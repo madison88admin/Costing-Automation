@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Databank Data Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .table th, .table td {
+            padding: 15px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f8f9ff;
+            transition: background-color 0.2s ease;
+        }
+
+        .table tbody tr:nth-child(even) {
+            background-color: #fafbfc;
+        }
+
+        .data-table-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .table-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .table-stats {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .dropdown {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            font-size: 12px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .action-btn {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn-edit {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .action-btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .file-upload {
+            border: 2px dashed #ddd;
+            padding: 20px;
+            text-align: center;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .file-upload:hover {
+            border-color: #007bff;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Databank Data Management System</h1>
+            <p>Professional data table interface for your Supabase databank</p>
+        </div>
+
+        <!-- Database Connection Section - Hidden -->
+        <div class="section" style="display: none;">
+            <h2>Database Connection</h2>
+            <div class="form-group">
+                <label for="dbType">Database Type:</label>
+                <select id="dbType">
+                    <option value="supabase" selected>Supabase</option>
+                    <option value="mysql">MySQL</option>
+                    <option value="postgresql">PostgreSQL</option>
+                    <option value="sqlite">SQLite</option>
+                </select>
+            </div>
+            
+            <div id="supabaseConfig">
+                <div class="form-group">
+                    <label for="supabaseUrl">Supabase URL:</label>
+                    <input type="text" id="supabaseUrl" value="https://icavnpspgmcrrqmsprze.supabase.co" placeholder="https://your-project.supabase.co">
+                </div>
+                <div class="form-group">
+                    <label for="supabaseKey">Supabase Anon Key:</label>
+                    <input type="text" id="supabaseKey" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljYXZucHNwZ21jcnJxbXNwcnplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0NzEyMzMsImV4cCI6MjA3MzA0NzIzM30.5_-LPYwj5ks_KyCXwCae2mcbI-T7em48RsMiv4Oaurk" placeholder="Your anon key">
+                </div>
+            </div>
+
+            <div id="otherDbConfig" class="hidden">
+                <div class="form-group">
+                    <label for="dbHost">Host:</label>
+                    <input type="text" id="dbHost" placeholder="localhost">
+                </div>
+                <div class="form-group">
+                    <label for="dbPort">Port:</label>
+                    <input type="number" id="dbPort" placeholder="5432">
+                </div>
+                <div class="form-group">
+                    <label for="dbUsername">Username:</label>
+                    <input type="text" id="dbUsername" placeholder="username">
+                </div>
+                <div class="form-group">
+                    <label for="dbPassword">Password:</label>
+                    <input type="password" id="dbPassword" placeholder="password">
+                </div>
+                <div class="form-group">
+                    <label for="dbName">Database Name:</label>
+                    <input type="text" id="dbName" placeholder="database_name">
+                </div>
+            </div>
+
+            <button onclick="connectDatabase()" id="connectButton">Connect to Database</button>
+            <div id="connectionStatus"></div>
+            <div id="autoConnectStatus" style="display: block;">
+                <div class="loading">🔄 Auto-connecting to Supabase...</div>
+            </div>
+        </div>
+
+        <!-- Tables Section - Hidden -->
+        <div class="section" id="tablesSection" style="display: none;">
+            <h2>Database Tables</h2>
+            <button onclick="loadTables()">Refresh Tables</button>
+            <div id="tablesList"></div>
+        </div>
+
+        <!-- Data Table Section -->
+        <div class="data-table-container" id="dataTableSection" style="display: none;">
+            <div class="table-header">
+                <h2 class="table-title">📊 Databank Data Management</h2>
+                <div class="table-stats">
+                    <span id="recordCount">• 0 records loaded</span>
+                    <span id="columnCount">0 columns visible</span>
+                </div>
+            </div>
+            
+            <div class="search-container">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search databank records..." onkeyup="filterTable()">
+                <button class="btn btn-primary" onclick="loadDatabankData(100)">🔄 Refresh Data</button>
+                <button class="btn btn-primary" onclick="loadMoreData()">📄 Load More (100)</button>
+                <button class="btn btn-primary" onclick="loadAllData()">📚 Load All (2,772)</button>
+                <button class="btn btn-secondary" onclick="exportData()">📤 Export</button>
+            </div>
+            
+            
+            <div id="tableData"></div>
+        </div>
+
+        <!-- File Import Section -->
+        <div class="section" id="importSection" style="display: none;">
+            <h2>Import Data</h2>
+            <div class="form-group">
+                <label for="importTable">Target Table:</label>
+                <select id="importTable">
+                    <option value="">Select a table</option>
+                </select>
+            </div>
+            
+            <div class="file-upload" onclick="document.getElementById('fileInput').click()">
+                <p>Click to select CSV or Excel file</p>
+                <input type="file" id="fileInput" accept=".csv,.xlsx" style="display: none;" onchange="handleFileSelect(event)">
+            </div>
+            
+            <div id="filePreview" style="display: none;">
+                <h3>File Preview</h3>
+                <div id="previewTable"></div>
+                <button onclick="importFile()">Import Data</button>
+            </div>
+            
+            <div id="importStatus"></div>
+        </div>
+    </div>
+
+    <script>
+        let connectionId = null;
+        let currentFile = null;
+        let filePreview = null;
+
+        // Auto-connect to Supabase when page loads
+        window.addEventListener('load', function() {
+            console.log('Page loaded, auto-connecting to Supabase...');
+            // Small delay to show the loading state
+            setTimeout(() => {
+                autoConnectToSupabase();
+            }, 500);
+        });
+
+        // Show/hide database config based on type
+        document.getElementById('dbType').addEventListener('change', function() {
+            const isSupabase = this.value === 'supabase';
+            document.getElementById('supabaseConfig').style.display = isSupabase ? 'block' : 'none';
+            document.getElementById('otherDbConfig').style.display = isSupabase ? 'none' : 'block';
+        });
+
+        // Auto-connect function
+        async function autoConnectToSupabase() {
+            console.log('Starting auto-connect to Supabase...');
+            // Show loading status
+            document.getElementById('autoConnectStatus').style.display = 'block';
+            document.getElementById('connectButton').style.display = 'none';
+            
+            try {
+                const config = {
+                    type: 'supabase',
+                    supabaseUrl: 'https://icavnpspgmcrrqmsprze.supabase.co',
+                    supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljYXZucHNwZ21jcnJxbXNwcnplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0NzEyMzMsImV4cCI6MjA3MzA0NzIzM30.5_-LPYwj5ks_KyCXwCae2mcbI-T7em48RsMiv4Oaurk'
+                };
+
+                console.log('Sending connection request...', config);
+                const response = await fetch('/api/database/connect', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+
+                console.log('Response received:', response.status);
+                const result = await response.json();
+                console.log('Result:', result);
+                
+                if (result.success) {
+                    connectionId = result.connectionId;
+                    showStatus('connectionStatus', '✅ Auto-connected to Supabase successfully!', 'success');
+                    document.getElementById('dataTableSection').style.display = 'block';
+                    document.getElementById('importSection').style.display = 'block';
+                    document.getElementById('autoConnectStatus').style.display = 'none';
+                    
+                    // Auto-load databank table data immediately
+                    setTimeout(() => {
+                        loadDatabankData();
+                    }, 500);
+                } else {
+                    showStatus('connectionStatus', '❌ Auto-connection failed: ' + (result.message || 'Unknown error'), 'error');
+                    document.getElementById('autoConnectStatus').style.display = 'none';
+                    document.getElementById('connectButton').style.display = 'inline-block';
+                }
+            } catch (error) {
+                showStatus('connectionStatus', '❌ Auto-connection error: ' + error.message, 'error');
+                document.getElementById('autoConnectStatus').style.display = 'none';
+                document.getElementById('connectButton').style.display = 'inline-block';
+            }
+        }
+
+        async function connectDatabase() {
+            const dbType = document.getElementById('dbType').value;
+            let config = { type: dbType };
+
+            if (dbType === 'supabase') {
+                config.supabaseUrl = document.getElementById('supabaseUrl').value;
+                config.supabaseKey = document.getElementById('supabaseKey').value;
+            } else {
+                config.host = document.getElementById('dbHost').value;
+                config.port = parseInt(document.getElementById('dbPort').value);
+                config.username = document.getElementById('dbUsername').value;
+                config.password = document.getElementById('dbPassword').value;
+                config.database = document.getElementById('dbName').value;
+            }
+
+            try {
+                const response = await fetch('/api/database/connect', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    connectionId = result.connectionId;
+                    showStatus('connectionStatus', 'Connected successfully!', 'success');
+                    document.getElementById('tablesSection').style.display = 'block';
+                    document.getElementById('importSection').style.display = 'block';
+                    loadTables();
+                } else {
+                    showStatus('connectionStatus', result.message || 'Connection failed', 'error');
+                }
+            } catch (error) {
+                showStatus('connectionStatus', 'Connection error: ' + error.message, 'error');
+            }
+        }
+
+        async function loadTables() {
+            if (!connectionId) return;
+
+            try {
+                const response = await fetch(`/api/database/tables/${connectionId}`);
+                const result = await response.json();
+                
+                if (result.tables) {
+                    displayTables(result.tables);
+                } else {
+                    showStatus('tablesList', 'No tables found', 'error');
+                }
+            } catch (error) {
+                showStatus('tablesList', 'Error loading tables: ' + error.message, 'error');
+            }
+        }
+
+        // Auto-load databank table data
+        async function loadDatabankData(limit = 100) {
+            if (!connectionId) {
+                console.log('No connection ID available');
+                return;
+            }
+
+            try {
+                console.log('Loading databank data with connection ID:', connectionId);
+                // Load the table data with higher limit
+                const response = await fetch(`/api/datatable/data/${connectionId}?table=databank&limit=${limit}`);
+                const result = await response.json();
+                
+                console.log('Data loading result:', result);
+                
+                if (result.data) {
+                    console.log('Data received, calling displayTableData with:', result.data.length, 'records');
+                    displayTableData(result.data);
+                    showStatus('tableData', `📊 Loaded ${result.data.length} records from databank table (Total: 2,772 records)`, 'success');
+                } else {
+                    console.log('No data in result');
+                    showStatus('tableData', 'No data found in databank table', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading databank data:', error);
+                showStatus('tableData', 'Error loading databank data: ' + error.message, 'error');
+            }
+        }
+
+        function displayTables(tables) {
+            const tablesList = document.getElementById('tablesList');
+            const selectedTable = document.getElementById('selectedTable');
+            const importTable = document.getElementById('importTable');
+            
+            let html = '<h3>Available Tables:</h3><ul>';
+            tables.forEach(table => {
+                html += `<li><strong>${table}</strong> <button onclick="loadTableInfo('${table}')">View Info</button></li>`;
+            });
+            html += '</ul>';
+            
+            tablesList.innerHTML = html;
+            
+            // Populate select options
+            selectedTable.innerHTML = '<option value="">Select a table</option>';
+            importTable.innerHTML = '<option value="">Select a table</option>';
+            tables.forEach(table => {
+                selectedTable.innerHTML += `<option value="${table}">${table}</option>`;
+                importTable.innerHTML += `<option value="${table}">${table}</option>`;
+            });
+            
+            // Auto-select databank table if it exists
+            if (tables.includes('databank')) {
+                selectedTable.value = 'databank';
+                importTable.value = 'databank';
+            }
+        }
+
+        async function loadTableInfo(tableName) {
+            if (!connectionId) return;
+
+            try {
+                const response = await fetch(`/api/database/table-info/${connectionId}/${tableName}`);
+                const result = await response.json();
+                
+                let html = `<h3>Table: ${tableName}</h3>`;
+                html += `<p><strong>Rows:</strong> ${result.rowCount}</p>`;
+                html += '<h4>Columns:</h4><table class="table"><tr><th>Name</th><th>Type</th><th>Nullable</th><th>Primary Key</th></tr>';
+                
+                result.columns.forEach(col => {
+                    html += `<tr>
+                        <td>${col.name}</td>
+                        <td>${col.type}</td>
+                        <td>${col.nullable ? 'Yes' : 'No'}</td>
+                        <td>${col.primaryKey ? 'Yes' : 'No'}</td>
+                    </tr>`;
+                });
+                html += '</table>';
+                
+                document.getElementById('tablesList').innerHTML = html;
+            } catch (error) {
+                showStatus('tablesList', 'Error loading table info: ' + error.message, 'error');
+            }
+        }
+
+        async function loadTableData() {
+            const tableName = document.getElementById('selectedTable').value;
+            if (!tableName || !connectionId) return;
+
+            try {
+                const response = await fetch(`/api/datatable/data/${connectionId}?table=${tableName}&limit=10`);
+                const result = await response.json();
+                
+                if (result.data) {
+                    displayTableData(result.data);
+                } else {
+                    showStatus('tableData', 'No data found', 'error');
+                }
+            } catch (error) {
+                showStatus('tableData', 'Error loading table data: ' + error.message, 'error');
+            }
+        }
+
+        function displayTableData(data) {
+            console.log('displayTableData called with:', data);
+            console.log('Data length:', data.length);
+            
+            // Store current data globally for pagination
+            window.currentTableData = data;
+            
+            // Check if tableData element exists
+            const tableElement = document.getElementById('tableData');
+            console.log('Table element exists:', !!tableElement);
+            if (!tableElement) {
+                console.error('tableData element not found!');
+                return;
+            }
+            
+            if (data.length === 0) {
+                console.log('No data to display');
+                tableElement.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #6c757d;">
+                        <h3>📭 No Data Available</h3>
+                        <p>No records found in the databank table. Try importing some data!</p>
+                    </div>
+                `;
+                updateTableStats(0, 0);
+                return;
+            }
+
+            const columns = Object.keys(data[0]);
+            console.log('Columns found:', columns);
+            updateTableStats(data.length, columns.length);
+
+            // Simple test first
+            tableElement.innerHTML = `
+                <div style="padding: 20px; background: #f0f0f0; border: 2px solid #007bff; margin: 10px;">
+                    <h3>✅ Data Table Test</h3>
+                    <p>Data loaded: ${data.length} records</p>
+                    <p>Columns: ${columns.length}</p>
+                    <p>First record: ${JSON.stringify(data[0])}</p>
+                </div>
+            `;
+            
+            // Wait 2 seconds, then show the actual table
+            setTimeout(() => {
+                console.log('Now showing actual table...');
+                showActualTable(data, columns, tableElement);
+            }, 2000);
+        }
+
+        function showActualTable(data, columns, tableElement) {
+            console.log('Building actual table...');
+            
+            // Simple table first
+            let html = `
+                <div style="border: 1px solid #ddd; border-radius: 8px; background: white; margin: 10px;">
+                    <div style="max-height: 400px; overflow-y: auto; overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; min-width: ${columns.length * 120}px;">
+                            <thead style="background: #f8f9fa; position: sticky; top: 0;">
+                                <tr>
+            `;
+            
+            // Add column headers (all columns)
+            columns.forEach((col, index) => {
+                html += `<th style="padding: 8px; border: 1px solid #ddd; text-align: left; min-width: 120px; white-space: nowrap;">${col}</th>`;
+            });
+            
+            html += `
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
+            
+            // Add data rows (show first 20 rows with all columns)
+            data.slice(0, 20).forEach((row, rowIndex) => {
+                html += `<tr style="background: ${rowIndex % 2 === 0 ? 'white' : '#f8f9fa'};">`;
+                
+                columns.forEach(col => {
+                    const value = row[col] || '';
+                    const displayValue = String(value).substring(0, 30) + (String(value).length > 30 ? '...' : '');
+                    html += `<td style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">${displayValue}</td>`;
+                });
+                
+                html += `</tr>`;
+            });
+            
+            html += `
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="padding: 10px; background: #f8f9fa; text-align: center;">
+                        Showing ${Math.min(20, data.length)} of ${data.length} records
+                    </div>
+                </div>
+            `;
+            
+            console.log('Setting simple table...');
+            tableElement.innerHTML = html;
+            console.log('Simple table set successfully');
+        }
+
+        function formatCellValue(value, columnName) {
+            if (value === null) return '<span style="color: #6c757d; font-style: italic;">—</span>';
+            if (value === undefined) return '<span style="color: #6c757d; font-style: italic;">—</span>';
+            if (typeof value === 'object') return `<code style="font-size: 12px; background: #f8f9fa; padding: 2px 6px; border-radius: 3px;">${JSON.stringify(value)}</code>`;
+            
+            // Format based on column name patterns
+            const lowerCol = columnName.toLowerCase();
+            if (lowerCol.includes('status') || lowerCol.includes('state')) {
+                const statusStyle = value.toLowerCase().includes('active') ? 'background: #d4edda; color: #155724;' : 
+                                  value.toLowerCase().includes('inactive') ? 'background: #f8d7da; color: #721c24;' : 
+                                  'background: #fff3cd; color: #856404;';
+                return `<span style="display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; ${statusStyle}">${value}</span>`;
+            }
+            
+            if (lowerCol.includes('date') || lowerCol.includes('time')) {
+                return `<span style="color: #6c757d; font-size: 14px;">${value}</span>`;
+            }
+            
+            if (lowerCol.includes('email')) {
+                return `<a href="mailto:${value}" style="color: #007bff; text-decoration: underline;">${value}</a>`;
+            }
+            
+            if (lowerCol.includes('url') || lowerCol.includes('link')) {
+                return `<a href="${value}" target="_blank" style="color: #007bff; text-decoration: underline;">${value}</a>`;
+            }
+            
+            return `<span style="color: #212529;">${String(value)}</span>`;
+        }
+
+        function scrollTableLeft() {
+            const container = document.getElementById('tableScrollContainer');
+            if (container) {
+                container.scrollBy({ left: -300, behavior: 'smooth' });
+            }
+        }
+
+        function scrollTableRight() {
+            const container = document.getElementById('tableScrollContainer');
+            if (container) {
+                container.scrollBy({ left: 300, behavior: 'smooth' });
+            }
+        }
+
+        function toggleYesBlank(columnName, rowIndex) {
+            console.log('Toggle Yes/Blank for column:', columnName, 'row:', rowIndex);
+            // Implementation for Yes/Blank toggle
+        }
+
+        function updateTableStats(recordCount, columnCount) {
+            document.getElementById('recordCount').textContent = `• ${recordCount} records loaded`;
+            document.getElementById('columnCount').textContent = `${columnCount} columns visible`;
+        }
+
+        function filterTable() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const table = document.getElementById('dataTable');
+            if (!table) return;
+            
+            const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+            
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const text = row.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        }
+
+        function sortTable(column) {
+            // Simple sorting functionality
+            console.log('Sorting by:', column);
+        }
+
+        function editRecord(index) {
+            console.log('Edit record:', index);
+            alert('Edit functionality coming soon!');
+        }
+
+        function deleteRecord(index) {
+            if (confirm('Are you sure you want to delete this record?')) {
+                console.log('Delete record:', index);
+                alert('Delete functionality coming soon!');
+            }
+        }
+
+        function exportData() {
+            console.log('Export data');
+            alert('Export functionality coming soon!');
+        }
+
+        // Load more data (incremental)
+        async function loadMoreData() {
+            const currentData = window.currentTableData || [];
+            const currentLimit = currentData.length;
+            const newLimit = currentLimit + 100;
+            
+            console.log(`Loading more data: ${currentLimit} -> ${newLimit}`);
+            await loadDatabankData(newLimit);
+        }
+
+        // Load all data (2,772 records)
+        async function loadAllData() {
+            console.log('Loading all 2,772 records...');
+            showStatus('tableData', '🔄 Loading all 2,772 records... This may take a moment.', 'info');
+            await loadDatabankData(2772);
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            currentFile = file;
+            previewFile(file);
+        }
+
+        async function previewFile(file) {
+            if (!connectionId) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('maxRows', '5');
+
+            try {
+                const response = await fetch(`/api/import/preview/${connectionId}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    filePreview = result.data;
+                    displayFilePreview(result.data, result.columns);
+                } else {
+                    showStatus('importStatus', 'Error previewing file: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showStatus('importStatus', 'Error previewing file: ' + error.message, 'error');
+            }
+        }
+
+        function displayFilePreview(data, columns) {
+            let html = '<table class="table"><tr>';
+            columns.forEach(col => {
+                html += `<th>${col}</th>`;
+            });
+            html += '</tr>';
+            
+            data.forEach(row => {
+                html += '<tr>';
+                columns.forEach(col => {
+                    html += `<td>${row[col] || ''}</td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</table>';
+            
+            document.getElementById('previewTable').innerHTML = html;
+            document.getElementById('filePreview').style.display = 'block';
+        }
+
+        async function importFile() {
+            if (!currentFile || !filePreview || !connectionId) return;
+
+            const tableName = document.getElementById('importTable').value;
+            if (!tableName) {
+                showStatus('importStatus', 'Please select a target table', 'error');
+                return;
+            }
+
+            // Create column mappings (simplified - maps file columns to database columns with same name)
+            const mappings = filePreview.length > 0 ? 
+                Object.keys(filePreview[0]).map(col => ({
+                    fileColumn: col,
+                    databaseColumn: col,
+                    required: false
+                })) : [];
+
+            const config = {
+                table: tableName,
+                mappings: mappings,
+                skipFirstRow: true,
+                updateExisting: false,
+                batchSize: 100
+            };
+
+            const formData = new FormData();
+            formData.append('file', currentFile);
+            formData.append('config', JSON.stringify(config));
+
+            try {
+                const isCSV = currentFile.name.endsWith('.csv');
+                const endpoint = isCSV ? 'csv' : 'excel';
+                
+                const response = await fetch(`/api/import/${endpoint}/${connectionId}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showStatus('importStatus', 
+                        `Import successful! Processed: ${result.rowsProcessed}, Inserted: ${result.rowsInserted}`, 
+                        'success');
+                } else {
+                    showStatus('importStatus', 'Import failed: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showStatus('importStatus', 'Import error: ' + error.message, 'error');
+            }
+        }
+
+        function showStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+    </script>
+</body>
+</html>
