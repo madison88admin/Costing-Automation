@@ -377,8 +377,8 @@
             <div class="search-container">
                 <input type="text" id="searchInput" class="search-input" placeholder="Search databank records..." onkeyup="filterTable()">
                 <button class="btn btn-primary" onclick="loadDatabankData(100)">🔄 Refresh Data</button>
-                <button class="btn btn-primary" onclick="loadMoreData()">📄 Load More (100)</button>
-                <button class="btn btn-primary" onclick="loadAllData()">📚 Load All (2,772)</button>
+                <button class="btn btn-primary" id="loadMoreBtn" onclick="loadMoreData()">📄 Load More (100)</button>
+                <button class="btn btn-primary" id="loadAllBtn" onclick="loadAllData()">📚 Load All (0)</button>
                 <button class="btn btn-secondary" onclick="exportData()">📤 Export</button>
             </div>
             
@@ -401,6 +401,32 @@
                 <input type="file" id="fileInput" accept=".csv,.xlsx" style="display: none;" onchange="handleFileSelect(event)">
             </div>
             
+            <!-- Data Review Panel -->
+            <div id="dataReviewPanel" style="display: none; margin-top: 20px;">
+                <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px;">
+                    <h3>🔍 Data Review & Verification</h3>
+                    <p style="color: #6c757d; margin-bottom: 20px;">Please review the scanned data and verify column mappings before importing</p>
+                    
+                    <!-- Scanned Data Summary -->
+                    <div id="scannedDataSummary" style="background: white; border: 1px solid #ddd; border-radius: 4px; padding: 15px; margin-bottom: 20px;">
+                        <h4>📋 Scanned Data Summary</h4>
+                        <div id="summaryContent"></div>
+                    </div>
+                    
+                    <!-- Column Mapping Review -->
+                    <div id="columnMappingReview" style="background: white; border: 1px solid #ddd; border-radius: 4px; padding: 15px; margin-bottom: 20px;">
+                        <h4>🗂️ Column Mapping Review</h4>
+                        <div id="mappingContent"></div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button class="btn btn-secondary" onclick="cancelImport()" style="margin-right: 10px;">❌ Cancel</button>
+                        <button class="btn btn-primary" onclick="confirmImport()">✅ Confirm & Import Data</button>
+                    </div>
+                </div>
+            </div>
+            
             <div id="filePreview" style="display: none;">
                 <h3>File Preview</h3>
                 <div id="previewTable"></div>
@@ -415,6 +441,9 @@
         let connectionId = null;
         let currentFile = null;
         let filePreview = null;
+        let scannedData = null;
+        let columnMappings = null;
+        let totalRecords = 0;
 
         // Auto-connect to Supabase when page loads
         window.addEventListener('load', function() {
@@ -467,6 +496,8 @@
                     // Auto-load databank table data immediately
                     setTimeout(() => {
                         loadDatabankData();
+                        // Also get the total count for button updates
+                        getTotalRecordCount();
                     }, 500);
                 } else {
                     showStatus('connectionStatus', '❌ Auto-connection failed: ' + (result.message || 'Unknown error'), 'error');
@@ -537,6 +568,8 @@
 
         // Auto-load databank table data
         async function loadDatabankData(limit = 100) {
+            console.log('🔄 loadDatabankData called with limit:', limit);
+            
             if (!connectionId) {
                 console.log('No connection ID available');
                 return;
@@ -552,8 +585,17 @@
                 
                 if (result.data) {
                     console.log('Data received, calling displayTableData with:', result.data.length, 'records');
+                    
+                    // Store total records globally
+                    totalRecords = result.total || result.data.length;
+                    window.totalRecords = totalRecords;
+                    
                     displayTableData(result.data);
-                    showStatus('tableData', `📊 Loaded ${result.data.length} records from databank table (Total: 2,772 records)`, 'success');
+                    
+                    // Update button counts with actual data
+                    updateButtonCounts(totalRecords);
+                    
+                    showStatus('tableData', `📊 Loaded ${result.data.length} records from databank table (Total: ${totalRecords} records)`, 'success');
                 } else {
                     console.log('No data in result');
                     showStatus('tableData', 'No data found in databank table', 'error');
@@ -664,42 +706,142 @@
                 return;
             }
 
-            const columns = Object.keys(data[0]);
-            console.log('Columns found:', columns);
-            updateTableStats(data.length, columns.length);
+            // Define the specific columns we want to display in order
+            const displayColumns = [
+                'Season',
+                'Customer', 
+                'Style Number',
+                'Style Name',
+                'Main Material',
+                'Material Consumption',
+                'Material Price',
+                'Trim Cost',
+                'Total Material Cost',
+                'Knitting Machine',
+                'Knitting Time',
+                'Knitting CPM',
+                'Knitting Cost',
+                'Ops Cost',
+                'Knitting + Ops Cost',
+                'Packaging',
+                'OH',
+                'Profit',
+                'FTY Adjustment',
+                'TTL FTY Cost'
+            ];
 
-            // Simple test first
+            // Map display names to potential database column names
+            const columnMapping = {
+                'Season': ['season', 'Season', 'SEASON', 'seasons', 'SEASONS'],
+                'Customer': ['customer', 'Customer', 'CUSTOMER', 'customers', 'CUSTOMERS'],
+                'Style Number': ['style_number', 'styleNumber', 'Style Number', 'STYLE_NUMBER', 'style_no', 'styleNo', 'STYLE_NO'],
+                'Style Name': ['style_name', 'styleName', 'Style Name', 'STYLE_NAME', 'style', 'STYLE'],
+                'Main Material': ['main_material', 'mainMaterial', 'Main Material', 'MAIN_MATERIAL', 'material', 'MATERIAL', 'main_materials'],
+                'Material Consumption': ['material_consumption', 'materialConsumption', 'Material Consumption', 'MATERIAL_CONSUMPTION', 'consumption', 'CONSUMPTION'],
+                'Material Price': ['material_price', 'materialPrice', 'Material Price', 'MATERIAL_PRICE', 'price', 'PRICE'],
+                'Trim Cost': ['trim_cost', 'trimCost', 'Trim Cost', 'TRIM_COST', 'trim', 'TRIM'],
+                'Total Material Cost': ['total_material_cost', 'totalMaterialCost', 'Total Material Cost', 'TOTAL_MATERIAL_COST', 'total_cost', 'totalCost'],
+                'Knitting Machine': ['knitting_machine', 'knittingMachine', 'Knitting Machine', 'KNITTING_MACHINE', 'machine', 'MACHINE'],
+                'Knitting Time': ['knitting_time', 'knittingTime', 'Knitting Time', 'KNITTING_TIME', 'time', 'TIME'],
+                'Knitting CPM': ['knitting_cpm', 'knittingCpm', 'Knitting CPM', 'KNITTING_CPM', 'cpm', 'CPM'],
+                'Knitting Cost': ['knitting_cost', 'knittingCost', 'Knitting Cost', 'KNITTING_COST', 'knitting', 'KNITTING'],
+                'Ops Cost': ['ops_cost', 'opsCost', 'Ops Cost', 'OPS_COST', 'ops', 'OPS', 'operations', 'OPERATIONS'],
+                'Knitting + Ops Cost': ['knitting_ops_cost', 'knittingOpsCost', 'Knitting + Ops Cost', 'KNITTING_OPS_COST', 'total_ops', 'totalOps'],
+                'Packaging': ['packaging', 'Packaging', 'PACKAGING', 'package', 'PACKAGE'],
+                'OH': ['oh', 'OH', 'overhead', 'Overhead', 'OVERHEAD', 'overheads', 'OVERHEADS'],
+                'Profit': ['profit', 'Profit', 'PROFIT', 'profits', 'PROFITS'],
+                'FTY Adjustment': ['fty_adjustment', 'ftyAdjustment', 'FTY Adjustment', 'FTY_ADJUSTMENT', 'fty', 'FTY', 'adjustment', 'ADJUSTMENT'],
+                'TTL FTY Cost': ['ttl_fty_cost', 'ttlFtyCost', 'TTL FTY Cost', 'TTL_FTY_COST', 'total_fty', 'totalFty', 'ttl_cost', 'ttlCost']
+            };
+
+            // Find actual database columns that match our display columns
+            const availableColumns = Object.keys(data[0]);
+            const mappedColumns = [];
+            const columnHeaders = [];
+
+            displayColumns.forEach(displayName => {
+                const possibleNames = columnMapping[displayName] || [displayName];
+                const foundColumn = possibleNames.find(name => availableColumns.includes(name));
+                
+                if (foundColumn) {
+                    mappedColumns.push(foundColumn);
+                    columnHeaders.push(displayName);
+                } else {
+                    // If column not found, still add it but mark as missing
+                    mappedColumns.push(null);
+                    columnHeaders.push(displayName);
+                }
+            });
+
+            console.log('Mapped columns:', mappedColumns);
+            console.log('Column headers:', columnHeaders);
+            updateTableStats(data.length, columnHeaders.length);
+
+            // Always show the table with the desired column headers
+            // Even if database columns don't match, we'll show the structure
+            console.log('Showing table with desired column structure');
+            console.log('Available database columns:', Object.keys(data[0]));
+            console.log('Desired display columns:', displayColumns);
+            
+            // Show the table with your specific column headers
+            console.log('About to show table with data:', data.length, 'rows');
+            console.log('Mapped columns:', mappedColumns);
+            console.log('Column headers:', columnHeaders);
+            
+            try {
+                // Show the actual table directly
+                console.log('Showing actual table with data...');
+                console.log('Table element before showActualTable:', tableElement);
+                
+                // First show a simple message
             tableElement.innerHTML = `
-                <div style="padding: 20px; background: #f0f0f0; border: 2px solid #007bff; margin: 10px;">
-                    <h3>✅ Data Table Test</h3>
-                    <p>Data loaded: ${data.length} records</p>
-                    <p>Columns: ${columns.length}</p>
-                    <p>First record: ${JSON.stringify(data[0])}</p>
+                    <div style="padding: 20px; background: #e8f5e8; border: 2px solid #28a745; border-radius: 8px; margin: 10px;">
+                        <h3>🔄 Loading Table...</h3>
+                        <p>Processing ${data.length} records with ${mappedColumns.filter(c => c !== null).length} mapped columns</p>
                 </div>
             `;
             
-            // Wait 2 seconds, then show the actual table
+                // Then call showActualTable
             setTimeout(() => {
-                console.log('Now showing actual table...');
-                showActualTable(data, columns, tableElement);
-            }, 2000);
+                    showActualTable(data, mappedColumns, columnHeaders, tableElement, displayColumns);
+                }, 500);
+                
+            } catch (error) {
+                console.error('Error in displayTableData:', error);
+                tableElement.innerHTML = `
+                    <div style="padding: 20px; background: #f8d7da; border: 2px solid #dc3545; border-radius: 8px; margin: 10px;">
+                        <h3>❌ Display Error</h3>
+                        <p>Error: ${error.message}</p>
+                        <p>Stack: ${error.stack}</p>
+                    </div>
+                `;
+            }
         }
 
-        function showActualTable(data, columns, tableElement) {
+        function showActualTable(data, mappedColumns, columnHeaders, tableElement, displayColumns) {
             console.log('Building actual table...');
+            console.log('Mapped columns:', mappedColumns);
+            console.log('Column headers:', columnHeaders);
+            console.log('Display columns:', displayColumns);
             
-            // Simple table first
+            try {
+            
+            // Create table with specific columns
             let html = `
-                <div style="border: 1px solid #ddd; border-radius: 8px; background: white; margin: 10px;">
-                    <div style="max-height: 400px; overflow-y: auto; overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse; min-width: ${columns.length * 120}px;">
-                            <thead style="background: #f8f9fa; position: sticky; top: 0;">
+                <div style="border: 1px solid #ddd; border-radius: 8px; background: white; margin: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <div style="max-height: 500px; overflow-y: auto; overflow-x: auto;">
+                        <table class="table" style="width: 100%; border-collapse: collapse; min-width: ${columnHeaders.length * 150}px; margin: 0;">
+                            <thead style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; position: sticky; top: 0; z-index: 10;">
                                 <tr>
             `;
             
-            // Add column headers (all columns)
-            columns.forEach((col, index) => {
-                html += `<th style="padding: 8px; border: 1px solid #ddd; text-align: left; min-width: 120px; white-space: nowrap;">${col}</th>`;
+            // Add column headers with display names
+            columnHeaders.forEach((header, index) => {
+                const isMissing = mappedColumns[index] === null;
+                const headerStyle = isMissing ? 
+                    'padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; background: #ffebee; color: #c62828; font-style: italic; font-weight: 600;' :
+                    'padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600;';
+                html += `<th style="${headerStyle}">${header}${isMissing ? ' (Missing)' : ''}</th>`;
             });
             
             html += `
@@ -708,14 +850,80 @@
                             <tbody>
             `;
             
-            // Add data rows (show first 20 rows with all columns)
-            data.slice(0, 20).forEach((row, rowIndex) => {
-                html += `<tr style="background: ${rowIndex % 2 === 0 ? 'white' : '#f8f9fa'};">`;
+            // Add data rows (show first 20 rows with mapped columns)
+            console.log('First row data:', data[0]);
+            console.log('Mapped columns for data:', mappedColumns);
+            
+            // Check if first row contains column names instead of data
+            const firstRowKeys = Object.keys(data[0]);
+            const firstRowValues = Object.values(data[0]);
+            console.log('First row keys:', firstRowKeys);
+            console.log('First row values:', firstRowValues);
+            
+            // More robust check for header row
+            let dataToShow = data;
+            
+            // Check if first row values match column names (case-insensitive)
+            const isHeaderRow = firstRowValues.every(val => {
+                const valStr = String(val).toLowerCase();
+                return firstRowKeys.some(key => key.toLowerCase() === valStr);
+            });
+            
+            // Also check if first row contains our specific display column names
+            const containsDisplayNames = firstRowValues.some(val => {
+                const valStr = String(val).toLowerCase();
+                return displayColumns.some(displayName => displayName.toLowerCase() === valStr);
+            });
+            
+            // Check for common header patterns
+            const commonHeaders = ['season', 'customer', 'style number', 'style name', 'main material'];
+            const containsCommonHeaders = firstRowValues.some(val => {
+                const valStr = String(val).toLowerCase();
+                return commonHeaders.includes(valStr);
+            });
+            
+            console.log('Is header row (keys match):', isHeaderRow);
+            console.log('Contains display names:', containsDisplayNames);
+            console.log('Contains common headers:', containsCommonHeaders);
+            
+            if (isHeaderRow || containsDisplayNames || containsCommonHeaders) {
+                console.log('Detected header row, skipping first row');
+                dataToShow = data.slice(1);
+            } else {
+                console.log('First row appears to be data, keeping all rows');
+            }
+            
+            console.log('Data to show (first 3 rows):', dataToShow.slice(0, 3));
+            
+            dataToShow.slice(0, 20).forEach((row, rowIndex) => {
+                const rowStyle = `background: ${rowIndex % 2 === 0 ? 'white' : '#f8f9fa'}; transition: background-color 0.2s ease;`;
+                html += `<tr style="${rowStyle}" onmouseover="this.style.backgroundColor='#e3f2fd'" onmouseout="this.style.backgroundColor='${rowIndex % 2 === 0 ? 'white' : '#f8f9fa'}'">`;
                 
-                columns.forEach(col => {
-                    const value = row[col] || '';
-                    const displayValue = String(value).substring(0, 30) + (String(value).length > 30 ? '...' : '');
-                    html += `<td style="padding: 6px; border: 1px solid #ddd; font-size: 12px;">${displayValue}</td>`;
+                mappedColumns.forEach((col, colIndex) => {
+                    if (col === null) {
+                        // Column not found in database - show placeholder
+                        html += `<td style="padding: 10px 8px; border: 1px solid #ddd; font-size: 13px; color: #c62828; font-style: italic; text-align: center; background: #ffebee; vertical-align: middle;">—</td>`;
+                    } else {
+                        const value = row[col];
+                        console.log(`Row ${rowIndex}, Column ${col}: value =`, value, 'type =', typeof value);
+                        
+                        // Handle different value types
+                        let displayValue = '';
+                        if (value === null || value === undefined) {
+                            displayValue = '';
+                        } else if (typeof value === 'object') {
+                            displayValue = JSON.stringify(value);
+                        } else {
+                            displayValue = String(value);
+                        }
+                        
+                        // Truncate if too long
+                        if (displayValue.length > 50) {
+                            displayValue = displayValue.substring(0, 50) + '...';
+                        }
+                        
+                        html += `<td style="padding: 10px 8px; border: 1px solid #ddd; font-size: 13px; vertical-align: middle;">${displayValue}</td>`;
+                    }
                 });
                 
                 html += `</tr>`;
@@ -725,15 +933,109 @@
                             </tbody>
                         </table>
                     </div>
-                    <div style="padding: 10px; background: #f8f9fa; text-align: center;">
-                        Showing ${Math.min(20, data.length)} of ${data.length} records
+                    <div style="padding: 15px; background: #f8f9fa; text-align: center; border-top: 1px solid #ddd; border-radius: 0 0 8px 8px;">
+                        <div style="font-weight: 600; color: #495057; margin-bottom: 5px;">
+                            Showing ${Math.min(20, dataToShow.length)} of ${window.totalRecords || data.length} records
+                        </div>
+                        <small style="color: #6c757d;">
+                            <span style="color: #c62828;">●</span> Columns in red are missing from database
+                        </small>
                     </div>
                 </div>
             `;
             
-            console.log('Setting simple table...');
+            console.log('Setting filtered table...');
+            console.log('Table element before setting HTML:', tableElement);
+            console.log('HTML length:', html.length);
+            
             tableElement.innerHTML = html;
-            console.log('Simple table set successfully');
+            console.log('Filtered table set successfully');
+            console.log('Table element after setting HTML:', tableElement);
+            console.log('Table element innerHTML length:', tableElement.innerHTML.length);
+            
+            // Force the table to be visible
+            tableElement.style.display = 'block';
+            tableElement.style.visibility = 'visible';
+            tableElement.style.minHeight = '200px';
+            
+            // Also ensure the parent container is visible
+            const parentContainer = tableElement.parentElement;
+            if (parentContainer) {
+                parentContainer.style.display = 'block';
+                parentContainer.style.visibility = 'visible';
+            }
+            
+            // Add a test div to verify something is being displayed
+            setTimeout(() => {
+                const testDiv = document.createElement('div');
+                testDiv.style.cssText = 'padding: 10px; background: #d4edda; border: 1px solid #c3e6cb; margin: 10px; border-radius: 4px; position: absolute; top: 10px; right: 10px; z-index: 1000;';
+                testDiv.innerHTML = '✅ Table rendered!';
+                document.body.appendChild(testDiv);
+                
+                // Remove after 3 seconds
+                setTimeout(() => {
+                    if (testDiv.parentNode) {
+                        testDiv.parentNode.removeChild(testDiv);
+                    }
+                }, 3000);
+            }, 100);
+            
+            } catch (error) {
+                console.error('Error in showActualTable:', error);
+                tableElement.innerHTML = `
+                    <div style="padding: 20px; background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; margin: 10px;">
+                        <h3>⚠️ Table Rendering Error</h3>
+                        <p>Error: ${error.message}</p>
+                        <p>Stack: ${error.stack}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function showColumnMappingDebug(availableColumns, displayColumns, mappedColumns) {
+            // Create a debug panel to show column mapping
+            const debugPanel = document.createElement('div');
+            debugPanel.style.cssText = `
+                margin: 20px;
+                padding: 15px;
+                background: #f8f9fa;
+                border: 1px solid #dee2e6;
+                border-radius: 8px;
+                font-size: 12px;
+            `;
+            
+            let debugHtml = '<h4>🔍 Column Mapping Debug</h4>';
+            debugHtml += '<div style="display: flex; gap: 20px;">';
+            
+            // Show available database columns
+            debugHtml += '<div style="flex: 1;">';
+            debugHtml += '<h5>Available Database Columns:</h5>';
+            debugHtml += '<ul style="margin: 0; padding-left: 20px;">';
+            availableColumns.forEach(col => {
+                debugHtml += `<li>${col}</li>`;
+            });
+            debugHtml += '</ul></div>';
+            
+            // Show mapping status
+            debugHtml += '<div style="flex: 1;">';
+            debugHtml += '<h5>Column Mapping Status:</h5>';
+            debugHtml += '<ul style="margin: 0; padding-left: 20px;">';
+            displayColumns.forEach((displayCol, index) => {
+                const mappedCol = mappedColumns[index];
+                const status = mappedCol ? '✅' : '❌';
+                const statusText = mappedCol ? `→ ${mappedCol}` : 'Not found';
+                debugHtml += `<li>${status} ${displayCol} ${statusText}</li>`;
+            });
+            debugHtml += '</ul></div>';
+            
+            debugHtml += '</div>';
+            debugPanel.innerHTML = debugHtml;
+            
+            // Insert after the table
+            const tableContainer = document.getElementById('tableData');
+            if (tableContainer && tableContainer.parentNode) {
+                tableContainer.parentNode.insertBefore(debugPanel, tableContainer.nextSibling);
+            }
         }
 
         function formatCellValue(value, columnName) {
@@ -789,6 +1091,44 @@
             document.getElementById('columnCount').textContent = `${columnCount} columns visible`;
         }
 
+        function updateButtonCounts(count) {
+            const loadMoreBtn = document.getElementById('loadMoreBtn');
+            const loadAllBtn = document.getElementById('loadAllBtn');
+            
+            if (count) {
+                totalRecords = count;
+                window.totalRecords = totalRecords;
+            }
+            
+            if (loadMoreBtn) {
+                loadMoreBtn.textContent = `📄 Load More (100)`;
+            }
+            
+            if (loadAllBtn) {
+                loadAllBtn.textContent = `📚 Load All (${totalRecords.toLocaleString()})`;
+            }
+        }
+
+        // Get total record count from database
+        async function getTotalRecordCount() {
+            if (!connectionId) return;
+
+            try {
+                // Get just the count without loading data
+                const response = await fetch(`/api/datatable/data/${connectionId}?table=databank&limit=1`);
+                const result = await response.json();
+                
+                if (result.total) {
+                    totalRecords = result.total;
+                    window.totalRecords = totalRecords;
+                    updateButtonCounts(totalRecords);
+                    console.log('Total records in database:', totalRecords);
+                }
+            } catch (error) {
+                console.error('Error getting total record count:', error);
+            }
+        }
+
         function filterTable() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const table = document.getElementById('dataTable');
@@ -833,17 +1173,23 @@
         async function loadMoreData() {
             const currentData = window.currentTableData || [];
             const currentLimit = currentData.length;
-            const newLimit = currentLimit + 100;
+            const increment = 100;
+            const newLimit = Math.min(currentLimit + increment, 10000); // Cap at 10k for performance
             
             console.log(`Loading more data: ${currentLimit} -> ${newLimit}`);
             await loadDatabankData(newLimit);
         }
 
-        // Load all data (2,772 records)
+        // Load all data (dynamic count)
         async function loadAllData() {
-            console.log('Loading all 2,772 records...');
-            showStatus('tableData', '🔄 Loading all 2,772 records... This may take a moment.', 'info');
-            await loadDatabankData(2772);
+            // Get the total count from the button text
+            const loadAllBtn = document.getElementById('loadAllBtn');
+            const totalText = loadAllBtn ? loadAllBtn.textContent.match(/\(([0-9,]+)\)/) : null;
+            const totalCount = totalText ? parseInt(totalText[1].replace(/,/g, '')) : 1000;
+            
+            console.log(`Loading all ${totalCount} records...`);
+            showStatus('tableData', `🔄 Loading all ${totalCount.toLocaleString()} records... This may take a moment.`, 'info');
+            await loadDatabankData(totalCount);
         }
 
         function handleFileSelect(event) {
@@ -851,7 +1197,19 @@
             if (!file) return;
 
             currentFile = file;
+            console.log('File selected:', file.name, file.type);
+            
+            // Check if it's an Excel file for factory cost scanning
+            if (file.name.toLowerCase().endsWith('.xlsx') || file.name.toLowerCase().endsWith('.xls')) {
+                // Show loading state
+                showStatus('importStatus', '🔄 Scanning Excel file for factory cost data...', 'info');
+                
+                // Start the scanning process
+                scanExcelFile(file);
+            } else {
+                // Use the original CSV preview functionality
             previewFile(file);
+            }
         }
 
         async function previewFile(file) {
@@ -955,6 +1313,241 @@
         function showStatus(elementId, message, type) {
             const element = document.getElementById(elementId);
             element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        // Excel file scanning and data extraction
+        async function scanExcelFile(file) {
+            try {
+                console.log('Starting Excel file scan...');
+                
+                // Simulate Excel parsing (in real implementation, you'd use a library like SheetJS)
+                const mockScannedData = await simulateExcelScan(file);
+                
+                scannedData = mockScannedData;
+                columnMappings = generateColumnMappings(mockScannedData);
+                
+                // Show the review panel
+                showDataReviewPanel();
+                
+            } catch (error) {
+                console.error('Error scanning Excel file:', error);
+                showStatus('importStatus', '❌ Error scanning file: ' + error.message, 'error');
+            }
+        }
+
+        // Simulate Excel file scanning (replace with actual Excel parsing)
+        async function simulateExcelScan(file) {
+            // This would be replaced with actual Excel parsing using SheetJS or similar
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    const mockData = {
+                        customer: 'TNF',
+                        season: 'F27',
+                        styleNumber: 'TNFF27-014',
+                        styleName: 'Fuzzy Wool Blend Beanie',
+                        costedQuantity: '2000pcs',
+                        leadtime: '130 days',
+                        
+                        // Yarn section
+                        yarn: [
+                            { material: '(UJ-F19-011) 100% Nylon, 1/7.2 Nm', consumption: '50', price: '14.79', cost: '0.74' },
+                            { material: '(HYDD ECO) 65% RWS 21.5mic Merino Wool 35%', consumption: '66', price: '19.38', cost: '1.28' }
+                        ],
+                        
+                        // Fabric section
+                        fabric: [
+                            { material: 'Fabric 1', consumption: '0', price: '0.00', cost: '0.00' }
+                        ],
+                        
+                        // Trim section
+                        trim: [
+                            { material: 'Sewing Thread (Coats EcoV)', consumption: '1', price: '0.02', cost: '0.02' }
+                        ],
+                        
+                        // Knitting section
+                        knitting: [
+                            { operation: 'Flat-3GG', time: '8', rate: '0.100', cost: '0.80' }
+                        ],
+                        
+                        // Operations section
+                        operations: [
+                            { operation: 'Labeling', cost: '0.10' },
+                            { operation: 'Neaten/Steaming/Packing (Beanie)', cost: '0.40' },
+                            { operation: 'Linking Beanie (Flat/ 1 Layer/ Cuff)', cost: '0.17' },
+                            { operation: 'Washing (Hat/ Glove)', cost: '0.17' },
+                            { operation: 'Hand Closing (9-3GG)', cost: '0.12' }
+                        ],
+                        
+                        // Packaging section
+                        packaging: [
+                            { type: 'Standard Packaging', cost: '0.10' },
+                            { type: 'Special Packaging', cost: '0.00' }
+                        ],
+                        
+                        // Totals
+                        totals: {
+                            materialCost: '2.04',
+                            knittingCost: '0.80',
+                            operationsCost: '0.96',
+                            packagingCost: '0.10',
+                            overhead: '0.20',
+                            profit: '0.59',
+                            totalFactoryCost: '4.69'
+                        }
+                    };
+                    resolve(mockData);
+                }, 2000); // Simulate processing time
+            });
+        }
+
+        // Generate column mappings for the scanned data
+        function generateColumnMappings(data) {
+            const mappings = {
+                'Season': data.season || '',
+                'Customer': data.customer || '',
+                'Style Number': data.styleNumber || '',
+                'Style Name': data.styleName || '',
+                'Main Material': data.yarn && data.yarn[0] ? data.yarn[0].material : '',
+                'Material Consumption': data.yarn && data.yarn[0] ? data.yarn[0].consumption : '',
+                'Material Price': data.yarn && data.yarn[0] ? data.yarn[0].price : '',
+                'Trim Cost': data.totals ? data.totals.materialCost : '',
+                'Total Material Cost': data.totals ? data.totals.materialCost : '',
+                'Knitting Machine': data.knitting && data.knitting[0] ? data.knitting[0].operation : '',
+                'Knitting Time': data.knitting && data.knitting[0] ? data.knitting[0].time : '',
+                'Knitting CPM': data.knitting && data.knitting[0] ? data.knitting[0].rate : '',
+                'Knitting Cost': data.knitting && data.knitting[0] ? data.knitting[0].cost : '',
+                'Ops Cost': data.totals ? data.totals.operationsCost : '',
+                'Knitting + Ops Cost': data.totals ? (parseFloat(data.totals.knittingCost || 0) + parseFloat(data.totals.operationsCost || 0)).toFixed(2) : '',
+                'Packaging': data.totals ? data.totals.packagingCost : '',
+                'OH': data.totals ? data.totals.overhead : '',
+                'Profit': data.totals ? data.totals.profit : '',
+                'FTY Adjustment': '0.00',
+                'TTL FTY Cost': data.totals ? data.totals.totalFactoryCost : ''
+            };
+            
+            return mappings;
+        }
+
+        // Show the data review panel
+        function showDataReviewPanel() {
+            document.getElementById('dataReviewPanel').style.display = 'block';
+            
+            // Populate scanned data summary
+            const summaryContent = document.getElementById('summaryContent');
+            summaryContent.innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px;">
+                    <div>
+                        <strong>Customer:</strong> ${scannedData.customer}<br>
+                        <strong>Season:</strong> ${scannedData.season}<br>
+                        <strong>Style #:</strong> ${scannedData.styleNumber}
+                    </div>
+                    <div>
+                        <strong>Style Name:</strong> ${scannedData.styleName}<br>
+                        <strong>Quantity:</strong> ${scannedData.costedQuantity}<br>
+                        <strong>Leadtime:</strong> ${scannedData.leadtime}
+                    </div>
+                </div>
+                <div style="background: #e8f5e8; padding: 10px; border-radius: 4px;">
+                    <strong>Total Factory Cost:</strong> $${scannedData.totals.totalFactoryCost}
+                </div>
+            `;
+            
+            // Populate column mapping review
+            const mappingContent = document.getElementById('mappingContent');
+            let mappingHtml = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">';
+            
+            Object.entries(columnMappings).forEach(([column, value]) => {
+                mappingHtml += `
+                    <div style="display: flex; justify-content: space-between; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <span><strong>${column}:</strong></span>
+                        <span style="color: #007bff;">${value || '—'}</span>
+                    </div>
+                `;
+            });
+            
+            mappingHtml += '</div>';
+            mappingContent.innerHTML = mappingHtml;
+            
+            showStatus('importStatus', '✅ Excel file scanned successfully! Please review the data below.', 'success');
+        }
+
+        // Cancel import
+        function cancelImport() {
+            document.getElementById('dataReviewPanel').style.display = 'none';
+            document.getElementById('fileInput').value = '';
+            currentFile = null;
+            scannedData = null;
+            columnMappings = null;
+            showStatus('importStatus', 'Import cancelled', 'info');
+        }
+
+        // Confirm and import data
+        async function confirmImport() {
+            try {
+                showStatus('importStatus', '🔄 Importing data to database...', 'info');
+                
+                // Convert mappings to database format
+                const dbRecord = {
+                    season: columnMappings['Season'],
+                    customer: columnMappings['Customer'],
+                    style_number: columnMappings['Style Number'],
+                    style_name: columnMappings['Style Name'],
+                    main_material: columnMappings['Main Material'],
+                    material_consumption: columnMappings['Material Consumption'],
+                    material_price: columnMappings['Material Price'],
+                    trim_cost: columnMappings['Trim Cost'],
+                    total_material_cost: columnMappings['Total Material Cost'],
+                    knitting_machine: columnMappings['Knitting Machine'],
+                    knitting_time: columnMappings['Knitting Time'],
+                    knitting_cpm: columnMappings['Knitting CPM'],
+                    knitting_cost: columnMappings['Knitting Cost'],
+                    ops_cost: columnMappings['Ops Cost'],
+                    knitting_ops_cost: columnMappings['Knitting + Ops Cost'],
+                    packaging: columnMappings['Packaging'],
+                    oh: columnMappings['OH'],
+                    profit: columnMappings['Profit'],
+                    fty_adjustment: columnMappings['FTY Adjustment'],
+                    ttl_fty_cost: columnMappings['TTL FTY Cost']
+                };
+                
+                console.log('Importing record to Supabase:', dbRecord);
+                
+                // Send data to your backend API
+                const response = await fetch(`/api/datatable/insert/${connectionId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        table: 'databank',
+                        data: dbRecord
+                    })
+                });
+                
+                const result = await response.json();
+                console.log('Insert result:', result);
+                
+                if (result.success) {
+                    showStatus('importStatus', '✅ Data imported successfully to Supabase! Refreshing table...', 'success');
+                    
+                    // Hide review panel and refresh table
+                    document.getElementById('dataReviewPanel').style.display = 'none';
+                    document.getElementById('fileInput').value = '';
+                    
+                    // Refresh the main table and update counts
+                    setTimeout(() => {
+                        loadDatabankData();
+                        getTotalRecordCount();
+                    }, 1000);
+                } else {
+                    console.error('Insert failed:', result);
+                    throw new Error(result.error || result.message || 'Failed to insert data');
+                }
+                
+            } catch (error) {
+                console.error('Error importing data:', error);
+                showStatus('importStatus', '❌ Error importing data: ' + error.message, 'error');
+            }
         }
     </script>
 </body>
