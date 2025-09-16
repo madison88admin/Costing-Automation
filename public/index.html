@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Databank Data Management System</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -218,8 +219,8 @@
         .search-form {
             padding: 40px;
             display: grid;
-            grid-template-columns: 1fr 2fr auto auto;
-            gap: 30px;
+            grid-template-columns: 1fr 2fr auto auto auto;
+            gap: 20px;
             align-items: end;
             background: rgba(255, 255, 255, 0.9);
             border-radius: 0 0 20px 20px;
@@ -336,6 +337,33 @@
             background: #faf9f7;
             border-color: #2c2c2c;
             color: #2c2c2c;
+        }
+
+        .import-button {
+            background: #3b82f6;
+            color: white;
+            border: 2px solid #3b82f6;
+            padding: 16px 25px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 100px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .import-button:hover {
+            background: #2563eb;
+            border-color: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+        }
+
+        .import-button:active {
+            transform: translateY(0);
         }
 
         /* Responsive Design */
@@ -888,8 +916,8 @@
                             <option value="customer">Customer</option>
                             <option value="style_number">Style Number</option>
                         </select>
-                    </div>
-                    
+            </div>
+            
                     <div class="filter-group">
                         <label for="searchInput">Search Value</label>
                         <input type="text" id="searchInput" class="search-input" placeholder="Select filter type first..." onkeyup="handleSearchKeyup(event)">
@@ -900,6 +928,9 @@
                     </button>
                     <button class="clear-button" onclick="clearSearch()">
                         Clear
+                    </button>
+                    <button class="import-button" onclick="exportToExcel()">
+                        Export
                     </button>
                 </div>
             </div>
@@ -971,6 +1002,25 @@
     </div>
 
     <script>
+        // Check if XLSX library loaded properly
+        window.addEventListener('load', function() {
+            if (typeof XLSX === 'undefined') {
+                console.error('XLSX library failed to load');
+                // Try loading from alternative CDN
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js';
+                script.onload = function() {
+                    console.log('XLSX library loaded from alternative CDN');
+                };
+                script.onerror = function() {
+                    console.error('Failed to load XLSX library from both CDNs');
+                };
+                document.head.appendChild(script);
+            } else {
+                console.log('XLSX library loaded successfully');
+            }
+        });
+
         let connectionId = null;
         let currentFile = null;
         let filePreview = null;
@@ -999,7 +1049,7 @@
             
             // Start connecting to Supabase immediately but don't hide intro yet
             console.log('Auto-connecting to Supabase...');
-            autoConnectToSupabase();
+                autoConnectToSupabase();
         });
 
         // Show/hide database config based on type
@@ -1044,7 +1094,7 @@
                     // Auto-load databank table data immediately
                     setTimeout(() => {
                         loadDatabankData().then(() => {
-                            // Also get the total count for button updates
+                        // Also get the total count for button updates
                             getTotalRecordCount().then(() => {
                                 // Everything is loaded, now hide the intro overlay
                                 setTimeout(() => {
@@ -1716,6 +1766,201 @@
                     break;
                 default:
                     searchInput.placeholder = 'Select filter type first...';
+            }
+        }
+
+        // Export table data to Excel
+        function exportToExcel() {
+            try {
+                // Check if XLSX library is loaded
+                if (typeof XLSX === 'undefined') {
+                    console.log('XLSX library not found, falling back to CSV export...');
+                    exportToCSV();
+                    return;
+                }
+
+                // Get the current table data
+                const tableData = window.currentTableData || [];
+                
+                if (tableData.length === 0) {
+                    alert('No data available to export. Please load data first.');
+                    return;
+                }
+
+                // Get table headers from the actual table
+                const table = document.querySelector('.table');
+                if (!table) {
+                    alert('No table found. Please ensure data is loaded.');
+                    return;
+                }
+
+                const headers = [];
+                const headerCells = table.querySelectorAll('thead th');
+                headerCells.forEach(cell => {
+                    headers.push(cell.textContent.trim());
+                });
+
+                // Prepare data for Excel (skip header row, only include data)
+                const excelData = [];
+                
+                // Add data rows only (skip the header row)
+                tableData.forEach(row => {
+                    const rowData = [];
+                    headers.forEach(header => {
+                        // Map header names to data properties
+                        let value = '';
+                        switch(header.toLowerCase()) {
+                            case 'season':
+                                value = row.season || '';
+                                break;
+                            case 'customer':
+                                value = row.customer || '';
+                                break;
+                            case 'style number':
+                                value = row.style_number || '';
+                                break;
+                            case 'style name':
+                                value = row.style_name || '';
+                                break;
+                            case 'main material':
+                                value = row.main_material || '';
+                                break;
+                            case 'material consumption':
+                                value = row.material_consumption || '';
+                                break;
+                            case 'material price':
+                                value = row.material_price || '';
+                                break;
+                            default:
+                                value = row[header.toLowerCase().replace(/\s+/g, '_')] || '';
+                        }
+                        rowData.push(value);
+                    });
+                    excelData.push(rowData);
+                });
+
+                // Create workbook and worksheet
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet(excelData);
+
+                // Set column widths for better formatting
+                const colWidths = [];
+                headers.forEach((header, index) => {
+                    let maxWidth = header.length;
+                    excelData.forEach(row => {
+                        if (row[index] && row[index].toString().length > maxWidth) {
+                            maxWidth = row[index].toString().length;
+                        }
+                    });
+                    colWidths.push({ wch: Math.min(maxWidth + 2, 50) });
+                });
+                ws['!cols'] = colWidths;
+
+                // Add worksheet to workbook
+                XLSX.utils.book_append_sheet(wb, ws, 'Databank Data');
+
+                // Generate filename with timestamp (XLSM format)
+                const now = new Date();
+                const timestamp = now.toISOString().slice(0, 19).replace(/:/g, '-');
+                const filename = `Databank_Data_${timestamp}.xlsm`;
+
+                // Save the file as XLSM
+                XLSX.writeFile(wb, filename, { bookType: 'xlsm' });
+
+                // Show success message
+                showStatus('tableData', `✅ Excel file exported successfully: ${filename}`, 'success');
+                
+            } catch (error) {
+                console.error('Error exporting to Excel:', error);
+                showStatus('tableData', `❌ Error exporting to Excel: ${error.message}`, 'error');
+            }
+        }
+
+        // Fallback CSV export function
+        function exportToCSV() {
+            try {
+                const tableData = window.currentTableData || [];
+                
+                if (tableData.length === 0) {
+                    alert('No data available to export. Please load data first.');
+                    return;
+                }
+
+                const table = document.querySelector('.table');
+                if (!table) {
+                    alert('No table found. Please ensure data is loaded.');
+                    return;
+                }
+
+                const headers = [];
+                const headerCells = table.querySelectorAll('thead th');
+                headerCells.forEach(cell => {
+                    headers.push(cell.textContent.trim());
+                });
+
+                // Create CSV content (skip header row, only include data)
+                let csvContent = '';
+                
+                tableData.forEach(row => {
+                    const rowData = [];
+                    headers.forEach(header => {
+                        let value = '';
+                        switch(header.toLowerCase()) {
+                            case 'season':
+                                value = row.season || '';
+                                break;
+                            case 'customer':
+                                value = row.customer || '';
+                                break;
+                            case 'style number':
+                                value = row.style_number || '';
+                                break;
+                            case 'style name':
+                                value = row.style_name || '';
+                                break;
+                            case 'main material':
+                                value = row.main_material || '';
+                                break;
+                            case 'material consumption':
+                                value = row.material_consumption || '';
+                                break;
+                            case 'material price':
+                                value = row.material_price || '';
+                                break;
+                            default:
+                                value = row[header.toLowerCase().replace(/\s+/g, '_')] || '';
+                        }
+                        // Escape commas and quotes in CSV
+                        value = value.toString().replace(/"/g, '""');
+                        if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+                            value = '"' + value + '"';
+                        }
+                        rowData.push(value);
+                    });
+                    csvContent += rowData.join(',') + '\n';
+                });
+
+                // Create and download CSV file
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                
+                const now = new Date();
+                const timestamp = now.toISOString().slice(0, 19).replace(/:/g, '-');
+                const filename = `Databank_Data_${timestamp}.csv`;
+                link.setAttribute('download', filename);
+                
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                showStatus('tableData', `✅ CSV file exported successfully: ${filename}`, 'success');
+                
+            } catch (error) {
+                console.error('Error exporting to CSV:', error);
+                showStatus('tableData', `❌ Error exporting to CSV: ${error.message}`, 'error');
             }
         }
 
