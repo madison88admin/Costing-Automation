@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Databank Data Management System</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="js/importUtils.js"></script>
+    <script src="js/capImport.js"></script>
+    <script src="js/beanieImport.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('everest.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: #2c2c2c;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            padding: 30px 40px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .nav-logo {
+            height: 60px;
+            width: auto;
+        }
+
+        .header-title {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            font-size: 28px;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 0;
+            letter-spacing: 0.5px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .template-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .template-btn {
+            padding: 12px 24px;
+            border: 2px solid #007bff;
+            background: white;
+            color: #007bff;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .template-btn.active {
+            background: #007bff;
+            color: white;
+        }
+
+        .template-btn:hover {
+            background: #007bff;
+            color: white;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .data-review {
+            display: none;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .data-review h3 {
+            margin-bottom: 20px;
+            color: #495057;
+        }
+
+        .review-section {
+            margin-bottom: 30px;
+        }
+
+        .review-section h4 {
+            margin-bottom: 15px;
+            color: #6c757d;
+            font-size: 16px;
+        }
+
+        .review-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .review-field {
+            margin-bottom: 15px;
+        }
+
+        .review-field label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+
+        .review-field input {
+            background: white;
+            border: 1px solid #ced4da;
+        }
+
+        .review-field input:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+
+        .cost-highlight {
+            background: #e8f5e8 !important;
+            font-weight: 600;
+            color: #155724;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="MadisonWhiteLogo.png" alt="Madison Logo" class="nav-logo">
+            <h1 class="header-title">Databank Data Management System</h1>
+        </div>
+
+        <!-- Template Selection -->
+        <div class="section">
+            <h2>Template Selection</h2>
+            <div class="template-buttons">
+                <button class="template-btn active" onclick="selectTemplate('cap')">Cap Template</button>
+                <button class="template-btn" onclick="selectTemplate('beanie')">Beanie Template</button>
+            </div>
+            <p>Select the appropriate template for your data before uploading.</p>
+        </div>
+
+        <!-- File Upload -->
+        <div class="section">
+            <h2>Import Data</h2>
+            <div class="form-group">
+                <label for="fileInput">Choose Excel/CSV File:</label>
+                <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" onchange="handleFileSelect(event)">
+            </div>
+            <div id="importStatus" class="status hidden"></div>
+        </div>
+
+        <!-- Data Review Panel -->
+        <div id="dataReview" class="data-review">
+            <h3>Data Review & Verification</h3>
+            
+            <!-- Scanned Data Summary -->
+            <div class="review-section">
+                <h4>📄 Scanned Data Summary</h4>
+                <div class="review-grid">
+                    <div class="review-field">
+                        <label for="reviewCustomer">Customer:</label>
+                        <input type="text" id="reviewCustomer" onchange="updateSummaryField('customer', this.value)">
+                    </div>
+                    <div class="review-field">
+                        <label for="reviewSeason">Season:</label>
+                        <input type="text" id="reviewSeason" onchange="updateSummaryField('season', this.value)">
+                    </div>
+                    <div class="review-field">
+                        <label for="reviewStyleNumber">Style #:</label>
+                        <input type="text" id="reviewStyleNumber" onchange="updateSummaryField('styleNumber', this.value)">
+                    </div>
+                    <div class="review-field">
+                        <label for="reviewStyleName">Style Name:</label>
+                        <input type="text" id="reviewStyleName" onchange="updateSummaryField('styleName', this.value)">
+                    </div>
+                    <div class="review-field">
+                        <label for="reviewQuantity">Quantity:</label>
+                        <input type="text" id="reviewQuantity" onchange="updateSummaryField('costedQuantity', this.value)">
+                    </div>
+                    <div class="review-field">
+                        <label for="reviewLeadtime">Leadtime:</label>
+                        <input type="text" id="reviewLeadtime" onchange="updateSummaryField('leadtime', this.value)">
+                    </div>
+                    <div class="review-field">
+                        <label for="reviewTotalCost">Total Factory Cost:</label>
+                        <input type="text" id="reviewTotalCost" class="cost-highlight" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column Mapping Review -->
+            <div class="review-section">
+                <h4>📁 Column Mapping Review</h4>
+                <div class="review-grid">
+                    <div class="review-field">
+                        <label for="mappingSeason">Season:</label>
+                        <input type="text" id="mappingSeason" readonly>
+                    </div>
+                    <div class="review-field">
+                        <label for="mappingCustomer">Customer:</label>
+                        <input type="text" id="mappingCustomer" readonly>
+                    </div>
+                    <div class="review-field">
+                        <label for="mappingStyleNumber">Style Number:</label>
+                        <input type="text" id="mappingStyleNumber" readonly>
+                    </div>
+                    <div class="review-field">
+                        <label for="mappingStyleName">Style Name:</label>
+                        <input type="text" id="mappingStyleName" readonly>
+                    </div>
+                    <div class="review-field">
+                        <label for="mappingMainMaterial">Main Material:</label>
+                        <input type="text" id="mappingMainMaterial" readonly>
+                    </div>
+                    <div class="review-field">
+                        <label for="mappingMaterialConsumption">Material Consumption:</label>
+                        <input type="text" id="mappingMaterialConsumption" readonly>
+                    </div>
+                    <div class="review-field">
+                        <label for="mappingMaterialPrice">Material Price:</label>
+                        <input type="text" id="mappingMaterialPrice" readonly>
+                    </div>
+                    <div class="review-field">
+                        <label for="mappingTrimCost">Trim Cost:</label>
+                        <input type="text" id="mappingTrimCost" readonly>
+                    </div>
+                    <div class="review-field">
+                        <label for="mappingTotalMaterialCost">Total Material Cost:</label>
+                        <input type="text" id="mappingTotalMaterialCost" readonly>
+                    </div>
+                    <div class="review-field">
+                        <label for="mappingKnittingMachine">Knitting Machine:</label>
+                        <input type="text" id="mappingKnittingMachine" readonly>
+                    </div>
+                    <div class="review-field">
+                        <label for="mappingKnittingTime">Knitting Time:</label>
+                        <input type="text" id="mappingKnittingTime" readonly>
+                    </div>
+                    <div class="review-field">
+                        <label for="mappingKnittingCPM">Knitting CPM:</label>
+                        <input type="text" id="mappingKnittingCPM" readonly>
+                    </div>
+                    <div class="review-field">
+                        <label for="mappingKnittingCost">Knitting Cost:</label>
+                        <input type="text" id="mappingKnittingCost" readonly>
+                    </div>
+                    <div class="review-field">
+                        <label for="mappingOpsCost">Ops Cost:</label>
+                        <input type="text" id="mappingOpsCost" readonly>
+                    </div>
+                    <div class="review-field">
+                        <label for="mappingKnittingOpsCost">Knitting + Ops Cost:</label>
+                        <input type="text" id="mappingKnittingOpsCost" readonly>
+                    </div>
+                    <div class="review-field">
+                        <label for="mappingPackaging">Packaging:</label>
+                        <input type="text" id="mappingPackaging" readonly>
+                    </div>
+                    <div class="review-field">
+                        <label for="mappingOH">OH:</label>
+                        <input type="text" id="mappingOH" readonly>
+                    </div>
+                    <div class="review-field">
+                        <label for="mappingProfit">Profit:</label>
+                        <input type="text" id="mappingProfit" readonly>
+                    </div>
+                    <div class="review-field">
+                        <label for="mappingFTYAdjustment">FTY Adjustment:</label>
+                        <input type="text" id="mappingFTYAdjustment" readonly>
+                    </div>
+                    <div class="review-field">
+                        <label for="mappingTTLFTYCost">TTL FTY Cost:</label>
+                        <input type="text" id="mappingTTLFTYCost" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="margin-top: 30px; text-align: center;">
+                <button onclick="importData()" style="background: #28a745; font-size: 16px; padding: 12px 30px;">
+                    ✅ Import to Database
+                </button>
+                <button onclick="cancelImport()" style="background: #6c757d; font-size: 16px; padding: 12px 30px;">
+                    ❌ Cancel
+                </button>
+                <button onclick="testTemplateDetection()" style="background: #17a2b8; font-size: 16px; padding: 12px 30px;">
+                    🔍 Debug Template Detection
+                </button>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="section">
+            <h2>Data Table</h2>
+            <div id="tableData"></div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let selectedTemplate = 'cap';
+        let scannedData = null;
+        let columnMappings = null;
+
+        // Template selection function
+        function selectTemplate(template) {
+            selectedTemplate = template;
+            
+            // Update button styles
+            document.querySelectorAll('.template-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            console.log('Selected template:', selectedTemplate);
+        }
+
+        // Handle file selection
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Check file type
+            if (!file.name.toLowerCase().endsWith('.xlsx') && 
+                !file.name.toLowerCase().endsWith('.xls') && 
+                !file.name.toLowerCase().endsWith('.csv')) {
+                showStatus('importStatus', '❌ Please select a valid Excel or CSV file.', 'error');
+                return;
+            }
+
+            // Show loading state
+            const fileType = file.name.toLowerCase().endsWith('.csv') ? 'CSV' : 'Excel';
+            const templateName = selectedTemplate === 'cap' ? 'Cap' : 'Beanie';
+            showStatus('importStatus', `🔄 Scanning ${fileType} file using ${templateName} template...`, 'info');
+            
+            console.log('Starting file scan with template:', selectedTemplate);
+            // Start the scanning process with selected template
+            scanExcelFile(file, selectedTemplate);
+        }
+
+        // Scan Excel file using external modules
+        async function scanExcelFile(file, template = null) {
+            try {
+                console.log('Starting Excel file scan with template:', template || 'auto-detect');
+                
+                // Parse Excel file and extract factory cost data using external modules
+                const mockScannedData = await simulateExcelScan(file, template);
+                
+                scannedData = mockScannedData;
+                columnMappings = generateColumnMappings(mockScannedData, template);
+                
+                // Show the review panel
+                showDataReviewPanel();
+                
+            } catch (error) {
+                console.error('Error scanning Excel file:', error);
+                showStatus('importStatus', '❌ Error scanning file: ' + error.message, 'error');
+            }
+        }
+
+        // Show data review panel
+        function showDataReviewPanel() {
+            // Populate summary fields
+            document.getElementById('reviewCustomer').value = scannedData.customer || '';
+            document.getElementById('reviewSeason').value = scannedData.season || '';
+            document.getElementById('reviewStyleNumber').value = scannedData.styleNumber || '';
+            document.getElementById('reviewStyleName').value = scannedData.styleName || '';
+            document.getElementById('reviewQuantity').value = scannedData.costedQuantity || '';
+            document.getElementById('reviewLeadtime').value = scannedData.leadtime || '';
+            document.getElementById('reviewTotalCost').value = scannedData.totals?.totalFactoryCost || '0.00';
+
+            // Populate column mapping fields
+            if (columnMappings) {
+                Object.keys(columnMappings).forEach(key => {
+                    const element = document.getElementById('mapping' + key.replace(/\s+/g, ''));
+                    if (element) {
+                        element.value = columnMappings[key] || '';
+                    }
+                });
+            }
+
+            // Show the review panel
+            document.getElementById('dataReview').style.display = 'block';
+            showStatus('importStatus', '✅ Excel file scanned successfully! Please review the data above.', 'success');
+        }
+
+        // Update summary field when user edits it
+        function updateSummaryField(fieldName, newValue) {
+            if (scannedData) {
+                switch(fieldName) {
+                    case 'customer':
+                        scannedData.customer = newValue;
+                        break;
+                    case 'season':
+                        scannedData.season = newValue;
+                        break;
+                    case 'styleNumber':
+                        scannedData.styleNumber = newValue;
+                        break;
+                    case 'styleName':
+                        scannedData.styleName = newValue;
+                        break;
+                    case 'costedQuantity':
+                        scannedData.costedQuantity = newValue;
+                        break;
+                    case 'leadtime':
+                        scannedData.leadtime = newValue;
+                        break;
+                }
+            }
+        }
+
+        // Import data to database
+        function importData() {
+            if (!scannedData) {
+                showStatus('importStatus', '❌ No data to import. Please scan a file first.', 'error');
+                return;
+            }
+
+            showStatus('importStatus', '🔄 Importing data to database...', 'info');
+            
+            // Here you would typically send the data to your backend
+            console.log('Importing data:', scannedData);
+            console.log('Column mappings:', columnMappings);
+            
+            // Simulate import success
+            setTimeout(() => {
+                showStatus('importStatus', '✅ Data imported successfully!', 'success');
+                // Hide review panel
+                document.getElementById('dataReview').style.display = 'none';
+                // Clear file input
+                document.getElementById('fileInput').value = '';
+            }, 2000);
+        }
+
+        // Cancel import
+        function cancelImport() {
+            document.getElementById('dataReview').style.display = 'none';
+            document.getElementById('fileInput').value = '';
+            scannedData = null;
+            columnMappings = null;
+            showStatus('importStatus', 'Import cancelled.', 'info');
+        }
+
+        // Test template detection
+        function testTemplateDetection() {
+            console.log('=== TESTING TEMPLATE DETECTION ===');
+            console.log('Current scannedData:', scannedData);
+            console.log('Current columnMappings:', columnMappings);
+            console.log('Current selectedTemplate:', selectedTemplate);
+            
+            if (scannedData) {
+                console.log('Scanned data structure:', JSON.stringify(scannedData, null, 2));
+            } else {
+                console.log('❌ No scannedData found!');
+            }
+            
+            if (columnMappings) {
+                console.log('Column mappings:', JSON.stringify(columnMappings, null, 2));
+            } else {
+                console.log('❌ No columnMappings found!');
+            }
+        }
+
+        // Show status message
+        function showStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status ${type}`;
+            element.classList.remove('hidden');
+        }
+
+        // Load databank data (placeholder)
+        function loadDatabankData() {
+            document.getElementById('tableData').innerHTML = '<p>Data table functionality would be implemented here.</p>';
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Databank Data Management System initialized');
+            loadDatabankData();
+        });
+    </script>
+</body>
+</html>

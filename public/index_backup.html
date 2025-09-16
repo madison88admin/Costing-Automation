@@ -2463,14 +2463,8 @@
             }
         }
 
-        // Parse Excel/CSV file and extract factory cost data - now using external modules
+        // Parse Excel/CSV file and extract factory cost data
         async function simulateExcelScan(file, template = null) {
-            // Use the external simulateExcelScan function if available
-            if (window.importUtils && window.importUtils.simulateExcelScan) {
-                return window.importUtils.simulateExcelScan(file, template);
-            }
-            
-            // Fallback to original implementation
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 
@@ -2544,99 +2538,15 @@
             });
         }
         
-        // Extract factory cost data from parsed Excel data
-        function extractFactoryCostData(jsonData, template = null) {
-            console.log('Starting data extraction from:', jsonData);
-            console.log('Template parameter:', template);
-            
-            if (!jsonData || jsonData.length === 0) {
-                console.log('No data to extract');
-                return createEmptyData();
-            }
-            
-            // Use selected template if provided, otherwise auto-detect
-            let templateType;
-            if (template && (template === 'beanie' || template === 'cap')) {
-                templateType = template;
-                console.log('Using selected template:', templateType);
-            } else {
-                templateType = detectTemplateType(jsonData);
-                console.log('Auto-detected template type:', templateType);
-            }
-            console.log('Selected template button was:', template);
-            
-            // Extract data based on template type using external modules
-            let extractedData;
-            if (templateType === 'beanie') {
-                extractedData = extractBeanieTemplateData(jsonData);
-            } else if (templateType === 'cap') {
-                extractedData = extractCapTemplateData(jsonData);
-            } else {
-                extractedData = extractGenericData(jsonData);
-            }
-            
-            console.log('Final extracted data:', extractedData);
-            return extractedData;
-        }
+        // Extract factory cost data from parsed Excel data - now handled by external modules
         
-        // Detect template type based on content analysis
-        function detectTemplateType(jsonData) {
-            const allText = jsonData.flat().join(' ').toLowerCase();
-            console.log('Analyzing content for template detection:', allText.substring(0, 200) + '...');
-            
-            // Check for beanie template indicators
-            if (allText.includes('yarn') && allText.includes('knitting') && 
-                (allText.includes('beanie') || allText.includes('hat') || allText.includes('glove') || 
-                 allText.includes('fuzzy wool') || allText.includes('tnf') || allText.includes('consumption (g)'))) {
-                console.log('Detected beanie template based on content');
-                return 'beanie';
-            }
-            
-            // Check for cap template indicators
-            if (allText.includes('fabric') && allText.includes('trim') && 
-                (allText.includes('cap') || allText.includes('hat') || allText.includes('brim') || 
-                 allText.includes('rossignol') || allText.includes('consumption (yard)'))) {
-                console.log('Detected cap template based on content');
-                return 'cap';
-            }
-            
-            // Check for specific section headers
-            if (allText.includes('yarn') && allText.includes('knitting time')) {
-                console.log('Detected beanie template based on section headers');
-                return 'beanie';
-            }
-            
-            if (allText.includes('fabric/s') && allText.includes('other fabric/s')) {
-                console.log('Detected cap template based on section headers');
-                return 'cap';
-            }
-            
-            // Check for specific customer patterns
-            if (allText.includes('tnf') || allText.includes('fuzzy wool blend beanie')) {
-                console.log('Detected beanie template based on customer/product');
-                return 'beanie';
-            }
-            
-            if (allText.includes('rossignol') || allText.includes('corporate cap')) {
-                console.log('Detected cap template based on customer/product');
-                return 'cap';
-            }
-            
-            console.log('No specific template detected, using generic');
-            return 'generic';
-        }
+        // Template detection now handled by external modules
         
-        // Extract data from beanie template (TNF style) - now handled by external module
+        // Extract data from beanie template (TNF style)
         function extractBeanieTemplateData(jsonData) {
-            // Call the external beanie import module
-            if (window.beanieImport && window.beanieImport.extractBeanieTemplateData) {
-                return window.beanieImport.extractBeanieTemplateData(jsonData);
-            }
-            return createEmptyData();
-        }
-        
-        // Old beanie function code removed - now using external module
-        function oldExtractBeanieTemplateData(jsonData) {
+            console.log('Extracting beanie template data from actual CSV format');
+            console.log('Raw CSV data sample:', jsonData.slice(0, 10));
+            
             const extractedData = {
                 customer: '',
                 season: '',
@@ -2978,17 +2888,8 @@
             return extractedData;
         }
         
-        // Extract data from cap template (ROSSIGNOL style) - now handled by external module
+        // Extract data from cap template (ROSSIGNOL style)
         function extractCapTemplateData(jsonData) {
-            // Call the external cap import module
-            if (window.capImport && window.capImport.extractCapTemplateData) {
-                return window.capImport.extractCapTemplateData(jsonData);
-            }
-            return createEmptyData();
-        }
-        
-        // Old cap function code removed - now using external module
-        function oldExtractCapTemplateData(jsonData) {
             console.log('Extracting cap template data from CSV format');
             console.log('Raw CSV data sample:', jsonData.slice(0, 10));
             
@@ -4172,13 +4073,8 @@
             };
         }
 
-        // Generate column mappings for the scanned data - now using external module
+        // Generate column mappings for the scanned data
         function generateColumnMappings(data, template = null) {
-            // Use the external generateColumnMappings function if available
-            if (window.importUtils && window.importUtils.generateColumnMappings) {
-                return window.importUtils.generateColumnMappings(data, template);
-            }
-            
             console.log('Generating column mappings for template:', template);
             
             let mainMaterial = '';
