@@ -900,10 +900,6 @@
         <div class="data-table-container" id="dataTableSection" style="display: none;">
             <div class="table-header">
                 <h2 class="table-title">Databank Data Management</h2>
-                <div class="table-stats">
-                    <span id="recordCount">• 0 records loaded</span>
-                    <span id="columnCount">0 columns visible</span>
-                </div>
             </div>
             
             <div class="search-container">
@@ -1320,7 +1316,6 @@
                         <p>No records found in the databank table. Try importing some data!</p>
                     </div>
                 `;
-                updateTableStats(0, 0);
                 return;
             }
 
@@ -1393,7 +1388,6 @@
 
             console.log('Mapped columns:', mappedColumns);
             console.log('Column headers:', columnHeaders);
-            updateTableStats(data.length, columnHeaders.length);
 
             // Always show the table with the desired column headers
             // Even if database columns don't match, we'll show the structure
@@ -1704,10 +1698,6 @@
             // Implementation for Yes/Blank toggle
         }
 
-        function updateTableStats(recordCount, columnCount) {
-            document.getElementById('recordCount').textContent = `• ${recordCount} records loaded`;
-            document.getElementById('columnCount').textContent = `${columnCount} columns visible`;
-        }
 
         function updateButtonCounts(count) {
             const loadMoreBtn = document.getElementById('loadMoreBtn');
