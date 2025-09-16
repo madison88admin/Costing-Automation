@@ -109,6 +109,10 @@ export class SupabaseService {
     try {
       const { table, page = 1, limit = 10, sortBy, sortOrder = 'ASC', filters = {}, search } = query;
       
+      // For large datasets, we need to handle this differently
+      // If limit is very high (like 5000+), we'll fetch all data without pagination
+      const isLargeDataset = limit > 1000;
+      
       let queryBuilder = this.supabase.from(table).select('*', { count: 'exact' });
 
       // Apply filters
@@ -137,11 +141,49 @@ export class SupabaseService {
         queryBuilder = queryBuilder.order(sortBy, { ascending: sortOrder === 'ASC' });
       }
 
-      // Apply pagination
-      const offset = (page - 1) * limit;
-      queryBuilder = queryBuilder.range(offset, offset + limit - 1);
+      let data, error, count;
 
-      const { data, error, count } = await queryBuilder;
+      if (isLargeDataset) {
+        // For large datasets, fetch all data without pagination
+        // We'll use multiple requests to get all data
+        const allData = [];
+        let offset = 0;
+        const batchSize = 1000; // Supabase's max per request
+        let hasMoreData = true;
+
+        while (hasMoreData) {
+          const batchQuery = queryBuilder.range(offset, offset + batchSize - 1);
+          const { data: batchData, error: batchError } = await batchQuery;
+          
+          if (batchError) {
+            error = batchError;
+            break;
+          }
+
+          if (batchData && batchData.length > 0) {
+            allData.push(...batchData);
+            offset += batchSize;
+            
+            // If we got less than batchSize, we've reached the end
+            if (batchData.length < batchSize) {
+              hasMoreData = false;
+            }
+          } else {
+            hasMoreData = false;
+          }
+        }
+
+        data = allData;
+        count = allData.length;
+      } else {
+        // For normal pagination, use the original approach
+        const offset = (page - 1) * limit;
+        queryBuilder = queryBuilder.range(offset, offset + limit - 1);
+        const result = await queryBuilder;
+        data = result.data;
+        error = result.error;
+        count = result.count;
+      }
 
       if (error) throw error;
 
