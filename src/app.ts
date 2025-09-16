@@ -62,8 +62,8 @@ app.get('/test-supabase', async (req: Request, res: Response) => {
   try {
     const { testSupabaseConnection, getSupabaseTables } = await import('./utils/supabaseTest');
     
-    const url = 'https://icavnpspgmcrrqmsprze.supabase.co';
-    const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljYXZucHNwZ21jcnJxbXNwcnplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0NzEyMzMsImV4cCI6MjA3MzA0NzIzM30.5_-LPYwj5ks_KyCXwCae2mcbI-T7em48RsMiv4Oaurk';
+    const url = process.env.SUPABASE_URL || 'https://icavnpspgmcrrqmsprze.supabase.co';
+    const key = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljYXZucHNwZ21jcnJxbXNwcnplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0NzEyMzMsImV4cCI6MjA3MzA0NzIzM30.5_-LPYwj5ks_KyCXwCae2mcbI-T7em48RsMiv4Oaurk';
     
     const connectionTest = await testSupabaseConnection(url, key);
     const tables = await getSupabaseTables(url, key);

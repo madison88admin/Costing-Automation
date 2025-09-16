@@ -13,7 +13,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('everest.jpg');
+            background: linear-gradient(135deg, rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url('everest.jpg');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -22,6 +22,7 @@
             margin: 0;
             padding: 0;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
         .container {
@@ -30,19 +31,43 @@
             padding: 20px;
             position: relative;
             z-index: 1;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .header {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(15px);
-            padding: 30px 40px;
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            margin-bottom: 40px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+            backdrop-filter: blur(20px);
+            padding: 40px 50px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            margin-bottom: 50px;
             display: flex;
             align-items: center;
-            gap: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            gap: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
         }
 
         .nav-logo {
@@ -142,18 +167,6 @@
             transition: background-color 0.2s ease;
         }
 
-        .controls {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            padding: 20px 30px;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(15px);
-            border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
 
         .table-title {
             font-size: 24px;
@@ -390,20 +403,35 @@
         }
 
         .table-container {
-            background: white;
-            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.9));
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15), 0 0 0 1px rgba(255, 255, 255, 0.2);
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
         }
 
         .table-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 20px;
+            padding: 30px 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .table-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
         }
 
         .table-title {
@@ -412,62 +440,106 @@
         }
 
         .table-scroll {
-            max-height: 600px;
+            max-height: 70vh;
             overflow: auto;
+            border-radius: 0 0 20px 20px;
+            scrollbar-width: thin;
+            scrollbar-color: #667eea rgba(102, 126, 234, 0.2);
+        }
+
+        .table-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .table-scroll::-webkit-scrollbar-track {
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 4px;
+        }
+
+        .table-scroll::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
+        }
+
+        .table-scroll::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
         }
 
         .table {
             width: 100%;
             border-collapse: collapse;
             min-width: 1200px;
+            background: rgba(255, 255, 255, 0.8);
         }
 
         .table th {
-            background: #f8f9fa;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             color: #495057;
-            padding: 15px 12px;
+            padding: 20px 16px;
             text-align: left;
-            font-weight: 600;
-            font-size: 13px;
+            font-weight: 700;
+            font-size: 14px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 2px solid #dee2e6;
+            letter-spacing: 0.8px;
+            border-bottom: 3px solid #667eea;
             position: sticky;
             top: 0;
             z-index: 10;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         .table td {
-            padding: 12px;
-            border-bottom: 1px solid #e9ecef;
-            font-size: 13px;
+            padding: 16px;
+            border-bottom: 1px solid rgba(233, 236, 239, 0.6);
+            font-size: 14px;
             vertical-align: middle;
+            transition: all 0.2s ease;
+        }
+
+        .table tbody tr {
+            transition: all 0.3s ease;
         }
 
         .table tbody tr:hover {
-            background-color: #f8f9ff;
-            transition: background-color 0.2s ease;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
         }
 
         .table tbody tr:nth-child(even) {
-            background-color: #fafbfc;
+            background: linear-gradient(135deg, rgba(248, 249, 250, 0.5) 0%, rgba(255, 255, 255, 0.3) 100%);
         }
 
         .loading {
             text-align: center;
-            padding: 60px;
+            padding: 80px 60px;
             color: #6c757d;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .loading-spinner {
             display: inline-block;
-            width: 40px;
-            height: 40px;
-            border: 4px solid #f3f3f3;
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(102, 126, 234, 0.2);
             border-top: 4px solid #667eea;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .loading h3 {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         @keyframes spin {
@@ -476,22 +548,138 @@
         }
 
         .status {
-            padding: 15px;
-            border-radius: 8px;
-            margin: 10px 0;
+            padding: 20px 30px;
+            border-radius: 16px;
+            margin: 15px 0;
             font-weight: 500;
+            font-size: 16px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .status::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
         }
 
         .status.success {
-            background: #d4edda;
+            background: linear-gradient(135deg, rgba(212, 237, 218, 0.9) 0%, rgba(195, 230, 203, 0.8) 100%);
             color: #155724;
-            border: 1px solid #c3e6cb;
+            border: 1px solid rgba(195, 230, 203, 0.5);
+        }
+
+        .status.success::before {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
         }
 
         .status.error {
-            background: #f8d7da;
+            background: linear-gradient(135deg, rgba(248, 215, 218, 0.9) 0%, rgba(245, 198, 203, 0.8) 100%);
             color: #721c24;
-            border: 1px solid #f5c6cb;
+            border: 1px solid rgba(245, 198, 203, 0.5);
+        }
+
+        .status.error::before {
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+        }
+
+        /* Modern Pagination Styling */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            backdrop-filter: blur(10px);
+            border-radius: 0 0 20px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .pagination button {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            color: #667eea;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            padding: 12px 18px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pagination button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .pagination button:hover::before {
+            left: 100%;
+        }
+
+        .pagination button:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .pagination button:active {
+            transform: translateY(0);
+        }
+
+        .pagination button:disabled {
+            background: rgba(102, 126, 234, 0.05);
+            color: rgba(102, 126, 234, 0.3);
+            border-color: rgba(102, 126, 234, 0.1);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .pagination button:disabled:hover {
+            background: rgba(102, 126, 234, 0.05);
+            color: rgba(102, 126, 234, 0.3);
+            border-color: rgba(102, 126, 234, 0.1);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .pagination button.current-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .pagination span {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 16px;
+            padding: 0 8px;
+            user-select: none;
         }
 
         .import-section {
@@ -861,39 +1049,20 @@
             <h1 class="header-title">Costing Department</h1>
         </div>
 
-        <!-- Stats Bar -->
-        <div class="stats-bar">
-            <div class="stat-item">
-                <span>Total Records:</span>
-                <span class="stat-number" id="totalRecords">Loading...</span>
-            </div>
-            <div class="stat-item">
-                <span>Columns:</span>
-                <span class="stat-number" id="columnCount">0</span>
-            </div>
-            <div class="stat-item">
-                <span>Search Results:</span>
-                <span class="stat-number" id="searchResults">All</span>
-            </div>
+
+        <!-- Status Messages -->
+        <div id="connectionStatus" class="status" style="display: none;"></div>
+        <div id="tablesList" class="status" style="display: none;"></div>
+        <div id="autoConnectStatus" class="status" style="display: none;">
+            <div class="loading-spinner"></div>
+            <span>Connecting to Supabase...</span>
         </div>
 
-        <!-- Controls -->
-        <div class="controls">
-            <input type="text" id="searchInput" class="search-box" placeholder="Search across all columns..." onkeyup="filterTable()">
-            <select id="customerFilter" class="search-box" onchange="filterTable()" style="min-width: 200px;">
-                <option value="">All Customers</option>
-            </select>
-            <select id="seasonFilter" class="search-box" onchange="filterTable()" style="min-width: 150px;">
-                <option value="">All Seasons</option>
-            </select>
-            <button class="btn btn-primary" onclick="refreshData()">🔄 Refresh Data</button>
-            <button class="btn btn-success" onclick="showImportModal()">📥 Import Data</button>
-            <button class="btn btn-secondary" onclick="exportData()">📤 Export CSV</button>
-            <button class="btn btn-secondary" onclick="clearFilters()">🗑️ Clear Filters</button>
-        </div>
 
-        <!-- Data Table -->
-        <div class="table-container" id="tableContainer">
+        <!-- Data Table Section -->
+        <div id="dataTableSection" style="display: none;">
+            <!-- Data Table -->
+            <div class="table-container" id="tableContainer">
             <div class="table-header">
                 <h2 class="table-title">Databank Data Management</h2>
                 <div class="table-stats">
@@ -929,6 +1098,15 @@
             </div>
             
             <div id="tableData"></div>
+        </div>
+        </div>
+
+        <!-- Tables Section -->
+        <div id="tablesSection" style="display: none;">
+            <div class="section">
+                <h2>Database Tables</h2>
+                <div id="tablesList"></div>
+            </div>
         </div>
 
         <!-- File Import Section -->
@@ -999,6 +1177,10 @@
         let scannedData = null;
         let columnMappings = null;
         let totalRecords = 0;
+        let allData = [];
+        let filteredData = [];
+        let currentPage = 1;
+        let recordsPerPage = 50;
 
         // Intro loading animation
         let introHidden = false;
@@ -1043,14 +1225,14 @@
                 
                 if (result.success) {
                     connectionId = result.connectionId;
-                    showStatus('connectionStatus', '✅ Auto-connected to Supabase successfully!', 'success');
+                    // Auto-connection success status removed as requested
                     document.getElementById('dataTableSection').style.display = 'block';
                     document.getElementById('importSection').style.display = 'block';
                     document.getElementById('autoConnectStatus').style.display = 'none';
                     
-                    // Auto-load databank table data immediately
+                    // Auto-load ALL databank table data immediately (no limit)
                     setTimeout(() => {
-                        loadDatabankData().then(() => {
+                        loadDatabankData(999999).then(() => {
                             // Also get the total count for button updates
                             getTotalRecordCount().then(() => {
                                 // Everything is loaded, now hide the intro overlay
@@ -1082,6 +1264,12 @@
             }
         }
 
+        async function connectToDatabase() {
+            // This function is called by the connect button
+            // It will trigger the auto-connection process
+            autoConnectToSupabase();
+        }
+
         async function connectDatabase() {
             const dbType = document.getElementById('dbType').value;
             let config = { type: dbType };
@@ -1104,10 +1292,11 @@
                 
                 // Use the new endpoint for loading all data efficiently
                 const response = await fetch(`/api/datatable/data-all/${connectionId}?table=databank`);
+                const result = await response.json();
                 
                 if (result.success) {
                     connectionId = result.connectionId;
-                    showStatus('connectionStatus', 'Connected successfully!', 'success');
+                    // Manual connection success status removed as requested
                     document.getElementById('tablesSection').style.display = 'block';
                     document.getElementById('importSection').style.display = 'block';
                     loadTables();
@@ -1137,8 +1326,8 @@
         }
 
         // Auto-load databank table data - ALWAYS FRESH FROM SUPABASE
-        async function loadDatabankData(limit = 100) {
-            console.log('🔄 loadDatabankData called with limit:', limit);
+        async function loadDatabankData(limit = 999999) {
+            console.log('🔄 loadDatabankData called with limit:', limit === 999999 ? 'ALL DATA (no limit)' : limit);
             
             if (!connectionId) {
                 console.log('No connection ID available');
@@ -1169,10 +1358,10 @@
                     // Update button counts with actual data
                     updateButtonCounts(totalRecords);
                     
-                    showStatus('tableData', `📊 Loaded ${result.data.length} FRESH records from Supabase (Total: ${totalRecords} records)`, 'success');
+                    // Status message removed as requested
                 } else {
                     console.log('No data in result');
-                    showStatus('tableData', 'No data found in databank table', 'error');
+                    showStatus('connectionStatus', 'No data found in databank table', 'error');
                 }
             } catch (error) {
                 console.error('Error loading data efficiently:', error);
@@ -1277,10 +1466,81 @@
         }
 
         // Display data in table
+        function displayTableData(data) {
+            console.log('📊 displayTableData called with data:', data);
+            console.log('📊 Data length:', data ? data.length : 'undefined');
+            console.log('📊 First record:', data && data.length > 0 ? data[0] : 'no data');
+            
+            // Store the data globally
+            allData = data;
+            filteredData = [...data];
+            
+            console.log('📊 filteredData length:', filteredData.length);
+            console.log('📊 allData length:', allData.length);
+            
+            // Update the table display
+            displayTable();
+            
+            // Update stats
+            updateStats();
+        }
+
+        // Display search results in table (without overwriting allData)
+        function displaySearchResults(searchData) {
+            console.log('🔍 displaySearchResults called with data:', searchData);
+            console.log('🔍 Search data length:', searchData ? searchData.length : 'undefined');
+            
+            // Only update filteredData, keep allData unchanged
+            filteredData = [...searchData];
+            
+            console.log('🔍 filteredData length after search:', filteredData.length);
+            console.log('🔍 allData length (unchanged):', allData.length);
+            
+            // Update the table display
+            displayTable();
+            
+            // Update stats
+            updateStats();
+        }
+
+        function updateStats() {
+            const recordCountElement = document.getElementById('recordCount');
+            
+            if (recordCountElement) {
+                recordCountElement.textContent = `• ${filteredData.length} records loaded`;
+            }
+        }
+
+        function updateButtonCounts(total) {
+            // Update any button counts or stats that depend on total records
+            // No longer needed since stats bar was removed
+        }
+
+        function displayTables(tables) {
+            const tablesListElement = document.getElementById('tablesList');
+            if (tablesListElement && tables.length > 0) {
+                let html = '<h3>Available Tables:</h3><ul>';
+                tables.forEach(table => {
+                    html += `<li>${table}</li>`;
+                });
+                html += '</ul>';
+                tablesListElement.innerHTML = html;
+            }
+        }
+
         function displayTable() {
-            const tableContent = document.getElementById('tableContent');
+            console.log('🔍 displayTable called');
+            console.log('🔍 filteredData length:', filteredData.length);
+            console.log('🔍 filteredData:', filteredData);
+            
+            const tableContent = document.getElementById('tableData');
+            console.log('🔍 tableContent element:', tableContent);
+            
+            // Ensure the table is visible
+            tableContent.style.display = 'block';
             
             if (filteredData.length === 0) {
+                console.log('🔍 No filtered data, showing no-data message');
                 tableContent.innerHTML = `
                     <div class="no-data">
                         <h3>📭 No Data Found</h3>
@@ -1291,6 +1551,8 @@
             }
 
             const columns = Object.keys(filteredData[0]);
+            console.log('🔍 Columns found:', columns);
+            console.log('🔍 Number of columns:', columns.length);
             const startIndex = (currentPage - 1) * recordsPerPage;
             const endIndex = Math.min(startIndex + recordsPerPage, filteredData.length);
             const pageData = filteredData.slice(startIndex, endIndex);
@@ -1347,33 +1609,37 @@
             let html = '<div class="pagination">';
             
             // Previous button
-            html += `<button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>← Previous</button>`;
+            html += `<button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} title="Previous Page">
+                <span style="margin-right: 6px;">‹</span>Previous
+            </button>`;
             
             // Page numbers
             const startPage = Math.max(1, currentPage - 2);
             const endPage = Math.min(totalPages, currentPage + 2);
             
             if (startPage > 1) {
-                html += `<button onclick="changePage(1)">1</button>`;
+                html += `<button onclick="changePage(1)" title="Go to page 1">1</button>`;
                 if (startPage > 2) {
-                    html += `<span>...</span>`;
+                    html += `<span>⋯</span>`;
                 }
             }
             
             for (let i = startPage; i <= endPage; i++) {
                 const isCurrent = i === currentPage;
-                html += `<button onclick="changePage(${i})" class="${isCurrent ? 'current-page' : ''}">${i}</button>`;
+                html += `<button onclick="changePage(${i})" class="${isCurrent ? 'current-page' : ''}" title="Go to page ${i}">${i}</button>`;
             }
             
             if (endPage < totalPages) {
                 if (endPage < totalPages - 1) {
-                    html += `<span>...</span>`;
+                    html += `<span>⋯</span>`;
                 }
-                html += `<button onclick="changePage(${totalPages})">${totalPages}</button>`;
+                html += `<button onclick="changePage(${totalPages})" title="Go to page ${totalPages}">${totalPages}</button>`;
             }
             
             // Next button
-            html += `<button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next →</button>`;
+            html += `<button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} title="Next Page">
+                Next<span style="margin-left: 6px;">›</span>
+            </button>`;
             
             html += '</div>';
             return html;
@@ -1407,32 +1673,6 @@
         }
 
         // Filter table based on search, customer filter, and season filter
-        function filterTable() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const customerFilter = document.getElementById('customerFilter').value;
-            const seasonFilter = document.getElementById('seasonFilter').value;
-            
-            filteredData = allData.filter(row => {
-                // Apply search filter
-                const matchesSearch = searchTerm === '' || Object.values(row).some(value => 
-                    String(value).toLowerCase().includes(searchTerm)
-                );
-                
-                // Apply customer filter
-                const matchesCustomer = customerFilter === '' || 
-                    (customerColumn && row[customerColumn] === customerFilter);
-                
-                // Apply season filter
-                const matchesSeason = seasonFilter === '' || 
-                    (seasonColumn && row[seasonColumn] === seasonFilter);
-                
-                return matchesSearch && matchesCustomer && matchesSeason;
-            });
-            
-            currentPage = 1;
-            updateStats();
-            displayTable();
-        }
 
         // Get total record count from database
         async function getTotalRecordCount() {
@@ -1443,16 +1683,16 @@
                 const response = await fetch(`/api/datatable/data/${connectionId}?table=databank&limit=1`);
                 const result = await response.json();
                 
-                if (aVal === null || aVal === undefined) return 1;
-                if (bVal === null || bVal === undefined) return -1;
-                
-                if (typeof aVal === 'number' && typeof bVal === 'number') {
-                    return aVal - bVal;
+                if (result.success && result.total) {
+                    // Update button counts
+                    updateButtonCounts(result.total);
+                    
+                    return result.total;
                 }
-                return Promise.resolve();
+                return 0;
             } catch (error) {
                 console.error('Error getting total record count:', error);
-                return Promise.reject(error);
+                return 0;
             }
         }
 
@@ -1489,17 +1729,17 @@
             const searchValue = document.getElementById('searchInput').value.trim();
             
             if (!filterType) {
-                showStatus('tableData', 'Please select a filter type first', 'error');
+                showStatus('connectionStatus', 'Please select a filter type first', 'error');
                 return;
             }
             
             if (!searchValue) {
-                showStatus('tableData', 'Please enter a search value', 'error');
+                showStatus('connectionStatus', 'Please enter a search value', 'error');
                 return;
             }
             
             if (!connectionId) {
-                showStatus('tableData', 'No database connection available', 'error');
+                showStatus('connectionStatus', 'No database connection available', 'error');
                 return;
             }
             
@@ -1533,17 +1773,17 @@
                     console.log(`Found ${filteredData.length} matching records out of ${result.data.length} total`);
                     
                     if (filteredData.length > 0) {
-                        displayTableData(filteredData);
-                        showStatus('tableData', `✅ Found ${filteredData.length} records matching "${searchValue}" in ${filterType} (searched ${result.data.length} FRESH records from Supabase)`, 'success');
+                        displaySearchResults(filteredData);
+                        // Search success status removed as requested
                     } else {
-                        showStatus('tableData', `❌ No records found matching "${searchValue}" in ${filterType} (searched ${result.data.length} FRESH records from Supabase)`, 'error');
+                        // Search no results status removed as requested
                     }
                 } else {
-                    showStatus('tableData', `❌ No data available in database`, 'error');
+                    showStatus('connectionStatus', `❌ No data available in database`, 'error');
                 }
             } catch (error) {
                 console.error('Search error:', error);
-                showStatus('tableData', 'Error searching data: ' + error.message, 'error');
+                showStatus('connectionStatus', 'Error searching data: ' + error.message, 'error');
             }
         }
 
@@ -1590,7 +1830,7 @@
             
             // Clear cached data and reload fresh data from Supabase
             window.currentTableData = null;
-            loadDatabankData(100);
+            loadDatabankData(999999);
         }
 
         function filterTable() {
@@ -1628,30 +1868,46 @@
             }
         }
 
-        function exportData() {
-            console.log('Export data');
-            alert('Export functionality coming soon!');
-        }
 
 
 
-        // Show import modal
-        function showImportModal() {
-            document.getElementById('importModal').style.display = 'flex';
-            document.getElementById('csvFile').value = '';
-            document.getElementById('importPreview').innerHTML = '';
-            document.getElementById('importBtn').disabled = true;
-        }
 
-        // Close import modal
+        // Close import review panel
         function closeImportModal() {
-            document.getElementById('importModal').style.display = 'none';
+            const reviewPanel = document.getElementById('dataReviewPanel');
+            if (reviewPanel) {
+                reviewPanel.style.display = 'none';
+            }
+            // Clear the file input
+            const fileInput = document.getElementById('fileInput');
+            if (fileInput) {
+                fileInput.value = '';
+            }
+            // Clear the preview
+            const preview = document.getElementById('importPreview');
+            if (preview) {
+                preview.innerHTML = '';
+            }
+            // Disable import button
+            const importBtn = document.getElementById('importBtn');
+            if (importBtn) {
+                importBtn.disabled = true;
+            }
         }
 
         // Handle file selection
         function handleFileSelect(event) {
             const file = event.target.files[0];
             if (!file) return;
+
+            // Store the current file
+            currentFile = file;
+            
+            // Show the data review panel
+            const reviewPanel = document.getElementById('dataReviewPanel');
+            if (reviewPanel) {
+                reviewPanel.style.display = 'block';
+            }
 
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -1707,7 +1963,7 @@
 
         // Import data
         async function importData() {
-            const file = document.getElementById('csvFile').files[0];
+            const file = document.getElementById('fileInput').files[0];
             if (!file) return;
 
             const reader = new FileReader();
@@ -1752,6 +2008,33 @@
                 }
             };
             reader.readAsText(file);
+        }
+
+        // Load all data at once (for refresh functionality)
+        async function loadAllDataAtOnce() {
+            console.log('🔄 Refreshing all data...');
+            
+            if (!connectionId) {
+                console.log('No connection ID available for refresh');
+                showStatus('connectionStatus', 'No database connection available', 'error');
+                return;
+            }
+
+            try {
+                // Show loading state
+                showLoadingAnimation('Refreshing all data from Supabase...');
+                
+                // Load all data without limit
+                await loadDatabankData(999999); // Load all available data
+                
+                // Also update the total count
+                await getTotalRecordCount();
+                
+                // Refresh success status removed as requested
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+                showStatus('connectionStatus', '❌ Error refreshing data: ' + error.message, 'error');
+            }
         }
 
         // Refresh data
@@ -1821,6 +2104,22 @@
             setTimeout(() => {
                 status.remove();
             }, 10000);
+        }
+
+        // Show status message in specific element
+        function showStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.className = `status ${type}`;
+                element.textContent = message;
+                element.style.display = 'block';
+                
+                // Auto-hide after 5 seconds for success, 10 seconds for error
+                const hideDelay = type === 'success' ? 5000 : 10000;
+                setTimeout(() => {
+                    element.style.display = 'none';
+                }, hideDelay);
+            }
         }
     </script>
 </body>
