@@ -145,36 +145,49 @@ export class SupabaseService {
 
       if (isLargeDataset) {
         // For large datasets, fetch all data without pagination
-        // We'll use multiple requests to get all data
-        const allData = [];
-        let offset = 0;
-        const batchSize = 1000; // Supabase's max per request
-        let hasMoreData = true;
+        // First, get the total count
+        const countQuery = this.supabase.from(table).select('*', { count: 'exact', head: true });
+        const { count: totalCount, error: countError } = await countQuery;
+        
+        if (countError) {
+          error = countError;
+          logger.error('Error getting total count:', countError);
+        } else {
+          logger.info(`Total records in database: ${totalCount}`);
+          // Now fetch all data in batches
+          const allData = [];
+          let offset = 0;
+          const batchSize = 1000; // Supabase's max per request
+          let hasMoreData = true;
 
-        while (hasMoreData) {
-          const batchQuery = queryBuilder.range(offset, offset + batchSize - 1);
-          const { data: batchData, error: batchError } = await batchQuery;
-          
-          if (batchError) {
-            error = batchError;
-            break;
-          }
-
-          if (batchData && batchData.length > 0) {
-            allData.push(...batchData);
-            offset += batchSize;
+          while (hasMoreData) {
+            const batchQuery = queryBuilder.range(offset, offset + batchSize - 1);
+            const { data: batchData, error: batchError } = await batchQuery;
             
-            // If we got less than batchSize, we've reached the end
-            if (batchData.length < batchSize) {
+            if (batchError) {
+              error = batchError;
+              logger.error('Error fetching batch:', batchError);
+              break;
+            }
+
+            if (batchData && batchData.length > 0) {
+              allData.push(...batchData);
+              offset += batchSize;
+              logger.info(`Fetched batch: ${batchData.length} records (total so far: ${allData.length})`);
+              
+              // If we got less than batchSize, we've reached the end
+              if (batchData.length < batchSize) {
+                hasMoreData = false;
+              }
+            } else {
               hasMoreData = false;
             }
-          } else {
-            hasMoreData = false;
           }
-        }
 
-        data = allData;
-        count = allData.length;
+          data = allData;
+          count = totalCount; // Use the actual count from database, not data length
+          logger.info(`Final result: ${allData.length} records loaded, total count: ${totalCount}`);
+        }
       } else {
         // For normal pagination, use the original approach
         const offset = (page - 1) * limit;

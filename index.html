@@ -504,6 +504,76 @@
             margin-bottom: 40px;
         }
 
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease-out;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: white;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { 
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
         .import-header {
             display: flex;
             align-items: center;
@@ -928,72 +998,78 @@
                     <button class="import-button" onclick="exportToExcel()">
                         Export
                     </button>
+                    <button class="import-button" onclick="openImportModal()" style="background: #6f42c1;">
+                        Import
+                    </button>
                 </div>
             </div>
             
             <div id="tableData"></div>
         </div>
 
-        <!-- File Import Section -->
-        <div class="import-section" id="importSection" style="display: none;">
-            <div class="import-header">
-                <div class="import-icon">
-                    📊
-                </div>
-                <div>
-                    <h2 class="import-title">Import Data</h2>
-                    <p class="import-subtitle">Upload your data files to the database</p>
-                </div>
-            </div>
-            
-            
-            <div class="file-upload" onclick="document.getElementById('fileInput').click()">
-                <div class="file-upload-content">
-                    <div class="file-upload-icon">📁</div>
-                    <div class="file-upload-text">Click to select your file</div>
-                    <div class="file-upload-subtext">Drag and drop or click to browse</div>
-                    <div class="supported-formats">
-                        <span class="format-badge">CSV</span>
-                        <span class="format-badge">Excel</span>
-                        <span class="format-badge">XLSX</span>
+        <!-- Import Modal -->
+        <div class="modal-overlay" id="importModal">
+            <div class="modal-content">
+                <button class="modal-close" onclick="closeImportModal()">&times;</button>
+                
+                <div class="import-header">
+                    <div class="import-icon">
+                        📊
+                    </div>
+                    <div>
+                        <h2 class="import-title">Import Data</h2>
+                        <p class="import-subtitle">Upload your data files to the database</p>
                     </div>
                 </div>
-                <input type="file" id="fileInput" accept=".csv,.xlsx" style="display: none;" onchange="handleFileSelect(event)">
-            </div>
-            
-            <!-- Data Review Panel -->
-            <div id="dataReviewPanel" style="display: none; margin-top: 20px;">
-                <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px;">
-                    <h3>🔍 Data Review & Verification</h3>
-                    <p style="color: #6c757d; margin-bottom: 20px;">Please review the scanned data and verify column mappings before importing</p>
-                    
-                    <!-- Scanned Data Summary -->
-                    <div id="scannedDataSummary" style="background: white; border: 1px solid #ddd; border-radius: 4px; padding: 15px; margin-bottom: 20px;">
-                        <h4>📋 Scanned Data Summary</h4>
-                        <div id="summaryContent"></div>
+                
+                <div class="file-upload" onclick="document.getElementById('fileInput').click()">
+                    <div class="file-upload-content">
+                        <div class="file-upload-icon">📁</div>
+                        <div class="file-upload-text">Click to select your file</div>
+                        <div class="file-upload-subtext">Drag and drop or click to browse</div>
+                        <div class="supported-formats">
+                            <span class="format-badge">CSV</span>
+                            <span class="format-badge">Excel</span>
+                            <span class="format-badge">XLSX</span>
+                        </div>
                     </div>
-                    
-                    <!-- Column Mapping Review -->
-                    <div id="columnMappingReview" style="background: white; border: 1px solid #ddd; border-radius: 4px; padding: 15px; margin-bottom: 20px;">
-                        <h4>🗂️ Column Mapping Review</h4>
-                        <div id="mappingContent"></div>
-                    </div>
-                    
-                    <!-- Action Buttons -->
-                    <div style="text-align: center; margin-top: 20px;">
-                        <button class="btn btn-secondary" onclick="cancelImport()" style="margin-right: 10px;">❌ Cancel</button>
-                        <button class="btn btn-primary" onclick="confirmImport()">✅ Confirm & Import Data</button>
+                    <input type="file" id="fileInput" accept=".csv,.xlsx" style="display: none;" onchange="handleFileSelect(event)">
+                </div>
+                
+                <!-- Data Review Panel -->
+                <div id="dataReviewPanel" style="display: none; margin-top: 20px;">
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px;">
+                        <h3>🔍 Data Review & Verification</h3>
+                        <p style="color: #6c757d; margin-bottom: 20px;">Please review the scanned data and verify column mappings before importing</p>
+                        
+                        <!-- Scanned Data Summary -->
+                        <div id="scannedDataSummary" style="background: white; border: 1px solid #ddd; border-radius: 4px; padding: 15px; margin-bottom: 20px;">
+                            <h4>📋 Scanned Data Summary</h4>
+                            <div id="summaryContent"></div>
+                        </div>
+                        
+                        <!-- Column Mapping Review -->
+                        <div id="columnMappingReview" style="background: white; border: 1px solid #ddd; border-radius: 4px; padding: 15px; margin-bottom: 20px;">
+                            <h4>🗂️ Column Mapping Review</h4>
+                            <div id="mappingContent"></div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div style="text-align: center; margin-top: 20px;">
+                            <button class="btn btn-secondary" onclick="cancelImport()" style="margin-right: 10px;">❌ Cancel</button>
+                            <button class="btn btn-primary" onclick="confirmImport()">✅ Confirm & Import Data</button>
+                        </div>
                     </div>
                 </div>
+                
+                <div id="filePreview" style="display: none;">
+                    <h3>File Preview</h3>
+                    <div id="previewTable"></div>
+                    <button onclick="importFile()">Import Data</button>
+                </div>
+                
+                <div id="importStatus"></div>
             </div>
-            
-            <div id="filePreview" style="display: none;">
-                <h3>File Preview</h3>
-                <div id="previewTable"></div>
-                <button onclick="importFile()">Import Data</button>
-            </div>
-            
-            <div id="importStatus"></div>
         </div>
     </div>
 
@@ -1038,6 +1114,40 @@
                 }, 1000);
             }
         }
+
+        // Modal functions
+        function openImportModal() {
+            const modal = document.getElementById('importModal');
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        }
+
+        function closeImportModal() {
+            const modal = document.getElementById('importModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto'; // Restore scrolling
+            
+            // Reset import form
+            document.getElementById('fileInput').value = '';
+            document.getElementById('dataReviewPanel').style.display = 'none';
+            document.getElementById('filePreview').style.display = 'none';
+            document.getElementById('importStatus').innerHTML = '';
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('importModal');
+            if (event.target === modal) {
+                closeImportModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeImportModal();
+            }
+        });
 
         // Auto-connect to Supabase when page loads
         window.addEventListener('load', function() {
@@ -1084,7 +1194,6 @@
                     connectionId = result.connectionId;
                     showStatus('connectionStatus', '✅ Auto-connected to Supabase successfully!', 'success');
                     document.getElementById('dataTableSection').style.display = 'block';
-                    document.getElementById('importSection').style.display = 'block';
                     document.getElementById('autoConnectStatus').style.display = 'none';
                     
                     // Auto-load databank table data immediately
