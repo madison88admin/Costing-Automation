@@ -6,6 +6,7 @@ export declare class SupabaseService {
     getTableInfo(tableName: string): Promise<TableInfo>;
     private inferType;
     getTableData(query: DataTableQuery): Promise<DataTableResponse>;
+    getAllTableData(table: string): Promise<DataTableResponse>;
     insertRecord(table: string, data: Record<string, any>): Promise<any>;
     updateRecord(table: string, id: string | number, data: Record<string, any>): Promise<any>;
     deleteRecord(table: string, id: string | number): Promise<boolean>;

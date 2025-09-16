@@ -46,6 +46,49 @@ router.get('/data/:connectionId', async (req, res) => {
         });
     }
 });
+router.get('/data-all/:connectionId', async (req, res) => {
+    try {
+        const { connectionId } = req.params;
+        const table = req.query.table;
+        if (!table) {
+            return res.status(400).json({ error: 'Table name is required' });
+        }
+        const connection = (0, connections_1.getConnection)(connectionId);
+        if (!connection) {
+            return res.status(404).json({ error: 'Connection not found' });
+        }
+        let dataTableService;
+        if (connection instanceof supabaseService_1.SupabaseService) {
+            dataTableService = connection;
+        }
+        else {
+            dataTableService = new dataTableService_1.DataTableService(connection);
+        }
+        let result;
+        if (connection instanceof supabaseService_1.SupabaseService) {
+            result = await dataTableService.getAllTableData(table);
+        }
+        else {
+            result = await dataTableService.getTableData({
+                table,
+                page: 1,
+                limit: 50000,
+                sortBy: undefined,
+                sortOrder: 'ASC',
+                filters: {},
+                search: undefined
+            });
+        }
+        return res.json(result);
+    }
+    catch (error) {
+        logger_1.default.error('Error getting all table data:', error);
+        return res.status(500).json({
+            error: 'Failed to retrieve all table data',
+            message: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+});
 router.post('/insert/:connectionId', async (req, res) => {
     try {
         const { connectionId } = req.params;
@@ -129,6 +172,50 @@ router.delete('/delete/:connectionId', async (req, res) => {
         logger_1.default.error('Error deleting record:', error);
         return res.status(500).json({
             error: 'Failed to delete record',
+            message: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+});
+router.post('/import/:connectionId', async (req, res) => {
+    try {
+        const { connectionId } = req.params;
+        const { table, data } = req.body;
+        if (!table || !data || !Array.isArray(data)) {
+            return res.status(400).json({ error: 'Table name and data array are required' });
+        }
+        const connection = (0, connections_1.getConnection)(connectionId);
+        if (!connection) {
+            return res.status(404).json({ error: 'Connection not found' });
+        }
+        let dataTableService;
+        if (connection instanceof supabaseService_1.SupabaseService) {
+            dataTableService = connection;
+        }
+        else {
+            dataTableService = new dataTableService_1.DataTableService(connection);
+        }
+        let result;
+        if (connection instanceof supabaseService_1.SupabaseService) {
+            result = await dataTableService.bulkInsert(table, data);
+        }
+        else {
+            const results = [];
+            for (const record of data) {
+                const insertResult = await dataTableService.insertRecord(table, record);
+                results.push(insertResult);
+            }
+            result = results;
+        }
+        return res.json({
+            success: true,
+            importedCount: Array.isArray(result) ? result.length : data.length,
+            message: `Successfully imported ${Array.isArray(result) ? result.length : data.length} records`
+        });
+    }
+    catch (error) {
+        logger_1.default.error('Error importing data:', error);
+        return res.status(500).json({
+            error: 'Failed to import data',
             message: error instanceof Error ? error.message : 'Unknown error'
         });
     }

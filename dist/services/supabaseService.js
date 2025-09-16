@@ -114,8 +114,10 @@ class SupabaseService {
             if (sortBy) {
                 queryBuilder = queryBuilder.order(sortBy, { ascending: sortOrder === 'ASC' });
             }
-            const offset = (page - 1) * limit;
-            queryBuilder = queryBuilder.range(offset, offset + limit - 1);
+            if (limit < 50000) {
+                const offset = (page - 1) * limit;
+                queryBuilder = queryBuilder.range(offset, offset + limit - 1);
+            }
             const { data, error, count } = await queryBuilder;
             if (error)
                 throw error;
@@ -130,6 +132,95 @@ class SupabaseService {
         catch (error) {
             logger_1.default.error('Error getting table data:', error);
             throw new Error('Failed to retrieve table data');
+        }
+    }
+    async getAllTableData(table) {
+        try {
+            const countQuery = this.supabase.from(table).select('*', { count: 'exact', head: true });
+            const { count, error: countError } = await countQuery;
+            if (countError)
+                throw countError;
+            const totalRecords = count || 0;
+            console.log(`Total records to load: ${totalRecords}`);
+            if (totalRecords === 0) {
+                return {
+                    data: [],
+                    total: 0,
+                    page: 1,
+                    limit: 0,
+                    totalPages: 1
+                };
+            }
+            const chunkSize = 1000;
+            const totalChunks = Math.ceil(totalRecords / chunkSize);
+            let allData = [];
+            console.log(`Loading ${totalRecords} records in ${totalChunks} chunks of ${chunkSize}...`);
+            for (let i = 0; i < totalChunks; i++) {
+                const offset = i * chunkSize;
+                const limit = Math.min(chunkSize, totalRecords - offset);
+                console.log(`Loading chunk ${i + 1}/${totalChunks} (offset: ${offset}, limit: ${limit})`);
+                let chunkData = [];
+                let chunkError = null;
+                let retryCount = 0;
+                const maxRetries = 3;
+                while (retryCount <= maxRetries) {
+                    try {
+                        const chunkQuery = this.supabase
+                            .from(table)
+                            .select('*')
+                            .range(offset, offset + limit - 1);
+                        const result = await chunkQuery;
+                        chunkData = result.data || [];
+                        chunkError = result.error;
+                        if (chunkError) {
+                            if (chunkError.message?.includes('429') || chunkError.message?.includes('rate limit')) {
+                                retryCount++;
+                                if (retryCount <= maxRetries) {
+                                    const backoffDelay = Math.pow(1.5, retryCount) * 1000;
+                                    console.log(`Rate limit hit, retrying in ${backoffDelay}ms (attempt ${retryCount}/${maxRetries})`);
+                                    await new Promise(resolve => setTimeout(resolve, backoffDelay));
+                                    continue;
+                                }
+                            }
+                            throw chunkError;
+                        }
+                        break;
+                    }
+                    catch (error) {
+                        if (error instanceof Error && (error.message.includes('429') || error.message.includes('rate limit'))) {
+                            retryCount++;
+                            if (retryCount <= maxRetries) {
+                                const backoffDelay = Math.pow(1.5, retryCount) * 1000;
+                                console.log(`Rate limit error, retrying in ${backoffDelay}ms (attempt ${retryCount}/${maxRetries})`);
+                                await new Promise(resolve => setTimeout(resolve, backoffDelay));
+                                continue;
+                            }
+                        }
+                        throw error;
+                    }
+                }
+                if (chunkData && chunkData.length > 0) {
+                    allData = allData.concat(chunkData);
+                    console.log(`Loaded ${chunkData.length} records, total so far: ${allData.length}`);
+                }
+                if (i < totalChunks - 1) {
+                    const delay = 500 + (i * 100);
+                    console.log(`Waiting ${delay}ms before next chunk...`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+            console.log(`Successfully loaded all ${allData.length} records`);
+            return {
+                data: allData,
+                total: totalRecords,
+                page: 1,
+                limit: totalRecords,
+                totalPages: 1
+            };
+        }
+        catch (error) {
+            logger_1.default.error('Error getting all table data:', error);
+            throw new Error('Failed to retrieve all table data');
         }
     }
     async insertRecord(table, data) {
