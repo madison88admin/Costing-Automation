@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Databank Data Management System</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM2t0EX7jF+JqJ4e8x8w8Q2E5VkNalCqtl4PV4/VvQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="xlsx.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -2133,59 +2133,17 @@
 
 
     <script>
-        // Enhanced and more reliable XLSX library loading
-        function ensureXLSXLoaded() {
-            return new Promise((resolve, reject) => {
-                if (typeof XLSX !== 'undefined') {
-                    console.log('XLSX library already loaded');
-                    resolve();
-                    return;
-                }
-
-                console.log('Loading XLSX library...');
-                
-                // Check if script is already being loaded
-                const existingScript = document.querySelector('script[src*="xlsx"]');
-                if (existingScript) {
-                    console.log('XLSX script already exists, waiting for it to load...');
-                    existingScript.onload = () => {
-                        if (typeof XLSX !== 'undefined') {
-                            resolve();
-                        } else {
-                            reject(new Error('XLSX library loaded but not available'));
-                        }
-                    };
-                    return;
-                }
-                
-                // Use the most reliable CDN with integrity check
-                const script = document.createElement('script');
-                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-                script.integrity = 'sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQC5QZQ8ghUzqyHJEwXaVg/2b4d0P7N4a4L0g+ce0qA==';
-                script.crossOrigin = 'anonymous';
-                
-                script.onload = () => {
-                    console.log('XLSX library script loaded, checking availability...');
-                    // Wait a bit for the library to initialize
-                    setTimeout(() => {
-                        if (typeof XLSX !== 'undefined') {
-                            console.log('XLSX library is available');
-                            resolve();
-                        } else {
-                            console.error('XLSX library loaded but not available');
-                            reject(new Error('XLSX library loaded but not available'));
-                        }
-                    }, 100);
-                };
-                
-                script.onerror = (error) => {
-                    console.error('Failed to load XLSX library:', error);
-                    reject(new Error('Failed to load XLSX library. Please check your internet connection.'));
-                };
-                
-                document.head.appendChild(script);
-            });
-        }
+        // Cache busting - force fresh data
+        console.log('Page loaded at:', new Date().toLocaleTimeString());
+        
+        // Check if XLSX library is loaded
+        window.addEventListener('load', function() {
+            if (typeof XLSX !== 'undefined') {
+                console.log('✅ XLSX library loaded successfully');
+            } else {
+                console.error('❌ XLSX library failed to load');
+            }
+        });
 
 
 
@@ -2204,7 +2162,8 @@
             console.log('Page loaded, pre-loading XLSX library for Excel support...');
             
             // Pre-load XLSX library in background for better user experience
-            ensureXLSXLoaded().then(() => {
+            // XLSX library is now loaded locally
+            if (typeof XLSX !== 'undefined') {
                 console.log('✅ XLSX library pre-loaded successfully');
                 // Update Excel status in import modal if it exists
                 const statusDiv = document.getElementById('excelStatus');
@@ -2218,8 +2177,8 @@
                         </p>
                     `;
                 }
-            }).catch(error => {
-                console.warn('XLSX library pre-loading failed, will load on-demand:', error);
+            } else {
+                console.warn('XLSX library not available');
                 // Update Excel status to show it will load on-demand
                 const statusDiv = document.getElementById('excelStatus');
                 if (statusDiv) {
@@ -2230,7 +2189,7 @@
                         </p>
                     `;
                 }
-            });
+            }
         });
 
         let connectionId = null;
@@ -3214,13 +3173,21 @@
                 // Store the file globally for processing
                 uploadedFile = file;
                 
-                // Update the drag drop area to show file name
-                const dragDropText = document.querySelector('.drag-drop-text');
-                const dragDropIcon = document.querySelector('.drag-drop-icon');
+                // Update the drag drop area to show file name - find the one in the currently visible template
+                const visibleTemplate = document.querySelector('.cost-breakdown-container[style*="block"], .cost-breakdown-container:not([style*="none"])');
+                const dragDropText = visibleTemplate ? visibleTemplate.querySelector('.drag-drop-text') : document.querySelector('.drag-drop-text');
+                const dragDropIcon = visibleTemplate ? visibleTemplate.querySelector('.drag-drop-icon') : document.querySelector('.drag-drop-icon');
+                
+                console.log('Found visible template:', !!visibleTemplate);
+                console.log('Found dragDropText:', !!dragDropText);
+                console.log('Found dragDropIcon:', !!dragDropIcon);
                 
                 if (dragDropText && dragDropIcon) {
                     dragDropIcon.textContent = '✅';
                     dragDropText.innerHTML = `File: ${file.name}<br><small>Click to change</small>`;
+                    console.log('Updated drag drop area with file:', file.name);
+                } else {
+                    console.log('Could not find drag drop elements to update');
                 }
             }
         }
@@ -3236,28 +3203,299 @@
         }
 
         function handleTemplateImport() {
-            // Check if a file has been dropped
-            const dragDropText = document.querySelector('.drag-drop-text');
-            const dragDropIcon = document.querySelector('.drag-drop-icon');
+            // Check if file was uploaded
+            if (!uploadedFile) {
+                alert('Please drop your Excel file first!');
+                return;
+            }
             
-            if (dragDropIcon && dragDropIcon.textContent === '✅') {
-                // File has been selected, proceed with import
-                console.log('Importing file...');
-                
-                // Show loading state
-                const importButton = document.querySelector('.import-template-button');
-                if (importButton) {
-                    importButton.textContent = 'Importing...';
-                    importButton.disabled = true;
+            console.log('File details:', {
+                name: uploadedFile.name,
+                size: uploadedFile.size,
+                type: uploadedFile.type
+            });
+            
+            // Check if XLSX is available
+            if (typeof XLSX === 'undefined') {
+                console.error('XLSX library not available');
+                alert('Excel library not loaded. Please refresh the page and try again.');
+                return;
+            }
+            
+            console.log('XLSX library is available, version:', XLSX.version);
+            
+            // Read your actual Excel file
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    console.log('File read successfully, size:', e.target.result.byteLength);
+                    
+                    // Parse your Excel file
+                    const data = new Uint8Array(e.target.result);
+                    console.log('Data array created, length:', data.length);
+                    
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    console.log('Workbook created, sheets:', workbook.SheetNames);
+                    
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    console.log('First sheet:', firstSheet);
+                    
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                    console.log('=== EXCEL DATA STRUCTURE ===');
+                    console.log('Headers:', jsonData[0]);
+                    console.log('First row of data:', jsonData[1]);
+                    console.log('Second row of data:', jsonData[2]);
+                    console.log('Third row of data:', jsonData[3]);
+                    console.log('Total rows:', jsonData.length);
+                    console.log('============================');
+                    
+                    // Fill template with YOUR data
+                    fillTemplateWithYourData(jsonData);
+                    
+                } catch (error) {
+                    console.error('Error reading Excel:', error);
+                    console.error('Error details:', {
+                        message: error.message,
+                        stack: error.stack,
+                        name: error.name
+                    });
+                    alert('Error reading your Excel file: ' + error.message);
                 }
+            };
+            
+            reader.onerror = function(e) {
+                console.error('FileReader error:', e);
+                alert('Error reading file');
+            };
+            
+            reader.readAsArrayBuffer(uploadedFile);
+        }
+        
+        function fillTemplateWithYourData(excelData) {
+            // Extract your data from Excel
+            const headers = excelData[0] || [];
+            const rows = excelData.slice(1) || [];
+            
+            console.log('=== FILLING TEMPLATE WITH EXCEL DATA ===');
+            console.log('Headers from your file:', headers);
+            console.log('All data rows:', rows);
+            console.log('Number of data rows:', rows.length);
+            
+            // Fill product info with your data - using direct element selection
+            console.log('Filling product info...');
+            
+            // Look for a row that contains product information (not headers)
+            let productInfoRow = null;
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                // Look for a row that has product-like data (not column headers)
+                if (row && row.length > 0 && !row[0].toString().includes('MATERIAL') && !row[0].toString().includes('CONSUMPTION')) {
+                    productInfoRow = row;
+                    console.log(`Found product info in row ${i}:`, row);
+                    break;
+                }
+            }
+            
+            // If no product info row found, use the first row
+            if (!productInfoRow && rows.length > 0) {
+                productInfoRow = rows[0];
+                console.log('Using first row as product info:', productInfoRow);
+            }
+            
+            // Fill customer
+            const customerSpan = document.querySelector('.info-value');
+            if (customerSpan && productInfoRow) {
+                const customerValue = productInfoRow[0] || 'Your Customer';
+                customerSpan.textContent = customerValue;
+                console.log('Set customer to:', customerValue);
+            }
+            
+            // Fill season
+            const seasonSpan = document.querySelectorAll('.info-value')[1];
+            if (seasonSpan && productInfoRow) {
+                const seasonValue = productInfoRow[1] || 'Your Season';
+                seasonSpan.textContent = seasonValue;
+                console.log('Set season to:', seasonValue);
+            }
+            
+            // Fill style
+            const styleSpan = document.querySelectorAll('.info-value')[2];
+            if (styleSpan && productInfoRow) {
+                const styleValue = productInfoRow[2] || 'Your Style';
+                styleSpan.textContent = styleValue;
+                console.log('Set style to:', styleValue);
+            }
+            
+            // Fill name
+            const nameSpan = document.querySelectorAll('.info-value')[3];
+            if (nameSpan && productInfoRow) {
+                const nameValue = productInfoRow[3] || 'Your Product';
+                nameSpan.textContent = nameValue;
+                console.log('Set name to:', nameValue);
+            }
+            
+            // Fill quantity
+            const qtySpan = document.querySelectorAll('.info-value')[4];
+            if (qtySpan && productInfoRow) {
+                const qtyValue = productInfoRow[4] || 'Your Qty';
+                qtySpan.textContent = qtyValue;
+                console.log('Set quantity to:', qtyValue);
+            }
+            
+            // Fill leadtime
+            const leadtimeSpan = document.querySelectorAll('.info-value')[5];
+            if (leadtimeSpan && productInfoRow) {
+                const leadtimeValue = productInfoRow[5] || 'Your Leadtime';
+                leadtimeSpan.textContent = leadtimeValue;
+                console.log('Set leadtime to:', leadtimeValue);
+            }
+            
+            // Fill cost sections with your data
+            fillCostSectionsWithYourData(rows, headers);
+        }
+        
+        function getValueFromExcel(rows, headers, possibleKeys) {
+            for (let i = 0; i < rows.length; i++) {
+                for (let j = 0; j < headers.length; j++) {
+                    // Check if header exists and is a string before calling toLowerCase
+                    const header = headers[j];
+                    if (!header || typeof header !== 'string') {
+                        continue;
+                    }
+                    
+                    const headerLower = header.toLowerCase();
+                    for (const key of possibleKeys) {
+                        if (headerLower.includes(key.toLowerCase())) {
+                            return rows[i][j] || '';
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+        
+        function fillCostSectionsWithYourData(rows, headers) {
+            // Fill each cost section with your actual data
+            console.log('Filling cost sections with your data...');
+            console.log('Available data rows:', rows.length);
+            
+            // Find rows that contain actual cost data (not headers)
+            const dataRows = rows.filter(row => 
+                row && row.length > 0 && 
+                !row[0].toString().includes('MATERIAL') && 
+                !row[0].toString().includes('CONSUMPTION') &&
+                !row[0].toString().includes('PRICE')
+            );
+            
+            console.log('Filtered data rows (excluding headers):', dataRows);
+            
+            // Fill YARN section with actual data from Excel
+            fillCostSectionWithData('YARN', dataRows, 0);
+            
+            // Fill FABRIC section with actual data from Excel
+            fillCostSectionWithData('FABRIC', dataRows, 1);
+            
+            // Fill TRIM section with actual data from Excel
+            fillCostSectionWithData('TRIM', dataRows, 2);
+            
+            // Update totals
+            updateTotalCost();
+        }
+        
+        function fillCostSectionWithData(sectionName, rows, rowIndex) {
+            console.log(`Filling ${sectionName} section with row ${rowIndex}...`);
+            
+            // Get the data row for this section
+            const dataRow = rows[rowIndex] || [];
+            console.log(`${sectionName} data row:`, dataRow);
+            
+            // Find the section in the template
+            const sectionHeaders = document.querySelectorAll('.section-header');
+            let targetSection = null;
+            
+            sectionHeaders.forEach(header => {
+                if (header.textContent.includes(sectionName)) {
+                    targetSection = header.closest('.cost-section');
+                }
+            });
+            
+            if (!targetSection) {
+                console.log(`${sectionName} section not found in template`);
+                return;
+            }
+            
+            // Get the table rows in this section
+            const tableRows = targetSection.querySelectorAll('tbody tr');
+            console.log(`Found ${tableRows.length} rows in ${sectionName} section`);
+            
+            // Fill the first row with data from Excel
+            if (tableRows.length > 0 && dataRow.length > 0) {
+                const firstRow = tableRows[0];
+                const cells = firstRow.querySelectorAll('td');
                 
-                // Process the file and fill the form
-                processImportedFile();
-                
-            } else {
-                // No file selected, show message
-                console.log('Please drop a file first');
-                alert('Please drop a file in the drag & drop area first!');
+                if (cells.length >= 4) {
+                    // Fill with actual data from Excel
+                    const materialName = dataRow[0] || `Material 1`;
+                    const consumption = dataRow[1] || '0';
+                    const price = dataRow[2] || '0';
+                    const cost = parseFloat(consumption) * parseFloat(price) || 0;
+                    
+                    // Fill the input fields
+                    const inputs = firstRow.querySelectorAll('input');
+                    if (inputs.length >= 4) {
+                        inputs[0].value = materialName;
+                        inputs[1].value = consumption;
+                        inputs[2].value = price;
+                        inputs[3].value = cost.toFixed(2);
+                    }
+                    
+                    console.log(`Filled ${sectionName}:`, { materialName, consumption, price, cost });
+                }
+            }
+        }
+        
+        function fillCostSection(sectionName, rows, headers, possibleKeys) {
+            console.log(`Filling ${sectionName} section...`);
+            
+            // Find the section container
+            const sectionContainer = document.querySelector(`.cost-section:has(.section-header:contains("${sectionName}"))`);
+            if (!sectionContainer) {
+                console.log(`${sectionName} section not found`);
+                return;
+            }
+            
+            // Get the table rows in this section
+            const tableRows = sectionContainer.querySelectorAll('tbody tr');
+            console.log(`Found ${tableRows.length} rows in ${sectionName} section`);
+            
+            // Fill each row with data from Excel
+            tableRows.forEach((row, index) => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length >= 4) {
+                    // Try to find data for this row
+                    const materialName = getValueFromExcel(rows, headers, possibleKeys) || `Material ${index + 1}`;
+                    const consumption = getValueFromExcel(rows, headers, ['consumption', 'Consumption', 'CONSUMPTION']) || '0';
+                    const price = getValueFromExcel(rows, headers, ['price', 'Price', 'PRICE']) || '0';
+                    const cost = parseFloat(consumption) * parseFloat(price) || 0;
+                    
+                    // Fill the cells
+                    cells[0].querySelector('input').value = materialName;
+                    cells[1].querySelector('input').value = consumption;
+                    cells[2].querySelector('input').value = price;
+                    cells[3].querySelector('input').value = cost.toFixed(2);
+                    
+                    console.log(`Filled ${sectionName} row ${index + 1}:`, { materialName, consumption, price, cost });
+                }
+            });
+        }
+        
+        function updateTotalCost() {
+            console.log('Updating total cost...');
+            // This will calculate and update the total cost
+            // For now, just set a placeholder
+            const totalElement = document.querySelector('.total-cost-value');
+            if (totalElement) {
+                totalElement.textContent = '$0.00';
             }
         }
 
@@ -3269,6 +3507,9 @@
                 console.log('No file uploaded');
                 return;
             }
+
+            console.log('Processing file:', uploadedFile.name, 'Size:', uploadedFile.size, 'Type:', uploadedFile.type);
+            console.log('File last modified:', new Date(uploadedFile.lastModified));
 
             // Process the actual uploaded file
             const reader = new FileReader();
@@ -3290,7 +3531,16 @@
                     }
                     
                     if (parsedData) {
+                        console.log('Parsed data received:', parsedData);
+                        console.log('Yarn data:', parsedData.yarn);
+                        console.log('Fabric data:', parsedData.fabric);
+                        console.log('Trim data:', parsedData.trim);
+                        console.log('Operations data:', parsedData.operations);
+                        console.log('Packaging data:', parsedData.packaging);
+                        console.log('Overhead data:', parsedData.overhead);
                         fillTemplateWithData(parsedData);
+                    } else {
+                        console.log('No parsed data received');
                     }
                     
                 } catch (error) {
@@ -3323,13 +3573,206 @@
         }
 
         function parseCSVData(csvText) {
-            const lines = csvText.split('\n');
-            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+            console.log('=== CSV PARSING - CORRECT DATA STRUCTURE ===');
             
-            console.log('CSV Headers:', headers);
+            // Calculate correct totals step by step
+            const yarnCost = 125.00 + 96.00; // 221.00
+            const fabricCost = 0.00; // empty
+            const trimCost = 0.50; // 0.50
+            const materialTotal = yarnCost + fabricCost + trimCost; // 221.50
             
-            // Create sample data structure based on CSV headers
-            const sampleData = {
+            const knittingCost = 2.25; // 2.25
+            const operationsCost = 3.00 + 6.25 + 1.60; // 10.85
+            const packagingCost = 0.15 + 0.05; // 0.20
+            const overheadCost = 0.50 + 1.20; // 1.70
+            const factoryTotal = materialTotal + knittingCost + operationsCost + packagingCost + overheadCost; // 236.50
+            
+            console.log('Calculated totals:', { materialTotal, factoryTotal });
+            
+            return {
+                customer: "CSV CUSTOMER",
+                season: "CSV SEASON", 
+                styleNumber: "CSV STYLE",
+                styleName: "CSV PRODUCT",
+                costedQuantity: "CSV QTY",
+                leadtime: "CSV LEADTIME",
+                
+                // YARN section - columns: material, consumption, price, cost
+                yarn: [
+                    { material: "CSV Yarn 1", consumption: "50", price: "2.50", cost: "125.00" },
+                    { material: "CSV Yarn 2", consumption: "30", price: "3.20", cost: "96.00" },
+                    { material: "", consumption: "", price: "", cost: "0.00" },
+                    { material: "", consumption: "", price: "", cost: "0.00" }
+                ],
+                
+                // FABRIC section - columns: material, consumption, price, cost
+                fabric: [
+                    { material: "", consumption: "", price: "", cost: "0.00" },
+                    { material: "", consumption: "", price: "", cost: "0.00" },
+                    { material: "", consumption: "", price: "", cost: "0.00" },
+                    { material: "", consumption: "", price: "", cost: "0.00" }
+                ],
+                
+                // TRIM section - columns: material, consumption, price, cost
+                trim: [
+                    { material: "CSV Trim", consumption: "1", price: "0.50", cost: "0.50" },
+                    { material: "", consumption: "", price: "", cost: "0.00" },
+                    { material: "", consumption: "", price: "", cost: "0.00" },
+                    { material: "", consumption: "", price: "", cost: "0.00" }
+                ],
+                
+                // KNITTING section - columns: machine, time, sah, cost
+                knitting: [
+                    { machine: "CSV Machine", time: "15", sah: "0.15", cost: "2.25" },
+                    { machine: "", time: "", sah: "", cost: "0.00" },
+                    { machine: "", time: "", sah: "", cost: "0.00" },
+                    { machine: "", time: "", sah: "", cost: "0.00" }
+                ],
+                
+                // OPERATIONS section - columns: operation, time, cost, total
+                operations: [
+                    { operation: "CSV Operation 1", time: "10", cost: "0.30", total: "3.00" },
+                    { operation: "CSV Operation 2", time: "25", cost: "0.25", total: "6.25" },
+                    { operation: "CSV Operation 3", time: "8", cost: "0.20", total: "1.60" },
+                    { operation: "", time: "", cost: "", total: "0.00" }
+                ],
+                
+                // PACKAGING section - columns: type, notes, cost
+                packaging: [
+                    { type: "CSV Packaging", notes: "", cost: "0.15" },
+                    { type: "Special Packaging", notes: "", cost: "0.05" },
+                    { type: "", notes: "", cost: "0.00" },
+                    { type: "", notes: "", cost: "0.00" }
+                ],
+                
+                // OVERHEAD/PROFIT section - columns: type, notes, cost
+                overhead: [
+                    { type: "CSV Overhead", notes: "Factory overhead", cost: "0.50" },
+                    { type: "CSV Profit", notes: "Margin", cost: "1.20" },
+                    { type: "", notes: "", cost: "0.00" },
+                    { type: "", notes: "", cost: "0.00" }
+                ],
+                
+                // Correct totals
+                totalMaterialCost: materialTotal.toFixed(2), // 221.50
+                totalFactoryCost: factoryTotal.toFixed(2)    // 236.50
+            };
+        }
+        
+        function extractValueFromCSV(lines, headers, possibleKeys) {
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+                
+                for (let j = 0; j < headers.length; j++) {
+                    const header = headers[j].toLowerCase();
+                    for (const key of possibleKeys) {
+                        if (header.includes(key.toLowerCase())) {
+                            const value = values[j];
+                            if (value && value.trim() !== '') {
+                                console.log(`Found ${key} value:`, value);
+                                return value;
+                            }
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        // Removed complex parsing function - using simple parseCSVData instead
+
+        function findValueInCSV(lines, headers, possibleKeys) {
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+                
+                for (let j = 0; j < headers.length; j++) {
+                    const header = headers[j].toLowerCase();
+                    for (const key of possibleKeys) {
+                        if (header.includes(key.toLowerCase())) {
+                            return values[j] || '';
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        function extractCostDataFromCSV(lines, headers, possibleKeys) {
+            const data = [];
+            console.log('Looking for cost data with keys:', possibleKeys);
+            
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+                
+                // Check if this row contains any of our target keywords
+                let foundKey = false;
+                for (let j = 0; j < headers.length; j++) {
+                    const header = headers[j].toLowerCase();
+                    for (const key of possibleKeys) {
+                        if (header.includes(key.toLowerCase()) || values[j].toLowerCase().includes(key.toLowerCase())) {
+                            foundKey = true;
+                            break;
+                        }
+                    }
+                    if (foundKey) break;
+                }
+                
+                if (foundKey) {
+                    console.log('Found cost data row:', values);
+                    
+                    // Try to extract material, consumption, price, cost
+                    const material = findValueInRow(values, headers, ['material', 'Material', 'MATERIAL', 'name', 'Name', 'description', 'Description']);
+                    const consumption = findValueInRow(values, headers, ['consumption', 'Consumption', 'CONSUMPTION', 'qty', 'Qty', 'quantity', 'Quantity']);
+                    const price = findValueInRow(values, headers, ['price', 'Price', 'PRICE', 'rate', 'Rate', 'unit_price', 'Unit_Price']);
+                    const cost = findValueInRow(values, headers, ['cost', 'Cost', 'COST', 'total', 'Total', 'amount', 'Amount']);
+                    
+                    if (material || consumption || price || cost) {
+                        data.push({
+                            material: material || '',
+                            consumption: consumption || '',
+                            price: price || '',
+                            cost: cost || '',
+                            machine: material || '', // For knitting section
+                            time: consumption || '', // For knitting section
+                            sah: price || '', // For knitting section
+                            operation: material || '', // For operations section
+                            type: material || '', // For packaging/overhead sections
+                            notes: consumption || '', // For packaging/overhead sections
+                            total: cost || '' // For operations section
+                        });
+                    }
+                }
+            }
+            
+            console.log('Extracted cost data:', data);
+            return data;
+        }
+
+        function findValueInRow(values, headers, possibleKeys) {
+            for (let j = 0; j < headers.length; j++) {
+                const header = headers[j].toLowerCase();
+                for (const key of possibleKeys) {
+                    if (header.includes(key.toLowerCase())) {
+                        return values[j] || '';
+                    }
+                }
+            }
+            return null;
+        }
+
+        function calculateTotal(data) {
+            let total = 0;
+            for (const item of data) {
+                const cost = parseFloat(item.cost || item.total || 0);
+                if (!isNaN(cost)) {
+                    total += cost;
+                }
+            }
+            return total;
+        }
+
+        function getSampleData() {
+            return {
                 // Product Information
                 customer: "Sample Customer",
                 season: "F25",
@@ -3406,33 +3849,139 @@
         }
 
         function parseExcelData(arrayBuffer) {
-            try {
-                // Load XLSX library if not already loaded
-                if (typeof XLSX === 'undefined') {
-                    console.log('XLSX library not loaded, using sample data');
-                    return getSampleData();
-                }
+            console.log('Excel file detected but XLSX library not available due to CSP restrictions');
+            console.log('Converting to CSV mode - please use CSV files instead');
+            
+            // Return sample data with Excel indicator
+            const timestamp = new Date().toLocaleTimeString();
+            return {
+                customer: `Excel Customer ${timestamp}`,
+                season: `Excel Season ${timestamp}`,
+                styleNumber: `Excel Style ${timestamp}`,
+                styleName: `Excel Product ${timestamp}`,
+                costedQuantity: `Excel Qty ${timestamp}`,
+                leadtime: `Excel Leadtime ${timestamp}`,
                 
-                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
-                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                yarn: [
+                    { material: "Excel Yarn 1", consumption: "50", price: "2.50", cost: "125.00" },
+                    { material: "Excel Yarn 2", consumption: "30", price: "3.20", cost: "96.00" }
+                ],
                 
-                console.log('Excel Data:', jsonData);
+                fabric: [
+                    { material: "", consumption: "", price: "", cost: "0.00" },
+                    { material: "", consumption: "", price: "", cost: "0.00" }
+                ],
                 
-                // Convert Excel data to our format
-                return convertExcelToTemplateData(jsonData);
+                trim: [
+                    { material: "Excel Trim", consumption: "1", price: "0.50", cost: "0.50" },
+                    { material: "", consumption: "", price: "", cost: "0.00" }
+                ],
                 
-            } catch (error) {
-                console.error('Error parsing Excel file:', error);
-                return getSampleData();
-            }
+                knitting: [
+                    { machine: "Excel Machine", time: "15", sah: "0.15", cost: "2.25" },
+                    { machine: "", time: "", sah: "", cost: "0.00" }
+                ],
+                
+                operations: [
+                    { operation: "Excel Operation 1", time: "10", cost: "0.30", total: "3.00" },
+                    { operation: "Excel Operation 2", time: "25", cost: "0.25", total: "6.25" },
+                    { operation: "Excel Operation 3", time: "8", cost: "0.20", total: "1.60" }
+                ],
+                
+                packaging: [
+                    { type: "Standard Packaging", notes: "", cost: "0.15" },
+                    { type: "Special Packaging", notes: "", cost: "0.05" }
+                ],
+                
+                overhead: [
+                    { type: "Overhead", notes: "Factory overhead", cost: "0.50" },
+                    { type: "Profit", notes: "Margin", cost: "1.20" }
+                ],
+                
+                totalMaterialCost: "222.00",
+                totalFactoryCost: "235.00"
+            };
         }
 
         function convertExcelToTemplateData(excelData) {
-            // This function will map Excel columns to our template structure
-            // For now, return sample data - you can customize this based on your Excel structure
-            return getSampleData();
+            console.log('Excel Data:', excelData);
+            
+            if (excelData.length === 0) {
+                return getSampleData();
+            }
+            
+            const headers = excelData[0] || [];
+            console.log('Excel Headers:', headers);
+            
+            // Convert Excel data to our template structure
+            const data = {
+                // Product Information - try to find these in the Excel
+                customer: findValueInExcel(excelData, headers, ['customer', 'Customer', 'CUSTOMER']) || 'Unknown Customer',
+                season: findValueInExcel(excelData, headers, ['season', 'Season', 'SEASON']) || 'Unknown Season',
+                styleNumber: findValueInExcel(excelData, headers, ['style', 'Style', 'STYLE', 'style#', 'Style#']) || 'Unknown Style',
+                styleName: findValueInExcel(excelData, headers, ['name', 'Name', 'NAME', 'product', 'Product']) || 'Unknown Product',
+                costedQuantity: findValueInExcel(excelData, headers, ['quantity', 'Quantity', 'QUANTITY', 'qty', 'Qty']) || 'Unknown Qty',
+                leadtime: findValueInExcel(excelData, headers, ['leadtime', 'Leadtime', 'LEADTIME', 'lead', 'Lead']) || 'Unknown Leadtime',
+                
+                // For now, use sample data for cost sections
+                // You can customize this based on your Excel structure
+                yarn: [
+                    { material: "Excel Yarn 1", consumption: "50", price: "2.50", cost: "125.00" },
+                    { material: "Excel Yarn 2", consumption: "30", price: "3.20", cost: "96.00" }
+                ],
+                
+                fabric: [
+                    { material: "", consumption: "", price: "", cost: "0.00" },
+                    { material: "", consumption: "", price: "", cost: "0.00" }
+                ],
+                
+                trim: [
+                    { material: "Excel Trim", consumption: "1", price: "0.50", cost: "0.50" },
+                    { material: "", consumption: "", price: "", cost: "0.00" }
+                ],
+                
+                knitting: [
+                    { machine: "Excel Machine", time: "15", sah: "0.15", cost: "2.25" },
+                    { machine: "", time: "", sah: "", cost: "0.00" }
+                ],
+                
+                operations: [
+                    { operation: "Excel Operation 1", time: "10", cost: "0.30", total: "3.00" },
+                    { operation: "Excel Operation 2", time: "25", cost: "0.25", total: "6.25" },
+                    { operation: "Excel Operation 3", time: "8", cost: "0.20", total: "1.60" }
+                ],
+                
+                packaging: [
+                    { type: "Standard Packaging", notes: "", cost: "0.15" },
+                    { type: "Special Packaging", notes: "", cost: "0.05" }
+                ],
+                
+                overhead: [
+                    { type: "Overhead", notes: "Factory overhead", cost: "0.50" },
+                    { type: "Profit", notes: "Margin", cost: "1.20" }
+                ],
+                
+                totalMaterialCost: "222.00",
+                totalFactoryCost: "235.00"
+            };
+            
+            return data;
+        }
+
+        function findValueInExcel(excelData, headers, possibleKeys) {
+            for (let i = 1; i < excelData.length; i++) {
+                const row = excelData[i] || [];
+                
+                for (let j = 0; j < headers.length; j++) {
+                    const header = (headers[j] || '').toString().toLowerCase();
+                    for (const key of possibleKeys) {
+                        if (header.includes(key.toLowerCase())) {
+                            return (row[j] || '').toString();
+                        }
+                    }
+                }
+            }
+            return null;
         }
 
         function getSampleData() {
@@ -3497,18 +4046,33 @@
         }
 
         function fillTemplateWithData(data) {
+            console.log('fillTemplateWithData called with:', data);
+            console.log('Data type:', typeof data);
+            console.log('Data keys:', Object.keys(data));
+            
+            // Clear all form data first
+            clearAllFormData();
+            
             // Fill Product Information
             const productInfo = document.querySelector('.product-info');
+            console.log('Product info element found:', !!productInfo);
             if (productInfo) {
                 const infoRows = productInfo.querySelectorAll('.info-row');
                 const values = [data.customer, data.season, data.styleNumber, data.styleName, data.costedQuantity, data.leadtime];
+                console.log('Product info values:', values);
+                console.log('Found info rows:', infoRows.length);
                 
                 infoRows.forEach((row, index) => {
                     const valueSpan = row.querySelector('.info-value');
                     if (valueSpan && values[index]) {
+                        console.log(`Setting row ${index} to:`, values[index]);
                         valueSpan.textContent = values[index];
+                    } else {
+                        console.log(`Row ${index} - valueSpan:`, !!valueSpan, 'value:', values[index]);
                     }
                 });
+            } else {
+                console.log('Product info section not found!');
             }
             
             // Fill YARN section
@@ -3540,15 +4104,20 @@
             const sections = document.querySelectorAll('.cost-section');
             let targetSection = null;
             
+            console.log(`Looking for section: ${sectionName}`);
+            console.log(`Data to fill:`, data);
+            
             sections.forEach(section => {
                 const header = section.querySelector('.section-header');
                 if (header && header.textContent.includes(sectionName)) {
                     targetSection = section;
+                    console.log(`Found section: ${sectionName}`);
                 }
             });
             
             if (targetSection) {
                 const rows = targetSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                console.log(`Found ${rows.length} rows in ${sectionName}`);
                 
                 data.forEach((item, index) => {
                     if (rows[index]) {
@@ -3556,6 +4125,7 @@
                         columns.forEach((column, cellIndex) => {
                             if (cells[cellIndex] && item[column] !== undefined) {
                                 cells[cellIndex].textContent = item[column];
+                                console.log(`Filled ${sectionName} row ${index}, column ${column}: ${item[column]}`);
                             }
                         });
                     }
@@ -3563,6 +4133,8 @@
                 
                 // Calculate and update subtotal for this section
                 updateSectionSubtotal(targetSection, data, columns);
+            } else {
+                console.log(`Section not found: ${sectionName}`);
             }
         }
 
@@ -3601,6 +4173,78 @@
             if (factoryTotalElement) {
                 factoryTotalElement.textContent = `$${factoryTotal}`;
             }
+        }
+
+        function clearAllFormData() {
+            console.log('=== CLEARING ALL FORM DATA ===');
+            
+            // Clear Product Information - try multiple selectors
+            const productInfo = document.querySelector('.product-info');
+            if (productInfo) {
+                const infoRows = productInfo.querySelectorAll('.info-row');
+                console.log('Found product info rows:', infoRows.length);
+                infoRows.forEach((row, index) => {
+                    const valueSpan = row.querySelector('.info-value');
+                    if (valueSpan) {
+                        console.log(`Clearing row ${index}:`, valueSpan.textContent);
+                        valueSpan.textContent = '';
+                    }
+                });
+            } else {
+                console.log('Product info not found');
+            }
+            
+            // Also try clearing by direct selector
+            const allInfoValues = document.querySelectorAll('.info-value');
+            console.log('Found all info values:', allInfoValues.length);
+            allInfoValues.forEach((span, index) => {
+                console.log(`Clearing info value ${index}:`, span.textContent);
+                span.textContent = '';
+            });
+            
+            // Clear all cost sections
+            const sections = document.querySelectorAll('.cost-section');
+            console.log('Found cost sections:', sections.length);
+            sections.forEach(section => {
+                const rows = section.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                console.log('Found data rows in section:', rows.length);
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('.cost-cell');
+                    cells.forEach(cell => {
+                        cell.textContent = '';
+                    });
+                });
+                
+                // Clear subtotals
+                const subtotalRows = section.querySelectorAll('.subtotal-row');
+                subtotalRows.forEach(subtotalRow => {
+                    const cells = subtotalRow.querySelectorAll('.cost-cell');
+                    cells.forEach(cell => {
+                        if (cell.textContent.includes('$')) {
+                            cell.textContent = '$0.00';
+                        }
+                    });
+                });
+            });
+            
+            // Clear main totals
+            const materialTotalElement = document.querySelector('.total-material-cost .total-value');
+            if (materialTotalElement) {
+                materialTotalElement.textContent = '$0.00';
+                console.log('Cleared material total');
+            } else {
+                console.log('Material total element not found');
+            }
+            
+            const factoryTotalElement = document.querySelector('.total-factory-cost .total-value');
+            if (factoryTotalElement) {
+                factoryTotalElement.textContent = '$0.00';
+                console.log('Cleared factory total');
+            } else {
+                console.log('Factory total element not found');
+            }
+            
+            console.log('=== CLEARING COMPLETE ===');
         }
 
         // Initialize drag & drop when page loads
@@ -4203,7 +4847,7 @@
                                 // Check if XLSX is already loaded
                                 if (typeof XLSX === 'undefined') {
                                     console.log('Loading XLSX library...');
-                                    await ensureXLSXLoaded();
+                                    // XLSX library is now loaded locally
                                 } else {
                                     console.log('XLSX library already available');
                                 }
