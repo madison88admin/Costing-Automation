@@ -16,17 +16,14 @@ const upload = multer({
   },
   fileFilter: (req, file, cb) => {
     const allowedTypes = [
-      'text/csv',
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      'text/csv'
     ];
     
     if (allowedTypes.includes(file.mimetype) || 
-        file.originalname.endsWith('.csv') || 
-        file.originalname.endsWith('.xlsx')) {
+        file.originalname.endsWith('.csv')) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only CSV and Excel files are allowed.'));
+      cb(new Error('Invalid file type. Only CSV files are allowed.'));
     }
   }
 });
@@ -87,33 +84,6 @@ router.post('/csv/:connectionId', upload.single('file'), async (req: Request, re
   }
 });
 
-router.post('/excel/:connectionId', upload.single('file'), async (req: Request, res: Response) => {
-  try {
-    const { connectionId } = req.params;
-    const config: ImportConfig = JSON.parse(req.body.config);
-    const { sheetName } = req.body;
-
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
-    }
-
-    const connection = getConnection(connectionId);
-    if (!connection) {
-      return res.status(404).json({ error: 'Connection not found' });
-    }
-
-    const importService = new ImportService(connection);
-    const result = await importService.importExcel(req.file, config, sheetName);
-
-    return res.json(result);
-  } catch (error) {
-    logger.error('Error importing Excel:', error);
-    return res.status(500).json({ 
-      error: 'Failed to import Excel',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    });
-  }
-});
 
 router.post('/bulk-insert/:connectionId', async (req: Request, res: Response) => {
   try {

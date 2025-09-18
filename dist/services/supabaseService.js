@@ -117,30 +117,42 @@ class SupabaseService {
             }
             let data, error, count;
             if (isLargeDataset) {
-                const allData = [];
-                let offset = 0;
-                const batchSize = 1000;
-                let hasMoreData = true;
-                while (hasMoreData) {
-                    const batchQuery = queryBuilder.range(offset, offset + batchSize - 1);
-                    const { data: batchData, error: batchError } = await batchQuery;
-                    if (batchError) {
-                        error = batchError;
-                        break;
-                    }
-                    if (batchData && batchData.length > 0) {
-                        allData.push(...batchData);
-                        offset += batchSize;
-                        if (batchData.length < batchSize) {
+                const countQuery = this.supabase.from(table).select('*', { count: 'exact', head: true });
+                const { count: totalCount, error: countError } = await countQuery;
+                if (countError) {
+                    error = countError;
+                    logger_1.default.error('Error getting total count:', countError);
+                }
+                else {
+                    logger_1.default.info(`Total records in database: ${totalCount}`);
+                    const allData = [];
+                    let offset = 0;
+                    const batchSize = 1000;
+                    let hasMoreData = true;
+                    while (hasMoreData) {
+                        const batchQuery = queryBuilder.range(offset, offset + batchSize - 1);
+                        const { data: batchData, error: batchError } = await batchQuery;
+                        if (batchError) {
+                            error = batchError;
+                            logger_1.default.error('Error fetching batch:', batchError);
+                            break;
+                        }
+                        if (batchData && batchData.length > 0) {
+                            allData.push(...batchData);
+                            offset += batchSize;
+                            logger_1.default.info(`Fetched batch: ${batchData.length} records (total so far: ${allData.length})`);
+                            if (batchData.length < batchSize) {
+                                hasMoreData = false;
+                            }
+                        }
+                        else {
                             hasMoreData = false;
                         }
                     }
-                    else {
-                        hasMoreData = false;
-                    }
+                    data = allData;
+                    count = totalCount;
+                    logger_1.default.info(`Final result: ${allData.length} records loaded, total count: ${totalCount}`);
                 }
-                data = allData;
-                count = allData.length;
             }
             else {
                 const offset = (page - 1) * limit;

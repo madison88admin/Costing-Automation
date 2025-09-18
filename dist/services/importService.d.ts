@@ -4,9 +4,7 @@ export declare class ImportService {
     private db;
     constructor(database: DatabaseConnection);
     importCSV(file: FileUpload, config: ImportConfig): Promise<ImportResult>;
-    importExcel(file: FileUpload, config: ImportConfig, sheetName?: string): Promise<ImportResult>;
     private parseCSV;
-    private parseExcel;
     private processData;
     private validateMappings;
     private processBatch;

@@ -1,43 +1,9 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ImportService = void 0;
-const XLSX = __importStar(require("xlsx"));
 const csv_parser_1 = __importDefault(require("csv-parser"));
 const stream_1 = require("stream");
 const logger_1 = __importDefault(require("../utils/logger"));
@@ -61,22 +27,6 @@ class ImportService {
             };
         }
     }
-    async importExcel(file, config, sheetName) {
-        try {
-            const data = await this.parseExcel(file.buffer, sheetName);
-            return await this.processData(data, config);
-        }
-        catch (error) {
-            logger_1.default.error('Excel import error:', error);
-            return {
-                success: false,
-                message: `Excel import failed: ${error}`,
-                rowsProcessed: 0,
-                rowsInserted: 0,
-                errors: [error instanceof Error ? error.message : String(error)]
-            };
-        }
-    }
     async parseCSV(buffer) {
         return new Promise((resolve, reject) => {
             const results = [];
@@ -87,14 +37,6 @@ class ImportService {
                 .on('end', () => resolve(results))
                 .on('error', reject);
         });
-    }
-    async parseExcel(buffer, sheetName) {
-        const workbook = XLSX.read(buffer, { type: 'buffer' });
-        const sheet = sheetName ? workbook.Sheets[sheetName] : workbook.Sheets[workbook.SheetNames[0]];
-        if (!sheet) {
-            throw new Error(`Sheet "${sheetName || workbook.SheetNames[0]}" not found`);
-        }
-        return XLSX.utils.sheet_to_json(sheet);
     }
     async processData(data, config) {
         const errors = [];
@@ -237,9 +179,6 @@ class ImportService {
             let data = [];
             if (file.mimetype === 'text/csv' || file.originalname.endsWith('.csv')) {
                 data = await this.parseCSV(file.buffer);
-            }
-            else if (file.mimetype.includes('spreadsheet') || file.originalname.endsWith('.xlsx')) {
-                data = await this.parseExcel(file.buffer);
             }
             else {
                 throw new Error('Unsupported file type');

@@ -339,32 +339,6 @@
             color: #2c2c2c;
         }
 
-        .import-button {
-            background: #3b82f6;
-            color: white;
-            border: 2px solid #3b82f6;
-            padding: 16px 25px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            min-width: 100px;
-            letter-spacing: 0.5px;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-        }
-
-        .import-button:hover {
-            background: #2563eb;
-            border-color: #2563eb;
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
-        }
-
-        .import-button:active {
-            transform: translateY(0);
-        }
 
         /* Responsive Design */
         @media (max-width: 768px) {
@@ -646,40 +620,6 @@
             background: rgba(255, 255, 255, 0.05);
         }
 
-        .import-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 25px;
-        }
-
-        .import-icon {
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 15px;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        }
-
-        .import-title {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-            font-size: 24px;
-            font-weight: 600;
-            color: #ffffff;
-            margin: 0;
-            letter-spacing: 0.5px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-
-        .import-subtitle {
-            color: #ffffff;
-            font-size: 16px;
-            margin: 8px 0 0 0;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-        }
 
         .form-row {
             display: grid;
@@ -717,82 +657,7 @@
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
-        .file-upload {
-            border: 3px dashed #667eea;
-            padding: 40px 20px;
-            text-align: center;
-            border-radius: 12px;
-            cursor: pointer;
-            background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
 
-        .file-upload::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
-            transition: left 0.5s ease;
-        }
-
-        .file-upload:hover {
-            border-color: #764ba2;
-            background: linear-gradient(135deg, #f0f2ff 0%, #ffffff 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
-        }
-
-        .file-upload:hover::before {
-            left: 100%;
-        }
-
-        .file-upload-content {
-            position: relative;
-            z-index: 1;
-        }
-
-        .file-upload-icon {
-            font-size: 48px;
-            color: #667eea;
-            margin-bottom: 15px;
-            display: block;
-        }
-
-        .file-upload-text {
-            font-size: 18px;
-            font-weight: 600;
-            color: #495057;
-            margin-bottom: 8px;
-        }
-
-        .file-upload-subtext {
-            font-size: 14px;
-            color: #6c757d;
-            margin: 0;
-        }
-
-        .supported-formats {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .format-badge {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
 
         .hidden {
             display: none;
@@ -1070,9 +935,6 @@
                     <button class="import-button" onclick="exportToExcel()">
                         Export
                     </button>
-                    <button class="import-button" onclick="openImportModal()" style="background: #6f42c1;">
-                        Import
-                    </button>
                 </div>
             </div>
             
@@ -1102,179 +964,8 @@
             </div>
         </div>
 
-        <!-- Import Modal -->
-        <div class="modal-overlay" id="importModal">
-            <div class="modal-content">
-                <button class="modal-close" onclick="closeImportModal()">&times;</button>
-                
-                <div class="import-header">
-                    <div class="import-icon">
-                        🤖
-                    </div>
-                    <div>
-                        <h2 class="import-title">Intelligent Import System</h2>
-                        <p class="import-subtitle">AI-powered data extraction and validation</p>
-                    </div>
-            </div>
-            
-            <div class="file-upload" onclick="document.getElementById('fileInput').click()">
-                    <div class="file-upload-content">
-                        <div class="file-upload-icon">📁</div>
-                        <div class="file-upload-text">Click to select your file</div>
-                        <div class="file-upload-subtext">Drag and drop or click to browse</div>
-                        <div class="supported-formats">
-                            <span class="format-badge">CSV</span>
-                            <span class="format-badge">XLSX</span>
-                            <span class="format-badge">XLS</span>
-                            <span class="format-badge">XLSM</span>
-                        </div>
-                    </div>
-                <input type="file" id="fileInput" accept=".csv,.xlsx,.xls,.xlsm" style="display: none;" onchange="handleFileSelect(event)">
-            </div>
-            
-            <!-- Template Detection Info -->
-            <div class="template-info" style="background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid rgba(255, 255, 255, 0.2);">
-                <h4 style="color: white; margin-bottom: 15px;">🎯 Supported Templates</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px;">
-                        <h5 style="color: #4CAF50; margin-bottom: 10px;">✅ Beanie Template</h5>
-                        <ul style="color: rgba(255, 255, 255, 0.9); font-size: 14px; margin: 0; padding-left: 20px;">
-                            <li>YARN section</li>
-                            <li>FABRIC section</li>
-                            <li>TRIM section</li>
-                        </ul>
-                    </div>
-                    <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px;">
-                        <h5 style="color: #2196F3; margin-bottom: 10px;">✅ Cap Template</h5>
-                        <ul style="color: rgba(255, 255, 255, 0.9); font-size: 14px; margin: 0; padding-left: 20px;">
-                            <li>FABRIC/S section</li>
-                            <li>OTHER FABRIC/S section</li>
-                            <li>TRIM/S section</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <!-- Excel Library Status -->
-                <div id="excelStatus" style="background: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.3); border-radius: 8px; padding: 15px; margin-top: 15px;">
-                    <h5 style="color: #ffc107; margin-bottom: 10px;">⚠️ Excel Library Status</h5>
-                    <p style="color: rgba(255, 255, 255, 0.9); font-size: 14px; margin: 0;">
-                        Excel library will load automatically when needed. If Excel files don't work, try converting to CSV format.
-                    </p>
-                </div>
-            </div>
-            
-            <!-- Import Options -->
-            <div class="import-options" style="background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid rgba(255, 255, 255, 0.2);">
-                <h4 style="color: white; margin-bottom: 15px;">⚙️ Import Settings</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <label style="display: flex; align-items: center; color: white; cursor: pointer;">
-                        <input type="checkbox" id="skipDuplicates" checked style="margin-right: 10px; transform: scale(1.2);">
-                        Skip duplicate entries
-                    </label>
-                    <label style="display: flex; align-items: center; color: white; cursor: pointer;">
-                        <input type="checkbox" id="validateData" checked style="margin-right: 10px; transform: scale(1.2);">
-                        Validate data before import
-                    </label>
-                    <label style="display: flex; align-items: center; color: white; cursor: pointer;">
-                        <input type="checkbox" id="autoCalculate" checked style="margin-right: 10px; transform: scale(1.2);">
-                        Auto-calculate missing values
-                    </label>
-                    <label style="display: flex; align-items: center; color: white; cursor: pointer;">
-                        <input type="checkbox" id="showValidationPage" checked style="margin-right: 10px; transform: scale(1.2);">
-                        Show validation page for errors
-                    </label>
-                </div>
-            </div>
-            
-            <!-- Progress Indicator -->
-            <div id="importProgress" class="import-progress" style="display: none; background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid rgba(255, 255, 255, 0.2);">
-                <h4 style="color: white; margin-bottom: 15px;">🔄 Processing File...</h4>
-                <div class="progress-bar" style="background: rgba(0, 0, 0, 0.3); border-radius: 10px; height: 20px; overflow: hidden; margin-bottom: 10px;">
-                    <div class="progress-fill" id="progressFill" style="background: linear-gradient(90deg, #4CAF50, #2196F3); height: 100%; width: 0%; transition: width 0.3s ease;"></div>
-                </div>
-                <p id="progressText" style="color: rgba(255, 255, 255, 0.9); margin: 0; text-align: center;">Analyzing file structure...</p>
-            </div>
-            
-            <!-- Data Review Panel -->
-            <div id="dataReviewPanel" style="display: none; margin-top: 20px;">
-                <div style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 20px; backdrop-filter: blur(10px);">
-                    <h3 style="color: white; margin-bottom: 15px;">🔍 Data Review & Verification</h3>
-                    <p style="color: rgba(255, 255, 255, 0.8); margin-bottom: 20px;">Please review the scanned data and verify column mappings before importing</p>
-                    
-                    <!-- Template Detection Result -->
-                    <div id="templateDetectionResult" style="background: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 15px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.2);">
-                        <h4 style="color: #4CAF50; margin-bottom: 10px;">🎯 Template Detection</h4>
-                        <div id="templateInfo" style="color: rgba(255, 255, 255, 0.9);"></div>
-                    </div>
-                    
-                    <!-- Scanned Data Summary -->
-                    <div id="scannedDataSummary" style="background: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 15px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.2);">
-                        <h4 style="color: #2196F3; margin-bottom: 10px;">📋 Scanned Data Summary</h4>
-                        <div id="summaryContent" style="color: rgba(255, 255, 255, 0.9);"></div>
-                    </div>
-                    
-                    <!-- Column Mapping Review -->
-                    <div id="columnMappingReview" style="background: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 15px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.2);">
-                        <h4 style="color: #FF9800; margin-bottom: 10px;">🗂️ Column Mapping Review</h4>
-                        <div id="mappingContent" style="color: rgba(255, 255, 255, 0.9);"></div>
-                    </div>
-                    
-                    <!-- Validation Results -->
-                    <div id="validationResults" style="background: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 15px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.2);">
-                        <h4 style="color: #F44336; margin-bottom: 10px;">⚠️ Validation Results</h4>
-                        <div id="validationContent" style="color: rgba(255, 255, 255, 0.9);"></div>
-                    </div>
-                    
-                    <!-- Action Buttons -->
-                    <div style="text-align: center; margin-top: 20px;">
-                        <button class="btn btn-secondary" onclick="cancelImport()" style="margin-right: 10px; background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">❌ Cancel</button>
-                        <button class="btn btn-primary" onclick="confirmImport()" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">✅ Confirm & Import Data</button>
-                    </div>
-                </div>
-            </div>
-            
-            <div id="filePreview" style="display: none;">
-                <h3>File Preview</h3>
-                <div id="previewTable"></div>
-                <button onclick="importFile()">Import Data</button>
-            </div>
-            
-            <div id="importStatus"></div>
-            </div>
-        </div>
     </div>
 
-    <!-- Validation Page -->
-    <div id="validationPage" class="validation-page" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 10000; overflow-y: auto;">
-        <div class="validation-container" style="max-width: 1200px; margin: 20px auto; background: rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 30px; backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.2);">
-            <div class="validation-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-                <h2 style="color: white; margin: 0;">🔧 Data Validation & Correction</h2>
-                <button onclick="closeValidationPage()" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 16px;">✕ Close</button>
-            </div>
-            
-            <div class="validation-content">
-                <div id="validationSummary" style="background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.2);">
-                    <h3 style="color: #FF9800; margin-bottom: 15px;">📊 Validation Summary</h3>
-                    <div id="validationSummaryContent" style="color: rgba(255, 255, 255, 0.9);"></div>
-                </div>
-                
-                <div id="errorList" style="background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.2);">
-                    <h3 style="color: #F44336; margin-bottom: 15px;">⚠️ Errors Found</h3>
-                    <div id="errorListContent" style="color: rgba(255, 255, 255, 0.9);"></div>
-                </div>
-                
-                <div id="editableData" style="background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.2);">
-                    <h3 style="color: #4CAF50; margin-bottom: 15px;">✏️ Edit Data</h3>
-                    <div id="editableDataContent" style="color: rgba(255, 255, 255, 0.9);"></div>
-                </div>
-                
-                <div class="validation-actions" style="text-align: center; margin-top: 30px;">
-                    <button onclick="saveValidationChanges()" class="btn btn-primary" style="background: #28a745; color: white; border: none; padding: 12px 30px; border-radius: 6px; cursor: pointer; font-size: 16px; margin-right: 15px;">💾 Save Changes</button>
-                    <button onclick="skipValidation()" class="btn btn-secondary" style="background: #6c757d; color: white; border: none; padding: 12px 30px; border-radius: 6px; cursor: pointer; font-size: 16px;">⏭️ Skip Validation</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <script>
         // Enhanced and more reliable XLSX library loading
@@ -1378,17 +1069,7 @@
         });
 
         let connectionId = null;
-        let currentFile = null;
-        let filePreview = null;
-        let scannedData = null;
-        let columnMappings = null;
         let totalRecords = 0;
-        
-        // Enhanced import system variables
-        let templateType = null;
-        let validationErrors = [];
-        let existingData = [];
-        let isProcessing = false;
         
         // Pagination variables
         let currentPage = 1;
@@ -1412,39 +1093,7 @@
             }
         }
 
-        // Modal functions
-        function openImportModal() {
-            const modal = document.getElementById('importModal');
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden'; // Prevent background scrolling
-        }
 
-        function closeImportModal() {
-            const modal = document.getElementById('importModal');
-            modal.style.display = 'none';
-            document.body.style.overflow = 'auto'; // Restore scrolling
-            
-            // Reset import form
-            document.getElementById('fileInput').value = '';
-            document.getElementById('dataReviewPanel').style.display = 'none';
-            document.getElementById('filePreview').style.display = 'none';
-            document.getElementById('importStatus').innerHTML = '';
-        }
-
-        // Close modal when clicking outside
-        document.addEventListener('click', function(event) {
-            const modal = document.getElementById('importModal');
-            if (event.target === modal) {
-                closeImportModal();
-            }
-        });
-
-        // Close modal with Escape key
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                closeImportModal();
-            }
-        });
 
         // Pagination functions
         function updatePagination() {
@@ -1563,6 +1212,8 @@
             const pageData = dataToShow.slice(startIndex, endIndex);
             
             console.log('displayCurrentPageData - currentPage:', currentPage, 'startIndex:', startIndex, 'endIndex:', endIndex);
+            console.log('filteredData:', filteredData ? filteredData.length : 'null');
+            console.log('allTableData:', allTableData ? allTableData.length : 'null');
             console.log('dataToShow.length:', dataToShow.length, 'pageData.length:', pageData.length);
             console.log('pageData sample:', pageData.slice(0, 2));
             
@@ -1776,7 +1427,6 @@
         function displayTables(tables) {
             const tablesList = document.getElementById('tablesList');
             const selectedTable = document.getElementById('selectedTable');
-            const importTable = document.getElementById('importTable');
             
             let html = '<h3>Available Tables:</h3><ul>';
             tables.forEach(table => {
@@ -2553,9 +2203,12 @@
                 
                 if (result.data && result.data.length > 0) {
                     console.log(`Fresh data loaded: ${result.data.length} records`);
+                    console.log('Available database fields:', Object.keys(result.data[0] || {}));
+                    console.log('Sample record:', result.data[0]);
                     
-                    // Store the fresh data
+                    // Store the fresh data in both variables
                     window.currentTableData = result.data;
+                    allTableData = result.data; // Update allTableData with fresh data
                     
                     // Show searching animation
                     showSearchingAnimation(`Searching through ${result.data.length} FRESH records for ${filterType}: "${searchValue}"...`);
@@ -2563,9 +2216,29 @@
                     // Add a small delay to show the searching animation
                     await new Promise(resolve => setTimeout(resolve, 800));
                     
-                    // Filter the data on the client side
-                    const filteredData = result.data.filter(row => {
-                        const fieldValue = String(row[filterType] || '').toLowerCase();
+                    // Map filter type to actual database field name
+                    const fieldMapping = {
+                        'season': ['season', 'Season', 'SEASON', 'seasons', 'SEASONS'],
+                        'customer': ['customer', 'Customer', 'CUSTOMER', 'customers', 'CUSTOMERS'],
+                        'style_number': ['style_number', 'styleNumber', 'Style Number', 'STYLE_NUMBER', 'style_no', 'styleNo', 'STYLE_NO'],
+                        'style_name': ['style_name', 'styleName', 'Style Name', 'STYLE_NAME', 'style', 'STYLE']
+                    };
+                    
+                    // Find the actual database field name
+                    const possibleFieldNames = fieldMapping[filterType] || [filterType];
+                    const actualFieldName = possibleFieldNames.find(name => result.data[0] && result.data[0].hasOwnProperty(name));
+                    
+                    if (!actualFieldName) {
+                        console.error('Field not found in database:', filterType, 'Available fields:', Object.keys(result.data[0] || {}));
+                        showStatus('tableData', `❌ Field "${filterType}" not found in database. Available fields: ${Object.keys(result.data[0] || {}).join(', ')}`, 'error');
+                        return;
+                    }
+                    
+                    console.log(`Searching in field: ${actualFieldName} (mapped from ${filterType})`);
+                    
+                    // Filter the data on the client side and store in global filteredData
+                    filteredData = result.data.filter(row => {
+                        const fieldValue = String(row[actualFieldName] || '').toLowerCase();
                         const searchTerm = searchValue.toLowerCase();
                         return fieldValue.includes(searchTerm);
                     });
@@ -2757,16 +2430,6 @@
             return fileType;
         }
 
-        function resetImportState() {
-            isProcessing = false;
-            scannedData = null;
-            templateType = null;
-            columnMappings = null;
-            validationErrors = [];
-            existingData = [];
-            document.getElementById('dataReviewPanel').style.display = 'none';
-            document.getElementById('importProgress').style.display = 'none';
-        }
 
         function showFileInfo(file, fileType) {
             const fileInfo = `
@@ -2780,119 +2443,7 @@
             document.getElementById('importStatus').innerHTML = fileInfo;
         }
 
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (!file) return;
 
-            // Reset previous state
-            resetImportState();
-            
-            try {
-                // Validate file
-                const fileType = validateFile(file);
-                currentFile = file;
-                
-                console.log('File selected:', {
-                    name: file.name,
-                    type: file.type,
-                    size: file.size,
-                    detectedType: fileType
-                });
-                
-                // Show file info
-                showFileInfo(file, fileType);
-                
-                // Start intelligent import process
-                processIntelligentImport(file, fileType);
-                
-            } catch (error) {
-                console.error('File validation failed:', error);
-                showStatus('importStatus', '❌ ' + error.message, 'error');
-                resetImportState();
-            }
-        }
-
-        // Enhanced Intelligent Import System - Main Processing Function
-        async function processIntelligentImport(file, fileType) {
-            if (isProcessing) {
-                console.warn('Import already in progress, ignoring new request');
-                return;
-            }
-
-            isProcessing = true;
-            
-            try {
-                console.log('Starting enhanced intelligent import for file:', file.name, 'Type:', fileType);
-                
-                // Show progress
-                showProgress(true);
-                updateProgress(5, 'Initializing...');
-                
-                // Read file content with enhanced error handling
-                updateProgress(10, `Reading ${fileType.toUpperCase()} file...`);
-                console.log('About to call readFileContent with fileType:', fileType);
-                const fileContent = await readFileContent(file, fileType);
-                console.log('File content loaded successfully, rows:', fileContent.length);
-                
-                // Validate file content
-                if (!fileContent || fileContent.length === 0) {
-                    throw new Error('File appears to be empty or invalid. Please check the file and try again.');
-                }
-                
-                updateProgress(25, 'Analyzing file structure...');
-                
-                // Detect template type with enhanced detection
-                templateType = detectTemplateType(fileContent);
-                console.log('Template detected:', templateType);
-                updateProgress(40, `Detected template: ${templateType.toUpperCase()}`);
-                
-                // Extract data based on template with better error handling
-                updateProgress(55, 'Extracting data...');
-                scannedData = await extractDataFromTemplate(fileContent, templateType);
-                console.log('Data extracted:', scannedData);
-                
-                // Check for duplicates with enhanced error handling
-                updateProgress(70, 'Checking for duplicates...');
-                if (document.getElementById('skipDuplicates').checked) {
-                    try {
-                        await checkDuplicates(scannedData);
-                        console.log('Duplicate check completed, existing records:', existingData ? existingData.length : 0);
-                    } catch (error) {
-                        console.warn('Duplicate check failed, continuing without duplicate checking:', error);
-                        existingData = [];
-                    }
-                } else {
-                    existingData = [];
-                }
-                
-                // Validate data with comprehensive validation
-                updateProgress(85, 'Validating data...');
-                if (document.getElementById('validateData').checked) {
-                    validationErrors = validateData(scannedData);
-                    console.log('Validation completed, errors:', validationErrors.length);
-                } else {
-                    validationErrors = [];
-                }
-                
-                // Map columns to database structure
-                updateProgress(95, 'Mapping columns...');
-                columnMappings = mapColumnsToDatabase(scannedData, templateType);
-                console.log('Column mappings created:', Object.keys(columnMappings).length);
-                
-                updateProgress(100, 'Complete!');
-                
-                // Show results with enhanced display
-                showDataReview();
-                
-            } catch (error) {
-                console.error('Error in enhanced intelligent import:', error);
-                showStatus('importStatus', '❌ Error processing file: ' + error.message, 'error');
-                resetImportState();
-            } finally {
-                isProcessing = false;
-                showProgress(false);
-            }
-        }
 
         // Optimized File Reading Functions
         async function readFileContent(file, fileType) {
@@ -3606,384 +3157,12 @@
             document.getElementById('filePreview').style.display = 'block';
         }
 
-        async function importFile() {
-            if (!currentFile || !filePreview || !connectionId) return;
-
-            const tableName = document.getElementById('importTable').value;
-            if (!tableName) {
-                showStatus('importStatus', 'Please select a target table', 'error');
-                return;
-            }
-
-            // Create column mappings (simplified - maps file columns to database columns with same name)
-            const mappings = filePreview.length > 0 ? 
-                Object.keys(filePreview[0]).map(col => ({
-                    fileColumn: col,
-                    databaseColumn: col,
-                    required: false
-                })) : [];
-
-            const config = {
-                table: tableName,
-                mappings: mappings,
-                skipFirstRow: true,
-                updateExisting: false,
-                batchSize: 100
-            };
-
-            const formData = new FormData();
-            formData.append('file', currentFile);
-            formData.append('config', JSON.stringify(config));
-
-            try {
-                const isCSV = currentFile.name.endsWith('.csv');
-                const endpoint = isCSV ? 'csv' : 'excel';
-                
-                const response = await fetch(`/api/import/${endpoint}/${connectionId}`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const result = await response.json();
-                
-                if (result.success) {
-                    showStatus('importStatus', 
-                        `Import successful! Processed: ${result.rowsProcessed}, Inserted: ${result.rowsInserted}`, 
-                        'success');
-                } else {
-                    showStatus('importStatus', 'Import failed: ' + result.message, 'error');
-                }
-            } catch (error) {
-                showStatus('importStatus', 'Import error: ' + error.message, 'error');
-            }
-        }
 
         function showStatus(elementId, message, type) {
             const element = document.getElementById(elementId);
             element.innerHTML = `<div class="status ${type}">${message}</div>`;
         }
 
-        // Excel file scanning and data extraction
-        async function scanExcelFile(file) {
-            try {
-                console.log('Starting Excel file scan...');
-                
-                // Simulate Excel parsing (in real implementation, you'd use a library like SheetJS)
-                const mockScannedData = await simulateExcelScan(file);
-                
-                scannedData = mockScannedData;
-                columnMappings = generateColumnMappings(mockScannedData);
-                
-                // Show the review panel
-                showDataReviewPanel();
-                
-            } catch (error) {
-                console.error('Error scanning Excel file:', error);
-                showStatus('importStatus', '❌ Error scanning file: ' + error.message, 'error');
-            }
-        }
-
-        // Simulate Excel file scanning (replace with actual Excel parsing)
-        async function simulateExcelScan(file) {
-            // This would be replaced with actual Excel parsing using SheetJS or similar
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    const mockData = {
-                        customer: 'TNF',
-                        season: 'F27',
-                        styleNumber: 'TNFF27-014',
-                        styleName: 'Fuzzy Wool Blend Beanie',
-                        costedQuantity: '2000pcs',
-                        leadtime: '130 days',
-                        
-                        // Yarn section
-                        yarn: [
-                            { material: '(UJ-F19-011) 100% Nylon, 1/7.2 Nm', consumption: '50', price: '14.79', cost: '0.74' },
-                            { material: '(HYDD ECO) 65% RWS 21.5mic Merino Wool 35%', consumption: '66', price: '19.38', cost: '1.28' }
-                        ],
-                        
-                        // Fabric section
-                        fabric: [
-                            { material: 'Fabric 1', consumption: '0', price: '0.00', cost: '0.00' }
-                        ],
-                        
-                        // Trim section
-                        trim: [
-                            { material: 'Sewing Thread (Coats EcoV)', consumption: '1', price: '0.02', cost: '0.02' }
-                        ],
-                        
-                        // Knitting section
-                        knitting: [
-                            { operation: 'Flat-3GG', time: '8', rate: '0.100', cost: '0.80' }
-                        ],
-                        
-                        // Operations section
-                        operations: [
-                            { operation: 'Labeling', cost: '0.10' },
-                            { operation: 'Neaten/Steaming/Packing (Beanie)', cost: '0.40' },
-                            { operation: 'Linking Beanie (Flat/ 1 Layer/ Cuff)', cost: '0.17' },
-                            { operation: 'Washing (Hat/ Glove)', cost: '0.17' },
-                            { operation: 'Hand Closing (9-3GG)', cost: '0.12' }
-                        ],
-                        
-                        // Packaging section
-                        packaging: [
-                            { type: 'Standard Packaging', cost: '0.10' },
-                            { type: 'Special Packaging', cost: '0.00' }
-                        ],
-                        
-                        // Totals
-                        totals: {
-                            materialCost: '2.04',
-                            knittingCost: '0.80',
-                            operationsCost: '0.96',
-                            packagingCost: '0.10',
-                            overhead: '0.20',
-                            profit: '0.59',
-                            totalFactoryCost: '4.69'
-                        }
-                    };
-                    resolve(mockData);
-                }, 2000); // Simulate processing time
-            });
-        }
-
-        // Generate column mappings for the scanned data
-        function generateColumnMappings(data) {
-            const mappings = {
-                'Season': data.season || '',
-                'Customer': data.customer || '',
-                'Style Number': data.styleNumber || '',
-                'Style Name': data.styleName || '',
-                'Main Material': data.yarn && data.yarn[0] ? data.yarn[0].material : '',
-                'Material Consumption': data.yarn && data.yarn[0] ? data.yarn[0].consumption : '',
-                'Material Price': data.yarn && data.yarn[0] ? data.yarn[0].price : '',
-                'Trim Cost': data.totals ? data.totals.materialCost : '',
-                'Total Material Cost': data.totals ? data.totals.materialCost : '',
-                'Knitting Machine': data.knitting && data.knitting[0] ? data.knitting[0].operation : '',
-                'Knitting Time': data.knitting && data.knitting[0] ? data.knitting[0].time : '',
-                'Knitting CPM': data.knitting && data.knitting[0] ? data.knitting[0].rate : '',
-                'Knitting Cost': data.knitting && data.knitting[0] ? data.knitting[0].cost : '',
-                'Ops Cost': data.totals ? data.totals.operationsCost : '',
-                'Knitting + Ops Cost': data.totals ? (parseFloat(data.totals.knittingCost || 0) + parseFloat(data.totals.operationsCost || 0)).toFixed(2) : '',
-                'Packaging': data.totals ? data.totals.packagingCost : '',
-                'OH': data.totals ? data.totals.overhead : '',
-                'Profit': data.totals ? data.totals.profit : '',
-                'FTY Adjustment': '0.00',
-                'TTL FTY Cost': data.totals ? data.totals.totalFactoryCost : ''
-            };
-            
-            return mappings;
-        }
-
-        // Show the data review panel
-        function showDataReviewPanel() {
-            document.getElementById('dataReviewPanel').style.display = 'block';
-            
-            // Populate scanned data summary
-            const summaryContent = document.getElementById('summaryContent');
-            summaryContent.innerHTML = `
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px;">
-                    <div>
-                        <strong>Customer:</strong> ${scannedData.customer}<br>
-                        <strong>Season:</strong> ${scannedData.season}<br>
-                        <strong>Style #:</strong> ${scannedData.styleNumber}
-                    </div>
-                    <div>
-                        <strong>Style Name:</strong> ${scannedData.styleName}<br>
-                        <strong>Quantity:</strong> ${scannedData.costedQuantity}<br>
-                        <strong>Leadtime:</strong> ${scannedData.leadtime}
-                    </div>
-                </div>
-                <div style="background: #e8f5e8; padding: 10px; border-radius: 4px;">
-                    <strong>Total Factory Cost:</strong> $${scannedData.totals.totalFactoryCost}
-                </div>
-            `;
-            
-            // Populate column mapping review
-            const mappingContent = document.getElementById('mappingContent');
-            let mappingHtml = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">';
-            
-            Object.entries(columnMappings).forEach(([column, value]) => {
-                mappingHtml += `
-                    <div style="display: flex; justify-content: space-between; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                        <span><strong>${column}:</strong></span>
-                        <span style="color: #007bff;">${value || '—'}</span>
-                    </div>
-                `;
-            });
-            
-            mappingHtml += '</div>';
-            mappingContent.innerHTML = mappingHtml;
-            
-            showStatus('importStatus', '✅ Excel file scanned successfully! Please review the data below.', 'success');
-        }
-
-        // Validation Page Functions
-        function closeValidationPage() {
-            document.getElementById('validationPage').style.display = 'none';
-        }
-
-        function saveValidationChanges() {
-            // Get edited values from the validation page
-            const editedData = getEditedDataFromValidationPage();
-            
-            // Update the scanned data with edited values
-            Object.assign(scannedData, editedData);
-            
-            // Re-validate the data
-            validationErrors = validateData(scannedData);
-            
-            // Re-map columns
-            columnMappings = mapColumnsToDatabase(scannedData, templateType);
-            
-            // Close validation page and show updated review
-            closeValidationPage();
-            showDataReview();
-        }
-
-        function skipValidation() {
-            closeValidationPage();
-            showDataReview();
-        }
-
-        function getEditedDataFromValidationPage() {
-            // Extract edited values from the validation page form
-            const editedData = {};
-            
-            Object.keys(columnMappings).forEach(key => {
-                const inputId = `edit_${key.replace(/\s+/g, '_')}`;
-                const inputElement = document.getElementById(inputId);
-                if (inputElement) {
-                    const value = inputElement.value.trim();
-                    
-                    // Convert to appropriate data type
-                    if (key.includes('Consumption') || key.includes('Price') || key.includes('Cost') || 
-                        key.includes('Time') || key.includes('CPM') || key.includes('Adjustment')) {
-                        editedData[key.toLowerCase().replace(/\s+/g, '')] = parseFloat(value) || 0;
-                    } else {
-                        editedData[key.toLowerCase().replace(/\s+/g, '')] = value;
-                    }
-                }
-            });
-            
-            return editedData;
-        }
-
-        // Enhanced Import Functions
-        function cancelImport() {
-            resetImportState();
-            document.getElementById('fileInput').value = '';
-            currentFile = null;
-            showStatus('importStatus', 'Import cancelled', 'info');
-        }
-
-        async function confirmImport() {
-            try {
-                // Check if validation errors exist and show validation page if needed
-                if (validationErrors.length > 0 && document.getElementById('showValidationPage').checked) {
-                    showValidationPage();
-                    return;
-                }
-
-                showStatus('importStatus', '🔄 Importing data to database...', 'info');
-                
-                // Convert mappings to database format
-                const dbRecord = {
-                    season: columnMappings['Season'],
-                    customer: columnMappings['Customer'],
-                    style_number: columnMappings['Style Number'],
-                    style_name: columnMappings['Style Name'],
-                    main_material: columnMappings['Main Material'],
-                    material_consumption: columnMappings['Material Consumption'],
-                    material_price: columnMappings['Material Price'],
-                    trim_cost: columnMappings['Trim Cost'],
-                    total_material_cost: columnMappings['Total Material Cost'],
-                    knitting_machine: columnMappings['Knitting Machine'],
-                    knitting_time: columnMappings['Knitting Time'],
-                    knitting_cpm: columnMappings['Knitting CPM'],
-                    knitting_cost: columnMappings['Knitting Cost'],
-                    ops_cost: columnMappings['Ops Cost'],
-                    knitting_ops_cost: columnMappings['Knitting + Ops Cost'],
-                    packaging: columnMappings['Packaging'],
-                    oh: columnMappings['OH'],
-                    profit: columnMappings['Profit'],
-                    fty_adjustment: columnMappings['FTY Adjustment'],
-                    ttl_fty_cost: columnMappings['TTL FTY Cost']
-                };
-                
-                console.log('Importing record to Supabase:', dbRecord);
-                
-                // Send data to backend API
-                const response = await fetch(`/api/datatable/insert/${connectionId}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        table: 'databank',
-                        data: dbRecord
-                    })
-                });
-                
-                const result = await response.json();
-                console.log('Insert result:', result);
-                
-                if (result.success) {
-                    showStatus('importStatus', '✅ Data imported successfully! Refreshing table...', 'success');
-                    
-                    // Hide review panel and refresh table
-                    document.getElementById('dataReviewPanel').style.display = 'none';
-                    document.getElementById('fileInput').value = '';
-                    
-                    // Refresh the main table
-                    setTimeout(() => {
-                        loadDatabankData();
-                        getTotalRecordCount();
-                    }, 1000);
-                } else {
-                    throw new Error(result.error || result.message || 'Failed to insert data');
-                }
-                
-            } catch (error) {
-                console.error('Error importing data:', error);
-                showStatus('importStatus', '❌ Error importing data: ' + error.message, 'error');
-            }
-        }
-
-        function showValidationPage() {
-            // Populate validation page with current data and errors
-            document.getElementById('validationSummaryContent').innerHTML = `
-                <p><strong>Template:</strong> ${templateType.toUpperCase()}</p>
-                <p><strong>Total Errors:</strong> ${validationErrors.length}</p>
-                <p><strong>Fields with Issues:</strong> ${validationErrors.map(e => e.field).join(', ')}</p>
-            `;
-            
-            let errorHtml = '<ul>';
-            validationErrors.forEach(error => {
-                errorHtml += `<li style="margin-bottom: 10px; padding: 10px; background: rgba(255, 0, 0, 0.1); border-radius: 6px;">
-                    <strong>${error.field}:</strong> ${error.message}
-                </li>`;
-            });
-            errorHtml += '</ul>';
-            document.getElementById('errorListContent').innerHTML = errorHtml;
-            
-            // Create editable form for the data
-            let editableHtml = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">';
-            Object.entries(columnMappings).forEach(([key, value]) => {
-                const hasError = validationErrors.some(e => e.field === key.toLowerCase().replace(/\s+/g, ''));
-                editableHtml += `
-                    <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px; ${hasError ? 'border: 2px solid #ff6b6b;' : ''}">
-                        <label style="display: block; margin-bottom: 5px; color: white; font-weight: bold;">${key}:</label>
-                        <input type="text" id="edit_${key.replace(/\s+/g, '_')}" value="${value || ''}" 
-                               style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.3); background: rgba(255, 255, 255, 0.1); color: white;">
-                    </div>
-                `;
-            });
-            editableHtml += '</div>';
-            document.getElementById('editableDataContent').innerHTML = editableHtml;
-            
-            // Show validation page
-            document.getElementById('validationPage').style.display = 'block';
-        }
     </script>
 </body>
 </html>
