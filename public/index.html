@@ -448,11 +448,25 @@
             margin-bottom: 30px;
         }
 
+        .header-content {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
         .cost-breakdown-header h2 {
             color: #2c2c2c;
             font-size: 28px;
             font-weight: 700;
+            margin: 0 0 8px 0;
+        }
+
+        .template-description {
+            color: #666;
+            font-size: 16px;
+            font-weight: 500;
             margin: 0;
+            font-style: italic;
         }
 
         .back-button {
@@ -666,6 +680,126 @@
         .factory-name {
             font-weight: 600;
             color: #2c2c2c;
+        }
+
+        .drag-drop-area {
+            background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+            border: 3px dashed #2196F3;
+            border-radius: 16px;
+            width: 200px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto 0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .drag-drop-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        .drag-drop-area:hover::before {
+            transform: translateX(100%);
+        }
+
+        .drag-drop-area:hover {
+            background: linear-gradient(135deg, #E1F5FE 0%, #B3E5FC 100%);
+            border-color: #1976D2;
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(33, 150, 243, 0.3);
+        }
+
+        .drag-drop-area.drag-over {
+            background: linear-gradient(135deg, #E8F5E8 0%, #C8E6C9 100%);
+            border-color: #4CAF50;
+            transform: scale(1.05);
+            box-shadow: 0 12px 30px rgba(76, 175, 80, 0.4);
+        }
+
+        .drag-drop-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            z-index: 1;
+        }
+
+        .drag-drop-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+
+        .drag-drop-area:hover .drag-drop-icon {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .drag-drop-text {
+            color: #1976D2;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0;
+            line-height: 1.4;
+            transition: all 0.3s ease;
+        }
+
+        .drag-drop-area:hover .drag-drop-text {
+            color: #0D47A1;
+        }
+
+        .drag-drop-area.drag-over .drag-drop-text {
+            color: #2E7D32;
+        }
+
+        .import-template-button {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            min-width: 100px;
+        }
+
+        .import-template-button:hover {
+            background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+        }
+
+        .import-template-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
+        }
+
+        .import-template-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
 
         /* Responsive Design for Cost Breakdown */
@@ -1340,7 +1474,10 @@
         <!-- TEMPLATE 1: Factory Cost Breakdown Table - Bottom of Page -->
         <div id="costBreakdown" class="cost-breakdown-container" style="display: none;">
             <div class="cost-breakdown-header">
-                <h2>Factory Cost Breakdown</h2>
+                <div class="header-content">
+                    <h2>Factory Cost Breakdown</h2>
+                    <p class="template-description">Template for Beanie</p>
+                </div>
                 <button class="back-button" onclick="goBackToSelection()">
                     ← Back to Selection
                 </button>
@@ -1666,6 +1803,320 @@
                         <div class="factory-label">Factory Cell</div>
                         <div class="factory-name"></div>
                     </div>
+
+                    <div class="drag-drop-area">
+                        <div class="drag-drop-content">
+                            <div class="drag-drop-icon">📁</div>
+                            <div class="drag-drop-text">drag & drop<br>function here</div>
+                        </div>
+                    </div>
+                    
+                    <button class="import-template-button" onclick="handleTemplateImport()">
+                        Import
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TEMPLATE 2: BallCaps Cost Breakdown Table - Bottom of Page -->
+        <div id="ballcapsBreakdown" class="cost-breakdown-container" style="display: none;">
+            <div class="cost-breakdown-header">
+                <div class="header-content">
+                    <h2>Factory Cost Breakdown</h2>
+                    <p class="template-description">Template for BallCaps</p>
+                </div>
+                <button class="back-button" onclick="goBackToSelection()">
+                    ← Back to Selection
+                </button>
+            </div>
+            
+            <div class="cost-breakdown-content">
+                <!-- Left Side - Cost Breakdown -->
+                <div class="cost-sections">
+                    <!-- FABRIC/S Section -->
+                    <div class="cost-section">
+                        <div class="section-header">FABRIC/S</div>
+                        <div class="cost-table">
+                            <div class="cost-row header-row">
+                                <div class="cost-cell">(Name/Code/Description)Description</div>
+                                <div class="cost-cell">CONSUMPTION (YARD)</div>
+                                <div class="cost-cell">MATERIAL PRICE (USD/YD)</div>
+                                <div class="cost-cell">MATERIAL COST</div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- OTHER FABRIC/S - TRIM/S Section -->
+                    <div class="cost-section">
+                        <div class="section-header">OTHER FABRIC/S - TRIM/S</div>
+                        <div class="cost-table">
+                            <div class="cost-row header-row">
+                                <div class="cost-cell">(Name/Code/Description)Description</div>
+                                <div class="cost-cell">CONSUMPTION (YARD)</div>
+                                <div class="cost-cell">MATERIAL PRICE (USD/YD)</div>
+                                <div class="cost-cell">MATERIAL COST</div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TRIM/S Section -->
+                    <div class="cost-section">
+                        <div class="section-header">TRIM/S</div>
+                        <div class="cost-table">
+                            <div class="cost-row header-row">
+                                <div class="cost-cell">(Name/Code/Description)Description</div>
+                                <div class="cost-cell">CONSUMPTION (PIECE)</div>
+                                <div class="cost-cell">MATERIAL PRICE (USD/PC)</div>
+                                <div class="cost-cell">MATERIAL COST</div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TOTAL MATERIAL COST -->
+                    <div class="cost-section total-section">
+                        <div class="total-material-cost">
+                            <div class="total-label">TOTAL MATERIAL AND SUBMATERIALS COST:</div>
+                            <div class="total-value">$0.00</div>
+                        </div>
+                    </div>
+
+                    <!-- OPERATIONS Section -->
+                    <div class="cost-section">
+                        <div class="section-header">OPERATIONS</div>
+                        <div class="cost-table">
+                            <div class="cost-row header-row">
+                                <div class="cost-cell">SMV</div>
+                                <div class="cost-cell">COST (USD/MIN)</div>
+                                <div class="cost-cell">MATERIAL COST</div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row subtotal-row">
+                                <div class="cost-cell">SUB TOTAL</div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell">$0.00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PACKAGING Section -->
+                    <div class="cost-section">
+                        <div class="section-header">PACKAGING</div>
+                        <div class="cost-table">
+                            <div class="cost-row header-row">
+                                <div class="cost-cell">Factory Notes</div>
+                                <div class="cost-cell">COST</div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row subtotal-row">
+                                <div class="cost-cell">SUB TOTAL</div>
+                                <div class="cost-cell">$0.00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- OVERHEAD/PROFIT Section -->
+                    <div class="cost-section">
+                        <div class="section-header">OVERHEAD/PROFIT</div>
+                        <div class="cost-table">
+                            <div class="cost-row header-row">
+                                <div class="cost-cell">Factory Notes</div>
+                                <div class="cost-cell">COST</div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row subtotal-row">
+                                <div class="cost-cell">SUB TOTAL</div>
+                                <div class="cost-cell">$0.00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TOTAL FACTORY COST -->
+                    <div class="cost-section total-section">
+                        <div class="total-factory-cost">
+                            <div class="total-label">TOTAL FACTORY COST:</div>
+                            <div class="total-value">$0.00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side - Product Details -->
+                <div class="product-details">
+                    <div class="product-info">
+                        <div class="info-row">
+                            <span class="info-label">Customer:</span>
+                            <span class="info-value"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Season:</span>
+                            <span class="info-value"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Style#:</span>
+                            <span class="info-value"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Style Name:</span>
+                            <span class="info-value"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">MOQ:</span>
+                            <span class="info-value"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Leadtime:</span>
+                            <span class="info-value"></span>
+                        </div>
+                    </div>
+
+                    <div class="product-image">
+                        <div class="image-placeholder">
+                            <div class="beanie-icon">🧢</div>
+                            <div class="image-text">Product Image</div>
+                        </div>
+                    </div>
+
+                    <div class="notes-section">
+                        <div class="notes-content">
+                            <div class="note-item">Add your costing notes here...</div>
+                            <div class="note-item"></div>
+                            <div class="note-item"></div>
+                            <div class="note-item"></div>
+                            <div class="note-item"></div>
+                            <div class="note-item"></div>
+                            <div class="note-item"></div>
+                            <div class="pricing-tiers">
+                                <div class="pricing-item">Pricing tiers will appear here</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="factory-cell">
+                        <div class="factory-label">Factory Cell</div>
+                        <div class="factory-name"></div>
+                    </div>
+
+                    <div class="drag-drop-area">
+                        <div class="drag-drop-content">
+                            <div class="drag-drop-icon">📁</div>
+                            <div class="drag-drop-text">drag & drop<br>function here</div>
+                        </div>
+                    </div>
+                    
+                    <button class="import-template-button" onclick="handleTemplateImport()">
+                        Import
+                    </button>
                 </div>
             </div>
         </div>
@@ -2675,15 +3126,18 @@
         // Show template based on product type selection
         function showTemplate(productType) {
             const costBreakdown = document.getElementById('costBreakdown');
+            const ballcapsBreakdown = document.getElementById('ballcapsBreakdown');
             const productSelection = document.querySelector('.product-selection-container');
             
             if (productType === 'beanie') {
-                // Show Template 1: Factory Cost Breakdown at the bottom
+                // Show Template 1: Factory Cost Breakdown for Beanie
                 costBreakdown.style.display = 'block';
+                ballcapsBreakdown.style.display = 'none';
                 productSelection.style.display = 'none';
             } else if (productType === 'ballcaps') {
-                // For now, show the same template (can be customized later)
-                costBreakdown.style.display = 'block';
+                // Show Template 2: Factory Cost Breakdown for BallCaps
+                costBreakdown.style.display = 'none';
+                ballcapsBreakdown.style.display = 'block';
                 productSelection.style.display = 'none';
             }
         }
@@ -2691,11 +3145,131 @@
         // Go back to product selection
         function goBackToSelection() {
             const costBreakdown = document.getElementById('costBreakdown');
+            const ballcapsBreakdown = document.getElementById('ballcapsBreakdown');
             const productSelection = document.querySelector('.product-selection-container');
             
             costBreakdown.style.display = 'none';
+            ballcapsBreakdown.style.display = 'none';
             productSelection.style.display = 'block';
         }
+
+        // Drag & Drop functionality for Template 1
+        function initializeDragDrop() {
+            const dragDropArea = document.querySelector('.drag-drop-area');
+            
+            if (dragDropArea) {
+                // Prevent default drag behaviors
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    dragDropArea.addEventListener(eventName, preventDefaults, false);
+                    document.body.addEventListener(eventName, preventDefaults, false);
+                });
+
+                // Highlight drop area when item is dragged over it
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dragDropArea.addEventListener(eventName, highlight, false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dragDropArea.addEventListener(eventName, unhighlight, false);
+                });
+
+                // Handle dropped files
+                dragDropArea.addEventListener('drop', handleDrop, false);
+                
+                // Handle click to reset
+                dragDropArea.addEventListener('click', resetDragDrop);
+            }
+        }
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function highlight(e) {
+            document.querySelector('.drag-drop-area').classList.add('drag-over');
+        }
+
+        function unhighlight(e) {
+            document.querySelector('.drag-drop-area').classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length > 0) {
+                const file = files[0];
+                console.log('File dropped:', file.name, file.type);
+                
+                // Update the drag drop area to show file name
+                const dragDropText = document.querySelector('.drag-drop-text');
+                const dragDropIcon = document.querySelector('.drag-drop-icon');
+                
+                if (dragDropText && dragDropIcon) {
+                    dragDropIcon.textContent = '✅';
+                    dragDropText.innerHTML = `File: ${file.name}<br><small>Click to change</small>`;
+                }
+                
+                // Here you can add your file processing logic
+                // For example, if it's an image, you could display it
+                // If it's a data file, you could process it
+            }
+        }
+
+        function resetDragDrop() {
+            const dragDropText = document.querySelector('.drag-drop-text');
+            const dragDropIcon = document.querySelector('.drag-drop-icon');
+            
+            if (dragDropText && dragDropIcon) {
+                dragDropIcon.textContent = '📁';
+                dragDropText.innerHTML = 'drag & drop<br>function here';
+            }
+        }
+
+        function handleTemplateImport() {
+            // Check if a file has been dropped
+            const dragDropText = document.querySelector('.drag-drop-text');
+            const dragDropIcon = document.querySelector('.drag-drop-icon');
+            
+            if (dragDropIcon && dragDropIcon.textContent === '✅') {
+                // File has been selected, proceed with import
+                console.log('Importing file...');
+                
+                // Show loading state
+                const importButton = document.querySelector('.import-template-button');
+                if (importButton) {
+                    importButton.textContent = 'Importing...';
+                    importButton.disabled = true;
+                }
+                
+                // Simulate import process (replace with actual import logic)
+                setTimeout(() => {
+                    console.log('Import completed!');
+                    
+                    // Reset button
+                    if (importButton) {
+                        importButton.textContent = 'Import';
+                        importButton.disabled = false;
+                    }
+                    
+                    // Show success feedback
+                    if (dragDropText) {
+                        dragDropText.innerHTML = 'Import successful!<br><small>Click to import another</small>';
+                    }
+                }, 2000);
+                
+            } else {
+                // No file selected, show message
+                console.log('Please drop a file first');
+                alert('Please drop a file in the drag & drop area first!');
+            }
+        }
+
+        // Initialize drag & drop when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDragDrop();
+        });
 
         // Export table data to Excel
         async function exportToExcel() {
