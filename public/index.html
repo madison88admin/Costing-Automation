@@ -339,6 +339,358 @@
             color: #2c2c2c;
         }
 
+        .import-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: 2px solid transparent;
+            padding: 16px 30px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            min-width: 100px;
+        }
+
+        .import-button:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .import-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .import-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Product Selection Styles */
+        .product-selection-container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .product-selection-header h2 {
+            color: #2c2c2c;
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0 0 30px 0;
+        }
+
+        .product-selection-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .product-button {
+            background: linear-gradient(135deg, #87CEEB 0%, #98D8E8 100%);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(135, 206, 235, 0.3);
+            min-width: 150px;
+        }
+
+        .product-button:hover {
+            background: linear-gradient(135deg, #7BB8D8 0%, #8BC8E8 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(135, 206, 235, 0.4);
+        }
+
+        .product-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(135, 206, 235, 0.3);
+        }
+
+        .beanie-button {
+            background: linear-gradient(135deg, #87CEEB 0%, #98D8E8 100%);
+        }
+
+        .ballcaps-button {
+            background: linear-gradient(135deg, #87CEEB 0%, #98D8E8 100%);
+        }
+
+        /* Factory Cost Breakdown Styles */
+        .cost-breakdown-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .cost-breakdown-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .cost-breakdown-header h2 {
+            color: #2c2c2c;
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .back-button {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
+        }
+
+        .back-button:hover {
+            background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
+        }
+
+        .back-button:active {
+            transform: translateY(0);
+        }
+
+        .cost-breakdown-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        .cost-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .cost-section {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            background: #2c2c2c;
+            color: white;
+            padding: 12px 16px;
+            font-weight: 600;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .cost-table {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cost-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            border-bottom: 1px solid #eee;
+        }
+
+        .cost-row.header-row {
+            background: #f8f9fa;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .cost-row.subtotal-row {
+            background: #e8f5e8;
+            font-weight: 600;
+        }
+
+        .cost-cell {
+            padding: 12px 16px;
+            border-right: 1px solid #eee;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+
+        .cost-cell:last-child {
+            border-right: none;
+        }
+
+        .total-section {
+            background: #e8f5e8;
+            border: 2px solid #28a745;
+        }
+
+        .total-material-cost, .total-factory-cost {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .total-label {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2c2c2c;
+            margin-bottom: 10px;
+        }
+
+        .total-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #28a745;
+        }
+
+        /* Product Details Styles */
+        .product-details {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .product-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #2c2c2c;
+        }
+
+        .info-value {
+            color: #666;
+        }
+
+        .product-image {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .image-placeholder {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .beanie-icon {
+            font-size: 48px;
+        }
+
+        .image-text {
+            font-weight: 600;
+            color: #2c2c2c;
+        }
+
+        .notes-section {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .notes-content {
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .note-item {
+            margin-bottom: 8px;
+            color: #2c2c2c;
+        }
+
+        .pricing-tiers {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+        }
+
+        .pricing-item {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #2c2c2c;
+        }
+
+        .factory-cell {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        .factory-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .factory-name {
+            font-weight: 600;
+            color: #2c2c2c;
+        }
+
+        /* Responsive Design for Cost Breakdown */
+        @media (max-width: 1200px) {
+            .cost-breakdown-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .cost-row {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            
+            .cost-cell {
+                border-right: none;
+                border-bottom: 1px solid #eee;
+            }
+            
+            .cost-cell:last-child {
+                border-bottom: none;
+            }
+        }
+
 
         /* Responsive Design */
         @media (max-width: 768px) {
@@ -349,6 +701,12 @@
             
             .search-header {
                 padding: 20px 24px;
+            }
+            
+            .search-button, .clear-button, .import-button {
+                padding: 14px 20px;
+                font-size: 14px;
+                min-width: 80px;
             }
             
             .search-form {
@@ -933,13 +1291,13 @@
                         Clear
                     </button>
                     <button class="import-button" onclick="exportToExcel()">
-                        Export
+                        📊 Export
                     </button>
                 </div>
             </div>
             
             <div id="tableData"></div>
-            
+                
             <!-- Pagination -->
             <div id="pagination" class="pagination" style="display: none;">
                 <button class="pagination-nav" id="firstPage" onclick="goToPage(1)" disabled>
@@ -964,6 +1322,353 @@
             </div>
         </div>
 
+        <!-- Product Type Selection - Bottom of Page -->
+        <div class="product-selection-container">
+            <div class="product-selection-header">
+                <h2>IMPORT EXCEL FILES FTY CBD</h2>
+            </div>
+            <div class="product-selection-buttons">
+                <button class="product-button beanie-button" onclick="showTemplate('beanie')">
+                    Beanie
+                </button>
+                <button class="product-button ballcaps-button" onclick="showTemplate('ballcaps')">
+                    BallCaps
+                </button>
+            </div>
+        </div>
+
+        <!-- TEMPLATE 1: Factory Cost Breakdown Table - Bottom of Page -->
+        <div id="costBreakdown" class="cost-breakdown-container" style="display: none;">
+            <div class="cost-breakdown-header">
+                <h2>Factory Cost Breakdown</h2>
+                <button class="back-button" onclick="goBackToSelection()">
+                    ← Back to Selection
+                </button>
+            </div>
+            
+            <div class="cost-breakdown-content">
+                <!-- Left Side - Cost Breakdown -->
+                <div class="cost-sections">
+                    <!-- YARN Section -->
+                    <div class="cost-section">
+                        <div class="section-header">YARN</div>
+                        <div class="cost-table">
+                            <div class="cost-row header-row">
+                                <div class="cost-cell">MATERIAL</div>
+                                <div class="cost-cell">CONSUMPTION (G)</div>
+                                <div class="cost-cell">MATERIAL PRICE (USD/KG)</div>
+                                <div class="cost-cell">MATERIAL COST</div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FABRIC Section -->
+                    <div class="cost-section">
+                        <div class="section-header">FABRIC</div>
+                        <div class="cost-table">
+                            <div class="cost-row header-row">
+                                <div class="cost-cell">MATERIAL</div>
+                                <div class="cost-cell">CONSUMPTION (YARDS)</div>
+                                <div class="cost-cell">MATERIAL PRICE (USD/YD)</div>
+                                <div class="cost-cell">MATERIAL COST</div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TRIM Section -->
+                    <div class="cost-section">
+                        <div class="section-header">TRIM</div>
+                        <div class="cost-table">
+                            <div class="cost-row header-row">
+                                <div class="cost-cell">MATERIAL</div>
+                                <div class="cost-cell">CONSUMPTION (PIECE)</div>
+                                <div class="cost-cell">MATERIAL PRICE (USD/PC)</div>
+                                <div class="cost-cell">MATERIAL COST</div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TOTAL MATERIAL COST -->
+                    <div class="cost-section total-section">
+                        <div class="total-material-cost">
+                            <div class="total-label">TOTAL MATERIAL AND SUBMATERIALS COST:</div>
+                            <div class="total-value">$0.00</div>
+                        </div>
+                    </div>
+
+                    <!-- KNITTING Section -->
+                    <div class="cost-section">
+                        <div class="section-header">KNITTING</div>
+                        <div class="cost-table">
+                            <div class="cost-row header-row">
+                                <div class="cost-cell">MACHINE</div>
+                                <div class="cost-cell">KNITTING TIME (MINS)</div>
+                                <div class="cost-cell">KNITTING SAH (USD/MIN)</div>
+                                <div class="cost-cell">KNITTING COST</div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- OPERATIONS Section -->
+                    <div class="cost-section">
+                        <div class="section-header">OPERATIONS</div>
+                        <div class="cost-table">
+                            <div class="cost-row header-row">
+                                <div class="cost-cell">OPERATION</div>
+                                <div class="cost-cell">OPERATION TIME (MINS)</div>
+                                <div class="cost-cell">OPERATION COST (USD/MIN)</div>
+                                <div class="cost-cell">OPERATION COST</div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row subtotal-row">
+                                <div class="cost-cell">SUB TOTAL</div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell">$0.00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PACKAGING Section -->
+                    <div class="cost-section">
+                        <div class="section-header">PACKAGING</div>
+                        <div class="cost-table">
+                            <div class="cost-row header-row">
+                                <div class="cost-cell">PACKAGING TYPE</div>
+                                <div class="cost-cell">Factory Notes</div>
+                                <div class="cost-cell">COST</div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row subtotal-row">
+                                <div class="cost-cell">SUB TOTAL</div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell">$0.00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- OVERHEAD/PROFIT Section -->
+                    <div class="cost-section">
+                        <div class="section-header">OVERHEAD/ PROFIT</div>
+                        <div class="cost-table">
+                            <div class="cost-row header-row">
+                                <div class="cost-cell">TYPE</div>
+                                <div class="cost-cell">Factory Notes</div>
+                                <div class="cost-cell">COST</div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row subtotal-row">
+                                <div class="cost-cell">SUB TOTAL</div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell">$0.00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TOTAL FACTORY COST -->
+                    <div class="cost-section total-section">
+                        <div class="total-factory-cost">
+                            <div class="total-label">TOTAL FACTORY COST:</div>
+                            <div class="total-value">$0.00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side - Product Details -->
+                <div class="product-details">
+                    <div class="product-info">
+                        <div class="info-row">
+                            <span class="info-label">Customer:</span>
+                            <span class="info-value"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Season:</span>
+                            <span class="info-value"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Style#:</span>
+                            <span class="info-value"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Style Name:</span>
+                            <span class="info-value"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Costed Quantity:</span>
+                            <span class="info-value"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Leadtime:</span>
+                            <span class="info-value"></span>
+                        </div>
+                    </div>
+
+                    <div class="product-image">
+                        <div class="image-placeholder">
+                            <div class="beanie-icon">📦</div>
+                            <div class="image-text">Product Image</div>
+                        </div>
+                    </div>
+
+                    <div class="notes-section">
+                        <div class="notes-content">
+                            <div class="note-item">Add your costing notes here...</div>
+                            <div class="note-item"></div>
+                            <div class="note-item"></div>
+                            <div class="note-item"></div>
+                            <div class="note-item"></div>
+                            <div class="note-item"></div>
+                            <div class="note-item"></div>
+                            <div class="pricing-tiers">
+                                <div class="pricing-item">Pricing tiers will appear here</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="factory-cell">
+                        <div class="factory-label">Factory Cell</div>
+                        <div class="factory-name"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
 
@@ -1966,14 +2671,54 @@
             }
         }
 
+
+        // Show template based on product type selection
+        function showTemplate(productType) {
+            const costBreakdown = document.getElementById('costBreakdown');
+            const productSelection = document.querySelector('.product-selection-container');
+            
+            if (productType === 'beanie') {
+                // Show Template 1: Factory Cost Breakdown at the bottom
+                costBreakdown.style.display = 'block';
+                productSelection.style.display = 'none';
+            } else if (productType === 'ballcaps') {
+                // For now, show the same template (can be customized later)
+                costBreakdown.style.display = 'block';
+                productSelection.style.display = 'none';
+            }
+        }
+
+        // Go back to product selection
+        function goBackToSelection() {
+            const costBreakdown = document.getElementById('costBreakdown');
+            const productSelection = document.querySelector('.product-selection-container');
+            
+            costBreakdown.style.display = 'none';
+            productSelection.style.display = 'block';
+        }
+
         // Export table data to Excel
         async function exportToExcel() {
             try {
-                // Ensure XLSX library is loaded
+                console.log('🚀 Starting Excel export...');
+                
+                // Try to load XLSX library, but don't wait too long
                 if (typeof XLSX === 'undefined') {
-                    console.log('XLSX library not found, loading...');
+                    console.log('XLSX library not found, attempting to load...');
                     try {
-                        await ensureXLSXLoaded();
+                        // Load XLSX library synchronously
+                        const script = document.createElement('script');
+                        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+                        script.integrity = 'sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQC5QZQ8ghUzqyHJEwXaVg/2b4d0P7N4a4L0g+ce0qA==';
+                        script.crossOrigin = 'anonymous';
+                        document.head.appendChild(script);
+                        
+                        // Wait a moment for the script to load
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        
+                        if (typeof XLSX === 'undefined') {
+                            throw new Error('XLSX library failed to load');
+                        }
                     } catch (error) {
                         console.log('Failed to load XLSX, falling back to CSV export...');
                         exportToCSV();
@@ -1981,65 +2726,106 @@
                     }
                 }
 
-                // Get the current table data
-                const tableData = window.currentTableData || [];
+                // Get the current table data - try multiple sources
+                let tableData = window.currentTableData || allTableData || [];
+                
+                console.log('Export data sources:');
+                console.log('window.currentTableData:', window.currentTableData ? window.currentTableData.length : 'null');
+                console.log('allTableData:', allTableData ? allTableData.length : 'null');
+                console.log('filteredData:', filteredData ? filteredData.length : 'null');
+                
+                // If we have filtered data, use that; otherwise use all data
+                if (filteredData && filteredData.length > 0) {
+                    tableData = filteredData;
+                    console.log('Using filtered data for export:', tableData.length, 'records');
+                } else if (allTableData && allTableData.length > 0) {
+                    tableData = allTableData;
+                    console.log('Using all table data for export:', tableData.length, 'records');
+                }
                 
                 if (tableData.length === 0) {
                     alert('No data available to export. Please load data first.');
                     return;
                 }
 
-                // Get table headers from the actual table
-                const table = document.querySelector('.table');
-                if (!table) {
-                    alert('No table found. Please ensure data is loaded.');
-                    return;
-                }
+                console.log('Exporting data sample:', tableData.slice(0, 2)); // Show first 2 records for debugging
 
-                const headers = [];
-                const headerCells = table.querySelectorAll('thead th');
-                headerCells.forEach(cell => {
-                    headers.push(cell.textContent.trim());
+                // Define the exact columns that are displayed on the website (same as displayColumns)
+                const displayColumns = [
+                    'Season',
+                    'Customer', 
+                    'Style Number',
+                    'Style Name',
+                    'Main Material',
+                    'Material Consumption',
+                    'Material Price',
+                    'Trim Cost',
+                    'Total Material Cost',
+                    'Knitting Machine',
+                    'Knitting Time',
+                    'Knitting CPM',
+                    'Knitting Cost',
+                    'Ops Cost',
+                    'Knitting + Ops Cost',
+                    'Packaging',
+                    'OH',
+                    'Profit',
+                    'FTY Adjustment',
+                    'TTL FTY Cost'
+                ];
+
+                // Map display columns to database field names (same as in displayTableData)
+                const columnMapping = {
+                    'Season': ['season', 'Season', 'SEASON', 'seasons', 'SEASONS'],
+                    'Customer': ['customer', 'Customer', 'CUSTOMER', 'customers', 'CUSTOMERS'],
+                    'Style Number': ['style_number', 'styleNumber', 'Style Number', 'STYLE_NUMBER', 'style_no', 'styleNo', 'STYLE_NO'],
+                    'Style Name': ['style_name', 'styleName', 'Style Name', 'STYLE_NAME', 'style', 'STYLE'],
+                    'Main Material': ['main_material', 'mainMaterial', 'Main Material', 'MAIN_MATERIAL', 'material', 'MATERIAL', 'main_materials'],
+                    'Material Consumption': ['material_consumption', 'materialConsumption', 'Material Consumption', 'MATERIAL_CONSUMPTION', 'consumption', 'CONSUMPTION'],
+                    'Material Price': ['material_price', 'materialPrice', 'Material Price', 'MATERIAL_PRICE', 'price', 'PRICE'],
+                    'Trim Cost': ['trim_cost', 'trimCost', 'Trim Cost', 'TRIM_COST', 'trim', 'TRIM'],
+                    'Total Material Cost': ['total_material_cost', 'totalMaterialCost', 'Total Material Cost', 'TOTAL_MATERIAL_COST', 'total_cost', 'totalCost'],
+                    'Knitting Machine': ['knitting_machine', 'knittingMachine', 'Knitting Machine', 'KNITTING_MACHINE', 'machine', 'MACHINE'],
+                    'Knitting Time': ['knitting_time', 'knittingTime', 'Knitting Time', 'KNITTING_TIME', 'time', 'TIME'],
+                    'Knitting CPM': ['knitting_cpm', 'knittingCpm', 'Knitting CPM', 'KNITTING_CPM', 'cpm', 'CPM'],
+                    'Knitting Cost': ['knitting_cost', 'knittingCost', 'Knitting Cost', 'KNITTING_COST', 'knitting', 'KNITTING'],
+                    'Ops Cost': ['ops_cost', 'opsCost', 'Ops Cost', 'OPS_COST', 'ops', 'OPS', 'operations', 'OPERATIONS'],
+                    'Knitting + Ops Cost': ['knitting_ops_cost', 'knittingOpsCost', 'Knitting + Ops Cost', 'KNITTING_OPS_COST', 'total_ops', 'totalOps'],
+                    'Packaging': ['packaging', 'Packaging', 'PACKAGING', 'package', 'PACKAGE'],
+                    'OH': ['oh', 'OH', 'overhead', 'Overhead', 'OVERHEAD', 'overheads', 'OVERHEADS'],
+                    'Profit': ['profit', 'Profit', 'PROFIT', 'profits', 'PROFITS'],
+                    'FTY Adjustment': ['fty_adjustment', 'ftyAdjustment', 'FTY Adjustment', 'FTY_ADJUSTMENT', 'fty', 'FTY', 'adjustment', 'ADJUSTMENT'],
+                    'TTL FTY Cost': ['ttl_fty_cost', 'ttlFtyCost', 'TTL FTY Cost', 'TTL_FTY_COST', 'total_fty', 'totalFty', 'ttl_cost', 'ttlCost']
+                };
+
+                // Find actual database field names for each display column
+                const availableFields = Object.keys(tableData[0] || {});
+                console.log('Available database fields:', availableFields);
+                
+                const mappedFields = {};
+                displayColumns.forEach(displayName => {
+                    const possibleNames = columnMapping[displayName] || [displayName];
+                    const foundField = possibleNames.find(name => availableFields.includes(name));
+                    mappedFields[displayName] = foundField || null;
                 });
 
-                // Prepare data for Excel (skip header row, only include data)
-                const excelData = [];
+                console.log('Field mapping for export:', mappedFields);
+
+                // Prepare data for Excel - start with headers
+                const excelData = [displayColumns]; // Use display column names as headers
                 
-                // Add data rows only (skip the header row)
+                // Add data rows
                 tableData.forEach(row => {
                     const rowData = [];
-                    headers.forEach(header => {
-                        // Map header names to data properties
-                        let value = '';
-                        switch(header.toLowerCase()) {
-                            case 'season':
-                                value = row.season || '';
-                                break;
-                            case 'customer':
-                                value = row.customer || '';
-                                break;
-                            case 'style number':
-                                value = row.style_number || '';
-                                break;
-                            case 'style name':
-                                value = row.style_name || '';
-                                break;
-                            case 'main material':
-                                value = row.main_material || '';
-                                break;
-                            case 'material consumption':
-                                value = row.material_consumption || '';
-                                break;
-                            case 'material price':
-                                value = row.material_price || '';
-                                break;
-                            default:
-                                value = row[header.toLowerCase().replace(/\s+/g, '_')] || '';
-                        }
+                    displayColumns.forEach(displayName => {
+                        const dbField = mappedFields[displayName];
+                        const value = dbField ? (row[dbField] || '') : '';
                         rowData.push(value);
                     });
                     excelData.push(rowData);
                 });
+
+                console.log('Excel data prepared:', excelData.length, 'rows (including header)');
 
                 // Create workbook and worksheet
                 const wb = XLSX.utils.book_new();
@@ -2047,7 +2833,7 @@
 
                 // Set column widths for better formatting
                 const colWidths = [];
-                headers.forEach((header, index) => {
+                displayColumns.forEach((header, index) => {
                     let maxWidth = header.length;
                     excelData.forEach(row => {
                         if (row[index] && row[index].toString().length > maxWidth) {
@@ -2061,77 +2847,120 @@
                 // Add worksheet to workbook
                 XLSX.utils.book_append_sheet(wb, ws, 'Databank Data');
 
-                // Generate filename with timestamp (XLSM format)
+                // Generate filename with timestamp
                 const now = new Date();
                 const timestamp = now.toISOString().slice(0, 19).replace(/:/g, '-');
-                const filename = `Databank_Data_${timestamp}.xlsm`;
+                const filename = `Databank_Data_${timestamp}.xlsx`;
 
-                // Save the file as XLSM
-                XLSX.writeFile(wb, filename, { bookType: 'xlsm' });
+                // Save the file
+                XLSX.writeFile(wb, filename);
 
                 // Show success message
-                showStatus('tableData', `✅ Excel file exported successfully: ${filename}`, 'success');
+                showStatus('tableData', `✅ Excel file exported successfully: ${filename} (${tableData.length} records)`, 'success');
                 
             } catch (error) {
                 console.error('Error exporting to Excel:', error);
-                showStatus('tableData', `❌ Error exporting to Excel: ${error.message}`, 'error');
+                console.log('Falling back to CSV export...');
+                exportToCSV();
             }
         }
 
-        // Fallback CSV export function
+        // Fallback CSV export function - matches exactly what's displayed on website
         function exportToCSV() {
             try {
-                const tableData = window.currentTableData || [];
+                console.log('Starting CSV export...');
+                
+                // Get the current table data - try multiple sources
+                let tableData = window.currentTableData || allTableData || [];
+                
+                // If we have filtered data, use that; otherwise use all data
+                if (filteredData && filteredData.length > 0) {
+                    tableData = filteredData;
+                    console.log('Using filtered data for CSV export:', tableData.length, 'records');
+                } else if (allTableData && allTableData.length > 0) {
+                    tableData = allTableData;
+                    console.log('Using all table data for CSV export:', tableData.length, 'records');
+                }
                 
                 if (tableData.length === 0) {
                     alert('No data available to export. Please load data first.');
                     return;
                 }
 
-                const table = document.querySelector('.table');
-                if (!table) {
-                    alert('No table found. Please ensure data is loaded.');
-                    return;
-                }
+                console.log('CSV Export - Data length:', tableData.length);
+                console.log('CSV Export - Sample data:', tableData.slice(0, 2));
 
-                const headers = [];
-                const headerCells = table.querySelectorAll('thead th');
-                headerCells.forEach(cell => {
-                    headers.push(cell.textContent.trim());
+                // Define the exact columns that are displayed on the website (same as displayColumns)
+                const displayColumns = [
+                    'Season',
+                    'Customer', 
+                    'Style Number',
+                    'Style Name',
+                    'Main Material',
+                    'Material Consumption',
+                    'Material Price',
+                    'Trim Cost',
+                    'Total Material Cost',
+                    'Knitting Machine',
+                    'Knitting Time',
+                    'Knitting CPM',
+                    'Knitting Cost',
+                    'Ops Cost',
+                    'Knitting + Ops Cost',
+                    'Packaging',
+                    'OH',
+                    'Profit',
+                    'FTY Adjustment',
+                    'TTL FTY Cost'
+                ];
+
+                // Map display columns to database field names (same as in displayTableData)
+                const columnMapping = {
+                    'Season': ['season', 'Season', 'SEASON', 'seasons', 'SEASONS'],
+                    'Customer': ['customer', 'Customer', 'CUSTOMER', 'customers', 'CUSTOMERS'],
+                    'Style Number': ['style_number', 'styleNumber', 'Style Number', 'STYLE_NUMBER', 'style_no', 'styleNo', 'STYLE_NO'],
+                    'Style Name': ['style_name', 'styleName', 'Style Name', 'STYLE_NAME', 'style', 'STYLE'],
+                    'Main Material': ['main_material', 'mainMaterial', 'Main Material', 'MAIN_MATERIAL', 'material', 'MATERIAL', 'main_materials'],
+                    'Material Consumption': ['material_consumption', 'materialConsumption', 'Material Consumption', 'MATERIAL_CONSUMPTION', 'consumption', 'CONSUMPTION'],
+                    'Material Price': ['material_price', 'materialPrice', 'Material Price', 'MATERIAL_PRICE', 'price', 'PRICE'],
+                    'Trim Cost': ['trim_cost', 'trimCost', 'Trim Cost', 'TRIM_COST', 'trim', 'TRIM'],
+                    'Total Material Cost': ['total_material_cost', 'totalMaterialCost', 'Total Material Cost', 'TOTAL_MATERIAL_COST', 'total_cost', 'totalCost'],
+                    'Knitting Machine': ['knitting_machine', 'knittingMachine', 'Knitting Machine', 'KNITTING_MACHINE', 'machine', 'MACHINE'],
+                    'Knitting Time': ['knitting_time', 'knittingTime', 'Knitting Time', 'KNITTING_TIME', 'time', 'TIME'],
+                    'Knitting CPM': ['knitting_cpm', 'knittingCpm', 'Knitting CPM', 'KNITTING_CPM', 'cpm', 'CPM'],
+                    'Knitting Cost': ['knitting_cost', 'knittingCost', 'Knitting Cost', 'KNITTING_COST', 'knitting', 'KNITTING'],
+                    'Ops Cost': ['ops_cost', 'opsCost', 'Ops Cost', 'OPS_COST', 'ops', 'OPS', 'operations', 'OPERATIONS'],
+                    'Knitting + Ops Cost': ['knitting_ops_cost', 'knittingOpsCost', 'Knitting + Ops Cost', 'KNITTING_OPS_COST', 'total_ops', 'totalOps'],
+                    'Packaging': ['packaging', 'Packaging', 'PACKAGING', 'package', 'PACKAGE'],
+                    'OH': ['oh', 'OH', 'overhead', 'Overhead', 'OVERHEAD', 'overheads', 'OVERHEADS'],
+                    'Profit': ['profit', 'Profit', 'PROFIT', 'profits', 'PROFITS'],
+                    'FTY Adjustment': ['fty_adjustment', 'ftyAdjustment', 'FTY Adjustment', 'FTY_ADJUSTMENT', 'fty', 'FTY', 'adjustment', 'ADJUSTMENT'],
+                    'TTL FTY Cost': ['ttl_fty_cost', 'ttlFtyCost', 'TTL FTY Cost', 'TTL_FTY_COST', 'total_fty', 'totalFty', 'ttl_cost', 'ttlCost']
+                };
+
+                // Find actual database field names for each display column
+                const availableFields = Object.keys(tableData[0] || {});
+                console.log('Available database fields for CSV:', availableFields);
+                
+                const mappedFields = {};
+                displayColumns.forEach(displayName => {
+                    const possibleNames = columnMapping[displayName] || [displayName];
+                    const foundField = possibleNames.find(name => availableFields.includes(name));
+                    mappedFields[displayName] = foundField || null;
                 });
 
-                // Create CSV content (skip header row, only include data)
-                let csvContent = '';
+                console.log('Field mapping for CSV export:', mappedFields);
+
+                // Create CSV content - start with headers
+                let csvContent = displayColumns.join(',') + '\n';
                 
+                // Add data rows
                 tableData.forEach(row => {
                     const rowData = [];
-                    headers.forEach(header => {
-                        let value = '';
-                        switch(header.toLowerCase()) {
-                            case 'season':
-                                value = row.season || '';
-                                break;
-                            case 'customer':
-                                value = row.customer || '';
-                                break;
-                            case 'style number':
-                                value = row.style_number || '';
-                                break;
-                            case 'style name':
-                                value = row.style_name || '';
-                                break;
-                            case 'main material':
-                                value = row.main_material || '';
-                                break;
-                            case 'material consumption':
-                                value = row.material_consumption || '';
-                                break;
-                            case 'material price':
-                                value = row.material_price || '';
-                                break;
-                            default:
-                                value = row[header.toLowerCase().replace(/\s+/g, '_')] || '';
-                        }
+                    displayColumns.forEach(displayName => {
+                        const dbField = mappedFields[displayName];
+                        let value = dbField ? (row[dbField] || '') : '';
+                        
                         // Escape commas and quotes in CSV
                         value = value.toString().replace(/"/g, '""');
                         if (value.includes(',') || value.includes('"') || value.includes('\n')) {
@@ -2141,6 +2970,8 @@
                     });
                     csvContent += rowData.join(',') + '\n';
                 });
+
+                console.log('CSV content prepared:', csvContent.length, 'characters');
 
                 // Create and download CSV file
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -2158,7 +2989,7 @@
                 link.click();
                 document.body.removeChild(link);
 
-                showStatus('tableData', `✅ CSV file exported successfully: ${filename}`, 'success');
+                showStatus('tableData', `✅ CSV file exported successfully: ${filename} (${tableData.length} records)`, 'success');
                 
             } catch (error) {
                 console.error('Error exporting to CSV:', error);
