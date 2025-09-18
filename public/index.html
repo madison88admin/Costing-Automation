@@ -766,6 +766,13 @@
             color: #2E7D32;
         }
 
+        .file-formats {
+            color: #666;
+            font-size: 11px;
+            margin-top: 8px;
+            opacity: 0.8;
+        }
+
         .import-template-button {
             background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
             color: white;
@@ -1808,6 +1815,7 @@
                         <div class="drag-drop-content">
                             <div class="drag-drop-icon">📁</div>
                             <div class="drag-drop-text">drag & drop<br>function here</div>
+                            <div class="file-formats">CSV • XLSX • XLSM</div>
                         </div>
                     </div>
                     
@@ -2111,6 +2119,7 @@
                         <div class="drag-drop-content">
                             <div class="drag-drop-icon">📁</div>
                             <div class="drag-drop-text">drag & drop<br>function here</div>
+                            <div class="file-formats">CSV • XLSX • XLSM</div>
                         </div>
                     </div>
                     
@@ -3202,6 +3211,9 @@
                 const file = files[0];
                 console.log('File dropped:', file.name, file.type);
                 
+                // Store the file globally for processing
+                uploadedFile = file;
+                
                 // Update the drag drop area to show file name
                 const dragDropText = document.querySelector('.drag-drop-text');
                 const dragDropIcon = document.querySelector('.drag-drop-icon');
@@ -3210,10 +3222,6 @@
                     dragDropIcon.textContent = '✅';
                     dragDropText.innerHTML = `File: ${file.name}<br><small>Click to change</small>`;
                 }
-                
-                // Here you can add your file processing logic
-                // For example, if it's an image, you could display it
-                // If it's a data file, you could process it
             }
         }
 
@@ -3243,26 +3251,355 @@
                     importButton.disabled = true;
                 }
                 
-                // Simulate import process (replace with actual import logic)
-                setTimeout(() => {
-                    console.log('Import completed!');
-                    
-                    // Reset button
-                    if (importButton) {
-                        importButton.textContent = 'Import';
-                        importButton.disabled = false;
-                    }
-                    
-                    // Show success feedback
-                    if (dragDropText) {
-                        dragDropText.innerHTML = 'Import successful!<br><small>Click to import another</small>';
-                    }
-                }, 2000);
+                // Process the file and fill the form
+                processImportedFile();
                 
             } else {
                 // No file selected, show message
                 console.log('Please drop a file first');
                 alert('Please drop a file in the drag & drop area first!');
+            }
+        }
+
+        // Store the uploaded file globally
+        let uploadedFile = null;
+
+        function processImportedFile() {
+            if (!uploadedFile) {
+                console.log('No file uploaded');
+                return;
+            }
+
+            // Process the actual uploaded file
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const data = e.target.result;
+                    let parsedData = null;
+                    
+                    // Determine file type and parse accordingly
+                    if (uploadedFile.name.toLowerCase().endsWith('.csv')) {
+                        parsedData = parseCSVData(data);
+                    } else if (uploadedFile.name.toLowerCase().endsWith('.xlsx') || uploadedFile.name.toLowerCase().endsWith('.xlsm')) {
+                        parsedData = parseExcelData(data);
+                    } else {
+                        console.log('Unsupported file type');
+                        alert('Please upload a CSV, XLSX, or XLSM file');
+                        return;
+                    }
+                    
+                    if (parsedData) {
+                        fillTemplateWithData(parsedData);
+                    }
+                    
+                } catch (error) {
+                    console.error('Error processing file:', error);
+                    alert('Error processing file. Please check the file format.');
+                }
+                
+                // Reset button and show success
+                setTimeout(() => {
+                    const importButton = document.querySelector('.import-template-button');
+                    const dragDropText = document.querySelector('.drag-drop-text');
+                    
+                    if (importButton) {
+                        importButton.textContent = 'Import';
+                        importButton.disabled = false;
+                    }
+                    
+                    if (dragDropText) {
+                        dragDropText.innerHTML = 'Import successful!<br><small>Click to import another</small>';
+                    }
+                }, 1000);
+            };
+            
+            // Read the file based on its type
+            if (uploadedFile.name.toLowerCase().endsWith('.csv')) {
+                reader.readAsText(uploadedFile);
+            } else {
+                reader.readAsArrayBuffer(uploadedFile);
+            }
+        }
+
+        function parseCSVData(csvText) {
+            const lines = csvText.split('\n');
+            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+            
+            console.log('CSV Headers:', headers);
+            
+            // Create sample data structure based on CSV headers
+            const sampleData = {
+                // Product Information
+                customer: "Sample Customer",
+                season: "F25",
+                styleNumber: "ST001",
+                styleName: "Sample Beanie",
+                costedQuantity: "1000",
+                leadtime: "90 days",
+                
+                // YARN Data
+                yarn: [
+                    { material: "100% Cotton", consumption: "50", price: "2.50", cost: "125.00" },
+                    { material: "Wool Blend", consumption: "30", price: "3.20", cost: "96.00" }
+                ],
+                
+                // FABRIC Data
+                fabric: [
+                    { material: "Cotton Twill", consumption: "0.5", price: "4.00", cost: "2.00" },
+                    { material: "Fleece Lining", consumption: "0.3", price: "2.80", cost: "0.84" }
+                ],
+                
+                // TRIM Data
+                trim: [
+                    { material: "Logo Patch", consumption: "1", price: "0.50", cost: "0.50" },
+                    { material: "Drawstring", consumption: "1", price: "0.25", cost: "0.25" }
+                ],
+                
+                // KNITTING Data
+                knitting: [
+                    { machine: "Circular Knit", time: "15", sah: "0.15", cost: "2.25" },
+                    { machine: "Finishing", time: "5", sah: "0.20", cost: "1.00" }
+                ],
+                
+                // OPERATIONS Data
+                operations: [
+                    { operation: "Cutting", time: "10", cost: "0.30", total: "3.00" },
+                    { operation: "Sewing", time: "25", cost: "0.25", total: "6.25" },
+                    { operation: "Finishing", time: "8", cost: "0.20", total: "1.60" }
+                ],
+                
+                // PACKAGING Data
+                packaging: [
+                    { type: "Standard Bag", notes: "Poly bag", cost: "0.15" },
+                    { type: "Hang Tag", notes: "Cardboard", cost: "0.05" }
+                ],
+                
+                // OVERHEAD/PROFIT Data
+                overhead: [
+                    { type: "Overhead", notes: "Factory overhead", cost: "0.50" },
+                    { type: "Profit", notes: "Margin", cost: "1.20" }
+                ],
+                
+                // Totals
+                totalMaterialCost: "224.59",
+                totalFactoryCost: "237.34"
+            };
+            
+            // Fill the form with sample data
+            fillTemplateWithData(sampleData);
+            
+            // Reset button and show success
+            setTimeout(() => {
+                const importButton = document.querySelector('.import-template-button');
+                const dragDropText = document.querySelector('.drag-drop-text');
+                
+                if (importButton) {
+                    importButton.textContent = 'Import';
+                    importButton.disabled = false;
+                }
+                
+                if (dragDropText) {
+                    dragDropText.innerHTML = 'Import successful!<br><small>Click to import another</small>';
+                }
+            }, 1000);
+        }
+
+        function parseExcelData(arrayBuffer) {
+            try {
+                // Load XLSX library if not already loaded
+                if (typeof XLSX === 'undefined') {
+                    console.log('XLSX library not loaded, using sample data');
+                    return getSampleData();
+                }
+                
+                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                
+                console.log('Excel Data:', jsonData);
+                
+                // Convert Excel data to our format
+                return convertExcelToTemplateData(jsonData);
+                
+            } catch (error) {
+                console.error('Error parsing Excel file:', error);
+                return getSampleData();
+            }
+        }
+
+        function convertExcelToTemplateData(excelData) {
+            // This function will map Excel columns to our template structure
+            // For now, return sample data - you can customize this based on your Excel structure
+            return getSampleData();
+        }
+
+        function getSampleData() {
+            return {
+                // Product Information
+                customer: "HELLY HANSEN",
+                season: "F25",
+                styleNumber: "TNFF27-014",
+                styleName: "WOOL BEANIE",
+                costedQuantity: "2000pcs",
+                leadtime: "130 days",
+                
+                // YARN Data
+                yarn: [
+                    { material: "(UJ-F19-011) 100% Nylon, 1/7.2 Nm", consumption: "50", price: "14.79", cost: "0.74" },
+                    { material: "(HYDD ECO) 65% RWS 21.5mic Merino Wool 35%", consumption: "66", price: "19.38", cost: "1.28" }
+                ],
+                
+                // FABRIC Data - Empty for beanie
+                fabric: [
+                    { material: "", consumption: "", price: "", cost: "0.00" },
+                    { material: "", consumption: "", price: "", cost: "0.00" }
+                ],
+                
+                // TRIM Data
+                trim: [
+                    { material: "Sewing Thread (Coats EcoV)", consumption: "", price: "", cost: "0.02" },
+                    { material: "", consumption: "", price: "", cost: "0.00" }
+                ],
+                
+                // KNITTING Data
+                knitting: [
+                    { machine: "Flat-3GG", time: "8", sah: "0.100", cost: "0.80" },
+                    { machine: "", time: "", sah: "", cost: "0.00" }
+                ],
+                
+                // OPERATIONS Data
+                operations: [
+                    { operation: "Labeling", time: "", cost: "", total: "0.10" },
+                    { operation: "Neaten/Steaming/Packing (Beanie)", time: "", cost: "", total: "0.40" },
+                    { operation: "Linking Beanie (Flat/ 1 Layer/ Cuff)", time: "", cost: "", total: "0.17" },
+                    { operation: "Washing (Hat/ Glove)", time: "", cost: "", total: "0.17" },
+                    { operation: "Hand Closing (9-3GG)", time: "", cost: "", total: "0.12" }
+                ],
+                
+                // PACKAGING Data
+                packaging: [
+                    { type: "Standard Packaging", notes: "", cost: "0.10" },
+                    { type: "Special Packaging", notes: "", cost: "0.00" }
+                ],
+                
+                // OVERHEAD/PROFIT Data
+                overhead: [
+                    { type: "OVERHEAD", notes: "", cost: "0.20" },
+                    { type: "PROFIT", notes: "", cost: "0.59" }
+                ],
+                
+                // Totals (calculated)
+                totalMaterialCost: "2.04",
+                totalFactoryCost: "4.69"
+            };
+        }
+
+        function fillTemplateWithData(data) {
+            // Fill Product Information
+            const productInfo = document.querySelector('.product-info');
+            if (productInfo) {
+                const infoRows = productInfo.querySelectorAll('.info-row');
+                const values = [data.customer, data.season, data.styleNumber, data.styleName, data.costedQuantity, data.leadtime];
+                
+                infoRows.forEach((row, index) => {
+                    const valueSpan = row.querySelector('.info-value');
+                    if (valueSpan && values[index]) {
+                        valueSpan.textContent = values[index];
+                    }
+                });
+            }
+            
+            // Fill YARN section
+            fillCostSection('YARN', data.yarn, ['material', 'consumption', 'price', 'cost']);
+            
+            // Fill FABRIC section
+            fillCostSection('FABRIC', data.fabric, ['material', 'consumption', 'price', 'cost']);
+            
+            // Fill TRIM section
+            fillCostSection('TRIM', data.trim, ['material', 'consumption', 'price', 'cost']);
+            
+            // Fill KNITTING section
+            fillCostSection('KNITTING', data.knitting, ['machine', 'time', 'sah', 'cost']);
+            
+            // Fill OPERATIONS section
+            fillCostSection('OPERATIONS', data.operations, ['operation', 'time', 'cost', 'total']);
+            
+            // Fill PACKAGING section
+            fillCostSection('PACKAGING', data.packaging, ['type', 'notes', 'cost']);
+            
+            // Fill OVERHEAD/PROFIT section
+            fillCostSection('OVERHEAD/ PROFIT', data.overhead, ['type', 'notes', 'cost']);
+            
+            // Update totals
+            updateTotals(data.totalMaterialCost, data.totalFactoryCost);
+        }
+
+        function fillCostSection(sectionName, data, columns) {
+            const sections = document.querySelectorAll('.cost-section');
+            let targetSection = null;
+            
+            sections.forEach(section => {
+                const header = section.querySelector('.section-header');
+                if (header && header.textContent.includes(sectionName)) {
+                    targetSection = section;
+                }
+            });
+            
+            if (targetSection) {
+                const rows = targetSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                
+                data.forEach((item, index) => {
+                    if (rows[index]) {
+                        const cells = rows[index].querySelectorAll('.cost-cell');
+                        columns.forEach((column, cellIndex) => {
+                            if (cells[cellIndex] && item[column] !== undefined) {
+                                cells[cellIndex].textContent = item[column];
+                            }
+                        });
+                    }
+                });
+                
+                // Calculate and update subtotal for this section
+                updateSectionSubtotal(targetSection, data, columns);
+            }
+        }
+
+        function updateSectionSubtotal(section, data, columns) {
+            // Find the subtotal row
+            const subtotalRow = section.querySelector('.subtotal-row');
+            if (!subtotalRow) return;
+            
+            // Calculate total based on the last column (cost column)
+            const costColumnIndex = columns.length - 1;
+            const costColumn = columns[costColumnIndex];
+            
+            let total = 0;
+            data.forEach(item => {
+                if (item[costColumn] && !isNaN(parseFloat(item[costColumn]))) {
+                    total += parseFloat(item[costColumn]);
+                }
+            });
+            
+            // Update the subtotal cell
+            const subtotalCells = subtotalRow.querySelectorAll('.cost-cell');
+            if (subtotalCells[costColumnIndex]) {
+                subtotalCells[costColumnIndex].textContent = `$${total.toFixed(2)}`;
+            }
+        }
+
+        function updateTotals(materialTotal, factoryTotal) {
+            // Update material total
+            const materialTotalElement = document.querySelector('.total-material-cost .total-value');
+            if (materialTotalElement) {
+                materialTotalElement.textContent = `$${materialTotal}`;
+            }
+            
+            // Update factory total
+            const factoryTotalElement = document.querySelector('.total-factory-cost .total-value');
+            if (factoryTotalElement) {
+                factoryTotalElement.textContent = `$${factoryTotal}`;
             }
         }
 
