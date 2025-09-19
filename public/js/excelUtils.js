@@ -1,0 +1,306 @@
+/**
+ * Excel Processing Utilities
+ * Handles XLSX library loading and file processing
+ */
+
+class ExcelUtils {
+    constructor() {
+        this.isLoaded = false;
+    }
+
+    /**
+     * Ensure XLSX library is loaded
+     */
+    async ensureXLSXLoaded() {
+        return new Promise((resolve, reject) => {
+            if (typeof XLSX !== 'undefined') {
+                console.log('✅ XLSX library already loaded');
+                this.isLoaded = true;
+                resolve();
+                return;
+            }
+
+            console.log('🔄 Loading XLSX library...');
+            
+            // Add overall timeout to prevent infinite waiting
+            const timeoutId = setTimeout(() => {
+                reject(new Error('XLSX library loading timed out after 10 seconds'));
+            }, 10000);
+            
+            // Check if script is already being loaded
+            const existingScript = document.querySelector('script[src*="xlsx"]');
+            if (existingScript) {
+                console.log('XLSX script already exists, checking if it loaded properly...');
+                
+                // Check if the script is already loaded and working
+                if (typeof XLSX !== 'undefined') {
+                    console.log('✅ XLSX library already available from existing script');
+                    clearTimeout(timeoutId);
+                    this.isLoaded = true;
+                    resolve();
+                    return;
+                }
+                
+                // If script exists but XLSX is not available, wait with timeout
+                console.log('⏳ Waiting for existing XLSX script to load...');
+                let attempts = 0;
+                const maxAttempts = 30; // 3 seconds max wait
+                const checkInterval = setInterval(() => {
+                    attempts++;
+                    if (typeof XLSX !== 'undefined') {
+                        clearInterval(checkInterval);
+                        clearTimeout(timeoutId);
+                        console.log('✅ XLSX library loaded from existing script');
+                        this.isLoaded = true;
+                        resolve();
+                    } else if (attempts >= maxAttempts) {
+                        clearInterval(checkInterval);
+                        console.warn('⚠️ Existing XLSX script failed to load, removing and retrying...');
+                        // Remove the failed script and try loading a new one
+                        existingScript.remove();
+                        // Continue to load a new script below
+                    }
+                }, 100);
+                
+                // If we're still waiting for the existing script, return early
+                if (attempts < maxAttempts) {
+                    return;
+                }
+            }
+            
+            // Use local XLSX library to avoid CSP issues
+            const script = document.createElement('script');
+            script.src = 'xlsx.min.js';
+            
+            script.onload = () => {
+                console.log('📦 XLSX library script loaded, checking availability...');
+                // Wait a bit for the library to initialize
+                setTimeout(() => {
+                    if (typeof XLSX !== 'undefined') {
+                        console.log('✅ XLSX library is available and ready');
+                        clearTimeout(timeoutId);
+                        this.isLoaded = true;
+                        resolve();
+                    } else {
+                        console.error('❌ XLSX library loaded but not available');
+                        clearTimeout(timeoutId);
+                        reject(new Error('XLSX library loaded but not available'));
+                    }
+                }, 200);
+            };
+            
+            script.onerror = (error) => {
+                console.error('❌ Failed to load local XLSX library:', error);
+                clearTimeout(timeoutId);
+                reject(new Error('Failed to load XLSX library. Please ensure xlsx.min.js is available in the public folder.'));
+            };
+            
+            document.head.appendChild(script);
+            console.log('📤 XLSX script added to document head');
+        });
+    }
+
+    /**
+     * Read Excel file content
+     */
+    async readFileContent(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            
+            reader.onload = async (e) => {
+                try {
+                    const fileType = this.getFileType(file.name);
+                    
+                    if (fileType === 'csv') {
+                        resolve(this.parseCSV(e.target.result));
+                    } else {
+                        // For Excel files, ensure XLSX is loaded
+                        console.log(`Processing ${fileType.toUpperCase()} file...`);
+                        
+                        if (typeof XLSX === 'undefined') {
+                            console.log('XLSX library not loaded, loading now...');
+                            await this.ensureXLSXLoaded();
+                        } else {
+                            console.log('XLSX library already available');
+                        }
+                        
+                        if (typeof XLSX === 'undefined') {
+                            throw new Error('Failed to load XLSX library. Please check your internet connection and try again.');
+                        }
+                        
+                        const data = new Uint8Array(e.target.result);
+                        
+                        // Optimized XLSX reading with minimal options for speed
+                        const workbook = XLSX.read(data, { 
+                            type: 'array',
+                            cellDates: false,  // Disable date parsing for speed
+                            cellNF: false,    // Disable number formatting for speed
+                            cellText: false,  // Disable text formatting for speed
+                            raw: true,        // Use raw values for speed
+                            dense: true       // Use dense array for speed
+                        });
+                        
+                        if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+                            throw new Error('No worksheets found in the Excel file');
+                        }
+                        
+                        console.log('Available sheets:', workbook.SheetNames);
+                        
+                        // Look for VANS data in any sheet
+                        let targetSheet = null;
+                        let targetSheetName = null;
+                        
+                        for (let i = 0; i < workbook.SheetNames.length; i++) {
+                            const sheetName = workbook.SheetNames[i];
+                            const worksheet = workbook.Sheets[sheetName];
+                            const sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: true });
+                            
+                            // Check if this sheet contains VANS data
+                            let hasVANS = false;
+                            for (let j = 0; j < Math.min(20, sheetData.length); j++) {
+                                const row = sheetData[j];
+                                if (row) {
+                                    for (let k = 0; k < row.length; k++) {
+                                        const cell = String(row[k] || '').trim();
+                                        if (cell.includes('VANS')) {
+                                            hasVANS = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (hasVANS) break;
+                            }
+                            
+                            if (hasVANS) {
+                                targetSheet = worksheet;
+                                targetSheetName = sheetName;
+                                console.log('Found VANS data in sheet:', sheetName);
+                                break;
+                            }
+                        }
+                        
+                        // If no VANS data found, use the first sheet
+                        if (!targetSheet) {
+                            console.log('No VANS data found, using first sheet:', workbook.SheetNames[0]);
+                            targetSheet = workbook.Sheets[workbook.SheetNames[0]];
+                            targetSheetName = workbook.SheetNames[0];
+                        }
+                        
+                        const worksheet = targetSheet;
+                        
+                        if (!worksheet) {
+                            throw new Error('Could not read the target worksheet');
+                        }
+                        
+                        // Convert to array format with optimized settings
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+                            header: 1,
+                            defval: '',
+                            blankrows: false,
+                            raw: true  // Use raw values for speed
+                        });
+                        
+                        console.log(`Excel file processed: ${jsonData.length} rows, ${jsonData[0] ? jsonData[0].length : 0} columns`);
+                        resolve(jsonData);
+                    }
+                } catch (error) {
+                    reject(error);
+                }
+            };
+            
+            reader.onerror = (error) => {
+                console.error('File reading error:', error);
+                reject(new Error('Failed to read file. Please check if the file is corrupted or try a different file.'));
+            };
+            
+            // Choose reading method based on file type
+            const fileType = this.getFileType(file.name);
+            if (fileType === 'csv') {
+                reader.readAsText(file, 'UTF-8');
+            } else {
+                reader.readAsArrayBuffer(file);
+            }
+        });
+    }
+
+    /**
+     * Parse CSV content
+     */
+    parseCSV(csvText) {
+        try {
+            const lines = csvText.split(/\r?\n/);
+            const result = [];
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (line) {
+                    // Simple CSV parsing - handles quoted fields
+                    const row = [];
+                    let current = '';
+                    let inQuotes = false;
+                    
+                    for (let j = 0; j < line.length; j++) {
+                        const char = line[j];
+                        
+                        if (char === '"') {
+                            inQuotes = !inQuotes;
+                        } else if (char === ',' && !inQuotes) {
+                            row.push(current.trim());
+                            current = '';
+                        } else {
+                            current += char;
+                        }
+                    }
+                    
+                    row.push(current.trim());
+                    result.push(row);
+                }
+            }
+            
+            return result;
+        } catch (error) {
+            console.error('CSV parsing error:', error);
+            throw new Error('Failed to parse CSV file');
+        }
+    }
+
+    /**
+     * Get file type from filename
+     */
+    getFileType(fileName) {
+        const extension = fileName.toLowerCase().split('.').pop();
+        
+        if (extension === 'csv') {
+            return 'csv';
+        } else if (['xlsx', 'xls', 'xlsm'].includes(extension)) {
+            return 'excel';
+        } else {
+            return 'unknown';
+        }
+    }
+
+    /**
+     * Validate file
+     */
+    validateFile(file) {
+        const fileType = this.getFileType(file.name);
+        const maxSize = 10 * 1024 * 1024; // 10MB limit
+        
+        if (file.size > maxSize) {
+            throw new Error('File size too large. Please use files smaller than 10MB.');
+        }
+        
+        if (fileType === 'unknown') {
+            throw new Error('Unsupported file type. Please use CSV, XLSX, XLS, or XLSM files.');
+        }
+        
+        return fileType;
+    }
+}
+
+// Export for use in other files
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = ExcelUtils;
+} else {
+    window.ExcelUtils = ExcelUtils;
+}

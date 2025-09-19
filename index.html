@@ -2346,10 +2346,7 @@
             formData.append('config', JSON.stringify(config));
 
             try {
-                const isCSV = currentFile.name.endsWith('.csv');
-                const endpoint = isCSV ? 'csv' : 'excel';
-                
-                const response = await fetch(`/api/import/${endpoint}/${connectionId}`, {
+                const response = await fetch(`/api/import/csv/${connectionId}`, {
                     method: 'POST',
                     body: formData
                 });
