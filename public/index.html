@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Databank Data Management System</title>
     <!-- Primary XLSX CDN with fallback -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM2t0EX7jF+JqJ4e8x8w8Q2E5VkNalCqtl4PV4/VvQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- Local XLSX fallback -->
     <script src="xlsx.min.js"></script>
     <!-- Application scripts -->
@@ -549,6 +549,26 @@
         .cost-table {
             display: flex;
             flex-direction: column;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .cost-table::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .cost-table::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        
+        .cost-table::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+        
+        .cost-table::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
         }
 
         .cost-row {
@@ -1517,7 +1537,6 @@
                 </button>
             </div>
             
-<<<<<<< HEAD
             <div class="file-upload" onclick="document.getElementById('fileInput').click()">
                     <div class="file-upload-content">
                         <div class="file-upload-icon">📁</div>
@@ -1549,7 +1568,18 @@
                             <li>FABRIC section</li>
                             <li>TRIM section</li>
                         </ul>
-=======
+                    </div>
+                    <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px;">
+                        <h5 style="color: #4CAF50; margin-bottom: 10px;">✅ BallCaps Template</h5>
+                        <ul style="color: rgba(255, 255, 255, 0.9); font-size: 14px; margin: 0; padding-left: 20px;">
+                            <li>FABRIC section</li>
+                            <li>OTHER FABRIC/S - TRIM/S section</li>
+                            <li>TRIM section</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
             <div class="cost-breakdown-content">
                 <!-- Left Side - Cost Breakdown -->
                 <div class="cost-sections">
@@ -1625,7 +1655,6 @@
                                 <div class="cost-cell"></div>
                             </div>
                         </div>
->>>>>>> 1ed43684206c70a13dcbcd74a13007c251ded6ca
                     </div>
 
                     <!-- TRIM Section -->
@@ -1881,7 +1910,7 @@
                     <div class="drag-drop-area">
                         <div class="drag-drop-content">
                             <div class="drag-drop-icon">📁</div>
-                            <div class="drag-drop-text">drag & drop<br>function here</div>
+                            <div class="drag-drop-text">drag & drop<br>or click to select</div>
                             <div class="file-formats">CSV • XLSX • XLSM</div>
                         </div>
                     </div>
@@ -1942,6 +1971,12 @@
                                 <div class="cost-cell"></div>
                                 <div class="cost-cell"></div>
                             </div>
+                            <div class="cost-row subtotal-row">
+                                <div class="cost-cell">SUB TOTAL</div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell">$0.00</div>
+                            </div>
                         </div>
                     </div>
 
@@ -1950,7 +1985,7 @@
                         <div class="section-header">OTHER FABRIC/S - TRIM/S</div>
                         <div class="cost-table">
                             <div class="cost-row header-row">
-                                <div class="cost-cell">(Name/Code/Description)Description</div>
+                                <div class="cost-cell">OTHER FABRIC/S - TRIM/S</div>
                                 <div class="cost-cell">CONSUMPTION (YARD)</div>
                                 <div class="cost-cell">MATERIAL PRICE (USD/YD)</div>
                                 <div class="cost-cell">MATERIAL COST</div>
@@ -1979,11 +2014,11 @@
                                 <div class="cost-cell"></div>
                                 <div class="cost-cell"></div>
                             </div>
-                            <div class="cost-row">
+                            <div class="cost-row subtotal-row">
+                                <div class="cost-cell">SUB TOTAL</div>
                                 <div class="cost-cell"></div>
                                 <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
+                                <div class="cost-cell">$0.00</div>
                             </div>
                         </div>
                     </div>
@@ -2044,27 +2079,38 @@
                         <div class="section-header">OPERATIONS</div>
                         <div class="cost-table">
                             <div class="cost-row header-row">
-                                <div class="cost-cell">SMV</div>
+                                <div class="cost-cell">OPERATION</div>
+                                <div class="cost-cell">TIME (MINS)</div>
                                 <div class="cost-cell">COST (USD/MIN)</div>
-                                <div class="cost-cell">MATERIAL COST</div>
+                                <div class="cost-cell">TOTAL</div>
                             </div>
                             <div class="cost-row">
                                 <div class="cost-cell"></div>
                                 <div class="cost-cell"></div>
                                 <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
                             </div>
                             <div class="cost-row">
                                 <div class="cost-cell"></div>
                                 <div class="cost-cell"></div>
                                 <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
                             </div>
                             <div class="cost-row">
+                                <div class="cost-cell"></div>
                                 <div class="cost-cell"></div>
                                 <div class="cost-cell"></div>
                                 <div class="cost-cell"></div>
                             </div>
                             <div class="cost-row subtotal-row">
                                 <div class="cost-cell">SUB TOTAL</div>
+                                <div class="cost-cell"></div>
                                 <div class="cost-cell"></div>
                                 <div class="cost-cell">$0.00</div>
                             </div>
@@ -2076,19 +2122,28 @@
                         <div class="section-header">PACKAGING</div>
                         <div class="cost-table">
                             <div class="cost-row header-row">
-                                <div class="cost-cell">Factory Notes</div>
+                                <div class="cost-cell">TYPE</div>
+                                <div class="cost-cell">NOTES</div>
                                 <div class="cost-cell">COST</div>
                             </div>
                             <div class="cost-row">
                                 <div class="cost-cell"></div>
                                 <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
                             </div>
                             <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
                                 <div class="cost-cell"></div>
                                 <div class="cost-cell"></div>
                             </div>
                             <div class="cost-row subtotal-row">
                                 <div class="cost-cell">SUB TOTAL</div>
+                                <div class="cost-cell"></div>
                                 <div class="cost-cell">$0.00</div>
                             </div>
                         </div>
@@ -2099,19 +2154,28 @@
                         <div class="section-header">OVERHEAD/PROFIT</div>
                         <div class="cost-table">
                             <div class="cost-row header-row">
-                                <div class="cost-cell">Factory Notes</div>
+                                <div class="cost-cell">TYPE</div>
+                                <div class="cost-cell">NOTES</div>
                                 <div class="cost-cell">COST</div>
                             </div>
                             <div class="cost-row">
                                 <div class="cost-cell"></div>
                                 <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
                             </div>
                             <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
                                 <div class="cost-cell"></div>
                                 <div class="cost-cell"></div>
                             </div>
                             <div class="cost-row subtotal-row">
                                 <div class="cost-cell">SUB TOTAL</div>
+                                <div class="cost-cell"></div>
                                 <div class="cost-cell">$0.00</div>
                             </div>
                         </div>
@@ -2185,7 +2249,7 @@
                     <div class="drag-drop-area">
                         <div class="drag-drop-content">
                             <div class="drag-drop-icon">📁</div>
-                            <div class="drag-drop-text">drag & drop<br>function here</div>
+                            <div class="drag-drop-text">drag & drop<br>or click to select</div>
                             <div class="file-formats">CSV • XLSX • XLSM</div>
                         </div>
                     </div>
@@ -2200,7 +2264,6 @@
 
 
     <script>
-<<<<<<< HEAD
         // Enhanced and more reliable XLSX library loading
         function ensureXLSXLoaded() {
             return new Promise((resolve, reject) => {
@@ -2231,7 +2294,6 @@
                 // Use the most reliable CDN with integrity check
                 const script = document.createElement('script');
                 script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-                script.integrity = 'sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQC5QZQ8ghUzqyHJEwXaVg/2b4d0P7N4a4L0g+ce0qA==';
                 script.crossOrigin = 'anonymous';
                 
                 script.onload = () => {
@@ -2264,8 +2326,6 @@
 
 
 
-=======
->>>>>>> 1ed43684206c70a13dcbcd74a13007c251ded6ca
         // Debug function for testing Excel processing (can be called from browser console)
         window.testExcelProcessing = function() {
             console.log('Testing Excel processing...');
@@ -2284,7 +2344,6 @@
             }
         };
 
-<<<<<<< HEAD
         // Simple test function to check XLSX loading
         window.testXLSXLoading = function() {
             console.log('🧪 Testing XLSX library loading...');
@@ -2305,7 +2364,7 @@
         // Demo function to show how Excel contents are displayed
         window.demoExcelContentDisplay = function() {
             console.log('📊 DEMO: How Excel file contents are displayed after reading');
-            console.log('================================================');
+            console.log('======');
             
             // Create a sample Excel file structure to demonstrate
             const sampleExcelContent = [
@@ -2414,7 +2473,7 @@
             }
             
             console.log('📊 ACTUAL EXCEL FILE DATA STRUCTURE:');
-            console.log('=====================================');
+            console.log('==');
             console.log(`File Type: ${fileType}`);
             console.log(`Number of Sheets: ${fileContent.length}`);
             console.log('');
@@ -2452,7 +2511,7 @@
         // Demo function for ULTRA FAST file reading
         window.demoUltraFastReading = function() {
             console.log('⚡ ULTRA FAST FILE READING DEMO');
-            console.log('===============================');
+            console.log('===');
             console.log('The main index.html now has ULTRA FAST file reading!');
             console.log('');
             console.log('🚀 Optimizations applied:');
@@ -2480,7 +2539,7 @@
         // Test XLSX loading status
         window.testXLSXStatus = function() {
             console.log('🔍 XLSX Library Status Check');
-            console.log('============================');
+            console.log('');
             if (typeof XLSX !== 'undefined') {
                 console.log('✅ XLSX library is loaded and ready');
                 console.log('📊 Version:', XLSX.version || 'Unknown');
@@ -2522,7 +2581,7 @@
             }
             
             console.log('📊 CURRENT FILE CONTENTS:');
-            console.log('=========================');
+            console.log('====');
             console.log(`File Type: ${fileType}`);
             console.log(`Number of Sheets/Sections: ${fileContent.length}`);
             console.log('');
@@ -2551,7 +2610,7 @@
         // Demo function to immediately display sample file contents
         window.demoDisplayContents = function() {
             console.log('🎬 DEMO: Displaying sample file contents');
-            console.log('=====================================');
+            console.log('==');
             
             // Create sample Excel-like content
             const sampleContent = [
@@ -2640,8 +2699,6 @@
             });
         });
 
-=======
->>>>>>> 1ed43684206c70a13dcbcd74a13007c251ded6ca
         let connectionId = null;
         let totalRecords = 0;
         
@@ -3571,11 +3628,15 @@
             productSelection.style.display = 'block';
         }
 
-        // Drag & Drop functionality for Template 1
+        // Drag & Drop functionality for both templates
         function initializeDragDrop() {
-            const dragDropArea = document.querySelector('.drag-drop-area');
+            const dragDropAreas = document.querySelectorAll('.drag-drop-area');
             
-            if (dragDropArea) {
+            console.log('Found drag drop areas:', dragDropAreas.length);
+            
+            dragDropAreas.forEach((dragDropArea, index) => {
+                console.log(`Initializing drag drop area ${index + 1}`);
+                
                 // Prevent default drag behaviors
                 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                     dragDropArea.addEventListener(eventName, preventDefaults, false);
@@ -3584,19 +3645,21 @@
 
                 // Highlight drop area when item is dragged over it
                 ['dragenter', 'dragover'].forEach(eventName => {
-                    dragDropArea.addEventListener(eventName, highlight, false);
+                    dragDropArea.addEventListener(eventName, (e) => highlight(e, dragDropArea), false);
                 });
 
                 ['dragleave', 'drop'].forEach(eventName => {
-                    dragDropArea.addEventListener(eventName, unhighlight, false);
+                    dragDropArea.addEventListener(eventName, (e) => unhighlight(e, dragDropArea), false);
                 });
 
                 // Handle dropped files
-                dragDropArea.addEventListener('drop', handleDrop, false);
+                dragDropArea.addEventListener('drop', (e) => handleDrop(e, dragDropArea), false);
                 
                 // Handle click to reset
                 dragDropArea.addEventListener('click', resetDragDrop);
-            }
+            });
+            
+            console.log('Drag & Drop initialized successfully for all areas');
         }
 
         function preventDefaults(e) {
@@ -3604,15 +3667,15 @@
             e.stopPropagation();
         }
 
-        function highlight(e) {
-            document.querySelector('.drag-drop-area').classList.add('drag-over');
+        function highlight(e, dragDropArea) {
+            dragDropArea.classList.add('drag-over');
         }
 
-        function unhighlight(e) {
-            document.querySelector('.drag-drop-area').classList.remove('drag-over');
+        function unhighlight(e, dragDropArea) {
+            dragDropArea.classList.remove('drag-over');
         }
 
-        function handleDrop(e) {
+        function handleDrop(e, dragDropArea) {
             const dt = e.dataTransfer;
             const files = dt.files;
             
@@ -3623,9 +3686,9 @@
                 // Store the file globally for processing
                 uploadedFile = file;
                 
-                // Update the drag drop area to show file name
-                const dragDropText = document.querySelector('.drag-drop-text');
-                const dragDropIcon = document.querySelector('.drag-drop-icon');
+                // Update the specific drag drop area to show file name
+                const dragDropText = dragDropArea.querySelector('.drag-drop-text');
+                const dragDropIcon = dragDropArea.querySelector('.drag-drop-icon');
                 
                 if (dragDropText && dragDropIcon) {
                     dragDropIcon.textContent = '✅';
@@ -3640,18 +3703,38 @@
             
             if (dragDropText && dragDropIcon) {
                 dragDropIcon.textContent = '📁';
-                dragDropText.innerHTML = 'drag & drop<br>function here';
+                dragDropText.innerHTML = 'drag & drop<br>or click to select';
+            }
+        }
+
+        // Handle file selection from click
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                console.log('File selected via click:', file.name, file.type);
+                uploadedFile = file;
+                
+                // Update all drag drop areas to show file name
+                const dragDropTexts = document.querySelectorAll('.drag-drop-text');
+                const dragDropIcons = document.querySelectorAll('.drag-drop-icon');
+                
+                dragDropTexts.forEach(dragDropText => {
+                    dragDropText.innerHTML = `File: ${file.name}<br><small>Click to change</small>`;
+                });
+                
+                dragDropIcons.forEach(dragDropIcon => {
+                    dragDropIcon.textContent = '✅';
+                });
             }
         }
 
         function handleTemplateImport() {
-            // Check if a file has been dropped
-            const dragDropText = document.querySelector('.drag-drop-text');
-            const dragDropIcon = document.querySelector('.drag-drop-icon');
+            // Check if a file has been uploaded (more reliable than checking UI elements)
+            console.log('Checking for uploaded file:', uploadedFile);
             
-            if (dragDropIcon && dragDropIcon.textContent === '✅') {
+            if (uploadedFile) {
                 // File has been selected, proceed with import
-                console.log('Importing file...');
+                console.log('Importing file:', uploadedFile.name, uploadedFile.type);
                 
                 // Show loading state
                 const importButton = document.querySelector('.import-template-button');
@@ -3665,7 +3748,7 @@
                 
             } else {
                 // No file selected, show message
-                console.log('Please drop a file first');
+                console.log('No file found in uploadedFile variable');
                 alert('Please drop a file in the drag & drop area first!');
             }
         }
@@ -3702,23 +3785,36 @@
                 window.lastExcelData = rawData;
                 console.log('Raw Excel data stored in window.lastExcelData for debugging');
                 
-                // Determine which importer to use based on file content or name
-                    let parsedData = null;
-                    
-                // For now, default to beanie importer (you can add logic to detect product type)
-                if (beanieImporter.isSupportedFile(uploadedFile.name)) {
-                    console.log('Using TNF Beanie Importer');
-                    parsedData = beanieImporter.parseExcelData(rawData);
-                } else if (ballcapsImporter.isSupportedFile(uploadedFile.name)) {
+                // Determine which importer to use based on file content
+                let parsedData = null;
+                const templateType = detectTemplateType(rawData);
+                console.log('Detected template type:', templateType);
+                
+                if (templateType === 'ballcaps') {
                     console.log('Using TNF Ball Caps Importer');
                     parsedData = ballcapsImporter.parseExcelData(rawData);
-                    } else {
-                    throw new Error('Unsupported file type or format');
-                    }
+                } else {
+                    console.log('Using TNF Beanie Importer (default)');
+                    parsedData = beanieImporter.parseExcelData(rawData);
+                }
                     
-                    if (parsedData) {
+                if (parsedData) {
+                    console.log('Parsed data:', parsedData);
+                    console.log('Data sections found:');
+                    console.log('- Fabric items:', parsedData.fabric?.length || 0);
+                    console.log('- Embroidery items:', parsedData.embroidery?.length || 0);
+                    console.log('- Trim items:', parsedData.trim?.length || 0);
+                    console.log('- Operations items:', parsedData.operations?.length || 0);
+                    console.log('- Packaging items:', parsedData.packaging?.length || 0);
+                    console.log('- Overhead items:', parsedData.overhead?.length || 0);
+                    
+                    // Populate the appropriate template based on detected type
+                    if (templateType === 'ballcaps') {
+                        populateBallCapsTemplate(parsedData);
+                    } else {
                         fillTemplateWithData(parsedData);
                     }
+                }
                     
                 } catch (error) {
                     console.error('Error processing file:', error);
@@ -3764,6 +3860,9 @@
             
             // Fill FABRIC section
             fillCostSection('FABRIC', data.fabric, ['material', 'consumption', 'price', 'cost']);
+            
+            // Fill EMBROIDERY section (for ballcaps)
+            fillCostSection('EMBROIDERY', data.embroidery, ['design', 'stitches', 'price', 'cost']);
             
             // Fill TRIM section
             fillCostSection('TRIM', data.trim, ['material', 'consumption', 'price', 'cost']);
@@ -3838,11 +3937,11 @@
             
             let total = 0;
             if (data && Array.isArray(data)) {
-            data.forEach(item => {
+                data.forEach(item => {
                     if (item && item[costColumn] && item[costColumn] !== null && item[costColumn] !== undefined && !isNaN(parseFloat(item[costColumn]))) {
-                    total += parseFloat(item[costColumn]);
-                }
-            });
+                        total += parseFloat(item[costColumn]);
+                    }
+                });
             }
             
             // Update the subtotal cell
@@ -3850,6 +3949,8 @@
             if (subtotalCells[costColumnIndex]) {
                 subtotalCells[costColumnIndex].textContent = `$${total.toFixed(2)}`;
             }
+            
+            console.log(`Subtotal calculated for ${costColumn}: $${total.toFixed(2)}`);
         }
 
         function updateTotals(materialTotal, factoryTotal) {
@@ -3875,6 +3976,24 @@
         // Initialize drag & drop when page loads
         document.addEventListener('DOMContentLoaded', function() {
             initializeDragDrop();
+            
+            // Add file input for click functionality
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = '.xlsx,.xls,.xlsm,.csv';
+            fileInput.style.display = 'none';
+            fileInput.onchange = handleFileSelect;
+            fileInput.id = 'hiddenFileInput';
+            document.body.appendChild(fileInput);
+            
+            // Make drag drop areas clickable
+            const dragDropAreas = document.querySelectorAll('.drag-drop-area');
+            dragDropAreas.forEach(area => {
+                area.style.cursor = 'pointer';
+                area.onclick = function() {
+                    fileInput.click();
+                };
+            });
         });
 
         // Export table data to Excel
@@ -4411,8 +4530,11 @@
             document.getElementById('importStatus').innerHTML = fileInfo;
         }
 
+        // Handle file selection
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
 
-<<<<<<< HEAD
             // Reset previous state
             resetImportState();
             
@@ -5606,9 +5728,7 @@
                 throw new Error('Failed to parse CSV file. Please check the file format.');
             }
         }
-=======
 
->>>>>>> 1ed43684206c70a13dcbcd74a13007c251ded6ca
 
         // Template Detection
         function detectTemplateType(data) {
@@ -5626,10 +5746,10 @@
                 return 'beanie';
             }
             
-            // Check for Cap template indicators
-            if (dataString.includes('fabric/s') || dataString.includes('other fabric/s') || dataString.includes('trim/s')) {
-                console.log('Cap template detected based on FABRIC/S sections');
-                return 'cap';
+            // Check for BallCaps template indicators
+            if (dataString.includes('fabric/s') || dataString.includes('other fabric/s') || dataString.includes('trim/s') || dataString.includes('embroidery')) {
+                console.log('BallCaps template detected based on FABRIC/S/EMBROIDERY sections');
+                return 'ballcaps';
             }
             
             // Check for style name patterns
@@ -5638,9 +5758,9 @@
                 return 'beanie';
             }
             
-            if (dataString.includes('cap') || dataString.includes('baseball')) {
-                console.log('Cap template detected based on style name');
-                return 'cap';
+            if (dataString.includes('cap') || dataString.includes('baseball') || dataString.includes('ballcap')) {
+                console.log('BallCaps template detected based on style name');
+                return 'ballcaps';
             }
             
             console.log('No specific template indicators found, defaulting to beanie');
@@ -5674,8 +5794,10 @@
 
             if (templateType === 'beanie') {
                 return extractBeanieData(data, extractedData);
+            } else if (templateType === 'ballcaps') {
+                return extractBallCapsData(data, extractedData);
             } else {
-                return extractCapData(data, extractedData);
+                return extractBeanieData(data, extractedData); // Default to beanie
             }
         }
 
@@ -5986,14 +6108,61 @@
                 materialPrice: extractedData.materialPrice || 'Not found',
                 totalMaterialCost: extractedData.totalMaterialCost || 'Not found'
             });
-            console.log('========================');
+            console.log('===');
 
             return extractedData;
         }
 
-        function extractCapData(data, extractedData) {
-            // Similar to beanie but adapted for cap template structure
-            return extractBeanieData(data, extractedData); // Simplified for now
+        function extractBallCapsData(data, extractedData) {
+            // Extract ballcaps specific data
+            console.log('Extracting BallCaps data...');
+            
+            // Look for ballcaps specific sections
+            let currentSection = '';
+            
+            for (let i = 0; i < data.length; i++) {
+                const row = data[i];
+                if (!row || row.length === 0) continue;
+                
+                const firstCell = String(row[0] || '').trim();
+                
+                // Detect sections
+                if (firstCell === 'FABRIC') {
+                    currentSection = 'fabric';
+                } else if (firstCell === 'EMBROIDERY') {
+                    currentSection = 'embroidery';
+                } else if (firstCell === 'TRIM') {
+                    currentSection = 'trim';
+                } else if (firstCell === 'OPERATIONS') {
+                    currentSection = 'operations';
+                } else if (firstCell === 'PACKAGING') {
+                    currentSection = 'packaging';
+                } else if (firstCell === 'OVERHEAD' || firstCell === 'OVERHEAD/PROFIT') {
+                    currentSection = 'overhead';
+                }
+                
+                // Extract basic info
+                if (firstCell.includes('Customer') && row[1]) {
+                    extractedData.customer = String(row[1]).trim();
+                }
+                if (firstCell.includes('Season') && row[1]) {
+                    extractedData.season = String(row[1]).trim();
+                }
+                if (firstCell.includes('Style#') && row[1]) {
+                    extractedData.styleNumber = String(row[1]).trim();
+                }
+                if (firstCell.includes('Style Name') && row[1]) {
+                    extractedData.styleName = String(row[1]).trim();
+                }
+                if (firstCell.includes('MOQ') && row[1]) {
+                    extractedData.moq = String(row[1]).trim();
+                }
+                if (firstCell.includes('Leadtime') && row[1]) {
+                    extractedData.leadtime = String(row[1]).trim();
+                }
+            }
+            
+            return extractedData;
         }
 
         function findSection(data, keywords) {
@@ -6133,6 +6302,254 @@
         function updateProgress(percent, text) {
             document.getElementById('progressFill').style.width = percent + '%';
             document.getElementById('progressText').textContent = text;
+        }
+
+        function populateBallCapsTemplate(parsedData) {
+            console.log('Populating BallCaps template with data:', parsedData);
+            console.log('BallCaps template sections:');
+            console.log('- Customer:', parsedData.customer);
+            console.log('- Season:', parsedData.season);
+            console.log('- Style#:', parsedData.styleNumber);
+            console.log('- Style Name:', parsedData.styleName);
+            console.log('- Fabric items:', parsedData.fabric?.length || 0);
+            console.log('- Embroidery items:', parsedData.embroidery?.length || 0);
+            console.log('- Trim items:', parsedData.trim?.length || 0);
+            console.log('- Operations items:', parsedData.operations?.length || 0);
+            console.log('- Packaging items:', parsedData.packaging?.length || 0);
+            console.log('- Overhead items:', parsedData.overhead?.length || 0);
+            
+            // Populate basic info
+            const infoValues = document.querySelectorAll('#ballcapsBreakdown .info-value');
+            const labels = ['customer', 'season', 'styleNumber', 'styleName', 'moq', 'leadtime'];
+            infoValues.forEach((element, index) => {
+                if (labels[index] && parsedData[labels[index]]) {
+                    element.textContent = parsedData[labels[index]];
+                }
+            });
+            
+            // Populate fabric/s section
+            if (parsedData.fabric && parsedData.fabric.length > 0) {
+                const fabricRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(1) .cost-row:not(.header-row):not(.subtotal-row)');
+                parsedData.fabric.forEach((item, index) => {
+                    if (fabricRows[index]) {
+                        const cells = fabricRows[index].querySelectorAll('.cost-cell');
+                        if (cells[0]) cells[0].textContent = item.material || '';
+                        if (cells[1]) cells[1].textContent = item.consumption || '';
+                        if (cells[2]) cells[2].textContent = item.price || '';
+                        if (cells[3]) cells[3].textContent = item.cost || '';
+                    }
+                });
+            }
+            
+            // Populate other fabric/s - trim/s section (formerly embroidery)
+            if (parsedData.embroidery && parsedData.embroidery.length > 0) {
+                const otherFabricRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(2) .cost-row:not(.header-row):not(.subtotal-row)');
+                parsedData.embroidery.forEach((item, index) => {
+                    if (otherFabricRows[index]) {
+                        const cells = otherFabricRows[index].querySelectorAll('.cost-cell');
+                        if (cells[0]) cells[0].textContent = item.material || item.design || '';
+                        if (cells[1]) cells[1].textContent = item.consumption || item.stitches || '';
+                        if (cells[2]) cells[2].textContent = item.price || '';
+                        if (cells[3]) cells[3].textContent = item.cost || '';
+                    }
+                });
+            }
+            
+            // Populate trim section
+            if (parsedData.trim && parsedData.trim.length > 0) {
+                const trimRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(3) .cost-row:not(.header-row):not(.subtotal-row)');
+                parsedData.trim.forEach((item, index) => {
+                    if (trimRows[index]) {
+                        const cells = trimRows[index].querySelectorAll('.cost-cell');
+                        if (cells[0]) cells[0].textContent = item.material || '';
+                        if (cells[1]) cells[1].textContent = item.consumption || '';
+                        if (cells[2]) cells[2].textContent = item.price || '';
+                        if (cells[3]) cells[3].textContent = item.cost || '';
+                    }
+                });
+            }
+            
+            // Populate operations section
+            if (parsedData.operations && parsedData.operations.length > 0) {
+                const operationsRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(5) .cost-row:not(.header-row):not(.subtotal-row)');
+                parsedData.operations.forEach((item, index) => {
+                    if (operationsRows[index]) {
+                        const cells = operationsRows[index].querySelectorAll('.cost-cell');
+                        if (cells[0]) cells[0].textContent = item.operation || '';
+                        if (cells[1]) cells[1].textContent = item.time || '';
+                        if (cells[2]) cells[2].textContent = item.cost || '';
+                        if (cells[3]) cells[3].textContent = item.total || '';
+                    }
+                });
+            }
+            
+            // Populate packaging section
+            if (parsedData.packaging && parsedData.packaging.length > 0) {
+                const packagingRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(6) .cost-row:not(.header-row):not(.subtotal-row)');
+                parsedData.packaging.forEach((item, index) => {
+                    if (packagingRows[index]) {
+                        const cells = packagingRows[index].querySelectorAll('.cost-cell');
+                        if (cells[0]) cells[0].textContent = item.type || '';
+                        if (cells[1]) cells[1].textContent = item.notes || '';
+                        if (cells[2]) cells[2].textContent = item.cost || '';
+                    }
+                });
+            }
+            
+            // Populate overhead section
+            if (parsedData.overhead && parsedData.overhead.length > 0) {
+                const overheadRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(7) .cost-row:not(.header-row):not(.subtotal-row)');
+                parsedData.overhead.forEach((item, index) => {
+                    if (overheadRows[index]) {
+                        const cells = overheadRows[index].querySelectorAll('.cost-cell');
+                        if (cells[0]) cells[0].textContent = item.type || '';
+                        if (cells[1]) cells[1].textContent = item.notes || '';
+                        if (cells[2]) cells[2].textContent = item.cost || '';
+                    }
+                });
+            }
+            
+            // Calculate and update subtotals for each section
+            calculateBallCapsSubtotals(parsedData);
+            
+            // Calculate and update grand totals
+            calculateBallCapsGrandTotals(parsedData);
+            
+            // Update totals (use calculated totals if available)
+            const materialTotal = document.querySelector('#ballcapsBreakdown .total-material-cost .total-value');
+            const factoryTotal = document.querySelector('#ballcapsBreakdown .total-factory-cost .total-value');
+            
+            if (materialTotal) {
+                const calculatedMaterialTotal = calculateMaterialTotal(parsedData);
+                materialTotal.textContent = '$' + (parsedData.totalMaterialCost || calculatedMaterialTotal);
+            }
+            
+            if (factoryTotal) {
+                const calculatedFactoryTotal = calculateFactoryTotal(parsedData);
+                factoryTotal.textContent = '$' + (parsedData.totalFactoryCost || calculatedFactoryTotal);
+            }
+        }
+
+        function calculateBallCapsSubtotals(parsedData) {
+            console.log('Calculating BallCaps subtotals...');
+            
+            // Calculate fabric/s subtotal
+            if (parsedData.fabric && parsedData.fabric.length > 0) {
+                const fabricTotal = parsedData.fabric.reduce((sum, item) => {
+                    return sum + (parseFloat(item.cost) || 0);
+                }, 0);
+                updateBallCapsSubtotal('#ballcapsBreakdown .cost-section:nth-child(1)', fabricTotal);
+            }
+            
+            // Calculate other fabric/s - trim/s subtotal (formerly embroidery)
+            if (parsedData.embroidery && parsedData.embroidery.length > 0) {
+                const otherFabricTotal = parsedData.embroidery.reduce((sum, item) => {
+                    return sum + (parseFloat(item.cost) || 0);
+                }, 0);
+                updateBallCapsSubtotal('#ballcapsBreakdown .cost-section:nth-child(2)', otherFabricTotal);
+            }
+            
+            // Calculate trim subtotal
+            if (parsedData.trim && parsedData.trim.length > 0) {
+                const trimTotal = parsedData.trim.reduce((sum, item) => {
+                    return sum + (parseFloat(item.cost) || 0);
+                }, 0);
+                updateBallCapsSubtotal('#ballcapsBreakdown .cost-section:nth-child(3)', trimTotal);
+            }
+            
+            // Calculate operations subtotal
+            if (parsedData.operations && parsedData.operations.length > 0) {
+                const operationsTotal = parsedData.operations.reduce((sum, item) => {
+                    return sum + (parseFloat(item.total) || 0);
+                }, 0);
+                updateBallCapsSubtotal('#ballcapsBreakdown .cost-section:nth-child(5)', operationsTotal);
+            }
+            
+            // Calculate packaging subtotal
+            if (parsedData.packaging && parsedData.packaging.length > 0) {
+                const packagingTotal = parsedData.packaging.reduce((sum, item) => {
+                    return sum + (parseFloat(item.cost) || 0);
+                }, 0);
+                updateBallCapsSubtotal('#ballcapsBreakdown .cost-section:nth-child(6)', packagingTotal);
+            }
+            
+            // Calculate overhead subtotal
+            if (parsedData.overhead && parsedData.overhead.length > 0) {
+                const overheadTotal = parsedData.overhead.reduce((sum, item) => {
+                    return sum + (parseFloat(item.cost) || 0);
+                }, 0);
+                updateBallCapsSubtotal('#ballcapsBreakdown .cost-section:nth-child(7)', overheadTotal);
+            }
+        }
+
+        function updateBallCapsSubtotal(selector, total) {
+            const section = document.querySelector(selector);
+            if (section) {
+                const subtotalRow = section.querySelector('.subtotal-row');
+                if (subtotalRow) {
+                    const subtotalCells = subtotalRow.querySelectorAll('.cost-cell');
+                    // Update the last cell (cost column)
+                    if (subtotalCells[subtotalCells.length - 1]) {
+                        subtotalCells[subtotalCells.length - 1].textContent = `$${total.toFixed(2)}`;
+                    }
+                }
+            }
+        }
+
+        function calculateBallCapsGrandTotals(parsedData) {
+            console.log('Calculating BallCaps grand totals...');
+            
+            // Calculate material total (fabric + trim)
+            const materialTotal = calculateMaterialTotal(parsedData);
+            console.log('Calculated Material Total:', materialTotal);
+            
+            // Calculate factory total (embroidery + operations + packaging + overhead)
+            const factoryTotal = calculateFactoryTotal(parsedData);
+            console.log('Calculated Factory Total:', factoryTotal);
+            
+            return { materialTotal, factoryTotal };
+        }
+
+        function calculateMaterialTotal(parsedData) {
+            let total = 0;
+            
+            // Add fabric costs
+            if (parsedData.fabric && parsedData.fabric.length > 0) {
+                total += parsedData.fabric.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
+            }
+            
+            // Add trim costs
+            if (parsedData.trim && parsedData.trim.length > 0) {
+                total += parsedData.trim.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
+            }
+            
+            return total.toFixed(2);
+        }
+
+        function calculateFactoryTotal(parsedData) {
+            let total = 0;
+            
+            // Add other fabric/s - trim/s costs (formerly embroidery)
+            if (parsedData.embroidery && parsedData.embroidery.length > 0) {
+                total += parsedData.embroidery.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
+            }
+            
+            // Add operations costs
+            if (parsedData.operations && parsedData.operations.length > 0) {
+                total += parsedData.operations.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
+            }
+            
+            // Add packaging costs
+            if (parsedData.packaging && parsedData.packaging.length > 0) {
+                total += parsedData.packaging.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
+            }
+            
+            // Add overhead costs
+            if (parsedData.overhead && parsedData.overhead.length > 0) {
+                total += parsedData.overhead.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
+            }
+            
+            return total.toFixed(2);
         }
 
         function showDataReview() {
