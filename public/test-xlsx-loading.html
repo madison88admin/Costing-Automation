@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XLSX Loading Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM2t0EX7jF+JqJ4e8x8w8Q2E5VkNalCqtl4PV4/VvQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+    <h1>XLSX Loading Test</h1>
+    <div id="status">Checking XLSX library...</div>
+    <div id="details"></div>
+
+    <script>
+        function checkXLSX() {
+            const statusDiv = document.getElementById('status');
+            const detailsDiv = document.getElementById('details');
+            
+            if (typeof XLSX !== 'undefined') {
+                statusDiv.innerHTML = '✅ XLSX library loaded successfully!';
+                statusDiv.style.color = 'green';
+                
+                detailsDiv.innerHTML = `
+                    <h3>XLSX Library Details:</h3>
+                    <p><strong>Version:</strong> ${XLSX.version || 'Unknown'}</p>
+                    <p><strong>Available Methods:</strong> ${Object.keys(XLSX).join(', ')}</p>
+                    <p><strong>Read Method:</strong> ${typeof XLSX.read}</p>
+                    <p><strong>Utils:</strong> ${typeof XLSX.utils}</p>
+                `;
+            } else {
+                statusDiv.innerHTML = '❌ XLSX library not loaded';
+                statusDiv.style.color = 'red';
+                detailsDiv.innerHTML = '<p>Please check your internet connection and refresh the page.</p>';
+            }
+        }
+
+        // Check immediately
+        checkXLSX();
+        
+        // Check again after a delay
+        setTimeout(checkXLSX, 2000);
+        
+        // Check on window load
+        window.addEventListener('load', checkXLSX);
+    </script>
+</body>
+</html>

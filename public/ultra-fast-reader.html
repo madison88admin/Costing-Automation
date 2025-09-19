@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultra Fast File Reader</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM2t0EX7jF+JqJ4e8x8w8Q2E5VkNalCqtl4PV4/VvQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Fallback XLSX loading -->
+    <script>
+        // Fallback XLSX loading if CDN fails
+        window.addEventListener('load', function() {
+            if (typeof XLSX === 'undefined') {
+                console.warn('⚠️ Primary XLSX CDN failed, trying fallback...');
+                const fallbackScript = document.createElement('script');
+                fallbackScript.src = 'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js';
+                fallbackScript.onload = function() {
+                    console.log('✅ Fallback XLSX library loaded successfully');
+                };
+                fallbackScript.onerror = function() {
+                    console.error('❌ Both XLSX CDN sources failed to load');
+                };
+                document.head.appendChild(fallbackScript);
+            } else {
+                console.log('✅ Primary XLSX CDN loaded successfully');
+            }
+        });
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .upload-area {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            border: 3px dashed #3498db;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: #2980b9;
+            background: #f8f9fa;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .progress {
+            width: 100%;
+            height: 20px;
+            background: #ecf0f1;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .content {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .table th {
+            background: #34495e;
+            color: white;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .table td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .message.success {
+            background: #d5f4e6;
+            color: #27ae60;
+        }
+
+        .message.error {
+            background: #fadbd8;
+            color: #e74c3c;
+        }
+
+        .message.info {
+            background: #d6eaf8;
+            color: #3498db;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ Ultra Fast File Reader</h1>
+            <p>Optimized for maximum speed - reads files in milliseconds!</p>
+        </div>
+
+        <div class="upload-area" id="uploadArea">
+            <h3>📁 Drop file here or click to browse</h3>
+            <p>Supports Excel, CSV, Text files</p>
+            <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls,.csv,.txt">
+        </div>
+
+        <div class="progress" id="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div id="messageArea"></div>
+
+        <div id="stats" class="stats" style="display: none;"></div>
+
+        <div id="content" class="content">
+            <div id="contentBody"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentData = null;
+
+        // File upload handling
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+
+        // Ensure XLSX library is loaded before setting up event listeners
+        (async function initializeApp() {
+            try {
+                console.log('🚀 Initializing Ultra Fast File Reader...');
+                await ensureXLSXLoaded();
+                console.log('✅ XLSX library loaded successfully - App ready!');
+                showMessage('success', 'Ultra Fast File Reader ready! Upload any file to get started.');
+            } catch (error) {
+                console.error('❌ Failed to load XLSX library:', error);
+                showMessage('error', 'Failed to load XLSX library. Please check your internet connection and refresh the page.');
+                return;
+            }
+        })();
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('dragleave', handleDragLeave);
+        uploadArea.addEventListener('drop', handleDrop);
+        fileInput.addEventListener('change', handleFileSelect);
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#27ae60';
+            uploadArea.style.background = '#d5f4e6';
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#3498db';
+            uploadArea.style.background = 'white';
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#3498db';
+            uploadArea.style.background = 'white';
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                processFile(files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                processFile(file);
+            }
+        }
+
+        // ULTRA FAST file processing
+        async function processFile(file) {
+            const startTime = performance.now();
+            showMessage('info', `⚡ Processing ${file.name}...`);
+            showProgress(true);
+
+            try {
+                const fileType = getFileType(file);
+                const data = await readFileUltraFast(file, fileType);
+                
+                const endTime = performance.now();
+                const processingTime = ((endTime - startTime) / 1000).toFixed(3);
+                
+                currentData = data;
+                displayStats(data, processingTime);
+                displayContent(data);
+                
+                showMessage('success', `⚡ File processed in ${processingTime} seconds!`);
+                showProgress(false);
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('error', `Error: ${error.message}`);
+                showProgress(false);
+            }
+        }
+
+        function getFileType(file) {
+            const ext = file.name.split('.').pop().toLowerCase();
+            if (['xlsx', 'xls'].includes(ext)) return 'excel';
+            if (ext === 'csv') return 'csv';
+            return 'text';
+        }
+
+        // ULTRA FAST file reading with minimal processing
+        async function readFileUltraFast(file, fileType) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                
+                reader.onload = async function(e) {
+                    try {
+                        if (fileType === 'excel') {
+                            const data = new Uint8Array(e.target.result);
+                            const result = await readExcelUltraFast(data);
+                            resolve(result);
+                        } else if (fileType === 'csv') {
+                            resolve(readCSVUltraFast(e.target.result));
+                        } else {
+                            resolve(readTextUltraFast(e.target.result));
+                        }
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                
+                reader.onerror = () => reject(new Error('Failed to read file'));
+                
+                if (fileType === 'excel') {
+                    reader.readAsArrayBuffer(file);
+                } else {
+                    reader.readAsText(file);
+                }
+            });
+        }
+
+        // Ensure XLSX library is loaded with enhanced debugging
+        function ensureXLSXLoaded() {
+            return new Promise((resolve, reject) => {
+                console.log('🔍 Checking XLSX library availability...');
+                
+                if (typeof XLSX !== 'undefined') {
+                    console.log('✅ XLSX library is already available');
+                    resolve();
+                    return;
+                }
+
+                console.log('⏳ XLSX library not ready, waiting for it to load...');
+                
+                // Wait for XLSX to load
+                let attempts = 0;
+                const maxAttempts = 100; // Increased to 10 seconds
+                const checkInterval = setInterval(() => {
+                    attempts++;
+                    console.log(`🔄 Attempt ${attempts}/${maxAttempts} - Checking for XLSX...`);
+                    
+                    if (typeof XLSX !== 'undefined') {
+                        console.log('✅ XLSX library loaded successfully!');
+                        clearInterval(checkInterval);
+                        resolve();
+                    } else if (attempts >= maxAttempts) {
+                        console.error('❌ XLSX library failed to load after 10 seconds');
+                        clearInterval(checkInterval);
+                        reject(new Error('XLSX library failed to load after 10 seconds. Please check your internet connection and refresh the page.'));
+                    }
+                }, 100);
+            });
+        }
+
+        // ULTRA FAST Excel reading with minimal options
+        async function readExcelUltraFast(data) {
+            console.log('📊 Starting Excel processing...');
+            
+            try {
+                await ensureXLSXLoaded();
+            } catch (error) {
+                console.error('❌ XLSX library loading failed:', error);
+                throw new Error('XLSX library not available. Please refresh the page and try again.');
+            }
+            
+            if (typeof XLSX === 'undefined') {
+                throw new Error('XLSX library not loaded after waiting');
+            }
+            
+            console.log('✅ XLSX library confirmed available, processing Excel...');
+
+            // Ultra minimal XLSX options for maximum speed
+            const workbook = XLSX.read(data, { 
+                type: 'array',
+                raw: true,           // Skip all formatting
+                cellDates: false,    // Skip date parsing
+                cellNF: false,       // Skip number formatting
+                cellText: false,     // Skip text formatting
+                cellStyles: false,   // Skip style processing
+                cellHTML: false,     // Skip HTML processing
+                cellFormula: false,  // Skip formula processing
+                cellHyperlinks: false, // Skip hyperlink processing
+                cellComments: false, // Skip comment processing
+                dense: true,         // Use dense arrays
+                codepage: 65001      // UTF-8
+            });
+
+            const result = [];
+            workbook.SheetNames.forEach(sheetName => {
+                const worksheet = workbook.Sheets[sheetName];
+                // Ultra fast conversion with minimal options
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+                    header: 1,       // Array format
+                    defval: '',      // Empty default
+                    blankrows: false, // Skip blank rows
+                    raw: true        // Raw values
+                });
+                result.push({
+                    sheetName: sheetName,
+                    data: jsonData
+                });
+            });
+
+            return result;
+        }
+
+        // ULTRA FAST CSV reading
+        function readCSVUltraFast(text) {
+            // Pre-compiled regex for maximum speed
+            const lines = text.split(/\r?\n/);
+            const data = lines.map(line => line.split(','));
+            
+            return [{
+                sheetName: 'CSV Data',
+                data: data
+            }];
+        }
+
+        // ULTRA FAST text reading
+        function readTextUltraFast(text) {
+            const lines = text.split(/\r?\n/);
+            return [{
+                sheetName: 'Text Content',
+                data: lines.map(line => [line])
+            }];
+        }
+
+        function displayStats(data, processingTime) {
+            const stats = document.getElementById('stats');
+            const totalRows = data.reduce((sum, sheet) => sum + (sheet.data ? sheet.data.length : 0), 0);
+            const totalSheets = data.length;
+            
+            stats.innerHTML = `
+                <div class="stat">
+                    <div class="stat-number">${totalSheets}</div>
+                    <div class="stat-label">Sheets</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">${totalRows}</div>
+                    <div class="stat-label">Rows</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">${processingTime}s</div>
+                    <div class="stat-label">Time</div>
+                </div>
+            `;
+            stats.style.display = 'flex';
+        }
+
+        function displayContent(data) {
+            const content = document.getElementById('content');
+            const contentBody = document.getElementById('contentBody');
+            
+            let html = '';
+            
+            data.forEach((sheet, index) => {
+                html += `<h3>📊 ${sheet.sheetName}</h3>`;
+                
+                if (sheet.data && sheet.data.length > 0) {
+                    html += '<table class="table">';
+                    
+                    // Add headers
+                    if (sheet.data[0] && sheet.data[0].length > 1) {
+                        html += '<tr>';
+                        for (let i = 0; i < sheet.data[0].length; i++) {
+                            html += `<th>Col ${i + 1}</th>`;
+                        }
+                        html += '</tr>';
+                    }
+                    
+                    // Add data rows (limit to 50 for speed)
+                    const maxRows = Math.min(50, sheet.data.length);
+                    for (let i = 0; i < maxRows; i++) {
+                        const row = sheet.data[i];
+                        html += '<tr>';
+                        
+                        if (Array.isArray(row)) {
+                            row.forEach(cell => {
+                                const cellValue = cell !== null && cell !== undefined ? String(cell) : '';
+                                html += `<td title="${cellValue}">${cellValue}</td>`;
+                            });
+                        } else {
+                            html += `<td colspan="10">${row}</td>`;
+                        }
+                        html += '</tr>';
+                    }
+                    
+                    html += '</table>';
+                    
+                    if (sheet.data.length > 50) {
+                        html += `<p style="text-align: center; color: #7f8c8d; margin-top: 10px;">Showing first 50 rows of ${sheet.data.length} total rows</p>`;
+                    }
+                } else {
+                    html += '<p>No data found</p>';
+                }
+            });
+            
+            contentBody.innerHTML = html;
+            content.style.display = 'block';
+        }
+
+        function showMessage(type, message) {
+            const messageArea = document.getElementById('messageArea');
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            
+            messageArea.innerHTML = `<div class="message ${className}">${message}</div>`;
+            
+            if (type === 'success' || type === 'info') {
+                setTimeout(() => {
+                    messageArea.innerHTML = '';
+                }, 3000);
+            }
+        }
+
+        function showProgress(show) {
+            const progress = document.getElementById('progress');
+            const progressBar = document.getElementById('progressBar');
+            
+            if (show) {
+                progress.style.display = 'block';
+                progressBar.style.width = '0%';
+                
+                // Animate progress
+                let width = 0;
+                const interval = setInterval(() => {
+                    if (width >= 100) {
+                        clearInterval(interval);
+                    } else {
+                        width += Math.random() * 15;
+                        progressBar.style.width = Math.min(width, 100) + '%';
+                    }
+                }, 50);
+            } else {
+                progressBar.style.width = '100%';
+                setTimeout(() => {
+                    progress.style.display = 'none';
+                }, 500);
+            }
+        }
+
+        // Demo function
+        window.demoUltraFast = function() {
+            console.log('⚡ ULTRA FAST FILE READER DEMO');
+            console.log('==============================');
+            console.log('This reader is optimized for MAXIMUM SPEED!');
+            console.log('Optimizations:');
+            console.log('- Minimal XLSX processing options');
+            console.log('- Pre-compiled regex patterns');
+            console.log('- Raw data processing only');
+            console.log('- Limited display rows (50 max)');
+            console.log('- No unnecessary formatting');
+            console.log('- Dense array structures');
+            console.log('- UTF-8 codepage for speed');
+            console.log('');
+            console.log('💡 Try uploading a file - it should read in milliseconds!');
+        };
+    </script>
+</body>
+</html>
