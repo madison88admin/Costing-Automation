@@ -3081,32 +3081,34 @@
             productSelection.style.display = 'block';
         }
 
-        // Drag & Drop functionality for Template 1
+        // Drag & Drop functionality for all templates
         function initializeDragDrop() {
-            const dragDropArea = document.querySelector('.drag-drop-area');
+            const dragDropAreas = document.querySelectorAll('.drag-drop-area');
             
-            if (dragDropArea) {
-                // Prevent default drag behaviors
-                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                    dragDropArea.addEventListener(eventName, preventDefaults, false);
-                    document.body.addEventListener(eventName, preventDefaults, false);
-                });
+            dragDropAreas.forEach(dragDropArea => {
+                if (dragDropArea) {
+                    // Prevent default drag behaviors
+                    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                        dragDropArea.addEventListener(eventName, preventDefaults, false);
+                        document.body.addEventListener(eventName, preventDefaults, false);
+                    });
 
-                // Highlight drop area when item is dragged over it
-                ['dragenter', 'dragover'].forEach(eventName => {
-                    dragDropArea.addEventListener(eventName, highlight, false);
-                });
+                    // Highlight drop area when item is dragged over it
+                    ['dragenter', 'dragover'].forEach(eventName => {
+                        dragDropArea.addEventListener(eventName, highlight, false);
+                    });
 
-                ['dragleave', 'drop'].forEach(eventName => {
-                    dragDropArea.addEventListener(eventName, unhighlight, false);
-                });
+                    ['dragleave', 'drop'].forEach(eventName => {
+                        dragDropArea.addEventListener(eventName, unhighlight, false);
+                    });
 
-                // Handle dropped files
-                dragDropArea.addEventListener('drop', handleDrop, false);
-                
-                // Handle click to reset
-                dragDropArea.addEventListener('click', resetDragDrop);
-            }
+                    // Handle dropped files
+                    dragDropArea.addEventListener('drop', handleDrop, false);
+                    
+                    // Handle click to reset
+                    dragDropArea.addEventListener('click', resetDragDrop);
+                }
+            });
         }
 
         function preventDefaults(e) {
@@ -3115,11 +3117,11 @@
         }
 
         function highlight(e) {
-            document.querySelector('.drag-drop-area').classList.add('drag-over');
+            e.target.closest('.drag-drop-area').classList.add('drag-over');
         }
 
         function unhighlight(e) {
-            document.querySelector('.drag-drop-area').classList.remove('drag-over');
+            e.target.closest('.drag-drop-area').classList.remove('drag-over');
         }
 
         function handleDrop(e) {
@@ -3133,9 +3135,10 @@
                 // Store the file globally for processing
                 uploadedFile = file;
                 
-                // Update the drag drop area to show file name
-                const dragDropText = document.querySelector('.drag-drop-text');
-                const dragDropIcon = document.querySelector('.drag-drop-icon');
+                // Update the specific drag drop area that received the file
+                const dragDropArea = e.target.closest('.drag-drop-area');
+                const dragDropText = dragDropArea.querySelector('.drag-drop-text');
+                const dragDropIcon = dragDropArea.querySelector('.drag-drop-icon');
                 
                 if (dragDropText && dragDropIcon) {
                     dragDropIcon.textContent = '✅';
@@ -3144,9 +3147,10 @@
             }
         }
 
-        function resetDragDrop() {
-            const dragDropText = document.querySelector('.drag-drop-text');
-            const dragDropIcon = document.querySelector('.drag-drop-icon');
+        function resetDragDrop(e) {
+            const dragDropArea = e.target.closest('.drag-drop-area');
+            const dragDropText = dragDropArea.querySelector('.drag-drop-text');
+            const dragDropIcon = dragDropArea.querySelector('.drag-drop-icon');
             
             if (dragDropText && dragDropIcon) {
                 dragDropIcon.textContent = '📁';
@@ -3155,16 +3159,17 @@
         }
 
         function handleTemplateImport() {
-            // Check if a file has been dropped
-            const dragDropText = document.querySelector('.drag-drop-text');
-            const dragDropIcon = document.querySelector('.drag-drop-icon');
+            // Check if a file has been dropped in the currently visible template
+            const visibleTemplate = document.querySelector('.cost-breakdown-container:not([style*="display: none"])');
+            const dragDropText = visibleTemplate ? visibleTemplate.querySelector('.drag-drop-text') : null;
+            const dragDropIcon = visibleTemplate ? visibleTemplate.querySelector('.drag-drop-icon') : null;
             
             if (dragDropIcon && dragDropIcon.textContent === '✅') {
                 // File has been selected, proceed with import
                 console.log('Importing file...');
                 
                 // Show loading state
-                const importButton = document.querySelector('.import-template-button');
+                const importButton = visibleTemplate ? visibleTemplate.querySelector('.import-template-button') : null;
                 if (importButton) {
                     importButton.textContent = 'Importing...';
                     importButton.disabled = true;
@@ -3212,19 +3217,26 @@
                 window.lastExcelData = rawData;
                 console.log('Raw Excel data stored in window.lastExcelData for debugging');
                 
-                // Determine which importer to use based on file content or name
-                    let parsedData = null;
-                    
-                // For now, default to beanie importer (you can add logic to detect product type)
-                if (beanieImporter.isSupportedFile(uploadedFile.name)) {
-                    console.log('Using TNF Beanie Importer');
-                    parsedData = beanieImporter.parseExcelData(rawData);
-                } else if (ballcapsImporter.isSupportedFile(uploadedFile.name)) {
+                // Determine which importer to use based on file content
+                let parsedData = null;
+                
+                // First check if file format is supported
+                if (!beanieImporter.isSupportedFile(uploadedFile.name)) {
+                    throw new Error('Unsupported file type. Please use .xlsx, .xls, or .xlsm files.');
+                }
+                
+                // Detect template type based on content
+                console.log('Raw data sample for detection:', rawData.slice(0, 10));
+                const templateType = detectTemplateType(rawData);
+                console.log('Detected template type:', templateType);
+                
+                if (templateType === 'cap' || templateType === 'ballcaps') {
                     console.log('Using TNF Ball Caps Importer');
                     parsedData = ballcapsImporter.parseExcelData(rawData);
-                    } else {
-                    throw new Error('Unsupported file type or format');
-                    }
+                } else {
+                    console.log('Using TNF Beanie Importer');
+                    parsedData = beanieImporter.parseExcelData(rawData);
+                }
                     
                     if (parsedData) {
                         fillTemplateWithData(parsedData);
@@ -3255,39 +3267,60 @@
 
 
         function fillTemplateWithData(data) {
-            // Fill Product Information
-            const productInfo = document.querySelector('.product-info');
+            // Fill Product Information - find the one in the currently visible template
+            const visibleTemplate = document.querySelector('.cost-breakdown-container:not([style*="display: none"])');
+            const productInfo = visibleTemplate ? visibleTemplate.querySelector('.product-info') : document.querySelector('.product-info');
+            console.log('Visible template:', visibleTemplate);
+            console.log('Product info element found:', productInfo);
+            
             if (productInfo) {
                 const infoRows = productInfo.querySelectorAll('.info-row');
-                const values = [data.customer, data.season, data.styleNumber, data.styleName, data.costedQuantity, data.leadtime];
+                console.log('Info rows found:', infoRows.length);
+                
+                // Map the data fields correctly - MOQ might be in costedQuantity or a separate field
+                const values = [
+                    data.customer || '', 
+                    data.season || '', 
+                    data.styleNumber || '', 
+                    data.styleName || '', 
+                    data.costedQuantity || data.moq || '', // Try both costedQuantity and moq
+                    data.leadtime || ''
+                ];
+                
+                console.log('Filling product info with values:', values);
                 
                 infoRows.forEach((row, index) => {
                     const valueSpan = row.querySelector('.info-value');
+                    console.log(`Row ${index}:`, row, 'Value span:', valueSpan, 'Value:', values[index]);
                     if (valueSpan && values[index]) {
                         valueSpan.textContent = values[index];
+                        console.log(`Filled ${index}: ${values[index]}`);
                     }
                 });
+            } else {
+                console.error('Product info element not found!');
             }
             
-            // Fill YARN section
-            fillCostSection('YARN', data.yarn, ['material', 'consumption', 'price', 'cost']);
+            // Check if this is ballcaps data (has otherFabric array)
+            const isBallcaps = data.otherFabric && Array.isArray(data.otherFabric);
             
-            // Fill FABRIC section
-            fillCostSection('FABRIC', data.fabric, ['material', 'consumption', 'price', 'cost']);
+            if (isBallcaps) {
+                // Fill ballcaps-specific sections
+                fillCostSection('FABRIC/S', data.fabric, ['material', 'consumption', 'price', 'cost']);
+                fillCostSection('OTHER FABRIC/S - TRIM/S', data.otherFabric, ['material', 'consumption', 'price', 'cost']);
+                fillCostSection('TRIM/S', data.trim, ['material', 'consumption', 'price', 'cost']);
+                fillCostSection('EMBROIDERY', data.embroidery, ['design', 'stitches', 'price', 'cost']);
+            } else {
+                // Fill beanie sections
+                fillCostSection('YARN', data.yarn, ['material', 'consumption', 'price', 'cost']);
+                fillCostSection('FABRIC', data.fabric, ['material', 'consumption', 'price', 'cost']);
+                fillCostSection('TRIM', data.trim, ['material', 'consumption', 'price', 'cost']);
+                fillCostSection('KNITTING', data.knitting, ['machine', 'time', 'sah', 'cost']);
+            }
             
-            // Fill TRIM section
-            fillCostSection('TRIM', data.trim, ['material', 'consumption', 'price', 'cost']);
-            
-            // Fill KNITTING section
-            fillCostSection('KNITTING', data.knitting, ['machine', 'time', 'sah', 'cost']);
-            
-            // Fill OPERATIONS section
+            // Fill common sections
             fillCostSection('OPERATIONS', data.operations, ['operation', 'time', 'cost', 'total']);
-            
-            // Fill PACKAGING section
             fillCostSection('PACKAGING', data.packaging, ['type', 'notes', 'cost']);
-            
-            // Fill OVERHEAD/PROFIT section
             fillCostSection('OVERHEAD/ PROFIT', data.overhead, ['type', 'notes', 'cost']);
             
             // Update totals
@@ -3933,6 +3966,19 @@
             
             const dataString = JSON.stringify(data).toLowerCase();
             console.log('Analyzing data for template detection...');
+            console.log('Data sample:', dataString.substring(0, 500));
+            
+            // Check for Cap template indicators first (more specific)
+            if (dataString.includes('fabric/s') || dataString.includes('other fabric/s') || dataString.includes('trim/s')) {
+                console.log('Cap template detected based on FABRIC/S sections');
+                return 'cap';
+            }
+            
+            // Check for style name patterns
+            if (dataString.includes('cap') || dataString.includes('baseball') || dataString.includes('corporate cap') || dataString.includes('bandit cap')) {
+                console.log('Cap template detected based on style name');
+                return 'cap';
+            }
             
             // Check for Beanie template indicators
             if (dataString.includes('yarn') || (dataString.includes('fabric') && dataString.includes('trim') && !dataString.includes('fabric/s'))) {
@@ -3940,21 +3986,9 @@
                 return 'beanie';
             }
             
-            // Check for Cap template indicators
-            if (dataString.includes('fabric/s') || dataString.includes('other fabric/s') || dataString.includes('trim/s')) {
-                console.log('Cap template detected based on FABRIC/S sections');
-                return 'cap';
-            }
-            
-            // Check for style name patterns
             if (dataString.includes('beanie') || dataString.includes('hat')) {
                 console.log('Beanie template detected based on style name');
                 return 'beanie';
-            }
-            
-            if (dataString.includes('cap') || dataString.includes('baseball')) {
-                console.log('Cap template detected based on style name');
-                return 'cap';
             }
             
             console.log('No specific template indicators found, defaulting to beanie');

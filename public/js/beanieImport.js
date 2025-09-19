@@ -158,6 +158,16 @@ class TNFBeanieImporter {
                     console.log('✅ YARN:', firstCell, 'Consumption:', row[1], 'Price:', row[2], 'Cost:', row[3]);
                 }
                 
+                if (currentSection === 'fabric' && firstCell && !firstCell.includes('FABRIC') && !firstCell.includes('CONSUMPTION') && !firstCell.includes('MATERIAL') && row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) > 0) {
+                    result.fabric.push({
+                        material: firstCell,
+                        consumption: String(row[1] || ''),
+                        price: parseFloat(row[2] || 0).toFixed(2),
+                        cost: parseFloat(row[3]).toFixed(2)
+                    });
+                    console.log('✅ FABRIC:', firstCell, 'Consumption:', row[1], 'Price:', row[2], 'Cost:', row[3]);
+                }
+                
                 if (currentSection === 'trim' && firstCell && !firstCell.includes('TRIM') && !firstCell.includes('CONSUMPTION') && !firstCell.includes('MATERIAL') && row[3] && !isNaN(parseFloat(row[3]))) {
                     result.trim.push({
                         material: firstCell,
@@ -246,6 +256,7 @@ class TNFBeanieImporter {
         console.log('Style#:', result.styleNumber);
         console.log('Style Name:', result.styleName);
         console.log('YARN items:', result.yarn.length, result.yarn);
+        console.log('FABRIC items:', result.fabric.length, result.fabric);
         console.log('TRIM items:', result.trim.length, result.trim);
         console.log('TRIM data details:', JSON.stringify(result.trim, null, 2));
         console.log('KNITTING items:', result.knitting.length, result.knitting);
