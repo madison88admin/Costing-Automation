@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Databank Data Management System</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM2t0EX7jF+JqJ4e8x8w8Q2E5VkNalCqtl4PV4/VvQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="xlsx.min.js"></script>
+    <script src="js/excelUtils.js"></script>
+    <script src="js/beanieImport.js"></script>
+    <script src="js/ballcapsImport.js"></script>
     <style>
         * {
             margin: 0;
@@ -1683,6 +1686,12 @@
                                 <div class="cost-cell"></div>
                                 <div class="cost-cell"></div>
                             </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
                             <div class="cost-row subtotal-row">
                                 <div class="cost-cell">SUB TOTAL</div>
                                 <div class="cost-cell"></div>
@@ -2133,62 +2142,6 @@
 
 
     <script>
-        // Enhanced and more reliable XLSX library loading
-        function ensureXLSXLoaded() {
-            return new Promise((resolve, reject) => {
-                if (typeof XLSX !== 'undefined') {
-                    console.log('XLSX library already loaded');
-                    resolve();
-                    return;
-                }
-
-                console.log('Loading XLSX library...');
-                
-                // Check if script is already being loaded
-                const existingScript = document.querySelector('script[src*="xlsx"]');
-                if (existingScript) {
-                    console.log('XLSX script already exists, waiting for it to load...');
-                    existingScript.onload = () => {
-                        if (typeof XLSX !== 'undefined') {
-                            resolve();
-                        } else {
-                            reject(new Error('XLSX library loaded but not available'));
-                        }
-                    };
-                    return;
-                }
-                
-                // Use the most reliable CDN with integrity check
-                const script = document.createElement('script');
-                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-                script.integrity = 'sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQC5QZQ8ghUzqyHJEwXaVg/2b4d0P7N4a4L0g+ce0qA==';
-                script.crossOrigin = 'anonymous';
-                
-                script.onload = () => {
-                    console.log('XLSX library script loaded, checking availability...');
-                    // Wait a bit for the library to initialize
-                    setTimeout(() => {
-                        if (typeof XLSX !== 'undefined') {
-                            console.log('XLSX library is available');
-                            resolve();
-                        } else {
-                            console.error('XLSX library loaded but not available');
-                            reject(new Error('XLSX library loaded but not available'));
-                        }
-                    }, 100);
-                };
-                
-                script.onerror = (error) => {
-                    console.error('Failed to load XLSX library:', error);
-                    reject(new Error('Failed to load XLSX library. Please check your internet connection.'));
-                };
-                
-                document.head.appendChild(script);
-            });
-        }
-
-
-
         // Debug function for testing Excel processing (can be called from browser console)
         window.testExcelProcessing = function() {
             console.log('Testing Excel processing...');
@@ -2198,40 +2151,6 @@
                 console.log('XLSX utils available:', typeof XLSX.utils !== 'undefined');
             }
         };
-
-        // Ensure XLSX is loaded when page loads
-        window.addEventListener('load', function() {
-            console.log('Page loaded, pre-loading XLSX library for Excel support...');
-            
-            // Pre-load XLSX library in background for better user experience
-            ensureXLSXLoaded().then(() => {
-                console.log('✅ XLSX library pre-loaded successfully');
-                // Update Excel status in import modal if it exists
-                const statusDiv = document.getElementById('excelStatus');
-                if (statusDiv) {
-                    statusDiv.style.background = 'rgba(76, 175, 80, 0.1)';
-                    statusDiv.style.border = '1px solid rgba(76, 175, 80, 0.3)';
-                    statusDiv.innerHTML = `
-                        <h5 style="color: #4CAF50; margin-bottom: 10px;">✅ Excel Library Ready</h5>
-                        <p style="color: rgba(255, 255, 255, 0.9); font-size: 14px; margin: 0;">
-                            Excel files (.xlsx, .xls, .xlsm) are fully supported! Upload any Excel file to get started.
-                        </p>
-                    `;
-                }
-            }).catch(error => {
-                console.warn('XLSX library pre-loading failed, will load on-demand:', error);
-                // Update Excel status to show it will load on-demand
-                const statusDiv = document.getElementById('excelStatus');
-                if (statusDiv) {
-                    statusDiv.innerHTML = `
-                        <h5 style="color: #ffc107; margin-bottom: 10px;">⚠️ Excel Library</h5>
-                        <p style="color: rgba(255, 255, 255, 0.9); font-size: 14px; margin: 0;">
-                            Excel library will load automatically when you upload an Excel file. CSV files work immediately.
-                        </p>
-                    `;
-                }
-            });
-        });
 
         let connectionId = null;
         let totalRecords = 0;
@@ -3264,29 +3183,47 @@
         // Store the uploaded file globally
         let uploadedFile = null;
 
-        function processImportedFile() {
+        // Initialize import utilities
+        const excelUtils = new ExcelUtils();
+        const beanieImporter = new TNFBeanieImporter();
+        const ballcapsImporter = new TNFBallCapsImporter();
+        
+        // Global variable to store raw Excel data for debugging
+        window.lastExcelData = null;
+
+        async function processImportedFile() {
             if (!uploadedFile) {
                 console.log('No file uploaded');
                 return;
             }
 
-            // Process the actual uploaded file
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                try {
-                    const data = e.target.result;
+            try {
+                // Show loading state
+                const importButton = document.querySelector('.import-template-button');
+                if (importButton) {
+                    importButton.textContent = 'Processing...';
+                    importButton.disabled = true;
+                }
+
+                // Read file content using utility
+                const rawData = await excelUtils.readFileContent(uploadedFile);
+                
+                // Store raw data globally for debugging
+                window.lastExcelData = rawData;
+                console.log('Raw Excel data stored in window.lastExcelData for debugging');
+                
+                // Determine which importer to use based on file content or name
                     let parsedData = null;
                     
-                    // Determine file type and parse accordingly
-                    if (uploadedFile.name.toLowerCase().endsWith('.csv')) {
-                        parsedData = parseCSVData(data);
-                    } else if (uploadedFile.name.toLowerCase().endsWith('.xlsx') || uploadedFile.name.toLowerCase().endsWith('.xlsm')) {
-                        parsedData = parseExcelData(data);
+                // For now, default to beanie importer (you can add logic to detect product type)
+                if (beanieImporter.isSupportedFile(uploadedFile.name)) {
+                    console.log('Using TNF Beanie Importer');
+                    parsedData = beanieImporter.parseExcelData(rawData);
+                } else if (ballcapsImporter.isSupportedFile(uploadedFile.name)) {
+                    console.log('Using TNF Ball Caps Importer');
+                    parsedData = ballcapsImporter.parseExcelData(rawData);
                     } else {
-                        console.log('Unsupported file type');
-                        alert('Please upload a CSV, XLSX, or XLSM file');
-                        return;
+                    throw new Error('Unsupported file type or format');
                     }
                     
                     if (parsedData) {
@@ -3295,9 +3232,8 @@
                     
                 } catch (error) {
                     console.error('Error processing file:', error);
-                    alert('Error processing file. Please check the file format.');
-                }
-                
+                alert(`Error processing file: ${error.message}`);
+            } finally {
                 // Reset button and show success
                 setTimeout(() => {
                     const importButton = document.querySelector('.import-template-button');
@@ -3312,189 +3248,11 @@
                         dragDropText.innerHTML = 'Import successful!<br><small>Click to import another</small>';
                     }
                 }, 1000);
-            };
-            
-            // Read the file based on its type
-            if (uploadedFile.name.toLowerCase().endsWith('.csv')) {
-                reader.readAsText(uploadedFile);
-            } else {
-                reader.readAsArrayBuffer(uploadedFile);
             }
         }
 
-        function parseCSVData(csvText) {
-            const lines = csvText.split('\n');
-            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-            
-            console.log('CSV Headers:', headers);
-            
-            // Create sample data structure based on CSV headers
-            const sampleData = {
-                // Product Information
-                customer: "Sample Customer",
-                season: "F25",
-                styleNumber: "ST001",
-                styleName: "Sample Beanie",
-                costedQuantity: "1000",
-                leadtime: "90 days",
-                
-                // YARN Data
-                yarn: [
-                    { material: "100% Cotton", consumption: "50", price: "2.50", cost: "125.00" },
-                    { material: "Wool Blend", consumption: "30", price: "3.20", cost: "96.00" }
-                ],
-                
-                // FABRIC Data
-                fabric: [
-                    { material: "Cotton Twill", consumption: "0.5", price: "4.00", cost: "2.00" },
-                    { material: "Fleece Lining", consumption: "0.3", price: "2.80", cost: "0.84" }
-                ],
-                
-                // TRIM Data
-                trim: [
-                    { material: "Logo Patch", consumption: "1", price: "0.50", cost: "0.50" },
-                    { material: "Drawstring", consumption: "1", price: "0.25", cost: "0.25" }
-                ],
-                
-                // KNITTING Data
-                knitting: [
-                    { machine: "Circular Knit", time: "15", sah: "0.15", cost: "2.25" },
-                    { machine: "Finishing", time: "5", sah: "0.20", cost: "1.00" }
-                ],
-                
-                // OPERATIONS Data
-                operations: [
-                    { operation: "Cutting", time: "10", cost: "0.30", total: "3.00" },
-                    { operation: "Sewing", time: "25", cost: "0.25", total: "6.25" },
-                    { operation: "Finishing", time: "8", cost: "0.20", total: "1.60" }
-                ],
-                
-                // PACKAGING Data
-                packaging: [
-                    { type: "Standard Bag", notes: "Poly bag", cost: "0.15" },
-                    { type: "Hang Tag", notes: "Cardboard", cost: "0.05" }
-                ],
-                
-                // OVERHEAD/PROFIT Data
-                overhead: [
-                    { type: "Overhead", notes: "Factory overhead", cost: "0.50" },
-                    { type: "Profit", notes: "Margin", cost: "1.20" }
-                ],
-                
-                // Totals
-                totalMaterialCost: "224.59",
-                totalFactoryCost: "237.34"
-            };
-            
-            // Fill the form with sample data
-            fillTemplateWithData(sampleData);
-            
-            // Reset button and show success
-            setTimeout(() => {
-                const importButton = document.querySelector('.import-template-button');
-                const dragDropText = document.querySelector('.drag-drop-text');
-                
-                if (importButton) {
-                    importButton.textContent = 'Import';
-                    importButton.disabled = false;
-                }
-                
-                if (dragDropText) {
-                    dragDropText.innerHTML = 'Import successful!<br><small>Click to import another</small>';
-                }
-            }, 1000);
-        }
 
-        function parseExcelData(arrayBuffer) {
-            try {
-                // Load XLSX library if not already loaded
-                if (typeof XLSX === 'undefined') {
-                    console.log('XLSX library not loaded, using sample data');
-                    return getSampleData();
-                }
-                
-                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
-                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-                
-                console.log('Excel Data:', jsonData);
-                
-                // Convert Excel data to our format
-                return convertExcelToTemplateData(jsonData);
-                
-            } catch (error) {
-                console.error('Error parsing Excel file:', error);
-                return getSampleData();
-            }
-        }
 
-        function convertExcelToTemplateData(excelData) {
-            // This function will map Excel columns to our template structure
-            // For now, return sample data - you can customize this based on your Excel structure
-            return getSampleData();
-        }
-
-        function getSampleData() {
-            return {
-                // Product Information
-                customer: "HELLY HANSEN",
-                season: "F25",
-                styleNumber: "TNFF27-014",
-                styleName: "WOOL BEANIE",
-                costedQuantity: "2000pcs",
-                leadtime: "130 days",
-                
-                // YARN Data
-                yarn: [
-                    { material: "(UJ-F19-011) 100% Nylon, 1/7.2 Nm", consumption: "50", price: "14.79", cost: "0.74" },
-                    { material: "(HYDD ECO) 65% RWS 21.5mic Merino Wool 35%", consumption: "66", price: "19.38", cost: "1.28" }
-                ],
-                
-                // FABRIC Data - Empty for beanie
-                fabric: [
-                    { material: "", consumption: "", price: "", cost: "0.00" },
-                    { material: "", consumption: "", price: "", cost: "0.00" }
-                ],
-                
-                // TRIM Data
-                trim: [
-                    { material: "Sewing Thread (Coats EcoV)", consumption: "", price: "", cost: "0.02" },
-                    { material: "", consumption: "", price: "", cost: "0.00" }
-                ],
-                
-                // KNITTING Data
-                knitting: [
-                    { machine: "Flat-3GG", time: "8", sah: "0.100", cost: "0.80" },
-                    { machine: "", time: "", sah: "", cost: "0.00" }
-                ],
-                
-                // OPERATIONS Data
-                operations: [
-                    { operation: "Labeling", time: "", cost: "", total: "0.10" },
-                    { operation: "Neaten/Steaming/Packing (Beanie)", time: "", cost: "", total: "0.40" },
-                    { operation: "Linking Beanie (Flat/ 1 Layer/ Cuff)", time: "", cost: "", total: "0.17" },
-                    { operation: "Washing (Hat/ Glove)", time: "", cost: "", total: "0.17" },
-                    { operation: "Hand Closing (9-3GG)", time: "", cost: "", total: "0.12" }
-                ],
-                
-                // PACKAGING Data
-                packaging: [
-                    { type: "Standard Packaging", notes: "", cost: "0.10" },
-                    { type: "Special Packaging", notes: "", cost: "0.00" }
-                ],
-                
-                // OVERHEAD/PROFIT Data
-                overhead: [
-                    { type: "OVERHEAD", notes: "", cost: "0.20" },
-                    { type: "PROFIT", notes: "", cost: "0.59" }
-                ],
-                
-                // Totals (calculated)
-                totalMaterialCost: "2.04",
-                totalFactoryCost: "4.69"
-            };
-        }
 
         function fillTemplateWithData(data) {
             // Fill Product Information
@@ -3537,12 +3295,18 @@
         }
 
         function fillCostSection(sectionName, data, columns) {
-            const sections = document.querySelectorAll('.cost-section');
+            // Only search within the currently visible template
+            const visibleTemplate = document.querySelector('.cost-breakdown-container:not([style*="display: none"])');
+            if (!visibleTemplate) {
+                return;
+            }
+            
+            const sections = visibleTemplate.querySelectorAll('.cost-section');
             let targetSection = null;
             
             sections.forEach(section => {
                 const header = section.querySelector('.section-header');
-                if (header && header.textContent.includes(sectionName)) {
+                if (header && header.textContent.trim() === sectionName) {
                     targetSection = section;
                 }
             });
@@ -3550,18 +3314,25 @@
             if (targetSection) {
                 const rows = targetSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
                 
-                data.forEach((item, index) => {
-                    if (rows[index]) {
-                        const cells = rows[index].querySelectorAll('.cost-cell');
-                        columns.forEach((column, cellIndex) => {
-                            if (cells[cellIndex] && item[column] !== undefined) {
-                                cells[cellIndex].textContent = item[column];
+                if (data && Array.isArray(data)) {
+                    data.forEach((item, index) => {
+                        if (rows[index] && item) {
+                            const cells = rows[index].querySelectorAll('.cost-cell');
+                            // Fill only the cells that exist, up to the minimum of columns.length and cells.length
+                            const maxColumns = Math.min(columns.length, cells.length);
+                            for (let cellIndex = 0; cellIndex < maxColumns; cellIndex++) {
+                                const column = columns[cellIndex];
+                                if (cells[cellIndex] && item[column] !== undefined && item[column] !== null) {
+                                    cells[cellIndex].textContent = String(item[column] || '');
+                                }
                             }
-                        });
-                    }
-                });
-                
-                // Calculate and update subtotal for this section
+                        }
+                    });
+                }
+            }
+            
+            // Calculate and update subtotal for this section
+            if (targetSection) {
                 updateSectionSubtotal(targetSection, data, columns);
             }
         }
@@ -3576,11 +3347,13 @@
             const costColumn = columns[costColumnIndex];
             
             let total = 0;
+            if (data && Array.isArray(data)) {
             data.forEach(item => {
-                if (item[costColumn] && !isNaN(parseFloat(item[costColumn]))) {
+                    if (item && item[costColumn] && item[costColumn] !== null && item[costColumn] !== undefined && !isNaN(parseFloat(item[costColumn]))) {
                     total += parseFloat(item[costColumn]);
                 }
             });
+            }
             
             // Update the subtotal cell
             const subtotalCells = subtotalRow.querySelectorAll('.cost-cell');
@@ -3590,14 +3363,20 @@
         }
 
         function updateTotals(materialTotal, factoryTotal) {
+            // Only update totals in the currently visible template
+            const visibleTemplate = document.querySelector('.cost-breakdown-container:not([style*="display: none"])');
+            if (!visibleTemplate) {
+                return;
+            }
+            
             // Update material total
-            const materialTotalElement = document.querySelector('.total-material-cost .total-value');
+            const materialTotalElement = visibleTemplate.querySelector('.total-material-cost .total-value');
             if (materialTotalElement) {
                 materialTotalElement.textContent = `$${materialTotal}`;
             }
             
             // Update factory total
-            const factoryTotalElement = document.querySelector('.total-factory-cost .total-value');
+            const factoryTotalElement = visibleTemplate.querySelector('.total-factory-cost .total-value');
             if (factoryTotalElement) {
                 factoryTotalElement.textContent = `$${factoryTotal}`;
             }
@@ -3619,9 +3398,7 @@
                     try {
                         // Load XLSX library synchronously
                         const script = document.createElement('script');
-                        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-                        script.integrity = 'sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQC5QZQ8ghUzqyHJEwXaVg/2b4d0P7N4a4L0g+ce0qA==';
-                        script.crossOrigin = 'anonymous';
+                        script.src = 'xlsx.min.js';
                         document.head.appendChild(script);
                         
                         // Wait a moment for the script to load
@@ -3747,8 +3524,11 @@
                 displayColumns.forEach((header, index) => {
                     let maxWidth = header.length;
                     excelData.forEach(row => {
-                        if (row[index] && row[index].toString().length > maxWidth) {
-                            maxWidth = row[index].toString().length;
+                        if (row[index] && row[index] != null && row[index] !== undefined) {
+                            const cellValue = String(row[index]);
+                            if (cellValue.length > maxWidth) {
+                                maxWidth = cellValue.length;
+                            }
                         }
                     });
                     colWidths.push({ wch: Math.min(maxWidth + 2, 50) });
@@ -3873,7 +3653,7 @@
                         let value = dbField ? (row[dbField] || '') : '';
                         
                         // Escape commas and quotes in CSV
-                        value = value.toString().replace(/"/g, '""');
+                        value = String(value || '').replace(/"/g, '""');
                         if (value.includes(',') || value.includes('"') || value.includes('\n')) {
                             value = '"' + value + '"';
                         }
@@ -4127,50 +3907,6 @@
             await loadDatabankData(totalCount);
         }
 
-        // Enhanced file type detection
-        function getFileType(file) {
-            const extension = file.name.toLowerCase().split('.').pop();
-            const mimeType = file.type.toLowerCase();
-            
-            console.log('File type detection:', {
-                name: file.name,
-                extension: extension,
-                mimeType: mimeType
-            });
-            
-            if (extension === 'csv' || mimeType.includes('csv')) {
-                console.log('Detected as CSV');
-                return 'csv';
-            } else if (extension === 'xlsx' || mimeType.includes('spreadsheetml')) {
-                console.log('Detected as XLSX');
-                return 'xlsx';
-            } else if (extension === 'xls' || mimeType.includes('excel')) {
-                console.log('Detected as XLS');
-                return 'xls';
-            } else if (extension === 'xlsm') {
-                console.log('Detected as XLSM');
-                return 'xlsm';
-            } else {
-                console.log('Detected as unknown type');
-                return 'unknown';
-            }
-        }
-
-        // Enhanced file validation
-        function validateFile(file) {
-            const fileType = getFileType(file);
-            const maxSize = 10 * 1024 * 1024; // 10MB limit
-            
-            if (file.size > maxSize) {
-                throw new Error('File size too large. Please use files smaller than 10MB.');
-            }
-            
-            if (fileType === 'unknown') {
-                throw new Error('Unsupported file type. Please use CSV, XLSX, XLS, or XLSM files.');
-            }
-            
-            return fileType;
-        }
 
 
         function showFileInfo(file, fileType) {
@@ -4187,124 +3923,6 @@
 
 
 
-        // Optimized File Reading Functions
-        async function readFileContent(file, fileType) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                
-                reader.onload = async (e) => {
-                    try {
-                        if (fileType === 'csv') {
-                            resolve(parseCSV(e.target.result));
-                        } else {
-                            // For Excel files (XLSX, XLS, XLSM), ensure XLSX is loaded
-                            console.log(`Processing ${fileType.toUpperCase()} file...`);
-                            try {
-                                // Check if XLSX is already loaded
-                                if (typeof XLSX === 'undefined') {
-                                    console.log('Loading XLSX library...');
-                                    await ensureXLSXLoaded();
-                                } else {
-                                    console.log('XLSX library already available');
-                                }
-                                
-                                const data = new Uint8Array(e.target.result);
-                                
-                                // Optimized XLSX reading with minimal options for speed
-                                const workbook = XLSX.read(data, { 
-                                    type: 'array',
-                                    cellDates: false,  // Disable date parsing for speed
-                                    cellNF: false,    // Disable number formatting for speed
-                                    cellText: false,  // Disable text formatting for speed
-                                    raw: true,        // Use raw values for speed
-                                    dense: true       // Use dense array for speed
-                                });
-                                
-                                if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
-                                    throw new Error('No worksheets found in the Excel file');
-                                }
-                                
-                                const sheetName = workbook.SheetNames[0];
-                                const worksheet = workbook.Sheets[sheetName];
-                                
-                                if (!worksheet) {
-                                    throw new Error('Could not read the first worksheet');
-                                }
-                                
-                                // Convert to array format with optimized settings
-                                const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
-                                    header: 1,
-                                    defval: '',
-                                    blankrows: false,
-                                    raw: true  // Use raw values for speed
-                                });
-                                
-                                console.log(`Excel file processed: ${jsonData.length} rows, ${jsonData[0] ? jsonData[0].length : 0} columns`);
-                                resolve(jsonData);
-                                
-                            } catch (xlsxError) {
-                                console.error('Excel processing failed:', xlsxError);
-                                reject(new Error(`Excel file processing failed: ${xlsxError.message}. Please try converting to CSV format.`));
-                            }
-                        }
-                    } catch (error) {
-                        reject(error);
-                    }
-                };
-                
-                reader.onerror = (error) => {
-                    console.error('File reading error:', error);
-                    reject(new Error('Failed to read file. Please check if the file is corrupted or try a different file.'));
-                };
-                
-                // Choose reading method based on file type
-                if (fileType === 'csv') {
-                    reader.readAsText(file, 'UTF-8');
-                } else {
-                    reader.readAsArrayBuffer(file);
-                }
-            });
-        }
-
-        function parseCSV(csvText) {
-            try {
-                const lines = csvText.split(/\r?\n/);
-                const result = [];
-                
-                for (let i = 0; i < lines.length; i++) {
-                    const line = lines[i].trim();
-                    if (line) {
-                        // Simple CSV parsing - handles quoted fields
-                        const row = [];
-                        let current = '';
-                        let inQuotes = false;
-                        
-                        for (let j = 0; j < line.length; j++) {
-                            const char = line[j];
-                            
-                            if (char === '"') {
-                                inQuotes = !inQuotes;
-                            } else if (char === ',' && !inQuotes) {
-                                row.push(current.trim());
-                                current = '';
-                            } else {
-                                current += char;
-                            }
-                        }
-                        
-                        // Add the last field
-                        row.push(current.trim());
-                        result.push(row);
-                    }
-                }
-                
-                console.log(`CSV file parsed: ${result.length} rows, ${result[0] ? result[0].length : 0} columns`);
-                return result;
-            } catch (error) {
-                console.error('CSV parsing error:', error);
-                throw new Error('Failed to parse CSV file. Please check the file format.');
-            }
-        }
 
         // Template Detection
         function detectTemplateType(data) {
