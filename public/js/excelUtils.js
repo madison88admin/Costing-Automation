@@ -151,7 +151,7 @@ class ExcelUtils {
                         
                         console.log('Available sheets:', workbook.SheetNames);
                         
-                        // Look for VANS data in any sheet
+                        // Look for VANS or ROSSIGNOL data in any sheet
                         let targetSheet = null;
                         let targetSheetName = null;
                         let allImages = [];
@@ -168,8 +168,11 @@ class ExcelUtils {
                             const worksheet = workbook.Sheets[sheetName];
                             const sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: true });
                             
-                            // Check if this sheet contains VANS data
+                            // Check if this sheet contains VANS or ROSSIGNOL data
                             let hasVANS = false;
+                            let hasROSSIGNOL = false;
+                            let hasBANDIT = false;
+                            
                             for (let j = 0; j < Math.min(20, sheetData.length); j++) {
                                 const row = sheetData[j];
                                 if (row) {
@@ -179,22 +182,37 @@ class ExcelUtils {
                                             hasVANS = true;
                                             break;
                                         }
+                                        if (cell.includes('ROSSIGNOL')) {
+                                            hasROSSIGNOL = true;
+                                        }
+                                        if (cell.includes('BANDIT CAP')) {
+                                            hasBANDIT = true;
+                                        }
                                     }
                                 }
-                                if (hasVANS) break;
+                                if (hasVANS || hasBANDIT) break;
                             }
                             
-                            if (hasVANS) {
+                            if (hasBANDIT) {
+                                targetSheet = worksheet;
+                                targetSheetName = sheetName;
+                                console.log('Found BANDIT CAP data in sheet:', sheetName);
+                                break;
+                            } else if (hasVANS) {
                                 targetSheet = worksheet;
                                 targetSheetName = sheetName;
                                 console.log('Found VANS data in sheet:', sheetName);
                                 break;
+                            } else if (hasROSSIGNOL && !targetSheet) {
+                                targetSheet = worksheet;
+                                targetSheetName = sheetName;
+                                console.log('Found ROSSIGNOL data in sheet:', sheetName);
                             }
                         }
                         
-                        // If no VANS data found, use the first sheet
+                        // If no specific data found, use the first sheet
                         if (!targetSheet) {
-                            console.log('No VANS data found, using first sheet:', workbook.SheetNames[0]);
+                            console.log('No specific data found, using first sheet:', workbook.SheetNames[0]);
                             targetSheet = workbook.Sheets[workbook.SheetNames[0]];
                             targetSheetName = workbook.SheetNames[0];
                         }
