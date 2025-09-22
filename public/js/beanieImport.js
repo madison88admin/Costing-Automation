@@ -460,16 +460,16 @@ class TNFBeanieImporter {
     }
 
     hasFabricData(row) {
-        // FABRIC needs: material name and cost
+        // FABRIC needs: material name and cost (including zero cost items)
         const hasMaterial = row[0] && String(row[0]).trim() && !String(row[0]).includes('FABRIC');
-        const hasCost = row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) > 0;
+        const hasCost = row[3] !== undefined && !isNaN(parseFloat(row[3]));
         return hasMaterial && hasCost;
     }
 
     hasTrimData(row) {
-        // TRIM needs: material name and cost
-        const hasMaterial = row[0] && String(row[0]).trim() && !String(row[0]).includes('TRIM');
-        const hasCost = row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) > 0;
+        // TRIM needs: material name and cost (including zero cost items and subtotals)
+        const hasMaterial = row[0] && String(row[0]).trim();
+        const hasCost = row[3] !== undefined && !isNaN(parseFloat(row[3]));
         return hasMaterial && hasCost;
     }
 

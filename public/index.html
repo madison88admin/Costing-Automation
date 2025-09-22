@@ -741,6 +741,8 @@
             margin: 20px auto 0;
             transition: all 0.3s ease;
             cursor: pointer;
+            pointer-events: auto;
+            z-index: 10;
             position: relative;
             overflow: hidden;
         }
@@ -2616,6 +2618,42 @@
             }
         };
 
+        // Function to manually initialize utilities
+        window.initializeUtilitiesNow = function() {
+            console.log('🔧 Manually initializing utilities...');
+            return initializeUtilities();
+        };
+
+        // Function to check drag & drop status
+        window.checkDragDropStatus = function() {
+            console.log('🔍 CHECKING DRAG & DROP STATUS');
+            console.log('==');
+            console.log('Document ready state:', document.readyState);
+            console.log('Window loaded:', window.performance.timing.loadEventEnd > 0);
+            
+            const dragDropAreas = document.querySelectorAll('.drag-drop-area');
+            console.log('Found drag drop areas:', dragDropAreas.length);
+            
+            dragDropAreas.forEach((area, index) => {
+                console.log(`Area ${index + 1}:`, {
+                    element: area,
+                    visible: area.offsetParent !== null,
+                    classes: area.className,
+                    hasEventListeners: area.onclick !== null
+                });
+            });
+            
+            // Check if file input exists
+            const fileInput = document.getElementById('hiddenFileInput');
+            console.log('File input exists:', !!fileInput);
+            
+            return {
+                areasFound: dragDropAreas.length,
+                fileInputExists: !!fileInput,
+                documentReady: document.readyState === 'complete'
+            };
+        };
+
         // Debug function to test drag and drop functionality
         window.testDragDrop = function() {
             console.log('🎯 TESTING DRAG & DROP FUNCTIONALITY');
@@ -3731,6 +3769,7 @@
 
         // Show template based on product type selection
         function showTemplate(productType) {
+            console.log('🎯 Showing template for product type:', productType);
             const costBreakdown = document.getElementById('costBreakdown');
             const ballcapsBreakdown = document.getElementById('ballcapsBreakdown');
             const productSelection = document.querySelector('.product-selection-container');
@@ -3740,12 +3779,25 @@
                 costBreakdown.style.display = 'block';
                 ballcapsBreakdown.style.display = 'none';
                 productSelection.style.display = 'none';
+                console.log('✅ Beanie template shown');
             } else if (productType === 'ballcaps') {
                 // Show Template 2: Factory Cost Breakdown for BallCaps
                 costBreakdown.style.display = 'none';
                 ballcapsBreakdown.style.display = 'block';
                 productSelection.style.display = 'none';
+                console.log('✅ Ballcaps template shown');
             }
+            
+            // Reinitialize drag & drop after showing the template
+            setTimeout(() => {
+                console.log('🔄 Reinitializing drag & drop after template change...');
+                try {
+                    initializeDragDrop();
+                    console.log('✅ Drag & drop reinitialized after template change');
+                } catch (error) {
+                    console.error('❌ Error reinitializing drag & drop after template change:', error);
+                }
+            }, 100);
         }
 
         // Go back to product selection
@@ -3762,12 +3814,17 @@
         // Drag & Drop functionality for both templates
         function initializeDragDrop() {
             console.log('🚀 Initializing drag & drop functionality...');
-            const dragDropAreas = document.querySelectorAll('.drag-drop-area');
+            console.log('Document body:', document.body);
+            console.log('Document ready state:', document.readyState);
             
+            const dragDropAreas = document.querySelectorAll('.drag-drop-area');
             console.log('Found drag drop areas:', dragDropAreas.length);
+            console.log('Drag drop areas:', dragDropAreas);
             
             if (dragDropAreas.length === 0) {
                 console.error('❌ No drag drop areas found!');
+                console.error('Available elements with "drag" in class:', document.querySelectorAll('[class*="drag"]'));
+                console.error('Available elements with "drop" in class:', document.querySelectorAll('[class*="drop"]'));
                 return;
             }
             
@@ -3786,24 +3843,37 @@
 
                 // Highlight drop area when item is dragged over it
                 ['dragenter', 'dragover'].forEach(eventName => {
-                    newDragDropArea.addEventListener(eventName, (e) => highlight(e, newDragDropArea), false);
+                    newDragDropArea.addEventListener(eventName, (e) => {
+                        console.log(`Drag ${eventName} detected on area ${index + 1}`);
+                        highlight(e, newDragDropArea);
+                    }, false);
                 });
 
                 ['dragleave', 'drop'].forEach(eventName => {
-                    newDragDropArea.addEventListener(eventName, (e) => unhighlight(e, newDragDropArea), false);
+                    newDragDropArea.addEventListener(eventName, (e) => {
+                        console.log(`Drag ${eventName} detected on area ${index + 1}`);
+                        unhighlight(e, newDragDropArea);
+                    }, false);
                 });
 
                 // Handle dropped files
                 newDragDropArea.addEventListener('drop', (e) => handleDrop(e, newDragDropArea), false);
                 
                 // Handle click to select file
-                newDragDropArea.addEventListener('click', () => {
+                newDragDropArea.addEventListener('click', (e) => {
                     console.log('Drag drop area clicked:', index);
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Test if click is working
+                    alert('Drag & drop area clicked! This means the click handler is working.');
+                    
                     const fileInput = document.getElementById('hiddenFileInput');
                     if (fileInput) {
                         fileInput.click();
                     } else {
                         console.error('File input not found');
+                        alert('File input not found!');
                     }
                 });
                 
@@ -3856,6 +3926,9 @@
                 uploadedFile = file;
                 console.log('File stored globally:', uploadedFile.name);
                 
+                // Clear previous data when new file is uploaded
+                clearPreviousData();
+                
                 // Update ALL drag drop areas to show file name
                 const dragDropTexts = document.querySelectorAll('.drag-drop-text');
                 const dragDropIcons = document.querySelectorAll('.drag-drop-icon');
@@ -3869,9 +3942,78 @@
                 });
                 
                 console.log('✅ All drag drop areas updated with file name');
+                
+                // Automatically process the file
+                console.log('🔄 Auto-processing new file...');
+                setTimeout(() => {
+                    processImportedFile();
+                }, 100);
             } else {
                 console.log('No files in drop event');
             }
+        }
+
+        // Function to clear previous data when new file is uploaded
+        function clearPreviousData() {
+            console.log('🧹 Clearing previous data...');
+            
+            // Clear global variables
+            window.lastExcelData = null;
+            window.fileContent = null;
+            window.currentFileType = null;
+            
+            // Clear any displayed data in the UI
+            const costBreakdown = document.getElementById('costBreakdown');
+            const ballcapsBreakdown = document.getElementById('ballcapsBreakdown');
+            
+            if (costBreakdown) {
+                // Clear beanie template data
+                const infoValues = costBreakdown.querySelectorAll('.info-value');
+                infoValues.forEach(element => {
+                    element.textContent = '';
+                });
+                
+                // Clear all cost sections
+                const costSections = costBreakdown.querySelectorAll('.cost-section');
+                costSections.forEach(section => {
+                    const rows = section.querySelectorAll('.cost-row:not(.header-row)');
+                    rows.forEach(row => {
+                        const cells = row.querySelectorAll('.cost-cell');
+                        cells.forEach(cell => {
+                            cell.textContent = '';
+                        });
+                    });
+                });
+            }
+            
+            if (ballcapsBreakdown) {
+                // Clear ballcaps template data
+                const infoValues = ballcapsBreakdown.querySelectorAll('.info-value');
+                infoValues.forEach(element => {
+                    element.textContent = '';
+                });
+                
+                // Clear all cost sections
+                const costSections = ballcapsBreakdown.querySelectorAll('.cost-section');
+                costSections.forEach(section => {
+                    const rows = section.querySelectorAll('.cost-row:not(.header-row)');
+                    rows.forEach(row => {
+                        const cells = row.querySelectorAll('.cost-cell');
+                        cells.forEach(cell => {
+                            cell.textContent = '';
+                        });
+                    });
+                });
+            }
+            
+            // Clear product images
+            const productImages = document.querySelectorAll('.product-image');
+            productImages.forEach(img => {
+                img.style.display = 'none';
+                img.src = '';
+            });
+            
+            console.log('✅ Previous data cleared');
         }
 
         function resetDragDrop() {
@@ -3891,6 +4033,9 @@
                 console.log('File selected via click:', file.name, file.type);
                 uploadedFile = file;
                 
+                // Clear previous data when new file is uploaded
+                clearPreviousData();
+                
                 // Update all drag drop areas to show file name
                 const dragDropTexts = document.querySelectorAll('.drag-drop-text');
                 const dragDropIcons = document.querySelectorAll('.drag-drop-icon');
@@ -3902,6 +4047,12 @@
                 dragDropIcons.forEach(dragDropIcon => {
                     dragDropIcon.textContent = '✅';
                 });
+                
+                // Automatically process the file
+                console.log('🔄 Auto-processing new file...');
+                setTimeout(() => {
+                    processImportedFile();
+                }, 100);
             }
         }
 
@@ -3933,18 +4084,58 @@
         // Store the uploaded file globally
         let uploadedFile = null;
 
-        // Initialize import utilities
-        const excelUtils = new ExcelUtils();
-        const beanieImporter = new TNFBeanieImporter();
-        const ballcapsImporter = new TNFBallCapsImporter();
-        
         // Global variable to store raw Excel data for debugging
         window.lastExcelData = null;
+
+        // Global utility variables
+        let excelUtils, beanieImporter, ballcapsImporter;
+
+        // Function to initialize utilities
+        function initializeUtilities() {
+            console.log('🔧 Initializing utilities...');
+            console.log('Available classes:', {
+                ExcelUtils: typeof ExcelUtils,
+                TNFBeanieImporter: typeof TNFBeanieImporter,
+                TNFBallCapsImporter: typeof TNFBallCapsImporter
+            });
+            
+            try {
+                if (typeof ExcelUtils !== 'undefined' && typeof TNFBeanieImporter !== 'undefined' && typeof TNFBallCapsImporter !== 'undefined') {
+                    excelUtils = new ExcelUtils();
+                    beanieImporter = new TNFBeanieImporter();
+                    ballcapsImporter = new TNFBallCapsImporter();
+                    console.log('✅ Utilities initialized successfully');
+                    return true;
+                } else {
+                    console.error('❌ Required classes not available:', {
+                        ExcelUtils: typeof ExcelUtils,
+                        TNFBeanieImporter: typeof TNFBeanieImporter,
+                        TNFBallCapsImporter: typeof TNFBallCapsImporter
+                    });
+                    console.log('🔄 Will retry initialization in 500ms...');
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ Error initializing utilities:', error);
+                console.error('Error details:', error.message, error.stack);
+                return false;
+            }
+        }
 
         async function processImportedFile() {
             if (!uploadedFile) {
                 console.log('No file uploaded');
                 return;
+            }
+
+            // Check if utilities are initialized
+            if (!excelUtils || !beanieImporter || !ballcapsImporter) {
+                console.log('🔄 Utilities not initialized, attempting to initialize...');
+                if (!initializeUtilities()) {
+                    console.error('❌ Failed to initialize utilities');
+                    alert('Import utilities not ready. Please refresh the page and try again.');
+                    return;
+                }
             }
 
             try {
@@ -4006,6 +4197,20 @@
                 } catch (error) {
                     console.error('Error processing file:', error);
                 alert(`Error processing file: ${error.message}`);
+                
+                // Clear uploaded file state and reinitialize drag & drop even after error
+                uploadedFile = null;
+                console.log('🔄 Cleared uploaded file state after error');
+                
+                setTimeout(() => {
+                    console.log('🔄 Reinitializing drag & drop after error...');
+                    try {
+                        initializeDragDrop();
+                        console.log('✅ Drag & drop reinitialized after error');
+                    } catch (reinitError) {
+                        console.error('❌ Error reinitializing drag & drop after error:', reinitError);
+                    }
+                }, 500);
             } finally {
                 // Reset button and show success
                 setTimeout(() => {
@@ -4020,6 +4225,20 @@
                     if (dragDropText) {
                         dragDropText.innerHTML = 'Import successful!<br><small>Click to import another</small>';
                     }
+                    
+                    // Clear uploaded file state and reinitialize drag & drop for next file upload
+                    uploadedFile = null;
+                    console.log('🔄 Cleared uploaded file state for next upload');
+                    
+                    setTimeout(() => {
+                        console.log('🔄 Reinitializing drag & drop after successful import...');
+                        try {
+                            initializeDragDrop();
+                            console.log('✅ Drag & drop reinitialized after import');
+                        } catch (error) {
+                            console.error('❌ Error reinitializing drag & drop after import:', error);
+                        }
+                    }, 500);
                 }, 1000);
             }
         }
@@ -4028,16 +4247,37 @@
 
 
         function fillTemplateWithData(data) {
+            console.log('🔍 Debugging Beanie template population:');
+            console.log('- data.moq:', data.moq);
+            console.log('- data.costedQuantity:', data.costedQuantity);
+            console.log('- data keys:', Object.keys(data));
+            
+            // Map costedQuantity to moq if moq is not available
+            if (!data.moq && data.costedQuantity) {
+                data.moq = data.costedQuantity;
+                console.log('✅ Mapped costedQuantity to moq:', data.moq);
+            }
+            
             // Fill Product Information
             const productInfo = document.querySelector('.product-info');
             if (productInfo) {
                 const infoRows = productInfo.querySelectorAll('.info-row');
-                const values = [data.customer, data.season, data.styleNumber, data.styleName, data.costedQuantity, data.leadtime];
+                const values = [data.customer, data.season, data.styleNumber, data.styleName, data.moq, data.leadtime];
+                const labels = ['customer', 'season', 'styleNumber', 'styleName', 'moq', 'leadtime'];
+                
+                console.log('- infoRows found:', infoRows.length);
+                console.log('- values:', values);
                 
                 infoRows.forEach((row, index) => {
                     const valueSpan = row.querySelector('.info-value');
-                    if (valueSpan && values[index]) {
-                        valueSpan.textContent = values[index];
+                    const label = labels[index];
+                    const value = values[index];
+                    console.log(`- Processing ${label}:`, value);
+                    if (valueSpan && value) {
+                        valueSpan.textContent = value;
+                        console.log(`✅ Set ${label} to:`, value);
+                    } else {
+                        console.log(`❌ Skipped ${label} - no value or element`);
                     }
                 });
             }
@@ -4195,21 +4435,59 @@
         // Initialize drag & drop when page loads
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 DOM Content Loaded - Initializing drag & drop...');
+            console.log('Document ready state:', document.readyState);
+            console.log('Window loaded:', document.readyState === 'complete');
             
+            // Check which containers are visible
+            const costBreakdown = document.getElementById('costBreakdown');
+            const ballcapsBreakdown = document.getElementById('ballcapsBreakdown');
+            const productSelection = document.querySelector('.product-selection-container');
+            
+            console.log('Container visibility:', {
+                costBreakdown: costBreakdown ? costBreakdown.style.display : 'not found',
+                ballcapsBreakdown: ballcapsBreakdown ? ballcapsBreakdown.style.display : 'not found',
+                productSelection: productSelection ? productSelection.style.display : 'not found'
+            });
+            
+            // Initialize utilities with retry mechanism
+            let utilityRetryCount = 0;
+            const maxUtilityRetries = 10;
+            
+            function tryInitializeUtilities() {
+                if (initializeUtilities()) {
+                    console.log('✅ Utilities initialized successfully');
+                } else if (utilityRetryCount < maxUtilityRetries) {
+                    utilityRetryCount++;
+                    console.log(`🔄 Retrying utility initialization (${utilityRetryCount}/${maxUtilityRetries})...`);
+                    setTimeout(tryInitializeUtilities, 500);
+                } else {
+                    console.error('❌ Failed to initialize utilities after maximum retries');
+                }
+            }
+            
+            setTimeout(() => {
+                console.log('🔧 Starting utility initialization...');
+                tryInitializeUtilities();
+            }, 50);
+
             // Add a small delay to ensure all elements are rendered
             setTimeout(() => {
+                console.log('🔧 Attempting drag & drop initialization...');
                 try {
                     initializeDragDrop();
                     console.log('✅ Drag & drop initialized successfully');
                 } catch (error) {
                     console.error('❌ Error initializing drag & drop:', error);
+                    console.error('Error details:', error.message, error.stack);
                     // Try again after a longer delay
                     setTimeout(() => {
+                        console.log('🔄 Retrying drag & drop initialization...');
                         try {
                             initializeDragDrop();
                             console.log('✅ Drag & drop initialized on retry');
                         } catch (retryError) {
                             console.error('❌ Drag & drop initialization failed on retry:', retryError);
+                            console.error('Retry error details:', retryError.message, retryError.stack);
                         }
                     }, 1000);
                 }
@@ -4242,6 +4520,17 @@
                 }
             }, 500);
         });
+
+        // Force initialization after a delay to ensure everything is loaded
+        setTimeout(() => {
+            console.log('🔄 Force initialization after delay...');
+            try {
+                initializeDragDrop();
+                console.log('✅ Force initialization successful');
+            } catch (error) {
+                console.error('❌ Force initialization failed:', error);
+            }
+        }, 2000);
 
         // Export table data to Excel
         async function exportToExcel() {
@@ -6363,6 +6652,7 @@
         function extractBallCapsData(data, extractedData) {
             // Extract ballcaps specific data
             console.log('Extracting BallCaps data...');
+            console.log('Data length:', data.length);
             
             // Look for ballcaps specific sections
             let currentSection = '';
@@ -6372,6 +6662,11 @@
                 if (!row || row.length === 0) continue;
                 
                 const firstCell = String(row[0] || '').trim();
+                
+                // Debug: Log first few rows to see the data structure
+                if (i < 10) {
+                    console.log(`Row ${i}:`, firstCell, '|', row[1] || '');
+                }
                 
                 // Detect sections
                 if (firstCell === 'FABRIC') {
@@ -6403,11 +6698,15 @@
                 }
                 if (firstCell.includes('MOQ') && row[1]) {
                     extractedData.moq = String(row[1]).trim();
+                    console.log('🔍 Found MOQ in row', i, ':', firstCell, '->', extractedData.moq);
                 }
                 if (firstCell.includes('Leadtime') && row[1]) {
                     extractedData.leadtime = String(row[1]).trim();
                 }
             }
+            
+            console.log('🔍 Final extracted data:', extractedData);
+            console.log('MOQ value:', extractedData.moq);
             
             return extractedData;
         }
@@ -6568,9 +6867,28 @@
             // Populate basic info
             const infoValues = document.querySelectorAll('#ballcapsBreakdown .info-value');
             const labels = ['customer', 'season', 'styleNumber', 'styleName', 'moq', 'leadtime'];
+            console.log('🔍 Debugging MOQ population:');
+            console.log('- infoValues found:', infoValues.length);
+            console.log('- labels:', labels);
+            console.log('- parsedData.moq:', parsedData.moq);
+            console.log('- parsedData.costedQuantity:', parsedData.costedQuantity);
+            console.log('- parsedData keys:', Object.keys(parsedData));
+            
+            // Map costedQuantity to moq if moq is not available
+            if (!parsedData.moq && parsedData.costedQuantity) {
+                parsedData.moq = parsedData.costedQuantity;
+                console.log('✅ Mapped costedQuantity to moq:', parsedData.moq);
+            }
+            
             infoValues.forEach((element, index) => {
-                if (labels[index] && parsedData[labels[index]]) {
-                    element.textContent = parsedData[labels[index]];
+                const label = labels[index];
+                const value = parsedData[label];
+                console.log(`- Processing ${label}:`, value);
+                if (label && value) {
+                    element.textContent = value;
+                    console.log(`✅ Set ${label} to:`, value);
+                } else {
+                    console.log(`❌ Skipped ${label} - no value`);
                 }
             });
             
@@ -6605,55 +6923,183 @@
             // Populate trim section
             if (parsedData.trim && parsedData.trim.length > 0) {
                 const trimRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(3) .cost-row:not(.header-row):not(.subtotal-row)');
+                let regularItemCount = 0;
+                let trimTotal = 0;
+                
                 parsedData.trim.forEach((item, index) => {
-                    if (trimRows[index]) {
-                        const cells = trimRows[index].querySelectorAll('.cost-cell');
-                        if (cells[0]) cells[0].textContent = item.material || '';
-                        if (cells[1]) cells[1].textContent = item.consumption || '';
-                        if (cells[2]) cells[2].textContent = item.price || '';
-                        if (cells[3]) cells[3].textContent = item.cost || '';
+                    // Check if this is a subtotal row
+                    if (item.material && item.material.includes('TOTAL MATERIAL AND SUBMATERIALS COST')) {
+                        // Update the subtotal row
+                        const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(3) .subtotal-row');
+                        if (subtotalRow) {
+                            const cells = subtotalRow.querySelectorAll('.cost-cell');
+                            if (cells[0]) cells[0].textContent = item.material;
+                            if (cells[3]) cells[3].textContent = `$${item.cost}`;
+                            console.log('✅ Updated TRIM subtotal:', item.material, item.cost);
+                        }
+                    } else {
+                        // Regular item
+                        if (trimRows[regularItemCount]) {
+                            const cells = trimRows[regularItemCount].querySelectorAll('.cost-cell');
+                            if (cells[0]) cells[0].textContent = item.material || '';
+                            if (cells[1]) cells[1].textContent = item.consumption || '';
+                            if (cells[2]) cells[2].textContent = item.price || '';
+                            if (cells[3]) cells[3].textContent = item.cost || '';
+                            
+                            // Add to total for calculation
+                            const cost = parseFloat(item.cost) || 0;
+                            trimTotal += cost;
+                            regularItemCount++;
+                        }
                     }
                 });
+                
+                // If no subtotal row was found in data, calculate and display one
+                const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(3) .subtotal-row');
+                if (subtotalRow && trimTotal > 0) {
+                    const cells = subtotalRow.querySelectorAll('.cost-cell');
+                    if (cells[0] && !cells[0].textContent.includes('TOTAL')) {
+                        cells[0].textContent = 'SUB TOTAL';
+                        cells[3].textContent = `$${trimTotal.toFixed(2)}`;
+                        console.log('✅ Calculated TRIM subtotal:', trimTotal.toFixed(2));
+                    }
+                }
             }
             
             // Populate operations section
             if (parsedData.operations && parsedData.operations.length > 0) {
                 const operationsRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(5) .cost-row:not(.header-row):not(.subtotal-row)');
+                let regularItemCount = 0;
+                let operationsTotal = 0;
+                
                 parsedData.operations.forEach((item, index) => {
-                    if (operationsRows[index]) {
-                        const cells = operationsRows[index].querySelectorAll('.cost-cell');
-                        if (cells[0]) cells[0].textContent = item.operation || '';
-                        if (cells[1]) cells[1].textContent = item.time || '';
-                        if (cells[2]) cells[2].textContent = item.cost || '';
-                        if (cells[3]) cells[3].textContent = item.total || '';
+                    // Check if this is a subtotal row
+                    if (item.operation && (item.operation.includes('SUB TOTAL') || item.operation.includes('TOTAL'))) {
+                        // Update the subtotal row
+                        const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(5) .subtotal-row');
+                        if (subtotalRow) {
+                            const cells = subtotalRow.querySelectorAll('.cost-cell');
+                            if (cells[0]) cells[0].textContent = item.operation;
+                            if (cells[3]) cells[3].textContent = `$${item.total}`;
+                            console.log('✅ Updated OPERATIONS subtotal:', item.operation, item.total);
+                        }
+                    } else {
+                        // Regular item
+                        if (operationsRows[regularItemCount]) {
+                            const cells = operationsRows[regularItemCount].querySelectorAll('.cost-cell');
+                            if (cells[0]) cells[0].textContent = item.operation || '';
+                            if (cells[1]) cells[1].textContent = item.time || '';
+                            if (cells[2]) cells[2].textContent = item.cost || '';
+                            if (cells[3]) cells[3].textContent = item.total || '';
+                            
+                            // Add to total for calculation
+                            const cost = parseFloat(item.total) || 0;
+                            operationsTotal += cost;
+                            regularItemCount++;
+                        }
                     }
                 });
+                
+                // If no subtotal row was found in data, calculate and display one
+                const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(5) .subtotal-row');
+                if (subtotalRow && operationsTotal > 0) {
+                    const cells = subtotalRow.querySelectorAll('.cost-cell');
+                    if (cells[0] && !cells[0].textContent.includes('TOTAL')) {
+                        cells[0].textContent = 'SUB TOTAL';
+                        cells[3].textContent = `$${operationsTotal.toFixed(2)}`;
+                        console.log('✅ Calculated OPERATIONS subtotal:', operationsTotal.toFixed(2));
+                    }
+                }
             }
             
             // Populate packaging section
             if (parsedData.packaging && parsedData.packaging.length > 0) {
                 const packagingRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(6) .cost-row:not(.header-row):not(.subtotal-row)');
+                let regularItemCount = 0;
+                let packagingTotal = 0;
+                
                 parsedData.packaging.forEach((item, index) => {
-                    if (packagingRows[index]) {
-                        const cells = packagingRows[index].querySelectorAll('.cost-cell');
-                        if (cells[0]) cells[0].textContent = item.type || '';
-                        if (cells[1]) cells[1].textContent = item.notes || '';
-                        if (cells[2]) cells[2].textContent = item.cost || '';
+                    // Check if this is a subtotal row
+                    if (item.type && (item.type.includes('SUB TOTAL') || item.type.includes('TOTAL'))) {
+                        // Update the subtotal row
+                        const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(6) .subtotal-row');
+                        if (subtotalRow) {
+                            const cells = subtotalRow.querySelectorAll('.cost-cell');
+                            if (cells[0]) cells[0].textContent = item.type;
+                            if (cells[2]) cells[2].textContent = `$${item.cost}`;
+                            console.log('✅ Updated PACKAGING subtotal:', item.type, item.cost);
+                        }
+                    } else {
+                        // Regular item
+                        if (packagingRows[regularItemCount]) {
+                            const cells = packagingRows[regularItemCount].querySelectorAll('.cost-cell');
+                            if (cells[0]) cells[0].textContent = item.type || '';
+                            if (cells[1]) cells[1].textContent = item.notes || '';
+                            if (cells[2]) cells[2].textContent = item.cost || '';
+                            
+                            // Add to total for calculation
+                            const cost = parseFloat(item.cost) || 0;
+                            packagingTotal += cost;
+                            regularItemCount++;
+                        }
                     }
                 });
+                
+                // If no subtotal row was found in data, calculate and display one
+                const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(6) .subtotal-row');
+                if (subtotalRow && packagingTotal > 0) {
+                    const cells = subtotalRow.querySelectorAll('.cost-cell');
+                    if (cells[0] && !cells[0].textContent.includes('TOTAL')) {
+                        cells[0].textContent = 'SUB TOTAL';
+                        cells[2].textContent = `$${packagingTotal.toFixed(2)}`;
+                        console.log('✅ Calculated PACKAGING subtotal:', packagingTotal.toFixed(2));
+                    }
+                }
             }
             
             // Populate overhead section
             if (parsedData.overhead && parsedData.overhead.length > 0) {
                 const overheadRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(7) .cost-row:not(.header-row):not(.subtotal-row)');
+                let regularItemCount = 0;
+                let overheadTotal = 0;
+                
                 parsedData.overhead.forEach((item, index) => {
-                    if (overheadRows[index]) {
-                        const cells = overheadRows[index].querySelectorAll('.cost-cell');
-                        if (cells[0]) cells[0].textContent = item.type || '';
-                        if (cells[1]) cells[1].textContent = item.notes || '';
-                        if (cells[2]) cells[2].textContent = item.cost || '';
+                    // Check if this is a subtotal row
+                    if (item.type && (item.type.includes('SUB TOTAL') || item.type.includes('TOTAL'))) {
+                        // Update the subtotal row
+                        const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(7) .subtotal-row');
+                        if (subtotalRow) {
+                            const cells = subtotalRow.querySelectorAll('.cost-cell');
+                            if (cells[0]) cells[0].textContent = item.type;
+                            if (cells[2]) cells[2].textContent = `$${item.cost}`;
+                            console.log('✅ Updated OVERHEAD subtotal:', item.type, item.cost);
+                        }
+                    } else {
+                        // Regular item
+                        if (overheadRows[regularItemCount]) {
+                            const cells = overheadRows[regularItemCount].querySelectorAll('.cost-cell');
+                            if (cells[0]) cells[0].textContent = item.type || '';
+                            if (cells[1]) cells[1].textContent = item.notes || '';
+                            if (cells[2]) cells[2].textContent = item.cost || '';
+                            
+                            // Add to total for calculation
+                            const cost = parseFloat(item.cost) || 0;
+                            overheadTotal += cost;
+                            regularItemCount++;
+                        }
                     }
                 });
+                
+                // If no subtotal row was found in data, calculate and display one
+                const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(7) .subtotal-row');
+                if (subtotalRow && overheadTotal > 0) {
+                    const cells = subtotalRow.querySelectorAll('.cost-cell');
+                    if (cells[0] && !cells[0].textContent.includes('TOTAL')) {
+                        cells[0].textContent = 'SUB TOTAL';
+                        cells[2].textContent = `$${overheadTotal.toFixed(2)}`;
+                        console.log('✅ Calculated OVERHEAD subtotal:', overheadTotal.toFixed(2));
+                    }
+                }
             }
             
             // Calculate and update subtotals for each section

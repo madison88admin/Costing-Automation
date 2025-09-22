@@ -122,6 +122,11 @@ class TNFBallCapsImporter {
                     console.log('🔍 Found TOTAL FACTORY COST');
                 }
                 
+                // Debug: Log current section and row data for operations/overhead
+                if (currentSection === 'operations' || currentSection === 'overhead') {
+                    console.log(`🔍 Current section: ${currentSection}, Row ${i}:`, firstCell, '|', row[1], '|', row[2], '|', row[3]);
+                }
+                
                 // Detect header rows and set current section based on context
                 if (firstCell.includes('(Name/Code/Description)Description') && row[1] && row[1].includes('CONSUMPTION')) {
                     // This is a header row, determine section based on context
@@ -176,12 +181,11 @@ class TNFBallCapsImporter {
                 }
                 
                 if (currentSection === 'trim' && firstCell && 
-                    !firstCell.includes('TRIM') && 
                     !firstCell.includes('(Name/Code/Description)') && 
                     !firstCell.includes('CONSUMPTION') && 
                     !firstCell.includes('MATERIAL PRICE') && 
                     !firstCell.includes('MATERIAL COST') && 
-                    row[3] && !isNaN(parseFloat(row[3]))) {
+                    row[3] !== undefined && !isNaN(parseFloat(row[3]))) {
                     result.trim.push({
                         material: firstCell,
                         consumption: String(row[1] || ''),
@@ -191,19 +195,21 @@ class TNFBallCapsImporter {
                     console.log('✅ TRIM:', firstCell, 'Cost:', row[3]);
                 }
                 
-                if (currentSection === 'operations' && firstCell && !firstCell.includes('OPERATIONS') && !firstCell.includes('TIME') && !firstCell.includes('COST') && !firstCell.includes('SUB TOTAL') && !firstCell.includes('TOTAL')) {
-                    if (row[3] && !isNaN(parseFloat(row[3]))) {
+                if (currentSection === 'operations' && !firstCell.includes('OPERATIONS') && !firstCell.includes('TIME') && !firstCell.includes('COST') && !firstCell.includes('SUB TOTAL') && !firstCell.includes('TOTAL')) {
+                    console.log(`🔍 Checking OPERATIONS: "${firstCell}" - Row:`, row, 'Cost in col 3:', row[3], 'Is number:', !isNaN(parseFloat(row[3])));
+                    // Check if this row has operations data (SMV in col 1, cost in col 3)
+                    if (row[1] && row[1].toString().trim() && row[3] && !isNaN(parseFloat(row[3]))) {
                         result.operations.push({
-                            operation: firstCell,
+                            operation: row[1].toString().trim() || 'Operation',
                             time: String(row[1] || ''),
                             cost: parseFloat(row[2] || 0).toFixed(2),
                             total: parseFloat(row[3]).toFixed(2)
                         });
-                        console.log('✅ OPERATION:', firstCell, 'Cost:', row[3]);
+                        console.log('✅ OPERATION:', row[1], 'Time:', row[1], 'Cost:', row[3]);
                     }
                 }
                 
-                if (currentSection === 'packaging' && firstCell && !firstCell.includes('PACKAGING') && !firstCell.includes('Factory Notes') && !firstCell.includes('SUB TOTAL') && !firstCell.includes('TOTAL')) {
+                if (currentSection === 'packaging' && firstCell && !firstCell.includes('PACKAGING') && !firstCell.includes('Factory Notes') && !firstCell.includes('TOTAL')) {
                     if (row[3] !== undefined && !isNaN(parseFloat(row[3]))) {
                         result.packaging.push({
                             type: firstCell,
@@ -214,14 +220,15 @@ class TNFBallCapsImporter {
                     }
                 }
                 
-                if (currentSection === 'overhead' && firstCell && !firstCell.includes('OVERHEAD') && !firstCell.includes('PROFIT') && !firstCell.includes('Factory Notes') && !firstCell.includes('SUB TOTAL') && !firstCell.includes('TOTAL')) {
+                if (currentSection === 'overhead' && firstCell && !firstCell.includes('OVERHEAD/ PROFIT') && !firstCell.includes('Factory Notes') && !firstCell.includes('TOTAL')) {
+                    console.log(`🔍 Checking OVERHEAD: "${firstCell}" - Row:`, row, 'Cost in col 3:', row[3], 'Is number:', !isNaN(parseFloat(row[3])));
                     if (row[3] !== undefined && !isNaN(parseFloat(row[3]))) {
                         result.overhead.push({
                             type: firstCell,
                             notes: String(row[1] || ''),
                             cost: parseFloat(row[3]).toFixed(2)
                         });
-                        console.log('✅ OVERHEAD:', firstCell, 'Cost:', row[3]);
+                        console.log('✅ OVERHEAD:', firstCell, 'Notes:', row[1], 'Cost:', row[3]);
                     }
                 }
                 

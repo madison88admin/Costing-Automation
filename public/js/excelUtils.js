@@ -235,7 +235,7 @@ class ExcelUtils {
                         const worksheetImages = this.extractImagesFromWorksheet(worksheet);
                         
                         // Combine workbook and worksheet images
-                        const allImages = allImages.concat(worksheetImages);
+                        allImages = allImages.concat(worksheetImages);
                         
                         console.log(`Excel file processed: ${jsonData.length} rows, ${jsonData[0] ? jsonData[0].length : 0} columns`);
                         console.log(`Found ${allImages.length} embedded images total`);
