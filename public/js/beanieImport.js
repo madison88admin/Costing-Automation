@@ -1,16 +1,43 @@
 /**
+ * beanieImport.js
  * TNF Beanie Cost Breakdown Excel Import Parser
- * Handles parsing of TNF Excel files for beanie products
+ * Specifically tuned for TNF format accuracy
+ * FIXED VERSION - Handles initialization properly
  */
 
-class TNFBeanieImporter {
+var TNFBeanieImporter = class TNFBeanieImporter {
     constructor() {
-        this.supportedFormats = ['.xlsx', '.xls', '.xlsm'];
+        this.supportedFormats = ['.xlsx', '.xls', '.xlsm', '.csv'];
+        this.debugMode = true; // Set to false to reduce console output
+        
+        // Flexible column mappings
+        this.columnMappings = {
+            // For material sections (yarn, fabric, trim)
+            material: {
+                name: 0,       // Column A: Material name
+                consumption: 1, // Column B: Consumption
+                price: 2,      // Column C: Price per unit
+                cost: 3        // Column D: Total cost
+            },
+            // For manufacturing sections (knitting, operations)
+            manufacturing: {
+                name: 0,      // Column A: Operation name
+                time: 1,      // Column B: Time/SAH
+                rate: 2,      // Column C: Rate per unit
+                cost: 3       // Column D: Total cost
+            },
+            // For overhead and packaging
+            other: {
+                name: 0,      // Column A: Item name
+                notes: 1,     // Column B: Notes/description
+                cost: 3       // Column D: Cost
+            }
+        };
     }
 
     /**
-     * Parse TNF Excel data into structured format - DIRECT MAPPING APPROACH
-     * @param {Object|Array} excelData - Raw Excel data from XLSX library (can be array or object with data/images)
+     * Parse Excel data into structured format - TNF OPTIMIZED
+     * @param {Object|Array} excelData - Raw Excel data from XLSX library
      * @returns {Object} Parsed cost breakdown data
      */
     parseExcelData(excelData) {
@@ -26,500 +53,574 @@ class TNFBeanieImporter {
         if (!data || data.length === 0) {
             throw new Error('No data found in the Excel file');
         }
-
-        console.log('Processing TNF Beanie Excel data with', data.length, 'rows');
-        console.log('=== USING DIRECT MAPPING APPROACH ===');
-        console.log('First 10 rows of raw data:', data.slice(0, 10));
-        console.log('All rows of raw data:', data);
-        console.log('Found', images.length, 'embedded images');
         
-        // Check if this is the correct data by looking for VANS
-        let hasVANS = false;
-        let hasTNF = false;
-        for (let i = 0; i < Math.min(20, data.length); i++) {
-            const row = data[i];
-            if (row) {
-                for (let j = 0; j < row.length; j++) {
-                    const cell = String(row[j] || '').trim();
-                    if (cell.includes('VANS')) hasVANS = true;
-                    if (cell.includes('TNF')) hasTNF = true;
-                }
-            }
+        // Clean up data - remove empty rows and normalize cell values
+        data = data.filter(row => row && row.some(cell => this.cleanCell(cell) !== ''))
+                   .map(row => row.map(cell => this.cleanCell(cell)));
+        
+        // Try to detect column structure from headers
+        this.detectColumnStructure(data);
+
+        this.log('Processing TNF beanie Excel data with', data.length, 'rows');
+        this.log('Found', images.length, 'embedded images');
+        
+        // Debug: Show first few rows to understand structure
+        this.log('First 5 rows of data:');
+        for (let i = 0; i < Math.min(5, data.length); i++) {
+            this.log(`Row ${i}:`, data[i]);
         }
-        console.log('🔍 Data contains VANS:', hasVANS);
-        console.log('🔍 Data contains TNF:', hasTNF);
-
-        const result = {
-            customer: "",
-            season: "", 
-            styleNumber: "",
-            styleName: "",
-            costedQuantity: "",
-            leadtime: "",
-            
-            yarn: [],
-            fabric: [],
-            trim: [],
-            knitting: [],
-            operations: [],
-            packaging: [],
-            overhead: [],
-            
-            totalMaterialCost: "0.00",
-            totalFactoryCost: "0.00",
-            
-            // Add images array
-            images: images
-        };
-
-        // FLEXIBLE PARSING - Search through all rows for data patterns
+        
+        // Initialize result structure
+        const result = this.initializeResult(images);
+        
         try {
-            // Search for basic info in any row
-            for (let i = 0; i < data.length; i++) {
-                const row = data[i];
-                if (!row) continue;
-                
-                    // Look for Customer info
-                    for (let j = 0; j < row.length; j++) {
-                        const cell = String(row[j] || '').trim();
-                        if (cell.includes('Customer') && j + 1 < row.length && row[j + 1]) {
-                            result.customer = String(row[j + 1]).trim();
-                            console.log('✅ Customer:', result.customer);
-                            console.log('🔍 Row with Customer info:', row);
-                        }
-                    if (cell.includes('Season') && j + 1 < row.length && row[j + 1]) {
-                        result.season = String(row[j + 1]).trim();
-                        console.log('✅ Season:', result.season);
-                    }
-                    if ((cell.includes('Style#') || cell.includes('Style:')) && j + 1 < row.length && row[j + 1]) {
-                        result.styleNumber = String(row[j + 1]).trim();
-                        console.log('✅ Style#:', result.styleNumber);
-                    }
-                    if (cell.includes('Style Name') && j + 1 < row.length && row[j + 1]) {
-                        result.styleName = String(row[j + 1]).trim();
-                        console.log('✅ Style Name:', result.styleName);
-                    }
-                    if (cell.includes('Costed Quantity') && j + 1 < row.length && row[j + 1]) {
-                        result.costedQuantity = String(row[j + 1]).trim();
-                        console.log('✅ Quantity:', result.costedQuantity);
-                    }
-                    if (cell.includes('Leadtime') && j + 1 < row.length && row[j + 1]) {
-                        result.leadtime = String(row[j + 1]).trim();
-                        console.log('✅ Leadtime:', result.leadtime);
-                    }
-                }
-            }
-
-            // FLEXIBLE COST DATA PARSING - Search through all rows
-            let currentSection = '';
+            // Extract basic product information from specific locations
+            this.extractProductInfo(data, result);
             
-            for (let i = 0; i < data.length; i++) {
-                const row = data[i];
-                if (!row || row.length === 0) continue;
-                
-                const firstCell = String(row[0] || '').trim();
-                
-                // Detect sections
-                if (firstCell === 'YARN') {
-                    currentSection = 'yarn';
-                    console.log('🔍 Found YARN section');
-                } else if (firstCell === 'FABRIC') {
-                    currentSection = 'fabric';
-                    console.log('🔍 Found FABRIC section');
-                } else if (firstCell === 'TRIM') {
-                    currentSection = 'trim';
-                    console.log('🔍 Found TRIM section');
-                } else if (firstCell === 'KNITTING') {
-                    currentSection = 'knitting';
-                    console.log('🔍 Found KNITTING section');
-                } else if (firstCell === 'OPERATIONS') {
-                    currentSection = 'operations';
-                    console.log('🔍 Found OPERATIONS section');
-                } else if (firstCell === 'PACKAGING') {
-                    currentSection = 'packaging';
-                    console.log('🔍 Found PACKAGING section');
-                } else if (firstCell === 'OVERHEAD/ PROFIT' || firstCell === 'OVERHEAD/PROFIT' || firstCell === 'OVERHEAD') {
-                    currentSection = 'overhead';
-                    console.log('🔍 Found OVERHEAD section');
-                } else if (firstCell === 'TOTAL FACTORY COST') {
-                    // Don't stop parsing here - continue to get the total
-                    console.log('🔍 Found TOTAL FACTORY COST');
-                } else if (firstCell === 'Knitting' && row[1] === 'Knit Cost (Per Min)') {
-                    currentSection = 'finished'; // Stop at reference table
-                    console.log('🔍 Found reference table - stopping parsing');
-                } else if (firstCell === 'Operations Cost (Reference)') {
-                    currentSection = 'finished'; // Stop at reference table
-                    console.log('🔍 Found Operations reference table - stopping parsing');
-                }
-                
-                // Skip parsing if we're in finished section
-                if (currentSection === 'finished') continue;
-                
-                // Debug: Log what we're processing in each section
-                if (currentSection && firstCell && !firstCell.includes('YARN') && !firstCell.includes('FABRIC') && !firstCell.includes('TRIM') && !firstCell.includes('KNITTING') && !firstCell.includes('OPERATIONS') && !firstCell.includes('PACKAGING') && !firstCell.includes('OVERHEAD') && !firstCell.includes('TOTAL')) {
-                    console.log(`🔍 Processing in ${currentSection}: "${firstCell}" - Row data:`, row);
-                }
-                
-                // Parse data based on section
-                if (currentSection === 'yarn' && firstCell && !firstCell.includes('YARN') && !firstCell.includes('CONSUMPTION') && !firstCell.includes('MATERIAL') && !firstCell.includes('TOTAL') && row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) > 0) {
-                    result.yarn.push({
-                        material: firstCell,
-                        consumption: String(row[1] || ''),
-                        price: parseFloat(row[2] || 0).toFixed(2),
-                        cost: parseFloat(row[3]).toFixed(2)
-                    });
-                    console.log('✅ YARN:', firstCell, 'Consumption:', row[1], 'Price:', row[2], 'Cost:', row[3]);
-                }
-                
-                if (currentSection === 'fabric' && firstCell && !firstCell.includes('FABRIC') && !firstCell.includes('CONSUMPTION') && !firstCell.includes('MATERIAL') && row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) > 0) {
-                    result.fabric.push({
-                        material: firstCell,
-                        consumption: String(row[1] || ''),
-                        price: parseFloat(row[2] || 0).toFixed(2),
-                        cost: parseFloat(row[3]).toFixed(2)
-                    });
-                    console.log('✅ FABRIC:', firstCell, 'Consumption:', row[1], 'Price:', row[2], 'Cost:', row[3]);
-                }
-                
-                if (currentSection === 'trim' && firstCell && !firstCell.includes('TRIM') && !firstCell.includes('CONSUMPTION') && !firstCell.includes('MATERIAL') && row[3] && !isNaN(parseFloat(row[3]))) {
-                    result.trim.push({
-                        material: firstCell,
-                        consumption: String(row[1] || ''),
-                        price: parseFloat(row[2] || 0).toFixed(2),
-                        cost: parseFloat(row[3]).toFixed(2)
-                    });
-                    console.log('✅ TRIM:', firstCell, 'Cost:', row[3]);
-                }
-                
-                if (currentSection === 'knitting' && firstCell && !firstCell.includes('KNITTING') && !firstCell.includes('TIME') && !firstCell.includes('SAH') && row[3] && !isNaN(parseFloat(row[3]))) {
-                    result.knitting.push({
-                        machine: firstCell,
-                        time: String(row[1] || ''),
-                        sah: parseFloat(row[2] || 0).toFixed(2),
-                        cost: parseFloat(row[3]).toFixed(2)
-                    });
-                    console.log('✅ KNITTING:', firstCell, 'Cost:', row[3]);
-                }
-                
-                if (currentSection === 'operations' && firstCell && !firstCell.includes('OPERATIONS') && !firstCell.includes('TIME') && !firstCell.includes('COST') && !firstCell.includes('SUB TOTAL') && !firstCell.includes('TOTAL')) {
-                    console.log(`🔍 Checking OPERATIONS: "${firstCell}" - Row:`, row, 'Cost in col 3:', row[3], 'Is number:', !isNaN(parseFloat(row[3])));
-                    if (row[3] && !isNaN(parseFloat(row[3]))) {
-                        result.operations.push({
-                            operation: firstCell,
-                            time: String(row[1] || ''),
-                            cost: parseFloat(row[3] || 0).toFixed(2),
-                            total: parseFloat(row[3] || 0).toFixed(2)
-                        });
-                        console.log('✅ OPERATION:', firstCell, 'Time:', row[1], 'Cost:', row[3]);
-                    }
-                }
-                
-                if (currentSection === 'packaging' && firstCell && !firstCell.includes('PACKAGING') && !firstCell.includes('Factory Notes') && !firstCell.includes('SUB TOTAL') && !firstCell.includes('TOTAL')) {
-                    console.log(`🔍 Checking PACKAGING: "${firstCell}" - Row:`, row, 'Cost in col 3:', row[3], 'Is number:', !isNaN(parseFloat(row[3])));
-                    if (row[3] !== undefined && !isNaN(parseFloat(row[3]))) {
-                        result.packaging.push({
-                            type: firstCell,
-                            notes: String(row[1] || ''),
-                            cost: parseFloat(row[3]).toFixed(2)
-                        });
-                        console.log('✅ PACKAGING:', firstCell, 'Notes:', row[1], 'Cost:', row[3]);
-                    }
-                }
-                
-                if (currentSection === 'overhead' && firstCell && !firstCell.includes('OVERHEAD') && !firstCell.includes('PROFIT') && !firstCell.includes('Factory Notes') && !firstCell.includes('SUB TOTAL') && !firstCell.includes('TOTAL')) {
-                    console.log(`🔍 Checking OVERHEAD: "${firstCell}" - Row:`, row, 'Cost in col 3:', row[3], 'Is number:', !isNaN(parseFloat(row[3])));
-                    if (row[3] !== undefined && !isNaN(parseFloat(row[3]))) {
-                        result.overhead.push({
-                            type: firstCell,
-                            notes: String(row[1] || ''),
-                            cost: parseFloat(row[3]).toFixed(2)
-                        });
-                        console.log('✅ OVERHEAD:', firstCell, 'Notes:', row[1], 'Cost:', row[3]);
-                    }
-                } else if (currentSection === 'overhead' && firstCell && (firstCell.includes('OVERHEAD') || firstCell.includes('PROFIT')) && !firstCell.includes('Factory Notes') && !firstCell.includes('SUB TOTAL') && !firstCell.includes('TOTAL')) {
-                    console.log(`🔍 Checking OVERHEAD (direct): "${firstCell}" - Row:`, row, 'Cost in col 3:', row[3], 'Is number:', !isNaN(parseFloat(row[3])));
-                    if (row[3] !== undefined && !isNaN(parseFloat(row[3]))) {
-                        result.overhead.push({
-                            type: firstCell,
-                            notes: String(row[1] || ''),
-                            cost: parseFloat(row[3]).toFixed(2)
-                        });
-                        console.log('✅ OVERHEAD (direct):', firstCell, 'Notes:', row[1], 'Cost:', row[3]);
-                    }
-                }
-                
-                // Extract totals
-                if (firstCell.includes('TOTAL MATERIAL') && row[3]) {
-                    result.totalMaterialCost = parseFloat(row[3]).toFixed(2);
-                    console.log('✅ Material Total:', result.totalMaterialCost);
-                }
-                if (firstCell.includes('TOTAL FACTORY') && row[3]) {
-                    result.totalFactoryCost = parseFloat(row[3]).toFixed(2);
-                    console.log('✅ Factory Total:', result.totalFactoryCost);
-                }
-            }
-
+            // Extract cost breakdown data using TNF-specific logic
+            this.extractCostData(data, result);
+            
+            // Extract totals from specific rows
+            this.extractTotals(data, result);
+            
         } catch (error) {
-            console.error('Error in direct mapping:', error);
+            console.error('Error parsing TNF beanie data:', error);
+            throw error;
         }
 
-        console.log('=== FINAL RESULT ===');
-        console.log('Customer:', result.customer);
-        console.log('Season:', result.season);
-        console.log('Style#:', result.styleNumber);
-        console.log('Style Name:', result.styleName);
-        console.log('YARN items:', result.yarn.length, result.yarn);
-        console.log('FABRIC items:', result.fabric.length, result.fabric);
-        console.log('TRIM items:', result.trim.length, result.trim);
-        console.log('TRIM data details:', JSON.stringify(result.trim, null, 2));
-        console.log('KNITTING items:', result.knitting.length, result.knitting);
-        console.log('OPERATIONS items:', result.operations.length, result.operations);
-        console.log('PACKAGING items:', result.packaging.length, result.packaging);
-        console.log('OVERHEAD items:', result.overhead.length, result.overhead);
-        console.log('Material Total:', result.totalMaterialCost);
-        console.log('Factory Total:', result.totalFactoryCost);
-        console.log('=== END RESULT ===');
-        
+        this.logFinalResult(result);
         return result;
     }
 
     /**
-     * Extract basic product information from specific rows and columns
+     * Initialize result object with TNF-specific structure
      */
-    extractBasicInfo(result, row, rowIndex) {
-        // Based on debug output, customer/product info is in columns 4-5
-        if (row[4] && row[5]) {
-            const label = String(row[4] || '').trim();
-            const value = String(row[5] || '').trim();
+    initializeResult(images = []) {
+        return {
+            // Product Information
+            customer: "",
+            brand: "",
+            season: "", 
+            styleNumber: "",
+            styleName: "",
+            description: "",
+            costedQuantity: "",
+            leadtime: "",
             
-            console.log(`Row ${rowIndex}: "${label}" = "${value}"`);
+            // Cost Breakdown Categories (TNF specific)
+            yarn: [],
+            fabric: [],
+            trim: [],
+            accessories: [],
+            knitting: [],
+            operations: [],
+            manufacturing: [],
+            packaging: [],
+            overhead: [],
+            profit: [],
             
-            if (label.includes('Customer')) {
-                result.customer = value;
-                console.log(`✅ Found Customer: ${value}`);
-            } else if (label.includes('Season')) {
-                result.season = value;
-                console.log(`✅ Found Season: ${value}`);
-            } else if (label.includes('Style#') || label.includes('Style:')) {
-                result.styleNumber = value;
-                console.log(`✅ Found Style#: ${value}`);
-            } else if (label.includes('Style Name')) {
-                result.styleName = value;
-                console.log(`✅ Found Style Name: ${value}`);
-            } else if (label.includes('Costed Quantity')) {
-                result.costedQuantity = value;
-                console.log(`✅ Found Quantity: ${value}`);
-            } else if (label.includes('Leadtime')) {
-                result.leadtime = value;
-                console.log(`✅ Found Leadtime: ${value}`);
+            // Totals
+            totalMaterialCost: "0.00",
+            totalFactoryCost: "0.00",
+            totalCost: "0.00",
+            
+            // Metadata
+            images: images,
+            manufacturer: "TNF",
+            currency: "USD"
+        };
+    }
+
+    /**
+     * Extract product information from TNF format (typically in top-right area)
+     */
+    extractProductInfo(data, result) {
+        this.log('🔍 Extracting product info...');
+        
+        // Search all rows and columns for product info
+        for (let i = 0; i < Math.min(20, data.length); i++) {
+            const row = data[i];
+            if (!row) continue;
+            
+            // Check all possible columns for labels and values
+            for (let j = 0; j < row.length - 1; j++) {
+                const label = this.cleanCell(row[j]);
+                const value = this.cleanCell(row[j + 1]);
+                
+                if (!label || !value) continue;
+                
+                // Map various possible label formats
+                const labelMap = {
+                    'customer:': 'customer',
+                    'customer：': 'customer',
+                    'season:': 'season',
+                    'season：': 'season',
+                    'style#:': 'styleNumber',
+                    'style#：': 'styleNumber',
+                    'style#': 'styleNumber',
+                    'style:': 'styleNumber',
+                    'style：': 'styleNumber',
+                    'style name:': 'styleName',
+                    'style name：': 'styleName',
+                    'costed quantity:': 'costedQuantity',
+                    'costed quantity：': 'costedQuantity',
+                    'leadtime:': 'leadtime',
+                    'leadtime：': 'leadtime'
+                };
+                
+                const cleanLabel = label.toLowerCase().trim();
+                const field = labelMap[cleanLabel];
+                
+                if (field) {
+                    result[field] = value;
+                    this.log(`✅ Found ${field}: ${value}`);
+                }
             }
         }
     }
 
     /**
-     * Extract value from cell, removing prefix if present
+     * Check specific columns for product information
      */
-    extractValue(cell, prefix) {
-        if (!cell) return '';
-        return String(cell).replace(prefix, '').trim();
+    checkInfoColumns(row, result, labelCol, valueCol, rowIndex) {
+        if (!row[labelCol] || !row[valueCol]) return;
+        
+        const label = this.cleanCell(row[labelCol]);
+        const value = this.cleanCell(row[valueCol]);
+        
+        if (!label || !value) return;
+        
+        this.log(`Row ${rowIndex}: Checking "${label}" = "${value}"`);
+        
+        const labelLower = label.toLowerCase();
+        
+        if (labelLower.includes('customer')) {
+            result.customer = value;
+            this.log('✅ Customer:', value);
+        } else if (labelLower.includes('season')) {
+            result.season = value;
+            this.log('✅ Season:', value);
+        } else if (labelLower.includes('style#') || labelLower.includes('style:')) {
+            result.styleNumber = value;
+            this.log('✅ Style#:', value);
+        } else if (labelLower.includes('style name')) {
+            result.styleName = value;
+            this.log('✅ Style Name:', value);
+        } else if (labelLower.includes('costed quantity') || labelLower.includes('quantity')) {
+            result.costedQuantity = value;
+            this.log('✅ Quantity:', value);
+        } else if (labelLower.includes('leadtime')) {
+            result.leadtime = value;
+            this.log('✅ Leadtime:', value);
+        }
     }
 
     /**
-     * Parse section headers and return current section
+     * Extract cost data using TNF-specific section detection
      */
-    parseSectionHeader(firstCell, currentSection) {
-        const sectionMap = {
+    extractCostData(data, result) {
+        let currentSection = '';
+        
+        this.log('🔍 Extracting cost data...');
+        
+        for (let i = 0; i < data.length; i++) {
+            const row = data[i];
+            if (!row) continue;
+            
+            const firstCell = this.cleanCell(row[0]);
+            this.log(`Row ${i}: "${firstCell}" - Row data:`, row);
+            
+            // Stop at reference tables FIRST - before any other processing
+            if (this.isReferenceTable(firstCell, row)) {
+                this.log('🔍 Found reference table - stopping cost parsing');
+                break;
+            }
+            
+            // Detect section headers
+            const detectedSection = this.detectTNFSection(firstCell);
+            if (detectedSection) {
+                currentSection = detectedSection;
+                this.log(`🔍 Entering ${detectedSection.toUpperCase()} section at row ${i}`);
+                continue;
+            }
+            
+            // Parse data within sections
+            if (currentSection && firstCell && !this.isHeaderOrTotalRow(firstCell)) {
+                this.parseTNFSectionRow(currentSection, row, result, firstCell, i);
+            }
+        }
+    }
+
+    /**
+     * Detect TNF-specific sections
+     */
+    detectTNFSection(firstCell) {
+        if (!firstCell) return null;
+        
+        const cellUpper = firstCell.toUpperCase().trim();
+        
+        // Only detect actual section headers, not items that contain section words
+        const exactSections = {
             'YARN': 'yarn',
-            'FABRIC': 'fabric',
+            'FABRIC': 'fabric', 
             'TRIM': 'trim',
             'KNITTING': 'knitting',
             'OPERATIONS': 'operations',
             'PACKAGING': 'packaging',
-            'OVERHEAD/ PROFIT': 'overhead'
+            'OVERHEAD/ PROFIT': 'overhead',
+            'OVERHEAD/PROFIT': 'overhead'
         };
-
-        return sectionMap[firstCell] || currentSection;
-    }
-
-    /**
-     * Parse data for specific sections based on actual TNF format
-     */
-    parseSectionData(result, section, row, firstCell, rowIndex) {
-        let materialCost = 0;
-        let factoryCost = 0;
-
-        switch (section) {
-            case 'yarn':
-                // TNF YARN format: Material, Consumption (G), Material Price (USD/KG), Material Cost
-                if (this.hasYarnData(row)) {
-                    result.yarn.push({
-                        material: firstCell,
-                        consumption: String(row[1] || ''), // Consumption (G)
-                        price: parseFloat(row[2] || 0).toFixed(2),       // Material Price (USD/KG)
-                        cost: parseFloat(row[3] || 0).toFixed(2)         // Material Cost
-                    });
-                    materialCost = parseFloat(row[3]) || 0;
-                    console.log(`Parsed YARN: ${firstCell}, Cost: ${row[3]}`);
-                }
-                break;
-
-            case 'fabric':
-                // TNF FABRIC format: Material, Consumption (YARDS), Material Price (USD/YD), Material Cost
-                if (this.hasFabricData(row)) {
-                    result.fabric.push({
-                        material: firstCell,
-                        consumption: String(row[1] || ''), // Consumption (YARDS)
-                        price: parseFloat(row[2] || 0).toFixed(2),       // Material Price (USD/YD)
-                        cost: parseFloat(row[3] || 0).toFixed(2)         // Material Cost
-                    });
-                    materialCost = parseFloat(row[3]) || 0;
-                    console.log(`Parsed FABRIC: ${firstCell}, Cost: ${row[3]}`);
-                }
-                break;
-
-            case 'trim':
-                // TNF TRIM format: Material, Consumption (PIECE), Material Price (USD/PC), Material Cost
-                if (this.hasTrimData(row)) {
-                    result.trim.push({
-                        material: firstCell,
-                        consumption: String(row[1] || ''), // Consumption (PIECE)
-                        price: parseFloat(row[2] || 0).toFixed(2),       // Material Price (USD/PC)
-                        cost: parseFloat(row[3] || 0).toFixed(2)         // Material Cost
-                    });
-                    materialCost = parseFloat(row[3]) || 0;
-                    console.log(`Parsed TRIM: ${firstCell}, Cost: ${row[3]}`);
-                }
-                break;
-
-            case 'knitting':
-                // TNF KNITTING format: Machine, Knitting Time (Mins), Knitting SAH (USD/Min), Knitting Cost
-                if (this.hasKnittingData(row)) {
-                    result.knitting.push({
-                        machine: firstCell,                // Machine
-                        time: String(row[1] || ''),        // Knitting Time (Mins)
-                        sah: parseFloat(row[2] || 0).toFixed(2),         // Knitting SAH (USD/Min)
-                        cost: parseFloat(row[3] || 0).toFixed(2)         // Knitting Cost
-                    });
-                    factoryCost = parseFloat(row[3]) || 0;
-                    console.log(`Parsed KNITTING: ${firstCell}, Cost: ${row[3]}`);
-                }
-                break;
-
-            case 'operations':
-                // TNF OPERATIONS format: Operation, Operation Time (Mins), Operation Cost (USD/Min), Operation Cost
-                if (this.hasOperationsData(row)) {
-                    result.operations.push({
-                        operation: firstCell,              // Operation
-                        time: String(row[1] || ''),        // Operation Time (Mins)
-                        cost: parseFloat(row[3] || 0).toFixed(2),        // Operation Cost (USD/Min)
-                        total: parseFloat(row[3] || 0).toFixed(2)        // Operation Cost (Total)
-                    });
-                    factoryCost = parseFloat(row[3]) || 0;
-                    console.log(`Parsed OPERATIONS: ${firstCell}, Cost: ${row[3]}`);
-                }
-                break;
-
-            case 'packaging':
-                // TNF PACKAGING format: Packaging Type, Factory Notes, Cost (in column 3)
-                if (this.hasPackagingData(row)) {
-                    result.packaging.push({
-                        type: firstCell,                   // Packaging Type
-                        notes: String(row[1] || ''),       // Factory Notes
-                        cost: parseFloat(row[3] || 0).toFixed(2)         // Cost (column 3)
-                    });
-                    factoryCost = parseFloat(row[3]) || 0;
-                    console.log(`Parsed PACKAGING: ${firstCell}, Cost: ${row[3]}`);
-                }
-                break;
-
-            case 'overhead':
-                // TNF OVERHEAD/PROFIT format: Type, Factory Notes, Cost (in column 3)
-                if (this.hasOverheadData(row)) {
-                    result.overhead.push({
-                        type: firstCell,                   // Type (OVERHEAD/PROFIT)
-                        notes: String(row[1] || ''),       // Factory Notes
-                        cost: parseFloat(row[3] || 0).toFixed(2)         // Cost (column 3)
-                    });
-                    factoryCost = parseFloat(row[3]) || 0;
-                    console.log(`Parsed OVERHEAD: ${firstCell}, Cost: ${row[3]}`);
-                }
-                break;
-        }
-
-        return { material: materialCost, factory: factoryCost };
-    }
-
-    /**
-     * Validation methods for each section - more flexible for TNF format
-     */
-    hasYarnData(row) {
-        // YARN needs: material name, consumption, price, and cost
-        const hasMaterial = row[0] && String(row[0]).trim() && !String(row[0]).includes('YARN');
-        const hasCost = row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) > 0;
-        return hasMaterial && hasCost;
-    }
-
-    hasFabricData(row) {
-        // FABRIC needs: material name and cost (including zero cost items)
-        const hasMaterial = row[0] && String(row[0]).trim() && !String(row[0]).includes('FABRIC');
-        const hasCost = row[3] !== undefined && !isNaN(parseFloat(row[3]));
-        return hasMaterial && hasCost;
-    }
-
-    hasTrimData(row) {
-        // TRIM needs: material name and cost (including zero cost items and subtotals)
-        const hasMaterial = row[0] && String(row[0]).trim();
-        const hasCost = row[3] !== undefined && !isNaN(parseFloat(row[3]));
-        return hasMaterial && hasCost;
-    }
-
-    hasKnittingData(row) {
-        // KNITTING needs: machine name, time, SAH, and cost
-        const hasMachine = row[0] && String(row[0]).trim() && !String(row[0]).includes('KNITTING');
-        const hasCost = row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) > 0;
-        return hasMachine && hasCost;
-    }
-
-    hasOperationsData(row) {
-        // OPERATIONS needs: operation name and cost (allow 0 cost)
-        const hasOperation = row[0] && String(row[0]).trim() && !String(row[0]).includes('OPERATIONS');
-        const hasCost = row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) >= 0;
-        console.log(`Checking OPERATIONS: "${row[0]}" cost: ${row[3]} - hasOp: ${hasOperation}, hasCost: ${hasCost}`);
-        return hasOperation && hasCost;
-    }
-
-    hasPackagingData(row) {
-        // PACKAGING needs: type and cost (cost in column 3 for TNF format)
-        const hasType = row[0] && String(row[0]).trim() && !String(row[0]).includes('PACKAGING');
-        const hasCost = row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) >= 0; // Allow 0 cost
-        console.log(`Checking PACKAGING: "${row[0]}" cost: ${row[3]} - hasType: ${hasType}, hasCost: ${hasCost}`);
-        return hasType && hasCost;
-    }
-
-    hasOverheadData(row) {
-        // OVERHEAD needs: type and cost (cost in column 3 for TNF format)
-        const hasType = row[0] && String(row[0]).trim() && !String(row[0]).includes('OVERHEAD');
-        const hasCost = row[3] && !isNaN(parseFloat(row[3])); // Allow negative costs for profit reduction
-        console.log(`Checking OVERHEAD: "${row[0]}" cost: ${row[3]} - hasType: ${hasType}, hasCost: ${hasCost}`);
-        return hasType && hasCost;
-    }
-
-    /**
-     * Extract total costs from specific rows - based on actual structure
-     */
-    extractTotals(result, firstCell, row) {
-        // Based on debug output:
-        // Row 17: "TOTAL MATERIAL AND SUBMATERIALS COST" with cost in column 3
-        if (firstCell.includes('TOTAL MATERIAL') && row[3]) {
-            result.totalMaterialCost = parseFloat(row[3]).toFixed(2);
-            console.log(`Found Material Total: ${result.totalMaterialCost}`);
+        
+        // Check for exact matches first
+        if (exactSections[cellUpper]) {
+            this.log(`🔍 Detected section "${cellUpper}" from header "${firstCell}"`);
+            return exactSections[cellUpper];
         }
         
-        // Row 42: "TOTAL FACTORY COST" with cost in column 3
-        if (firstCell.includes('TOTAL FACTORY') && row[3]) {
-            result.totalFactoryCost = parseFloat(row[3]).toFixed(2);
-            console.log(`Found Factory Total: ${result.totalFactoryCost}`);
+        // Only allow "OVERHEAD" and "PROFIT" as sections when they are standalone
+        if (cellUpper === 'OVERHEAD') {
+            this.log(`🔍 Detected section "OVERHEAD" from header "${firstCell}"`);
+            return 'overhead';
         }
+        
+        if (cellUpper === 'PROFIT') {
+            this.log(`🔍 Detected section "PROFIT" from header "${firstCell}"`);
+            return 'profit';
+        }
+        
+        // Don't treat items like "Standard Packaging" as section headers
+        return null;
+    }
+
+    /**
+     * Check if row is a header or total row that should be skipped
+     */
+    isHeaderOrTotalRow(firstCell) {
+        const cellLower = firstCell.toLowerCase();
+        const skipPatterns = [
+            'consumption', 'material price', 'material cost', 'time', 'sah', 'cost',
+            'sub total', 'subtotal', 'total material', 'total factory', 'factory notes'
+        ];
+        
+        return skipPatterns.some(pattern => cellLower.includes(pattern));
+    }
+
+    /**
+     * Parse a row within a TNF section
+     */
+    parseTNFSectionRow(section, row, result, itemName, rowIndex) {
+        // Skip completely empty rows
+        if (!row.some(cell => this.cleanCell(cell) !== '')) {
+            return;
+        }
+
+        // Get the appropriate column mapping based on section type
+        const mapping = this.getColumnMapping(section);
+        if (!mapping) {
+            this.log(`❌ No column mapping found for section: ${section}`);
+            return;
+        }
+
+        // TNF typically uses column 3 for costs, but check multiple columns
+        let cost = null;
+        let costColumn = -1;
+
+        // Check the configured cost column first, then try others
+        const costCols = [
+            mapping.cost,  // Try configured column first
+            3, 4, 5       // Then try standard positions
+        ].filter((col, index, arr) => arr.indexOf(col) === index); // Remove duplicates
+
+        for (let col of costCols) {
+            const potentialCost = this.parseFloat(row[col]);
+            if (potentialCost !== null) {
+                cost = potentialCost;
+                costColumn = col;
+                break;
+            }
+        }
+        
+        if (cost === null) {
+            this.log(`❌ No valid cost found for ${itemName} in row ${rowIndex}`);
+            return;
+        }
+        
+        // For material sections (yarn, fabric, trim), only include positive costs
+        // For packaging, overhead, profit sections, include all costs (including negative)
+        const materialSections = ['yarn', 'fabric', 'trim'];
+        if (materialSections.includes(section) && cost <= 0) {
+            this.log(`❌ Skipping ${itemName} - zero/negative cost in material section`);
+            return;
+        }
+        
+        // For packaging/overhead/profit, include zero and negative costs
+        const allowZeroSections = ['packaging', 'overhead', 'profit'];
+        if (allowZeroSections.includes(section) && cost === 0 && itemName.toLowerCase().includes('special')) {
+            // Skip "Special Packaging" with 0 cost, but keep others
+            this.log(`❌ Skipping ${itemName} - zero cost special item`);
+            return;
+        }
+        
+        // Build item based on section
+        const item = this.buildTNFItem(section, row, itemName, cost);
+        
+        if (item && result[section]) {
+            result[section].push(item);
+            this.log(`✅ ${section.toUpperCase()}: "${itemName}" - Cost: ${cost.toFixed(2)} (col ${costColumn})`);
+        }
+    }
+
+    /**
+     * Build item object for TNF format
+     */
+    buildTNFItem(section, row, itemName, cost) {
+        const baseItem = {
+            name: itemName,
+            cost: this.formatCurrency(cost)
+        };
+        
+        switch (section) {
+            case 'yarn':
+            case 'fabric':
+            case 'trim':
+                return {
+                    ...baseItem,
+                    material: itemName,
+                    consumption: this.cleanCell(row[1]) || '',
+                    price: this.formatCurrency(row[2]) || '0.00'
+                };
+                
+            case 'knitting':
+                return {
+                    ...baseItem,
+                    machine: itemName,
+                    time: this.cleanCell(row[1]) || '',
+                    sah: this.formatCurrency(row[2]) || '0.00'
+                };
+                
+            case 'operations':
+                return {
+                    ...baseItem,
+                    operation: itemName,
+                    time: this.cleanCell(row[1]) || '',
+                    rate: this.formatCurrency(row[2]) || '0.00',
+                    total: this.formatCurrency(cost)
+                };
+                
+            case 'packaging':
+                return {
+                    ...baseItem,
+                    type: itemName,
+                    notes: this.cleanCell(row[1]) || ''
+                };
+                
+            case 'overhead':
+            case 'profit':
+                return {
+                    ...baseItem,
+                    type: itemName,
+                    notes: this.cleanCell(row[1]) || ''
+                };
+                
+            default:
+                return baseItem;
+        }
+    }
+
+    /**
+     * Extract totals from TNF format
+     */
+    extractTotals(data, result) {
+        this.log('🔍 Extracting totals...');
+        
+        for (let i = 0; i < data.length; i++) {
+            const row = data[i];
+            if (!row) continue;
+            
+            const firstCell = this.cleanCell(row[0]);
+            
+            // Look for total rows
+            if (firstCell.includes('TOTAL MATERIAL')) {
+                const total = this.findCostInRow(row);
+                if (total !== null) {
+                    result.totalMaterialCost = this.formatCurrency(total);
+                    this.log('✅ Material Total:', result.totalMaterialCost, 'from row', i);
+                }
+            }
+            
+            if (firstCell.includes('TOTAL FACTORY')) {
+                const total = this.findCostInRow(row);
+                if (total !== null) {
+                    result.totalFactoryCost = this.formatCurrency(total);
+                    this.log('✅ Factory Total:', result.totalFactoryCost, 'from row', i);
+                }
+            }
+            
+            // Also check for SUB TOTAL rows
+            if (firstCell.includes('SUB TOTAL')) {
+                const total = this.findCostInRow(row);
+                if (total !== null) {
+                    this.log('📊 Sub Total found:', this.formatCurrency(total), 'at row', i);
+                }
+            }
+        }
+        
+        // Calculate totals if not found
+        if (result.totalMaterialCost === "0.00") {
+            this.calculateMaterialTotal(result);
+        }
+        
+        if (result.totalFactoryCost === "0.00") {
+            this.calculateFactoryTotal(result);
+        }
+        
+        // Set total cost
+        result.totalCost = result.totalFactoryCost;
+    }
+
+    /**
+     * Find cost value in a row by checking multiple columns
+     */
+    findCostInRow(row) {
+        // Check columns 3, 4, 5, 2 for cost values
+        for (let col of [3, 4, 5, 2]) {
+            const cost = this.parseFloat(row[col]);
+            if (cost !== null) {
+                return cost;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Calculate material total from individual items
+     */
+    calculateMaterialTotal(result) {
+        let total = 0;
+        const materialSections = ['yarn', 'fabric', 'trim'];
+        
+        materialSections.forEach(section => {
+            if (result[section]) {
+                result[section].forEach(item => {
+                    total += parseFloat(item.cost) || 0;
+                });
+            }
+        });
+        
+        result.totalMaterialCost = this.formatCurrency(total);
+        this.log('📊 Calculated Material Total:', result.totalMaterialCost);
+    }
+
+    /**
+     * Calculate factory total from all sections
+     */
+    calculateFactoryTotal(result) {
+        let total = parseFloat(result.totalMaterialCost) || 0;
+        const factorySections = ['knitting', 'operations', 'packaging', 'overhead', 'profit'];
+        
+        factorySections.forEach(section => {
+            if (result[section]) {
+                result[section].forEach(item => {
+                    total += parseFloat(item.cost) || 0;
+                });
+            }
+        });
+        
+        result.totalFactoryCost = this.formatCurrency(total);
+        this.log('📊 Calculated Factory Total:', result.totalFactoryCost);
+    }
+
+    /**
+     * Check if we've reached a reference table
+     */
+    isReferenceTable(firstCell, row) {
+        // Check if this is the start of the reference table (row 43 in your data)
+        // This is where "Knitting" appears with "Knit Cost (Per Min)" in column 2
+        if (firstCell === 'Knitting' && 
+            row[1] && this.cleanCell(row[1]).includes('Knit Cost') && 
+            row[2] && this.cleanCell(row[2]).includes('Operations')) {
+            this.log('🔍 Found reference table at Knitting row - stopping parsing');
+            return true;
+        }
+        
+        // Also check for other reference patterns
+        const referencePatterns = [
+            'Knitting Cost (Reference)',
+            'Operations Cost (Reference)', 
+            'Per Min',
+            'Reference'
+        ];
+        
+        return referencePatterns.some(pattern => 
+            firstCell.includes(pattern) || 
+            (row[1] && this.cleanCell(row[1]).includes(pattern)) ||
+            (row[2] && this.cleanCell(row[2]).includes(pattern))
+        );
+    }
+
+    // UTILITY METHODS
+
+    /**
+     * Clean and normalize cell content
+     */
+    cleanCell(cell) {
+        if (cell === null || cell === undefined) return '';
+        return String(cell).trim();
+    }
+
+    /**
+     * Parse float value safely
+     */
+    parseFloat(value) {
+        if (value === null || value === undefined) return null;
+        const num = parseFloat(value);
+        return isNaN(num) ? null : num;
+    }
+
+    /**
+     * Format currency value
+     */
+    formatCurrency(value) {
+        const num = this.parseFloat(value);
+        return num !== null ? num.toFixed(2) : '0.00';
+    }
+
+    /**
+     * Logging utility
+     */
+    log(...args) {
+        if (this.debugMode) {
+            console.log(...args);
+        }
+    }
+
+    /**
+     * Log final result summary
+     */
+    logFinalResult(result) {
+        this.log('=== FINAL TNF RESULT SUMMARY ===');
+        this.log('Customer:', result.customer);
+        this.log('Season:', result.season);
+        this.log('Style#:', result.styleNumber);
+        this.log('Style Name:', result.styleName);
+        this.log('Quantity:', result.costedQuantity);
+        this.log('Leadtime:', result.leadtime);
+        
+        const sections = ['yarn', 'fabric', 'trim', 'knitting', 'operations', 'packaging', 'overhead', 'profit'];
+        
+        sections.forEach(section => {
+            if (result[section] && result[section].length > 0) {
+                this.log(`${section.toUpperCase()} items:`, result[section].length);
+                result[section].forEach(item => {
+                    this.log(`  - ${item.name}: $${item.cost}`);
+                });
+            }
+        });
+        
+        this.log('Material Total:', result.totalMaterialCost);
+        this.log('Factory Total:', result.totalFactoryCost);
+        this.log('Grand Total:', result.totalCost);
+        this.log('=== END TNF RESULT ===');
     }
 
     /**
@@ -531,16 +632,172 @@ class TNFBeanieImporter {
     }
 
     /**
+     * Get the appropriate column mapping for a section
+     */
+    getColumnMapping(section) {
+        if (['yarn', 'fabric', 'trim'].includes(section)) {
+            return this.columnMappings.material;
+        }
+        if (['knitting', 'operations'].includes(section)) {
+            return this.columnMappings.manufacturing;
+        }
+        return this.columnMappings.other;
+    }
+
+    /**
+     * Validate an item based on section-specific rules
+     */
+    validateItemForSection(item, section) {
+        if (['yarn', 'fabric', 'trim'].includes(section)) {
+            // Material sections require at least a name and either consumption or cost
+            return item.name && (
+                (item.consumption && item.consumption !== '0' && item.consumption !== '0.00') ||
+                (item.cost && parseFloat(item.cost) > 0)
+            );
+        }
+        
+        if (['knitting', 'operations'].includes(section)) {
+            // Manufacturing sections require name and cost
+            return item.name && item.cost && parseFloat(item.cost) >= 0;
+        }
+        
+        // Other sections (packaging, overhead) just need name and cost
+        return item.name && item.cost !== undefined;
+    }
+
+    /**
+     * Detect potential row structures by analyzing headers
+     */
+    detectColumnStructure(data) {
+        // Look through first 10 rows for column headers
+        for (let i = 0; i < Math.min(10, data.length); i++) {
+            const row = data[i] || [];
+            const headers = row.map(cell => String(cell || '').toLowerCase().trim());
+            
+            // Look for common column patterns
+            if (headers.includes('material') && headers.includes('consumption')) {
+                const materialCol = headers.indexOf('material');
+                const consumptionCol = headers.indexOf('consumption');
+                const priceCol = headers.findIndex(h => h.includes('price') || h.includes('rate'));
+                const costCol = headers.findIndex(h => h.includes('cost') && !h.includes('price'));
+                
+                if (materialCol !== -1 && consumptionCol !== -1) {
+                    this.log('📊 Detected material column structure:', {
+                        name: materialCol,
+                        consumption: consumptionCol,
+                        price: priceCol !== -1 ? priceCol : 2,
+                        cost: costCol !== -1 ? costCol : 3
+                    });
+                    
+                    // Update material column mapping
+                    this.columnMappings.material = {
+                        name: materialCol,
+                        consumption: consumptionCol,
+                        price: priceCol !== -1 ? priceCol : 2,
+                        cost: costCol !== -1 ? costCol : 3
+                    };
+                }
+            }
+            
+            if (headers.includes('operation') || headers.includes('process')) {
+                const nameCol = headers.findIndex(h => h.includes('operation') || h.includes('process'));
+                const timeCol = headers.findIndex(h => h.includes('time') || h.includes('sah'));
+                const rateCol = headers.findIndex(h => h.includes('rate') || h.includes('cost/min'));
+                const costCol = headers.findIndex(h => h.includes('total') || (h.includes('cost') && !h.includes('rate')));
+                
+                if (nameCol !== -1) {
+                    this.log('📊 Detected operation column structure:', {
+                        name: nameCol,
+                        time: timeCol !== -1 ? timeCol : 1,
+                        rate: rateCol !== -1 ? rateCol : 2,
+                        cost: costCol !== -1 ? costCol : 3
+                    });
+                    
+                    // Update manufacturing column mapping
+                    this.columnMappings.manufacturing = {
+                        name: nameCol,
+                        time: timeCol !== -1 ? timeCol : 1,
+                        rate: rateCol !== -1 ? rateCol : 2,
+                        cost: costCol !== -1 ? costCol : 3
+                    };
+                }
+            }
+        }
+    }
+
+    /**
      * Get file type for processing
      */
     getFileType(fileName) {
         const extension = fileName.toLowerCase().split('.').pop();
         return extension === 'csv' ? 'csv' : 'excel';
     }
+
+    /**
+     * Set debug mode
+     */
+    setDebugMode(enabled) {
+        this.debugMode = enabled;
+    }
 }
 
-// Debug function for testing
+// FIXED INITIALIZATION SYSTEM
+// This ensures everything loads properly before use
+
+// Initialize utilities when dependencies are ready
+function initializeTNFUtilities() {
+    return new Promise((resolve, reject) => {
+        // Check if required dependencies are available
+        const checkDependencies = () => {
+            if (typeof window !== 'undefined') {
+                // Browser environment - check for XLSX if needed
+                if (typeof XLSX !== 'undefined' || !window.requiresXLSX) {
+                    window.TNFBeanieImporter = TNFBeanieImporter;
+                    console.log('✅ TNF Beanie Importer ready');
+                    resolve(TNFBeanieImporter);
+                } else {
+                    console.log('⏳ Waiting for XLSX library...');
+                    setTimeout(checkDependencies, 100);
+                }
+            } else {
+                // Node.js environment
+                resolve(TNFBeanieImporter);
+            }
+        };
+        
+        checkDependencies();
+        
+        // Timeout after 10 seconds
+        setTimeout(() => {
+            reject(new Error('TNF utilities initialization timeout'));
+        }, 10000);
+    });
+}
+
+// Auto-initialize when script loads
 if (typeof window !== 'undefined') {
+    // Browser environment
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeTNFUtilities().catch(console.error);
+        });
+    } else {
+        // Document already loaded
+        setTimeout(() => initializeTNFUtilities().catch(console.error), 100);
+    }
+} else {
+    // Node.js environment - export immediately
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports = TNFBeanieImporter;
+    }
+}
+
+// Make available globally
+if (typeof window !== 'undefined') {
+    window.TNFBeanieImporter = TNFBeanieImporter;
+    window.initializeTNFUtilities = initializeTNFUtilities;
+    
+    // Debug function for testing
     window.debugTNFImport = function(excelData) {
         console.log('=== DEBUGGING TNF IMPORT ===');
         console.log('Raw Excel Data:', excelData);
@@ -551,11 +808,4 @@ if (typeof window !== 'undefined') {
         console.log('Parsed Result:', result);
         return result;
     };
-}
-
-// Export for use in other files
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = TNFBeanieImporter;
-} else {
-    window.TNFBeanieImporter = TNFBeanieImporter;
 }
