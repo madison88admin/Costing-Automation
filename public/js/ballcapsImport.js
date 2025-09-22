@@ -10,15 +10,25 @@ class TNFBallCapsImporter {
 
     /**
      * Parse TNF Excel data into structured format for ball caps
-     * @param {Array} excelData - Raw Excel data from XLSX library
+     * @param {Object|Array} excelData - Raw Excel data from XLSX library (can be array or object with data/images)
      * @returns {Object} Parsed cost breakdown data
      */
     parseExcelData(excelData) {
-        if (!excelData || excelData.length === 0) {
+        // Handle both old array format and new object format with images
+        let data = excelData;
+        let images = [];
+        
+        if (excelData && typeof excelData === 'object' && !Array.isArray(excelData)) {
+            data = excelData.data || excelData;
+            images = excelData.images || [];
+        }
+        
+        if (!data || data.length === 0) {
             throw new Error('No data found in the Excel file');
         }
 
-        console.log('Processing TNF Ball Caps Excel data with', excelData.length, 'rows');
+        console.log('Processing TNF Ball Caps Excel data with', data.length, 'rows');
+        console.log('Found', images.length, 'embedded images');
 
         const result = {
             customer: "TNF",
@@ -37,14 +47,17 @@ class TNFBallCapsImporter {
             overhead: [],
             
             totalMaterialCost: "0.00",
-            totalFactoryCost: "0.00"
+            totalFactoryCost: "0.00",
+            
+            // Add images array
+            images: images
         };
 
         // FLEXIBLE PARSING - Search through all rows for data patterns
         try {
             // Search for basic info in any row
-            for (let i = 0; i < excelData.length; i++) {
-                const row = excelData[i];
+            for (let i = 0; i < data.length; i++) {
+                const row = data[i];
                 if (!row) continue;
                 
                 // Look for Customer info
@@ -80,8 +93,8 @@ class TNFBallCapsImporter {
             // FLEXIBLE COST DATA PARSING - Search through all rows
             let currentSection = '';
             
-            for (let i = 0; i < excelData.length; i++) {
-                const row = excelData[i];
+            for (let i = 0; i < data.length; i++) {
+                const row = data[i];
                 if (!row || row.length === 0) continue;
                 
                 const firstCell = String(row[0] || '').trim();

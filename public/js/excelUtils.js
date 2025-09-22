@@ -112,7 +112,12 @@ class ExcelUtils {
                     const fileType = this.getFileType(file.name);
                     
                     if (fileType === 'csv') {
-                        resolve(this.parseCSV(e.target.result));
+                        const csvData = this.parseCSV(e.target.result);
+                        resolve({
+                            data: csvData,
+                            images: [],
+                            sheetName: 'CSV Data'
+                        });
                     } else {
                         // For Excel files, ensure XLSX is loaded
                         console.log(`Processing ${fileType.toUpperCase()} file...`);
@@ -149,6 +154,14 @@ class ExcelUtils {
                         // Look for VANS data in any sheet
                         let targetSheet = null;
                         let targetSheetName = null;
+                        let allImages = [];
+                        
+                        // First, check for images at workbook level
+                        console.log('🔍 Checking workbook level for images...');
+                        if (workbook['!images']) {
+                            console.log('Found images at workbook level:', Object.keys(workbook['!images']).length);
+                            allImages = allImages.concat(this.extractImagesFromWorkbook(workbook));
+                        }
                         
                         for (let i = 0; i < workbook.SheetNames.length; i++) {
                             const sheetName = workbook.SheetNames[i];
@@ -200,8 +213,21 @@ class ExcelUtils {
                             raw: true  // Use raw values for speed
                         });
                         
+                        // Extract embedded images from the worksheet
+                        const worksheetImages = this.extractImagesFromWorksheet(worksheet);
+                        
+                        // Combine workbook and worksheet images
+                        const allImages = allImages.concat(worksheetImages);
+                        
                         console.log(`Excel file processed: ${jsonData.length} rows, ${jsonData[0] ? jsonData[0].length : 0} columns`);
-                        resolve(jsonData);
+                        console.log(`Found ${allImages.length} embedded images total`);
+                        
+                        // Return data with images
+                        resolve({
+                            data: jsonData,
+                            images: allImages,
+                            sheetName: targetSheetName
+                        });
                     }
                 } catch (error) {
                     reject(error);
@@ -277,6 +303,231 @@ class ExcelUtils {
         } else {
             return 'unknown';
         }
+    }
+
+    /**
+     * Extract embedded images from Excel workbook
+     */
+    extractImagesFromWorkbook(workbook) {
+        const images = [];
+        
+        try {
+            console.log('🔍 Extracting images from workbook level...');
+            
+            if (workbook['!images']) {
+                const imageData = workbook['!images'];
+                console.log('Found workbook images:', Object.keys(imageData).length);
+                
+                Object.keys(imageData).forEach(key => {
+                    const image = imageData[key];
+                    if (image && image.data) {
+                        try {
+                            let mimeType = 'image/png';
+                            
+                            // Detect image type
+                            if (image.data[0] === 0xFF && image.data[1] === 0xD8) {
+                                mimeType = 'image/jpeg';
+                            } else if (image.data[0] === 0x89 && image.data[1] === 0x50) {
+                                mimeType = 'image/png';
+                            } else if (image.data[0] === 0x47 && image.data[1] === 0x49) {
+                                mimeType = 'image/gif';
+                            }
+                            
+                            const base64 = btoa(String.fromCharCode.apply(null, image.data));
+                            const dataUrl = `data:${mimeType};base64,${base64}`;
+                            
+                            images.push({
+                                id: `workbook_${key}`,
+                                dataUrl: dataUrl,
+                                mimeType: mimeType,
+                                position: image.position || null,
+                                size: image.data.length
+                            });
+                            
+                            console.log(`✅ Extracted workbook image ${key}: ${mimeType}, ${image.data.length} bytes`);
+                        } catch (imgError) {
+                            console.warn(`Failed to process workbook image ${key}:`, imgError);
+                        }
+                    }
+                });
+            }
+            
+        } catch (error) {
+            console.warn('Error extracting images from workbook:', error);
+        }
+        
+        return images;
+    }
+
+    /**
+     * Extract embedded images from Excel worksheet
+     */
+    extractImagesFromWorksheet(worksheet) {
+        const images = [];
+        
+        try {
+            console.log('🔍 Searching for images in worksheet...');
+            console.log('Worksheet properties:', Object.keys(worksheet));
+            
+            // Method 1: Check for !images property
+            if (worksheet['!images']) {
+                console.log('Found !images property with', Object.keys(worksheet['!images']).length, 'items');
+                const imageData = worksheet['!images'];
+                
+                Object.keys(imageData).forEach(key => {
+                    const image = imageData[key];
+                    console.log(`Processing image ${key}:`, image);
+                    
+                    if (image && image.data) {
+                        try {
+                            // Convert binary data to base64 data URL
+                            let mimeType = 'image/png'; // Default to PNG
+                            
+                            // Try to detect image type from the data
+                            if (image.data[0] === 0xFF && image.data[1] === 0xD8) {
+                                mimeType = 'image/jpeg';
+                            } else if (image.data[0] === 0x89 && image.data[1] === 0x50) {
+                                mimeType = 'image/png';
+                            } else if (image.data[0] === 0x47 && image.data[1] === 0x49) {
+                                mimeType = 'image/gif';
+                            }
+                            
+                            // Convert binary data to base64
+                            const base64 = btoa(String.fromCharCode.apply(null, image.data));
+                            const dataUrl = `data:${mimeType};base64,${base64}`;
+                            
+                            images.push({
+                                id: key,
+                                dataUrl: dataUrl,
+                                mimeType: mimeType,
+                                position: image.position || null,
+                                size: image.data.length
+                            });
+                            
+                            console.log(`✅ Extracted image ${key}: ${mimeType}, ${image.data.length} bytes`);
+                        } catch (imgError) {
+                            console.warn(`Failed to process image ${key}:`, imgError);
+                        }
+                    }
+                });
+            }
+            
+            // Method 2: Check for !drawings property
+            if (worksheet['!drawings']) {
+                console.log('Found !drawings property with', Object.keys(worksheet['!drawings']).length, 'items');
+                const drawingData = worksheet['!drawings'];
+                
+                Object.keys(drawingData).forEach(key => {
+                    const drawing = drawingData[key];
+                    console.log(`Processing drawing ${key}:`, drawing);
+                    
+                    if (drawing && drawing.data) {
+                        try {
+                            let mimeType = 'image/png';
+                            
+                            // Detect image type
+                            if (drawing.data[0] === 0xFF && drawing.data[1] === 0xD8) {
+                                mimeType = 'image/jpeg';
+                            } else if (drawing.data[0] === 0x89 && drawing.data[1] === 0x50) {
+                                mimeType = 'image/png';
+                            } else if (drawing.data[0] === 0x47 && drawing.data[1] === 0x49) {
+                                mimeType = 'image/gif';
+                            }
+                            
+                            const base64 = btoa(String.fromCharCode.apply(null, drawing.data));
+                            const dataUrl = `data:${mimeType};base64,${base64}`;
+                            
+                            images.push({
+                                id: `drawing_${key}`,
+                                dataUrl: dataUrl,
+                                mimeType: mimeType,
+                                position: drawing.position || null,
+                                size: drawing.data.length
+                            });
+                            
+                            console.log(`✅ Extracted drawing ${key}: ${mimeType}, ${drawing.data.length} bytes`);
+                        } catch (drawingError) {
+                            console.warn(`Failed to process drawing ${key}:`, drawingError);
+                        }
+                    }
+                });
+            }
+            
+            // Method 3: Check for images in cell data
+            if (images.length === 0) {
+                console.log('No images found in !images or !drawings, checking cell data...');
+                
+                const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:A1');
+                for (let row = range.s.r; row <= range.e.r; row++) {
+                    for (let col = range.s.c; col <= range.e.c; col++) {
+                        const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+                        const cell = worksheet[cellAddress];
+                        
+                        if (cell && cell.v && typeof cell.v === 'string' && cell.v.startsWith('data:image/')) {
+                            images.push({
+                                id: `cell_${cellAddress}`,
+                                dataUrl: cell.v,
+                                mimeType: cell.v.split(';')[0].split(':')[1],
+                                position: { row: row, col: col },
+                                size: cell.v.length
+                            });
+                            console.log(`✅ Found image in cell ${cellAddress}`);
+                        }
+                    }
+                }
+            }
+            
+            // Method 4: Check for embedded objects in cells
+            if (images.length === 0) {
+                console.log('Checking for embedded objects in cells...');
+                
+                const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:A1');
+                for (let row = range.s.r; row <= range.e.r; row++) {
+                    for (let col = range.s.c; col <= range.e.c; col++) {
+                        const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+                        const cell = worksheet[cellAddress];
+                        
+                        if (cell && cell.f && cell.f.includes('image')) {
+                            console.log(`Found image reference in cell ${cellAddress}:`, cell);
+                        }
+                    }
+                }
+            }
+            
+            // Method 5: Try to extract from raw workbook data if available
+            if (images.length === 0) {
+                console.log('No images found using standard methods, trying alternative approach...');
+                
+                // This is a fallback method that might work with some Excel files
+                try {
+                    // Check if we can access the raw workbook data
+                    const workbook = worksheet._workbook || worksheet;
+                    if (workbook && workbook.SSF) {
+                        console.log('Found SSF (Shared String Format) data, checking for images...');
+                        // Sometimes images are stored in shared strings
+                    }
+                } catch (altError) {
+                    console.log('Alternative extraction method failed:', altError);
+                }
+            }
+            
+            console.log(`🔍 Image extraction complete. Found ${images.length} images.`);
+            
+            // If still no images found, provide helpful debugging info
+            if (images.length === 0) {
+                console.log('💡 No images found. This could be because:');
+                console.log('   - The Excel file has no embedded images');
+                console.log('   - Images are in a format not supported by XLSX.js');
+                console.log('   - Images are stored in a different location');
+                console.log('   - The Excel file was created with a version that stores images differently');
+                console.log('   - Try saving the Excel file as .xlsx format and re-uploading');
+            }
+            
+        } catch (error) {
+            console.warn('Error extracting images from worksheet:', error);
+        }
+        
+        return images;
     }
 
     /**

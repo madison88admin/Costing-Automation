@@ -2536,6 +2536,126 @@
             console.log('🔧 Enhanced with fallback XLSX loading for reliability');
         };
 
+        // Debug function to test image extraction
+        window.testImageExtraction = function() {
+            console.log('🖼️ TESTING IMAGE EXTRACTION');
+            console.log('==');
+            
+            if (!window.lastExcelData) {
+                console.log('❌ No Excel data available. Please upload an Excel file first.');
+                return;
+            }
+            
+            console.log('Raw Excel data structure:', window.lastExcelData);
+            
+            if (window.lastExcelData.images) {
+                console.log('✅ Found', window.lastExcelData.images.length, 'embedded images:');
+                window.lastExcelData.images.forEach((image, index) => {
+                    console.log(`  Image ${index + 1}:`, {
+                        id: image.id,
+                        mimeType: image.mimeType,
+                        size: image.size,
+                        position: image.position,
+                        dataUrl: image.dataUrl.substring(0, 50) + '...'
+                    });
+                });
+                
+                // Test displaying the first image
+                if (window.lastExcelData.images.length > 0) {
+                    console.log('🎯 Testing image display...');
+                    displayProductImages(window.lastExcelData.images);
+                }
+            } else {
+                console.log('❌ No images found in Excel data');
+                console.log('This could mean:');
+                console.log('- The Excel file has no embedded images');
+                console.log('- Images are in a format not supported by XLSX.js');
+                console.log('- Images are stored in a different location in the Excel file');
+            }
+        };
+
+        // Debug function to analyze Excel file structure
+        window.analyzeExcelStructure = function() {
+            console.log('🔍 ANALYZING EXCEL FILE STRUCTURE');
+            console.log('==');
+            
+            if (!window.lastExcelData) {
+                console.log('❌ No Excel data available. Please upload an Excel file first.');
+                return;
+            }
+            
+            console.log('Excel data type:', typeof window.lastExcelData);
+            console.log('Excel data keys:', Object.keys(window.lastExcelData));
+            
+            if (window.lastExcelData.data) {
+                console.log('Data array length:', window.lastExcelData.data.length);
+                console.log('First few rows:', window.lastExcelData.data.slice(0, 3));
+            }
+            
+            if (window.lastExcelData.images) {
+                console.log('Images found:', window.lastExcelData.images.length);
+            } else {
+                console.log('No images property found');
+            }
+            
+            // Check if it's the old format
+            if (Array.isArray(window.lastExcelData)) {
+                console.log('⚠️ Using old array format - images may not be extracted');
+                console.log('Consider re-uploading the file to get the new format with image support');
+            }
+        };
+
+        // Debug function to test drag and drop functionality
+        window.testDragDrop = function() {
+            console.log('🎯 TESTING DRAG & DROP FUNCTIONALITY');
+            console.log('==');
+            
+            const dragDropAreas = document.querySelectorAll('.drag-drop-area');
+            console.log('Found drag drop areas:', dragDropAreas.length);
+            
+            dragDropAreas.forEach((area, index) => {
+                console.log(`Area ${index + 1}:`, {
+                    element: area,
+                    classes: area.className,
+                    style: area.style.cssText,
+                    hasListeners: area.ondrop !== null || area.ondragover !== null
+                });
+            });
+            
+            // Test if event listeners are attached
+            const testArea = dragDropAreas[0];
+            if (testArea) {
+                console.log('Testing event listeners on first area...');
+                
+                // Simulate drag events
+                const dragEnterEvent = new DragEvent('dragenter', {
+                    bubbles: true,
+                    cancelable: true,
+                    dataTransfer: new DataTransfer()
+                });
+                
+                const dragOverEvent = new DragEvent('dragover', {
+                    bubbles: true,
+                    cancelable: true,
+                    dataTransfer: new DataTransfer()
+                });
+                
+                console.log('Simulating dragenter event...');
+                testArea.dispatchEvent(dragEnterEvent);
+                
+                console.log('Simulating dragover event...');
+                testArea.dispatchEvent(dragOverEvent);
+                
+                console.log('Drag over class applied:', testArea.classList.contains('drag-over'));
+            }
+            
+            console.log('💡 If drag & drop is not working:');
+            console.log('1. Check browser console for JavaScript errors');
+            console.log('2. Make sure the page is fully loaded');
+            console.log('3. Try refreshing the page');
+            console.log('4. Check if file types are supported');
+        };
+
         // Test XLSX loading status
         window.testXLSXStatus = function() {
             console.log('🔍 XLSX Library Status Check');
@@ -3668,23 +3788,42 @@
         }
 
         function highlight(e, dragDropArea) {
+            console.log('🎯 Highlight called');
             dragDropArea.classList.add('drag-over');
         }
 
         function unhighlight(e, dragDropArea) {
+            console.log('🎯 Unhighlight called');
             dragDropArea.classList.remove('drag-over');
         }
 
         function handleDrop(e, dragDropArea) {
+            console.log('🎯 Handle drop called');
+            e.preventDefault();
+            e.stopPropagation();
+            
             const dt = e.dataTransfer;
             const files = dt.files;
             
+            console.log('Files dropped:', files.length);
+            
             if (files.length > 0) {
                 const file = files[0];
-                console.log('File dropped:', file.name, file.type);
+                console.log('File dropped:', file.name, file.type, file.size);
+                
+                // Validate file type
+                const allowedTypes = ['.xlsx', '.xls', '.xlsm', '.csv'];
+                const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+                
+                if (!allowedTypes.includes(fileExtension)) {
+                    console.error('Invalid file type:', fileExtension);
+                    alert('Please select a valid file type (.xlsx, .xls, .xlsm, .csv)');
+                    return;
+                }
                 
                 // Store the file globally for processing
                 uploadedFile = file;
+                console.log('File stored globally:', uploadedFile.name);
                 
                 // Update the specific drag drop area to show file name
                 const dragDropText = dragDropArea.querySelector('.drag-drop-text');
@@ -3693,7 +3832,12 @@
                 if (dragDropText && dragDropIcon) {
                     dragDropIcon.textContent = '✅';
                     dragDropText.innerHTML = `File: ${file.name}<br><small>Click to change</small>`;
+                    console.log('Drag drop area updated with file name');
+                } else {
+                    console.error('Could not find drag drop text or icon elements');
                 }
+            } else {
+                console.log('No files in drop event');
             }
         }
 
@@ -3785,9 +3929,16 @@
                 window.lastExcelData = rawData;
                 console.log('Raw Excel data stored in window.lastExcelData for debugging');
                 
+                // Handle both old array format and new object format
+                let dataToProcess = rawData;
+                if (rawData && typeof rawData === 'object' && !Array.isArray(rawData)) {
+                    dataToProcess = rawData.data || rawData;
+                    console.log('Found', rawData.images ? rawData.images.length : 0, 'embedded images');
+                }
+                
                 // Determine which importer to use based on file content
                 let parsedData = null;
-                const templateType = detectTemplateType(rawData);
+                const templateType = detectTemplateType(dataToProcess);
                 console.log('Detected template type:', templateType);
                 
                 if (templateType === 'ballcaps') {
@@ -3814,6 +3965,9 @@
                     } else {
                         fillTemplateWithData(parsedData);
                     }
+                    
+                    // Display product images if available
+                    displayProductImages(parsedData.images);
                 }
                     
                 } catch (error) {
@@ -3953,6 +4107,38 @@
             console.log(`Subtotal calculated for ${costColumn}: $${total.toFixed(2)}`);
         }
 
+        function displayProductImages(images) {
+            if (!images || images.length === 0) {
+                console.log('No product images to display');
+                return;
+            }
+            
+            console.log('Displaying', images.length, 'product images');
+            
+            // Find all product image containers in both templates
+            const imageContainers = document.querySelectorAll('.product-image');
+            
+            imageContainers.forEach(container => {
+                const placeholder = container.querySelector('.image-placeholder');
+                if (placeholder && images.length > 0) {
+                    // Use the first image found
+                    const image = images[0];
+                    
+                    // Create image element
+                    const img = document.createElement('img');
+                    img.src = image.dataUrl;
+                    img.alt = 'Product Image';
+                    img.style.cssText = 'max-width: 100%; max-height: 300px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);';
+                    
+                    // Replace placeholder with actual image
+                    placeholder.innerHTML = '';
+                    placeholder.appendChild(img);
+                    
+                    console.log('✅ Product image displayed:', image.mimeType, image.size, 'bytes');
+                }
+            });
+        }
+
         function updateTotals(materialTotal, factoryTotal) {
             // Only update totals in the currently visible template
             const visibleTemplate = document.querySelector('.cost-breakdown-container:not([style*="display: none"])');
@@ -3975,25 +4161,50 @@
 
         // Initialize drag & drop when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            initializeDragDrop();
+            console.log('🚀 DOM Content Loaded - Initializing drag & drop...');
+            
+            try {
+                initializeDragDrop();
+                console.log('✅ Drag & drop initialized successfully');
+            } catch (error) {
+                console.error('❌ Error initializing drag & drop:', error);
+            }
             
             // Add file input for click functionality
-            const fileInput = document.createElement('input');
-            fileInput.type = 'file';
-            fileInput.accept = '.xlsx,.xls,.xlsm,.csv';
-            fileInput.style.display = 'none';
-            fileInput.onchange = handleFileSelect;
-            fileInput.id = 'hiddenFileInput';
-            document.body.appendChild(fileInput);
+            try {
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = '.xlsx,.xls,.xlsm,.csv';
+                fileInput.style.display = 'none';
+                fileInput.onchange = handleFileSelect;
+                fileInput.id = 'hiddenFileInput';
+                document.body.appendChild(fileInput);
+                console.log('✅ File input created successfully');
+            } catch (error) {
+                console.error('❌ Error creating file input:', error);
+            }
             
             // Make drag drop areas clickable
-            const dragDropAreas = document.querySelectorAll('.drag-drop-area');
-            dragDropAreas.forEach(area => {
-                area.style.cursor = 'pointer';
-                area.onclick = function() {
-                    fileInput.click();
-                };
-            });
+            try {
+                const dragDropAreas = document.querySelectorAll('.drag-drop-area');
+                console.log('Found drag drop areas for click:', dragDropAreas.length);
+                
+                dragDropAreas.forEach((area, index) => {
+                    area.style.cursor = 'pointer';
+                    area.onclick = function() {
+                        console.log('Drag drop area clicked:', index);
+                        const fileInput = document.getElementById('hiddenFileInput');
+                        if (fileInput) {
+                            fileInput.click();
+                        } else {
+                            console.error('File input not found');
+                        }
+                    };
+                });
+                console.log('✅ Drag drop areas made clickable');
+            } catch (error) {
+                console.error('❌ Error making drag drop areas clickable:', error);
+            }
         });
 
         // Export table data to Excel
