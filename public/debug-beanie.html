@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Beanie Import</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <h1>Debug Beanie Import</h1>
+    <input type="file" id="fileInput" accept=".xlsx,.xls,.xlsm">
+    <div id="result"></div>
+    <div id="debug"></div>
+
+    <script src="js/excelUtils.js"></script>
+    <script src="js/beanieImport.js"></script>
+    
+    <script>
+        document.getElementById('fileInput').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const debugDiv = document.getElementById('debug');
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                console.log('=== DEBUGGING BEANIE IMPORT ===');
+                console.log('File:', file.name, file.type, file.size);
+                
+                // Test 1: Check if classes are available
+                debugDiv.innerHTML += '<h3>Step 1: Class Availability</h3>';
+                debugDiv.innerHTML += '<p>ExcelUtils: ' + (typeof ExcelUtils !== 'undefined' ? '✅ Available' : '❌ Missing') + '</p>';
+                debugDiv.innerHTML += '<p>TNFBeanieImporter: ' + (typeof TNFBeanieImporter !== 'undefined' ? '✅ Available' : '❌ Missing') + '</p>';
+                
+                if (typeof ExcelUtils === 'undefined' || typeof TNFBeanieImporter === 'undefined') {
+                    debugDiv.innerHTML += '<p style="color: red;">❌ Required classes not available!</p>';
+                    return;
+                }
+                
+                // Test 2: Initialize classes
+                debugDiv.innerHTML += '<h3>Step 2: Class Initialization</h3>';
+                const excelUtils = new ExcelUtils();
+                const beanieImporter = new TNFBeanieImporter();
+                debugDiv.innerHTML += '<p>✅ Classes initialized successfully</p>';
+                
+                // Test 3: Read file
+                debugDiv.innerHTML += '<h3>Step 3: File Reading</h3>';
+                const rawData = await excelUtils.readFileContent(file);
+                console.log('Raw data:', rawData);
+                debugDiv.innerHTML += '<p>✅ File read successfully</p>';
+                debugDiv.innerHTML += '<p>Data type: ' + typeof rawData + '</p>';
+                debugDiv.innerHTML += '<p>Data length: ' + (rawData.data ? rawData.data.length : rawData.length) + '</p>';
+                
+                // Test 4: Parse data
+                debugDiv.innerHTML += '<h3>Step 4: Data Parsing</h3>';
+                const parsedData = beanieImporter.parseExcelData(rawData);
+                console.log('Parsed data:', parsedData);
+                debugDiv.innerHTML += '<p>✅ Data parsed successfully</p>';
+                
+                // Test 5: Display results
+                debugDiv.innerHTML += '<h3>Step 5: Results</h3>';
+                debugDiv.innerHTML += '<p>Customer: ' + parsedData.customer + '</p>';
+                debugDiv.innerHTML += '<p>Season: ' + parsedData.season + '</p>';
+                debugDiv.innerHTML += '<p>Style: ' + parsedData.styleNumber + '</p>';
+                debugDiv.innerHTML += '<p>YARN items: ' + parsedData.yarn.length + '</p>';
+                debugDiv.innerHTML += '<p>FABRIC items: ' + parsedData.fabric.length + '</p>';
+                debugDiv.innerHTML += '<p>TRIM items: ' + parsedData.trim.length + '</p>';
+                debugDiv.innerHTML += '<p>KNITTING items: ' + parsedData.knitting.length + '</p>';
+                
+                resultDiv.innerHTML = '<pre>' + JSON.stringify(parsedData, null, 2) + '</pre>';
+                
+            } catch (error) {
+                console.error('Error:', error);
+                debugDiv.innerHTML += '<div style="color: red;"><h3>❌ Error:</h3><p>' + error.message + '</p><pre>' + error.stack + '</pre></div>';
+                resultDiv.innerHTML = '<div style="color: red;">Error: ' + error.message + '</div>';
+            }
+        });
+    </script>
+</body>
+</html>

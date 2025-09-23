@@ -4083,7 +4083,7 @@
 
         // Store the uploaded file globally
         let uploadedFile = null;
-
+        
         // Global variable to store raw Excel data for debugging
         window.lastExcelData = null;
 
@@ -4311,27 +4311,47 @@
         }
 
         function fillCostSection(sectionName, data, columns) {
+            console.log('🔍 fillCostSection called for:', sectionName, 'with data:', data);
+            
             // Only search within the currently visible template
             const visibleTemplate = document.querySelector('.cost-breakdown-container:not([style*="display: none"])');
             if (!visibleTemplate) {
+                console.log('❌ No visible template found');
                 return;
             }
             
             const sections = visibleTemplate.querySelectorAll('.cost-section');
+            console.log('🔍 Found', sections.length, 'sections');
             let targetSection = null;
             
-            sections.forEach(section => {
+            sections.forEach((section, index) => {
                 const header = section.querySelector('.section-header');
-                if (header && header.textContent.trim() === sectionName) {
+                if (header) {
+                    const headerText = header.textContent.trim();
+                    console.log(`🔍 Section ${index}:`, headerText);
+                    if (headerText === sectionName) {
                     targetSection = section;
+                        console.log('✅ Found target section:', sectionName, 'at index', index);
+                        console.log('✅ Section element:', section);
+                    }
                 }
             });
+            
+            if (!targetSection) {
+                console.log('❌ No target section found for:', sectionName);
+                console.log('Available sections:', Array.from(sections).map(s => s.querySelector('.section-header')?.textContent.trim()));
+            }
             
             if (targetSection) {
                 const rows = targetSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
                 
                 if (data && Array.isArray(data)) {
                     data.forEach((item, index) => {
+                        // Skip SUB TOTAL items - they will be handled separately
+                        if (item.isSubtotal) {
+                            return;
+                        }
+                        
                         if (rows[index] && item) {
                             const cells = rows[index].querySelectorAll('.cost-cell');
                             // Fill only the cells that exist, up to the minimum of columns.length and cells.length
@@ -4344,6 +4364,31 @@
                             }
                         }
                     });
+                }
+                
+                // Handle SUB TOTAL rows
+                const subtotalRow = targetSection.querySelector('.subtotal-row');
+                console.log('🔍 SUB TOTAL row found:', !!subtotalRow);
+                if (subtotalRow && data && Array.isArray(data)) {
+                    const subtotalItem = data.find(item => item.isSubtotal);
+                    console.log('🔍 SUB TOTAL item found:', subtotalItem);
+                    if (subtotalItem) {
+                        const cells = subtotalRow.querySelectorAll('.cost-cell');
+                        console.log('🔍 SUB TOTAL cells found:', cells.length);
+                        const maxColumns = Math.min(columns.length, cells.length);
+                        for (let cellIndex = 0; cellIndex < maxColumns; cellIndex++) {
+                            const column = columns[cellIndex];
+                            if (cells[cellIndex] && subtotalItem[column] !== undefined && subtotalItem[column] !== null) {
+                                cells[cellIndex].textContent = String(subtotalItem[column] || '');
+                                console.log(`✅ Updated SUB TOTAL cell ${cellIndex} (${column}):`, subtotalItem[column]);
+                            }
+                        }
+                        console.log('✅ Updated SUB TOTAL row for', sectionName, ':', subtotalItem);
+                    } else {
+                        console.log('❌ No SUB TOTAL item found in data');
+                    }
+                } else {
+                    console.log('❌ No SUB TOTAL row or data found');
                 }
             }
             
@@ -4365,6 +4410,11 @@
             let total = 0;
             if (data && Array.isArray(data)) {
                 data.forEach(item => {
+                    // Skip SUB TOTAL items when calculating
+                    if (item.isSubtotal) {
+                        return;
+                    }
+                    
                     if (item && item[costColumn] && item[costColumn] !== null && item[costColumn] !== undefined && !isNaN(parseFloat(item[costColumn]))) {
                         total += parseFloat(item[costColumn]);
                     }
@@ -4474,7 +4524,7 @@
             setTimeout(() => {
                 console.log('🔧 Attempting drag & drop initialization...');
                 try {
-                    initializeDragDrop();
+            initializeDragDrop();
                     console.log('✅ Drag & drop initialized successfully');
                 } catch (error) {
                     console.error('❌ Error initializing drag & drop:', error);
@@ -4495,13 +4545,13 @@
             
             // Add file input for click functionality
             try {
-                const fileInput = document.createElement('input');
-                fileInput.type = 'file';
-                fileInput.accept = '.xlsx,.xls,.xlsm,.csv';
-                fileInput.style.display = 'none';
-                fileInput.onchange = handleFileSelect;
-                fileInput.id = 'hiddenFileInput';
-                document.body.appendChild(fileInput);
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = '.xlsx,.xls,.xlsm,.csv';
+            fileInput.style.display = 'none';
+            fileInput.onchange = handleFileSelect;
+            fileInput.id = 'hiddenFileInput';
+            document.body.appendChild(fileInput);
                 console.log('✅ File input created successfully');
             } catch (error) {
                 console.error('❌ Error creating file input:', error);
@@ -6941,10 +6991,10 @@
                         // Regular item
                         if (trimRows[regularItemCount]) {
                             const cells = trimRows[regularItemCount].querySelectorAll('.cost-cell');
-                            if (cells[0]) cells[0].textContent = item.material || '';
-                            if (cells[1]) cells[1].textContent = item.consumption || '';
-                            if (cells[2]) cells[2].textContent = item.price || '';
-                            if (cells[3]) cells[3].textContent = item.cost || '';
+                        if (cells[0]) cells[0].textContent = item.material || '';
+                        if (cells[1]) cells[1].textContent = item.consumption || '';
+                        if (cells[2]) cells[2].textContent = item.price || '';
+                        if (cells[3]) cells[3].textContent = item.cost || '';
                             
                             // Add to total for calculation
                             const cost = parseFloat(item.cost) || 0;
@@ -6987,10 +7037,10 @@
                         // Regular item
                         if (operationsRows[regularItemCount]) {
                             const cells = operationsRows[regularItemCount].querySelectorAll('.cost-cell');
-                            if (cells[0]) cells[0].textContent = item.operation || '';
-                            if (cells[1]) cells[1].textContent = item.time || '';
-                            if (cells[2]) cells[2].textContent = item.cost || '';
-                            if (cells[3]) cells[3].textContent = item.total || '';
+                        if (cells[0]) cells[0].textContent = item.operation || '';
+                        if (cells[1]) cells[1].textContent = item.time || '';
+                        if (cells[2]) cells[2].textContent = item.cost || '';
+                        if (cells[3]) cells[3].textContent = item.total || '';
                             
                             // Add to total for calculation
                             const cost = parseFloat(item.total) || 0;
@@ -7033,9 +7083,9 @@
                         // Regular item
                         if (packagingRows[regularItemCount]) {
                             const cells = packagingRows[regularItemCount].querySelectorAll('.cost-cell');
-                            if (cells[0]) cells[0].textContent = item.type || '';
-                            if (cells[1]) cells[1].textContent = item.notes || '';
-                            if (cells[2]) cells[2].textContent = item.cost || '';
+                        if (cells[0]) cells[0].textContent = item.type || '';
+                        if (cells[1]) cells[1].textContent = item.notes || '';
+                        if (cells[2]) cells[2].textContent = item.cost || '';
                             
                             // Add to total for calculation
                             const cost = parseFloat(item.cost) || 0;
@@ -7078,9 +7128,9 @@
                         // Regular item
                         if (overheadRows[regularItemCount]) {
                             const cells = overheadRows[regularItemCount].querySelectorAll('.cost-cell');
-                            if (cells[0]) cells[0].textContent = item.type || '';
-                            if (cells[1]) cells[1].textContent = item.notes || '';
-                            if (cells[2]) cells[2].textContent = item.cost || '';
+                        if (cells[0]) cells[0].textContent = item.type || '';
+                        if (cells[1]) cells[1].textContent = item.notes || '';
+                        if (cells[2]) cells[2].textContent = item.cost || '';
                             
                             // Add to total for calculation
                             const cost = parseFloat(item.cost) || 0;

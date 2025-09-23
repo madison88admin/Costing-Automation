@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Beanie Import</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <h1>Test Beanie Import</h1>
+    <input type="file" id="fileInput" accept=".xlsx,.xls,.xlsm">
+    <div id="result"></div>
+
+    <script src="js/excelUtils.js"></script>
+    <script src="js/beanieImport.js"></script>
+    
+    <script>
+        document.getElementById('fileInput').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            try {
+                console.log('Testing beanie import with file:', file.name);
+                
+                // Test ExcelUtils
+                const excelUtils = new ExcelUtils();
+                const rawData = await excelUtils.readFileContent(file);
+                console.log('ExcelUtils result:', rawData);
+                
+                // Test BeanieImporter
+                const beanieImporter = new TNFBeanieImporter();
+                const parsedData = beanieImporter.parseExcelData(rawData);
+                console.log('BeanieImporter result:', parsedData);
+                
+                document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(parsedData, null, 2) + '</pre>';
+                
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML = '<div style="color: red;">Error: ' + error.message + '</div>';
+            }
+        });
+    </script>
+</body>
+</html>
