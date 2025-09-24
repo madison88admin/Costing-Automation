@@ -1,4 +1,7 @@
 [build]
+  # Build command - simple command for static site
+  command = "npm run build:netlify"
+  
   # Directory to publish - Netlify will serve from the public folder
   publish = "public"
   

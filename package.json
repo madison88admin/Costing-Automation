@@ -7,8 +7,7 @@
     "start": "node dist/app.js",
     "dev": "tsx watch src/app.ts",
     "build": "tsc",
-    "build:netlify": "tsc && npm run copy:public",
-    "copy:public": "cp -r public/* dist/ 2>/dev/null || xcopy public\\* dist\\ /E /I /Y",
+    "build:netlify": "echo 'Static site - no build required'",
     "test": "jest"
   },
   "keywords": [
