@@ -1505,3 +1505,24 @@
 {"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-24T06:00:00.328Z"}
 {"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-24T06:00:00.470Z"}
 {"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-24T06:00:00.471Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:04:39.272Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:04:54.831Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:05:03.718Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:05:08.790Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:05:10.042Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:06:30.059Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:06:31.227Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:06:32.723Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:06:51.346Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:06:53.366Z"}
+{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-24T06:07:30.786Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-24T06:07:31.250Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-24T06:07:31.572Z"}
+{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-24T06:07:31.764Z"}
+{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-24T06:07:31.765Z"}
+{"customer":"TNF","level":"info","message":"Received beanie data for saving:","season":"F27","service":"costing-automation","styleNumber":"TNFF27-014","timestamp":"2025-09-24T06:07:44.651Z"}
+{"level":"info","message":"Converting beanie data to database format...","service":"costing-automation","timestamp":"2025-09-24T06:07:45.012Z"}
+{"customer":"TNF","level":"info","message":"Saving beanie data to database:","season":"F27","service":"costing-automation","styleNumber":"TNFF27-014","table":"beanie_costs","timestamp":"2025-09-24T06:07:45.013Z"}
+{"code":"PGRST205","details":null,"hint":null,"level":"error","message":"Database error: Could not find the table 'public.beanie_costs' in the schema cache","service":"costing-automation","timestamp":"2025-09-24T06:07:45.115Z"}
+{"level":"error","message":"Error saving beanie data: Failed to save data: Could not find the table 'public.beanie_costs' in the schema cache","service":"costing-automation","stack":"Error: Failed to save data: Could not find the table 'public.beanie_costs' in the schema cache\n    at BeanieDataService.saveBeanieData (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\src\\services\\beanieDataService.ts:176:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async <anonymous> (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\src\\routes\\beanieData.ts:38:20)","timestamp":"2025-09-24T06:07:45.117Z"}
+{"level":"error","message":"Error saving beanie data: Failed to save data: Could not find the table 'public.beanie_costs' in the schema cache","service":"costing-automation","stack":"Error: Failed to save data: Could not find the table 'public.beanie_costs' in the schema cache\n    at BeanieDataService.saveBeanieData (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\src\\services\\beanieDataService.ts:176:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async <anonymous> (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\src\\routes\\beanieData.ts:38:20)","timestamp":"2025-09-24T06:07:45.118Z"}

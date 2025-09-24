@@ -1,250 +1,281 @@
-import { SupabaseService } from './supabaseService';
-import { TNFBeanieImporter } from '../../public/js/beanieImport';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import logger from '../utils/logger';
 
-export interface BeanieCostData {
+export interface BeanieData {
   customer: string;
   season: string;
   styleNumber: string;
   styleName: string;
   costedQuantity: string;
   leadtime: string;
-  yarn: any[];
-  fabric: any[];
-  trim: any[];
-  knitting: any[];
-  operations: any[];
-  packaging: any[];
-  overhead: any[];
+  yarn: Array<{
+    material: string;
+    consumption: string;
+    price: string;
+    cost: string;
+  }>;
+  fabric: Array<{
+    material: string;
+    consumption: string;
+    price: string;
+    cost: string;
+  }>;
+  trim: Array<{
+    material: string;
+    consumption: string;
+    price: string;
+    cost: string;
+  }>;
+  knitting: Array<{
+    machine: string;
+    time: string;
+    sah: string;
+    cost: string;
+  }>;
+  operations: Array<{
+    operation: string;
+    time: string;
+    cost: string;
+    total: string;
+  }>;
+  packaging: Array<{
+    type: string;
+    notes: string;
+    cost: string;
+  }>;
+  overhead: Array<{
+    type: string;
+    notes: string;
+    cost: string;
+  }>;
   totalMaterialCost: string;
   totalFactoryCost: string;
   images: any[];
 }
 
+export interface DatabaseRecord {
+  Season: string;
+  Customer: string;
+  Style_Number: string;
+  Style_Name: string;
+  Main_Material: string;
+  Material_Consumption: string;
+  Material_Price: string;
+  Trim_Cost: string;
+  Total_Material_Cost: string;
+  Knitting_Machine: string;
+  Knitting_Time: string;
+  Knitting_CPM: string;
+  Knitting_Cost: string;
+  Ops_Cost: string;
+  Knitting_Ops_Cost: string;
+  Packaging: string;
+  OH: string;
+  Profit: string;
+  FTY_Adjustment: string;
+  TTL_FTY_Cost: string;
+}
+
 export class BeanieDataService {
-  private supabase: SupabaseService;
+  private supabase: SupabaseClient;
 
-  constructor(supabase: SupabaseService) {
-    this.supabase = supabase;
+  constructor() {
+    const supabaseUrl = 'https://icavnpspgmcrrqmsprze.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljYXZucHNwZ21jcnJxbXNwcnplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0NzEyMzMsImV4cCI6MjA3MzA0NzIzM30.5_-LPYwj5ks_KyCXwCae2mcbI-T7em48RsMiv4Oaurk';
+    
+    this.supabase = createClient(supabaseUrl, supabaseKey);
   }
 
   /**
-   * Parse Excel file and save beanie cost data to database
+   * Convert beanie data to database record format
    */
-  async saveBeanieCostData(excelData: any): Promise<{ success: boolean; message: string; data?: any }> {
-    try {
-      // Parse the Excel data using the TNFBeanieImporter
-      const importer = new TNFBeanieImporter();
-      const parsedData = importer.parseExcelData(excelData);
+  private convertToDatabaseRecord(data: BeanieData): DatabaseRecord {
+    // Get main material (first yarn item)
+    const mainMaterial = data.yarn.length > 0 ? data.yarn[0].material : '';
+    const materialConsumption = data.yarn.length > 0 ? data.yarn[0].consumption : '';
+    const materialPrice = data.yarn.length > 0 ? data.yarn[0].price : '';
 
-      logger.info('Parsed beanie cost data:', parsedData);
+    // Calculate trim cost (sum of all trim items)
+    const trimCost = data.trim.reduce((sum, item) => sum + parseFloat(item.cost || '0'), 0).toFixed(2);
 
-      // Save the main cost record
-      const costRecord = await this.saveMainCostRecord(parsedData);
+    // Get knitting machine and details
+    const knittingMachine = data.knitting.length > 0 ? data.knitting[0].machine : '';
+    const knittingTime = data.knitting.length > 0 ? data.knitting[0].time : '';
+    const knittingCPM = data.knitting.length > 0 ? data.knitting[0].sah : '';
+    const knittingCost = data.knitting.length > 0 ? data.knitting[0].cost : '';
 
-      // Save section data
-      await this.saveSectionData(costRecord.id, parsedData);
+    // Calculate operations cost (sum of all operations)
+    const opsCost = data.operations.reduce((sum, item) => sum + parseFloat(item.total || '0'), 0).toFixed(2);
 
-      return {
-        success: true,
-        message: 'Beanie cost data saved successfully',
-        data: costRecord
-      };
-    } catch (error) {
-      logger.error('Error saving beanie cost data:', error);
-      return {
-        success: false,
-        message: `Failed to save beanie cost data: ${error instanceof Error ? error.message : 'Unknown error'}`
-      };
-    }
-  }
+    // Calculate knitting + ops cost
+    const knittingOpsCost = (parseFloat(knittingCost || '0') + parseFloat(opsCost)).toFixed(2);
 
-  /**
-   * Save the main cost record
-   */
-  private async saveMainCostRecord(data: BeanieCostData): Promise<any> {
-    const costRecord = {
-      customer: data.customer,
-      season: data.season,
-      style_number: data.styleNumber,
-      style_name: data.styleName,
-      costed_quantity: data.costedQuantity,
-      leadtime: data.leadtime,
-      total_material_cost: parseFloat(data.totalMaterialCost) || 0,
-      total_factory_cost: parseFloat(data.totalFactoryCost) || 0,
-      product_type: 'beanie',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+    // Calculate packaging cost (sum of all packaging items)
+    const packagingCost = data.packaging.reduce((sum, item) => sum + parseFloat(item.cost || '0'), 0).toFixed(2);
+
+    // Separate overhead and profit
+    const overheadItems = data.overhead.filter(item => item.type !== 'PROFIT');
+    const profitItems = data.overhead.filter(item => item.type === 'PROFIT');
+    
+    const ohCost = overheadItems.reduce((sum, item) => sum + parseFloat(item.cost || '0'), 0).toFixed(2);
+    const profitCost = profitItems.reduce((sum, item) => sum + parseFloat(item.cost || '0'), 0).toFixed(2);
+
+    // FTY Adjustment (if any adjustment items exist)
+    const ftyAdjustment = data.overhead
+      .filter(item => item.type.includes('adjustment') || item.type.includes('support'))
+      .reduce((sum, item) => sum + parseFloat(item.cost || '0'), 0)
+      .toFixed(2);
+
+    return {
+      Season: data.season,
+      Customer: data.customer,
+      Style_Number: data.styleNumber,
+      Style_Name: data.styleName,
+      Main_Material: mainMaterial,
+      Material_Consumption: materialConsumption,
+      Material_Price: materialPrice,
+      Trim_Cost: trimCost,
+      Total_Material_Cost: data.totalMaterialCost,
+      Knitting_Machine: knittingMachine,
+      Knitting_Time: knittingTime,
+      Knitting_CPM: knittingCPM,
+      Knitting_Cost: knittingCost,
+      Ops_Cost: opsCost,
+      Knitting_Ops_Cost: knittingOpsCost,
+      Packaging: packagingCost,
+      OH: ohCost,
+      Profit: profitCost,
+      FTY_Adjustment: ftyAdjustment,
+      TTL_FTY_Cost: data.totalFactoryCost
     };
-
-    return await this.supabase.insertRecord('costs', costRecord);
   }
 
   /**
-   * Save section data (yarn, fabric, trim, etc.)
+   * Save beanie data to database
    */
-  private async saveSectionData(costId: number, data: BeanieCostData): Promise<void> {
-    // Save YARN data
-    if (data.yarn && data.yarn.length > 0) {
-      const yarnRecords = data.yarn.map(item => ({
-        cost_id: costId,
-        section: 'yarn',
-        material: item.material,
-        consumption: item.consumption,
-        price: parseFloat(item.price) || 0,
-        cost: parseFloat(item.cost) || 0,
-        is_subtotal: item.isSubtotal || false
-      }));
-      await this.supabase.bulkInsert('cost_items', yarnRecords);
-    }
-
-    // Save FABRIC data
-    if (data.fabric && data.fabric.length > 0) {
-      const fabricRecords = data.fabric.map(item => ({
-        cost_id: costId,
-        section: 'fabric',
-        material: item.material,
-        consumption: item.consumption,
-        price: parseFloat(item.price) || 0,
-        cost: parseFloat(item.cost) || 0,
-        is_subtotal: item.isSubtotal || false
-      }));
-      await this.supabase.bulkInsert('cost_items', fabricRecords);
-    }
-
-    // Save TRIM data
-    if (data.trim && data.trim.length > 0) {
-      const trimRecords = data.trim.map(item => ({
-        cost_id: costId,
-        section: 'trim',
-        material: item.material,
-        consumption: item.consumption,
-        price: parseFloat(item.price) || 0,
-        cost: parseFloat(item.cost) || 0,
-        is_subtotal: item.isSubtotal || false
-      }));
-      await this.supabase.bulkInsert('cost_items', trimRecords);
-    }
-
-    // Save KNITTING data
-    if (data.knitting && data.knitting.length > 0) {
-      const knittingRecords = data.knitting.map(item => ({
-        cost_id: costId,
-        section: 'knitting',
-        operation: item.machine,
-        time: item.time,
-        cost: parseFloat(item.cost) || 0,
-        total: parseFloat(item.total) || 0,
-        is_subtotal: item.isSubtotal || false
-      }));
-      await this.supabase.bulkInsert('cost_items', knittingRecords);
-    }
-
-    // Save OPERATIONS data
-    if (data.operations && data.operations.length > 0) {
-      const operationsRecords = data.operations.map(item => ({
-        cost_id: costId,
-        section: 'operations',
-        operation: item.operation,
-        time: item.time,
-        cost: parseFloat(item.cost) || 0,
-        total: parseFloat(item.total) || 0,
-        is_subtotal: item.isSubtotal || false
-      }));
-      await this.supabase.bulkInsert('cost_items', operationsRecords);
-    }
-
-    // Save PACKAGING data
-    if (data.packaging && data.packaging.length > 0) {
-      const packagingRecords = data.packaging.map(item => ({
-        cost_id: costId,
-        section: 'packaging',
-        type: item.type,
-        notes: item.notes,
-        cost: parseFloat(item.cost) || 0,
-        is_subtotal: item.isSubtotal || false
-      }));
-      await this.supabase.bulkInsert('cost_items', packagingRecords);
-    }
-
-    // Save OVERHEAD data
-    if (data.overhead && data.overhead.length > 0) {
-      const overheadRecords = data.overhead.map(item => ({
-        cost_id: costId,
-        section: 'overhead',
-        type: item.type,
-        notes: item.notes,
-        cost: parseFloat(item.cost) || 0,
-        is_subtotal: item.isSubtotal || false
-      }));
-      await this.supabase.bulkInsert('cost_items', overheadRecords);
-    }
-  }
-
-  /**
-   * Get beanie cost data by ID
-   */
-  async getBeanieCostData(costId: number): Promise<any> {
+  async saveBeanieData(data: BeanieData, tableName: string = 'beanie_costs'): Promise<any> {
     try {
-      // Get main cost record
-      const { data: costData, error: costError } = await this.supabase.supabase
-        .from('costs')
-        .select('*')
-        .eq('id', costId)
+      logger.info('Converting beanie data to database format...');
+      const dbRecord = this.convertToDatabaseRecord(data);
+      
+      logger.info('Saving beanie data to database:', {
+        table: tableName,
+        season: dbRecord.Season,
+        customer: dbRecord.Customer,
+        styleNumber: dbRecord.Style_Number
+      });
+
+      const { data: result, error } = await this.supabase
+        .from(tableName)
+        .insert(dbRecord)
+        .select()
         .single();
 
-      if (costError) throw costError;
+      if (error) {
+        logger.error('Database error:', error);
+        throw new Error(`Failed to save data: ${error.message}`);
+      }
 
-      // Get cost items
-      const { data: itemsData, error: itemsError } = await this.supabase.supabase
-        .from('cost_items')
-        .select('*')
-        .eq('cost_id', costId)
-        .order('section', { ascending: true });
-
-      if (itemsError) throw itemsError;
-
-      // Group items by section
-      const groupedItems = itemsData.reduce((acc: any, item: any) => {
-        if (!acc[item.section]) {
-          acc[item.section] = [];
-        }
-        acc[item.section].push(item);
-        return acc;
-      }, {});
-
-      return {
-        ...costData,
-        yarn: groupedItems.yarn || [],
-        fabric: groupedItems.fabric || [],
-        trim: groupedItems.trim || [],
-        knitting: groupedItems.knitting || [],
-        operations: groupedItems.operations || [],
-        packaging: groupedItems.packaging || [],
-        overhead: groupedItems.overhead || []
-      };
+      logger.info('Successfully saved beanie data to database:', result);
+      return result;
     } catch (error) {
-      logger.error('Error getting beanie cost data:', error);
-      throw new Error('Failed to retrieve beanie cost data');
+      logger.error('Error saving beanie data:', error);
+      throw error;
     }
   }
 
   /**
-   * Get all beanie cost records
+   * Get all beanie records from database
    */
-  async getAllBeanieCostData(): Promise<any[]> {
+  async getBeanieRecords(tableName: string = 'beanie_costs'): Promise<DatabaseRecord[]> {
     try {
-      const { data, error } = await this.supabase.supabase
-        .from('costs')
+      const { data, error } = await this.supabase
+        .from(tableName)
         .select('*')
-        .eq('product_type', 'beanie')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        logger.error('Database error:', error);
+        throw new Error(`Failed to fetch data: ${error.message}`);
+      }
+
       return data || [];
     } catch (error) {
-      logger.error('Error getting all beanie cost data:', error);
-      throw new Error('Failed to retrieve beanie cost data');
+      logger.error('Error fetching beanie records:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update existing beanie record
+   */
+  async updateBeanieData(id: string | number, data: BeanieData, tableName: string = 'beanie_costs'): Promise<any> {
+    try {
+      const dbRecord = this.convertToDatabaseRecord(data);
+      
+      const { data: result, error } = await this.supabase
+        .from(tableName)
+        .update(dbRecord)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        logger.error('Database error:', error);
+        throw new Error(`Failed to update data: ${error.message}`);
+      }
+
+      logger.info('Successfully updated beanie data:', result);
+      return result;
+    } catch (error) {
+      logger.error('Error updating beanie data:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete beanie record
+   */
+  async deleteBeanieData(id: string | number, tableName: string = 'beanie_costs'): Promise<boolean> {
+    try {
+      const { error } = await this.supabase
+        .from(tableName)
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        logger.error('Database error:', error);
+        throw new Error(`Failed to delete data: ${error.message}`);
+      }
+
+      logger.info('Successfully deleted beanie data');
+      return true;
+    } catch (error) {
+      logger.error('Error deleting beanie data:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Check if table exists and create if needed
+   */
+  async ensureTableExists(tableName: string = 'beanie_costs'): Promise<boolean> {
+    try {
+      // Try to query the table to see if it exists
+      const { error } = await this.supabase
+        .from(tableName)
+        .select('id')
+        .limit(1);
+
+      if (error && error.code === 'PGRST116') {
+        logger.info(`Table ${tableName} does not exist. Please create it in your Supabase dashboard.`);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      logger.error('Error checking table existence:', error);
+      return false;
     }
   }
 }

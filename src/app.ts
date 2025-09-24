@@ -9,6 +9,7 @@ import dataTableRoutes from './routes/dataTable';
 import importRoutes from './routes/import';
 import beanieImportRoutes from './routes/beanieImport';
 import ballcapsImportRoutes from './routes/ballcapsImport';
+import beanieDataRoutes from './routes/beanieData';
 import logger from './utils/logger';
 
 dotenv.config();
@@ -55,6 +56,7 @@ app.use('/api/datatable', dataTableRoutes);
 app.use('/api/import', importRoutes);
 app.use('/api/beanie', beanieImportRoutes);
 app.use('/api/ballcaps', ballcapsImportRoutes);
+app.use('/api/beanie-data', beanieDataRoutes);
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
