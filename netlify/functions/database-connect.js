@@ -73,7 +73,7 @@ exports.handler = async (event, context) => {
         message: 'Connected to Supabase successfully',
         connectionId: 'supabase-connection',
         database: 'Supabase',
-        tables: ['databank', 'beanie_costs'] // Add your actual table names
+        tables: ['databank', 'beanie_costs']
       })
     };
 
