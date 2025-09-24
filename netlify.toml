@@ -14,6 +14,9 @@
   
   # Build environment
   NODE_ENV = "production"
+  
+  # Disable secrets scanning for frontend keys
+  SECRETS_SCAN_ENABLED = "false"
 
 # Redirect rules for SPA routing
 [[redirects]]
