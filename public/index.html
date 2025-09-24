@@ -3110,6 +3110,12 @@
                 // Detect if running on localhost or Netlify
                 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
                 const apiUrl = isLocalhost ? '/api/database/connect' : '/.netlify/functions/database-connect';
+                console.log('🔍 Debug Info:', {
+                    hostname: window.location.hostname,
+                    isLocalhost: isLocalhost,
+                    apiUrl: apiUrl,
+                    fullUrl: window.location.href
+                });
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
