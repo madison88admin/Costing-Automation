@@ -3107,7 +3107,7 @@
                 };
 
                 console.log('Sending connection request...', config);
-                const response = await fetch('/api/database/connect', {
+                const response = await fetch('/.netlify/functions/database-connect', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(config)
@@ -3173,7 +3173,7 @@
             }
 
             try {
-                const response = await fetch('/api/database/connect', {
+                const response = await fetch('/.netlify/functions/database-connect', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(config)
@@ -3231,7 +3231,7 @@
                 console.log('Loading ALL data from Supabase with connection ID:', connectionId);
                 // Load ALL data from Supabase - no limit
                 const timestamp = new Date().getTime();
-                const response = await fetch(`/api/datatable/data/${connectionId}?table=databank&limit=999999&_t=${timestamp}`);
+                const response = await fetch(`/.netlify/functions/datatable-data?${connectionId}?table=databank&limit=999999&_t=${timestamp}`);
                 const result = await response.json();
                 
                 console.log('Fresh data loading result:', result);
@@ -3344,7 +3344,7 @@
             if (!tableName || !connectionId) return;
 
             try {
-                const response = await fetch(`/api/datatable/data/${connectionId}?table=${tableName}&limit=10`);
+                const response = await fetch(`/.netlify/functions/datatable-data?${connectionId}?table=${tableName}&limit=10`);
                 const result = await response.json();
                 
                 if (result.data) {
@@ -3791,7 +3791,7 @@
 
             try {
                 // Get just the count without loading data
-                const response = await fetch(`/api/datatable/data/${connectionId}?table=databank&limit=1`);
+                const response = await fetch(`/.netlify/functions/datatable-data?${connectionId}?table=databank&limit=1`);
                 const result = await response.json();
                 
                 if (result.total) {
@@ -5129,7 +5129,7 @@
                 showLoadingAnimation(`Loading FRESH data from Supabase and searching for ${filterType}: "${searchValue}"...`);
                 
                 // Load ALL data from Supabase
-                const response = await fetch(`/api/datatable/data/${connectionId}?table=databank&limit=999999`);
+                const response = await fetch(`/.netlify/functions/datatable-data?${connectionId}?table=databank&limit=999999`);
                 const result = await response.json();
                 
                 if (result.data && result.data.length > 0) {
