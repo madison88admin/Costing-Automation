@@ -1,0 +1,22 @@
+From 9ef6a4937624f83b6d65ec70453f4afea1ad7c43 Mon Sep 17 00:00:00 2001
+From: renren-3 <131635258+renren-3@users.noreply.github.com>
+Date: Wed, 24 Sep 2025 14:34:52 +0800
+Subject: [PATCH 20/22] Add Netlify Functions for API endpoints
+
+---
+ logs/combined.log | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/logs/combined.log b/logs/combined.log
+index eb52e23..a1258c7 100644
+--- a/logs/combined.log
++++ b/logs/combined.log
+@@ -1528,3 +1528,5 @@
+ {"level":"error","message":"Error saving beanie data: Failed to save data: Could not find the table 'public.beanie_costs' in the schema cache","service":"costing-automation","stack":"Error: Failed to save data: Could not find the table 'public.beanie_costs' in the schema cache\n    at BeanieDataService.saveBeanieData (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\src\\services\\beanieDataService.ts:176:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async <anonymous> (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\src\\routes\\beanieData.ts:38:20)","timestamp":"2025-09-24T06:07:45.118Z"}
+ {"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:31:35.022Z"}
+ {"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:31:36.323Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:31:46.269Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:32:43.266Z"}
+-- 
+2.51.0.windows.1
+

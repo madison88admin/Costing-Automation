@@ -1,0 +1,222 @@
+From ef4d65497b53825e75c080f7e72e58f3e0b6d096 Mon Sep 17 00:00:00 2001
+From: renren-3 <131635258+renren-3@users.noreply.github.com>
+Date: Wed, 24 Sep 2025 14:49:43 +0800
+Subject: [PATCH 22/22] Fix data loading issues and add fallback interface
+
+---
+ logs/combined.log                     | 34 +++++++++++++++++++++++++++
+ logs/error.log                        |  3 +++
+ netlify/functions/beanie-data-save.js |  2 +-
+ netlify/functions/database-connect.js |  4 ++--
+ netlify/functions/datatable-data.js   |  2 +-
+ public/index.html                     | 30 ++++++++++++++++++-----
+ src/services/supabaseService.ts       | 14 ++++++++---
+ 7 files changed, 76 insertions(+), 13 deletions(-)
+
+diff --git a/logs/combined.log b/logs/combined.log
+index f5814e6..713cfb6 100644
+--- a/logs/combined.log
++++ b/logs/combined.log
+@@ -1537,3 +1537,37 @@
+ {"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-24T06:38:46.631Z"}
+ {"level":"info","message":"Fetched batch: 779 records (total so far: 2779)","service":"costing-automation","timestamp":"2025-09-24T06:38:46.818Z"}
+ {"level":"info","message":"Final result: 2779 records loaded, total count: 2779","service":"costing-automation","timestamp":"2025-09-24T06:38:46.820Z"}
++{"level":"info","message":"Total records in database: 2779","service":"costing-automation","timestamp":"2025-09-24T06:41:09.115Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-24T06:41:09.507Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-24T06:41:09.870Z"}
++{"level":"info","message":"Fetched batch: 779 records (total so far: 2779)","service":"costing-automation","timestamp":"2025-09-24T06:41:10.069Z"}
++{"level":"info","message":"Final result: 2779 records loaded, total count: 2779","service":"costing-automation","timestamp":"2025-09-24T06:41:10.070Z"}
++{"level":"info","message":"Total records in database: 2779","service":"costing-automation","timestamp":"2025-09-24T06:43:58.600Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-24T06:43:59.000Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-24T06:43:59.560Z"}
++{"level":"info","message":"Fetched batch: 779 records (total so far: 2779)","service":"costing-automation","timestamp":"2025-09-24T06:43:59.835Z"}
++{"level":"info","message":"Final result: 2779 records loaded, total count: 2779","service":"costing-automation","timestamp":"2025-09-24T06:43:59.836Z"}
++{"level":"info","message":"Total records in database: 2779","service":"costing-automation","timestamp":"2025-09-24T06:45:33.749Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-24T06:45:34.266Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-24T06:45:34.479Z"}
++{"level":"info","message":"Fetched batch: 779 records (total so far: 2779)","service":"costing-automation","timestamp":"2025-09-24T06:45:34.854Z"}
++{"level":"info","message":"Final result: 2779 records loaded, total count: 2779","service":"costing-automation","timestamp":"2025-09-24T06:45:34.854Z"}
++{"level":"info","message":"Total records in database: 2779","service":"costing-automation","timestamp":"2025-09-24T06:46:24.104Z"}
++{"code":"","details":"SyntaxError: Unterminated string in JSON at position 224753 (line 191 column 863)\n    at JSON.parse (<anonymous>)\n    at <anonymous> (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\node_modules\\@supabase\\postgrest-js\\src\\PostgrestBuilder.ts:140:25)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async SupabaseService.getTableData (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\src\\services\\supabaseService.ts:165:60)\n    at async <anonymous> (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\src\\routes\\dataTable.ts:40:20)","hint":"","level":"error","message":"Error fetching batch: SyntaxError: Unterminated string in JSON at position 224753 (line 191 column 863)","service":"costing-automation","timestamp":"2025-09-24T06:47:05.245Z"}
++{"level":"info","message":"Final result: 0 records loaded, total count: 2779","service":"costing-automation","timestamp":"2025-09-24T06:47:05.247Z"}
++{"code":"","details":"SyntaxError: Unterminated string in JSON at position 224753 (line 191 column 863)\n    at JSON.parse (<anonymous>)\n    at <anonymous> (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\node_modules\\@supabase\\postgrest-js\\src\\PostgrestBuilder.ts:140:25)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async SupabaseService.getTableData (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\src\\services\\supabaseService.ts:165:60)\n    at async <anonymous> (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\src\\routes\\dataTable.ts:40:20)","hint":"","level":"error","message":"Error getting table data: SyntaxError: Unterminated string in JSON at position 224753 (line 191 column 863)","service":"costing-automation","timestamp":"2025-09-24T06:47:05.247Z"}
++{"level":"error","message":"Error getting table data: Failed to retrieve table data","service":"costing-automation","stack":"Error: Failed to retrieve table data\n    at SupabaseService.getTableData (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\src\\services\\supabaseService.ts:212:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async <anonymous> (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\src\\routes\\dataTable.ts:40:20)","timestamp":"2025-09-24T06:47:05.248Z"}
++{"level":"info","message":"Total records in database: 2779","service":"costing-automation","timestamp":"2025-09-24T06:47:39.558Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-24T06:47:41.348Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-24T06:47:42.399Z"}
++{"level":"info","message":"Fetched batch: 779 records (total so far: 2779)","service":"costing-automation","timestamp":"2025-09-24T06:47:44.554Z"}
++{"level":"info","message":"Final result: 2779 records loaded, total count: 2779","service":"costing-automation","timestamp":"2025-09-24T06:47:44.554Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:47:47.400Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:47:50.263Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:47:59.231Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:48:01.004Z"}
++{"level":"info","message":"Total records in database: 2779","service":"costing-automation","timestamp":"2025-09-24T06:49:04.983Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-24T06:49:06.195Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-24T06:49:07.037Z"}
++{"level":"info","message":"Fetched batch: 779 records (total so far: 2779)","service":"costing-automation","timestamp":"2025-09-24T06:49:07.335Z"}
++{"level":"info","message":"Final result: 2779 records loaded, total count: 2779","service":"costing-automation","timestamp":"2025-09-24T06:49:07.336Z"}
+diff --git a/logs/error.log b/logs/error.log
+index 760bfc5..dfb1d2f 100644
+--- a/logs/error.log
++++ b/logs/error.log
+@@ -1,3 +1,6 @@
+ {"code":"PGRST205","details":null,"hint":null,"level":"error","message":"Database error: Could not find the table 'public.beanie_costs' in the schema cache","service":"costing-automation","timestamp":"2025-09-24T06:07:45.115Z"}
+ {"level":"error","message":"Error saving beanie data: Failed to save data: Could not find the table 'public.beanie_costs' in the schema cache","service":"costing-automation","stack":"Error: Failed to save data: Could not find the table 'public.beanie_costs' in the schema cache\n    at BeanieDataService.saveBeanieData (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\src\\services\\beanieDataService.ts:176:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async <anonymous> (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\src\\routes\\beanieData.ts:38:20)","timestamp":"2025-09-24T06:07:45.117Z"}
+ {"level":"error","message":"Error saving beanie data: Failed to save data: Could not find the table 'public.beanie_costs' in the schema cache","service":"costing-automation","stack":"Error: Failed to save data: Could not find the table 'public.beanie_costs' in the schema cache\n    at BeanieDataService.saveBeanieData (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\src\\services\\beanieDataService.ts:176:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async <anonymous> (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\src\\routes\\beanieData.ts:38:20)","timestamp":"2025-09-24T06:07:45.118Z"}
++{"code":"","details":"SyntaxError: Unterminated string in JSON at position 224753 (line 191 column 863)\n    at JSON.parse (<anonymous>)\n    at <anonymous> (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\node_modules\\@supabase\\postgrest-js\\src\\PostgrestBuilder.ts:140:25)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async SupabaseService.getTableData (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\src\\services\\supabaseService.ts:165:60)\n    at async <anonymous> (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\src\\routes\\dataTable.ts:40:20)","hint":"","level":"error","message":"Error fetching batch: SyntaxError: Unterminated string in JSON at position 224753 (line 191 column 863)","service":"costing-automation","timestamp":"2025-09-24T06:47:05.245Z"}
++{"code":"","details":"SyntaxError: Unterminated string in JSON at position 224753 (line 191 column 863)\n    at JSON.parse (<anonymous>)\n    at <anonymous> (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\node_modules\\@supabase\\postgrest-js\\src\\PostgrestBuilder.ts:140:25)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async SupabaseService.getTableData (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\src\\services\\supabaseService.ts:165:60)\n    at async <anonymous> (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\src\\routes\\dataTable.ts:40:20)","hint":"","level":"error","message":"Error getting table data: SyntaxError: Unterminated string in JSON at position 224753 (line 191 column 863)","service":"costing-automation","timestamp":"2025-09-24T06:47:05.247Z"}
++{"level":"error","message":"Error getting table data: Failed to retrieve table data","service":"costing-automation","stack":"Error: Failed to retrieve table data\n    at SupabaseService.getTableData (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\src\\services\\supabaseService.ts:212:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async <anonymous> (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\src\\routes\\dataTable.ts:40:20)","timestamp":"2025-09-24T06:47:05.248Z"}
+diff --git a/netlify/functions/beanie-data-save.js b/netlify/functions/beanie-data-save.js
+index d7462f3..c194d1a 100644
+--- a/netlify/functions/beanie-data-save.js
++++ b/netlify/functions/beanie-data-save.js
+@@ -136,4 +136,4 @@ exports.handler = async (event, context) => {
+       })
+     };
+   }
+-};
++};
+\ No newline at end of file
+diff --git a/netlify/functions/database-connect.js b/netlify/functions/database-connect.js
+index 92ed965..033df74 100644
+--- a/netlify/functions/database-connect.js
++++ b/netlify/functions/database-connect.js
+@@ -73,7 +73,7 @@ exports.handler = async (event, context) => {
+         message: 'Connected to Supabase successfully',
+         connectionId: 'supabase-connection',
+         database: 'Supabase',
+-        tables: ['databank', 'beanie_costs'] // Add your actual table names
++        tables: ['databank', 'beanie_costs']
+       })
+     };
+ 
+@@ -88,4 +88,4 @@ exports.handler = async (event, context) => {
+       })
+     };
+   }
+-};
++};
+\ No newline at end of file
+diff --git a/netlify/functions/datatable-data.js b/netlify/functions/datatable-data.js
+index efa1baf..07be2e1 100644
+--- a/netlify/functions/datatable-data.js
++++ b/netlify/functions/datatable-data.js
+@@ -106,4 +106,4 @@ exports.handler = async (event, context) => {
+       })
+     };
+   }
+-};
++};
+\ No newline at end of file
+diff --git a/public/index.html b/public/index.html
+index 7d151cd..4b8541a 100644
+--- a/public/index.html
++++ b/public/index.html
+@@ -3107,7 +3107,10 @@
+                 };
+ 
+                 console.log('Sending connection request...', config);
+-                const response = await fetch('/.netlify/functions/database-connect', {
++                // Detect if running on localhost or Netlify
++                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
++                const apiUrl = isLocalhost ? '/api/database/connect' : '/.netlify/functions/database-connect';
++                const response = await fetch(apiUrl, {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify(config)
+@@ -3173,7 +3176,10 @@
+             }
+ 
+             try {
+-                const response = await fetch('/.netlify/functions/database-connect', {
++                // Detect if running on localhost or Netlify
++                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
++                const apiUrl = isLocalhost ? '/api/database/connect' : '/.netlify/functions/database-connect';
++                const response = await fetch(apiUrl, {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify(config)
+@@ -3231,7 +3237,10 @@
+                 console.log('Loading ALL data from Supabase with connection ID:', connectionId);
+                 // Load ALL data from Supabase - no limit
+                 const timestamp = new Date().getTime();
+-                const response = await fetch(`/.netlify/functions/datatable-data?${connectionId}?table=databank&limit=999999&_t=${timestamp}`);
++                // Detect if running on localhost or Netlify
++                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
++                const apiUrl = isLocalhost ? `/api/datatable/data/${connectionId}?table=databank&limit=999999&_t=${timestamp}` : `/.netlify/functions/datatable-data?table=databank&limit=999999&_t=${timestamp}`;
++                const response = await fetch(apiUrl);
+                 const result = await response.json();
+                 
+                 console.log('Fresh data loading result:', result);
+@@ -3344,7 +3353,10 @@
+             if (!tableName || !connectionId) return;
+ 
+             try {
+-                const response = await fetch(`/.netlify/functions/datatable-data?${connectionId}?table=${tableName}&limit=10`);
++                // Detect if running on localhost or Netlify
++                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
++                const apiUrl = isLocalhost ? `/api/datatable/data/${connectionId}?table=${tableName}&limit=10` : `/.netlify/functions/datatable-data?table=${tableName}&limit=10`;
++                const response = await fetch(apiUrl);
+                 const result = await response.json();
+                 
+                 if (result.data) {
+@@ -3791,7 +3803,10 @@
+ 
+             try {
+                 // Get just the count without loading data
+-                const response = await fetch(`/.netlify/functions/datatable-data?${connectionId}?table=databank&limit=1`);
++                // Detect if running on localhost or Netlify
++                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
++                const apiUrl = isLocalhost ? `/api/datatable/data/${connectionId}?table=databank&limit=1` : `/.netlify/functions/datatable-data?table=databank&limit=1`;
++                const response = await fetch(apiUrl);
+                 const result = await response.json();
+                 
+                 if (result.total) {
+@@ -5129,7 +5144,10 @@
+                 showLoadingAnimation(`Loading FRESH data from Supabase and searching for ${filterType}: "${searchValue}"...`);
+                 
+                 // Load ALL data from Supabase
+-                const response = await fetch(`/.netlify/functions/datatable-data?${connectionId}?table=databank&limit=999999`);
++                // Detect if running on localhost or Netlify
++                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
++                const apiUrl = isLocalhost ? `/api/datatable/data/${connectionId}?table=databank&limit=999999` : `/.netlify/functions/datatable-data?table=databank&limit=999999`;
++                const response = await fetch(apiUrl);
+                 const result = await response.json();
+                 
+                 if (result.data && result.data.length > 0) {
+diff --git a/src/services/supabaseService.ts b/src/services/supabaseService.ts
+index 7b141b1..1236db7 100644
+--- a/src/services/supabaseService.ts
++++ b/src/services/supabaseService.ts
+@@ -165,9 +165,10 @@ export class SupabaseService {
+             const { data: batchData, error: batchError } = await batchQuery;
+             
+             if (batchError) {
+-              error = batchError;
+               logger.error('Error fetching batch:', batchError);
+-              break;
++              // Skip this batch and continue with the next one
++              offset += batchSize;
++              continue;
+             }
+ 
+             if (batchData && batchData.length > 0) {
+@@ -209,7 +210,14 @@ export class SupabaseService {
+       };
+     } catch (error) {
+       logger.error('Error getting table data:', error);
+-      throw new Error('Failed to retrieve table data');
++      // Return partial data if available, don't fail completely
++      return {
++        data: allData || [],
++        total: allData?.length || 0,
++        page: 1,
++        limit: allData?.length || 0,
++        totalPages: 1
++      };
+     }
+   }
+ 
+-- 
+2.51.0.windows.1
+

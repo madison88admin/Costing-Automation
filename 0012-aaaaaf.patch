@@ -1,0 +1,201 @@
+From dc60d1f20cdb171f8e2717ede6ae2588e87e7639 Mon Sep 17 00:00:00 2001
+From: renren-3 <131635258+renren-3@users.noreply.github.com>
+Date: Mon, 22 Sep 2025 10:12:16 +0800
+Subject: [PATCH 12/22] aaaaaf
+
+---
+ public/index.html | 126 +++++++++++++++++++++++++++++-----------------
+ 1 file changed, 81 insertions(+), 45 deletions(-)
+
+diff --git a/public/index.html b/public/index.html
+index b97c9ad..04a548f 100644
+--- a/public/index.html
++++ b/public/index.html
+@@ -2605,6 +2605,17 @@
+             }
+         };
+ 
++        // Function to reinitialize drag & drop
++        window.reinitializeDragDrop = function() {
++            console.log('🔄 Reinitializing drag & drop...');
++            try {
++                initializeDragDrop();
++                console.log('✅ Drag & drop reinitialized successfully');
++            } catch (error) {
++                console.error('❌ Error reinitializing drag & drop:', error);
++            }
++        };
++
+         // Debug function to test drag and drop functionality
+         window.testDragDrop = function() {
+             console.log('🎯 TESTING DRAG & DROP FUNCTIONALITY');
+@@ -3750,36 +3761,56 @@
+ 
+         // Drag & Drop functionality for both templates
+         function initializeDragDrop() {
++            console.log('🚀 Initializing drag & drop functionality...');
+             const dragDropAreas = document.querySelectorAll('.drag-drop-area');
+             
+             console.log('Found drag drop areas:', dragDropAreas.length);
+             
++            if (dragDropAreas.length === 0) {
++                console.error('❌ No drag drop areas found!');
++                return;
++            }
++            
+             dragDropAreas.forEach((dragDropArea, index) => {
+-                console.log(`Initializing drag drop area ${index + 1}`);
++                console.log(`🔧 Initializing drag drop area ${index + 1}:`, dragDropArea);
++                
++                // Remove existing event listeners to prevent duplicates
++                const newDragDropArea = dragDropArea.cloneNode(true);
++                dragDropArea.parentNode.replaceChild(newDragDropArea, dragDropArea);
+                 
+                 // Prevent default drag behaviors
+                 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+-                    dragDropArea.addEventListener(eventName, preventDefaults, false);
++                    newDragDropArea.addEventListener(eventName, preventDefaults, false);
+                     document.body.addEventListener(eventName, preventDefaults, false);
+                 });
+ 
+                 // Highlight drop area when item is dragged over it
+                 ['dragenter', 'dragover'].forEach(eventName => {
+-                    dragDropArea.addEventListener(eventName, (e) => highlight(e, dragDropArea), false);
++                    newDragDropArea.addEventListener(eventName, (e) => highlight(e, newDragDropArea), false);
+                 });
+ 
+                 ['dragleave', 'drop'].forEach(eventName => {
+-                    dragDropArea.addEventListener(eventName, (e) => unhighlight(e, dragDropArea), false);
++                    newDragDropArea.addEventListener(eventName, (e) => unhighlight(e, newDragDropArea), false);
+                 });
+ 
+                 // Handle dropped files
+-                dragDropArea.addEventListener('drop', (e) => handleDrop(e, dragDropArea), false);
++                newDragDropArea.addEventListener('drop', (e) => handleDrop(e, newDragDropArea), false);
++                
++                // Handle click to select file
++                newDragDropArea.addEventListener('click', () => {
++                    console.log('Drag drop area clicked:', index);
++                    const fileInput = document.getElementById('hiddenFileInput');
++                    if (fileInput) {
++                        fileInput.click();
++                    } else {
++                        console.error('File input not found');
++                    }
++                });
+                 
+-                // Handle click to reset
+-                dragDropArea.addEventListener('click', resetDragDrop);
++                console.log(`✅ Drag drop area ${index + 1} initialized successfully`);
+             });
+             
+-            console.log('Drag & Drop initialized successfully for all areas');
++            console.log('✅ All drag & drop areas initialized successfully');
+         }
+ 
+         function preventDefaults(e) {
+@@ -3825,17 +3856,19 @@
+                 uploadedFile = file;
+                 console.log('File stored globally:', uploadedFile.name);
+                 
+-                // Update the specific drag drop area to show file name
+-                const dragDropText = dragDropArea.querySelector('.drag-drop-text');
+-                const dragDropIcon = dragDropArea.querySelector('.drag-drop-icon');
++                // Update ALL drag drop areas to show file name
++                const dragDropTexts = document.querySelectorAll('.drag-drop-text');
++                const dragDropIcons = document.querySelectorAll('.drag-drop-icon');
+                 
+-                if (dragDropText && dragDropIcon) {
+-                    dragDropIcon.textContent = '✅';
++                dragDropTexts.forEach(dragDropText => {
+                     dragDropText.innerHTML = `File: ${file.name}<br><small>Click to change</small>`;
+-                    console.log('Drag drop area updated with file name');
+-                } else {
+-                    console.error('Could not find drag drop text or icon elements');
+-                }
++                });
++                
++                dragDropIcons.forEach(dragDropIcon => {
++                    dragDropIcon.textContent = '✅';
++                });
++                
++                console.log('✅ All drag drop areas updated with file name');
+             } else {
+                 console.log('No files in drop event');
+             }
+@@ -4163,12 +4196,24 @@
+         document.addEventListener('DOMContentLoaded', function() {
+             console.log('🚀 DOM Content Loaded - Initializing drag & drop...');
+             
+-            try {
+-                initializeDragDrop();
+-                console.log('✅ Drag & drop initialized successfully');
+-            } catch (error) {
+-                console.error('❌ Error initializing drag & drop:', error);
+-            }
++            // Add a small delay to ensure all elements are rendered
++            setTimeout(() => {
++                try {
++                    initializeDragDrop();
++                    console.log('✅ Drag & drop initialized successfully');
++                } catch (error) {
++                    console.error('❌ Error initializing drag & drop:', error);
++                    // Try again after a longer delay
++                    setTimeout(() => {
++                        try {
++                            initializeDragDrop();
++                            console.log('✅ Drag & drop initialized on retry');
++                        } catch (retryError) {
++                            console.error('❌ Drag & drop initialization failed on retry:', retryError);
++                        }
++                    }, 1000);
++                }
++            }, 100);
+             
+             // Add file input for click functionality
+             try {
+@@ -4183,28 +4228,19 @@
+             } catch (error) {
+                 console.error('❌ Error creating file input:', error);
+             }
+-            
+-            // Make drag drop areas clickable
+-            try {
+-                const dragDropAreas = document.querySelectorAll('.drag-drop-area');
+-                console.log('Found drag drop areas for click:', dragDropAreas.length);
+-                
+-                dragDropAreas.forEach((area, index) => {
+-                    area.style.cursor = 'pointer';
+-                    area.onclick = function() {
+-                        console.log('Drag drop area clicked:', index);
+-                        const fileInput = document.getElementById('hiddenFileInput');
+-                        if (fileInput) {
+-                            fileInput.click();
+-                        } else {
+-                            console.error('File input not found');
+-                        }
+-                    };
+-                });
+-                console.log('✅ Drag drop areas made clickable');
+-            } catch (error) {
+-                console.error('❌ Error making drag drop areas clickable:', error);
+-            }
++        });
++
++        // Also initialize on window load as a fallback
++        window.addEventListener('load', function() {
++            console.log('🚀 Window Loaded - Fallback initialization...');
++            setTimeout(() => {
++                try {
++                    initializeDragDrop();
++                    console.log('✅ Drag & drop initialized on window load');
++                } catch (error) {
++                    console.error('❌ Error initializing drag & drop on window load:', error);
++                }
++            }, 500);
+         });
+ 
+         // Export table data to Excel
+-- 
+2.51.0.windows.1
+

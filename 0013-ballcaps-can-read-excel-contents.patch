@@ -1,0 +1,1343 @@
+From a0c41151acdd5eba23cf5a744878ad7571d77659 Mon Sep 17 00:00:00 2001
+From: renren-3 <131635258+renren-3@users.noreply.github.com>
+Date: Mon, 22 Sep 2025 11:25:02 +0800
+Subject: [PATCH 13/22] ballcaps can read excel contents
+
+---
+ logs/combined.log           | 195 ++++++++++++++
+ public/index.html           | 518 +++++++++++++++++++++++++++++++++---
+ public/js/ballcapsImport.js |  25 +-
+ public/js/beanieImport.js   |  10 +-
+ public/js/excelUtils.js     |   2 +-
+ public/test-dragdrop.html   | 237 +++++++++++++++++
+ 6 files changed, 936 insertions(+), 51 deletions(-)
+ create mode 100644 public/test-dragdrop.html
+
+diff --git a/logs/combined.log b/logs/combined.log
+index 2f0c552..b08d71d 100644
+--- a/logs/combined.log
++++ b/logs/combined.log
+@@ -496,3 +496,198 @@
+ {"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T01:25:48.612Z"}
+ {"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T01:25:48.931Z"}
+ {"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T01:25:48.932Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-22T01:39:51.097Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T01:39:59.379Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T01:39:59.749Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T01:40:00.425Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T01:40:00.729Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T01:40:00.731Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T01:41:44.899Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T01:41:45.867Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T01:41:47.255Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T01:41:48.270Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T01:41:48.271Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T01:43:31.120Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T01:43:31.550Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T01:43:32.411Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T01:43:32.997Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T01:43:32.999Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T01:45:15.740Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T01:45:16.774Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T01:45:18.505Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T01:45:19.639Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T01:45:19.639Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T01:45:35.144Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T01:45:35.674Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T01:45:36.191Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T01:45:36.465Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T01:45:36.466Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T01:48:11.980Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T01:48:13.186Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T01:48:13.546Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T01:48:14.031Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T01:48:14.032Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T01:49:28.602Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T01:49:29.039Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T01:49:29.325Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T01:49:29.526Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T01:49:29.527Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T01:49:44.609Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T01:49:45.029Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T01:49:45.467Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T01:49:45.875Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T01:49:45.876Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T01:51:43.421Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T01:51:44.563Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T01:51:45.417Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T01:51:45.724Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T01:51:45.725Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T01:55:12.217Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T01:55:12.966Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T01:55:13.383Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T01:55:13.711Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T01:55:13.712Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T02:01:04.004Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T02:01:04.999Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T02:01:05.634Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T02:01:05.926Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T02:01:05.927Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T02:11:50.685Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T02:11:51.316Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T02:11:51.750Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T02:11:52.113Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T02:11:52.114Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-22T02:15:10.431Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T02:15:20.740Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T02:15:21.171Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T02:15:21.880Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T02:15:22.273Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T02:15:22.273Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T02:19:16.453Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T02:19:16.846Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T02:19:17.187Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T02:19:17.563Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T02:19:17.564Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T02:21:19.684Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T02:21:20.103Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T02:21:21.429Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T02:21:21.870Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T02:21:21.871Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T02:22:48.410Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T02:22:50.174Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T02:22:50.599Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T02:22:50.924Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T02:22:50.926Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T02:27:18.407Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T02:27:18.947Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T02:27:19.275Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T02:27:19.547Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T02:27:19.547Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-22T02:28:41.781Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T02:29:04.081Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T02:29:04.642Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T02:29:04.933Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T02:29:05.074Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T02:29:05.074Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-22T02:40:06.809Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T02:40:46.809Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T02:40:47.349Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T02:40:47.740Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T02:40:48.044Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T02:40:48.045Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T02:41:44.592Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T02:41:46.998Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T02:41:48.638Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T02:41:49.200Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T02:41:49.201Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T02:41:53.265Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T02:41:54.444Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T02:41:55.511Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T02:41:56.057Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T02:41:56.057Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T02:44:14.971Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T02:44:15.594Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T02:44:16.593Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T02:44:16.942Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T02:44:16.943Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T02:48:31.988Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T02:48:32.487Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T02:48:32.761Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T02:48:33.023Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T02:48:33.024Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T02:48:54.753Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T02:48:55.078Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T02:48:55.549Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T02:48:55.749Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T02:48:55.749Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T02:50:26.094Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T02:50:26.695Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T02:50:26.938Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T02:50:27.187Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T02:50:27.188Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T02:51:56.581Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T02:51:58.136Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T02:51:58.410Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T02:51:58.592Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T02:51:58.592Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-22T02:56:07.366Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T02:56:10.911Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T02:56:12.272Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T02:56:13.205Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T02:56:13.598Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T02:56:13.598Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T02:57:51.895Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T02:57:53.093Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T02:57:53.401Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T02:57:53.702Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T02:57:53.703Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T03:00:09.004Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T03:00:09.354Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T03:00:10.193Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T03:00:10.561Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T03:00:10.562Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T03:00:42.907Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T03:00:43.346Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T03:00:44.126Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T03:00:44.487Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T03:00:44.487Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T03:06:59.555Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T03:07:00.220Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T03:07:01.159Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T03:07:01.507Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T03:07:01.508Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T03:10:09.083Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T03:10:10.330Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T03:10:10.855Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T03:10:11.117Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T03:10:11.118Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T03:11:14.407Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T03:11:15.196Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T03:11:16.938Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T03:11:17.649Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T03:11:17.649Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T03:12:24.165Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T03:12:24.576Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T03:12:25.816Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T03:12:26.192Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T03:12:26.192Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T03:14:24.386Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T03:14:25.040Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T03:14:25.373Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T03:14:25.575Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T03:14:25.575Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T03:16:42.528Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T03:16:43.657Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T03:16:44.256Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T03:16:44.532Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T03:16:44.533Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T03:18:23.305Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T03:18:24.520Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T03:18:25.399Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T03:18:25.987Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T03:18:25.988Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-22T03:19:46.283Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-22T03:19:48.633Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-22T03:19:49.295Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-22T03:19:49.569Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-22T03:19:49.570Z"}
+diff --git a/public/index.html b/public/index.html
+index 04a548f..1f4c965 100644
+--- a/public/index.html
++++ b/public/index.html
+@@ -741,6 +741,8 @@
+             margin: 20px auto 0;
+             transition: all 0.3s ease;
+             cursor: pointer;
++            pointer-events: auto;
++            z-index: 10;
+             position: relative;
+             overflow: hidden;
+         }
+@@ -2616,6 +2618,42 @@
+             }
+         };
+ 
++        // Function to manually initialize utilities
++        window.initializeUtilitiesNow = function() {
++            console.log('🔧 Manually initializing utilities...');
++            return initializeUtilities();
++        };
++
++        // Function to check drag & drop status
++        window.checkDragDropStatus = function() {
++            console.log('🔍 CHECKING DRAG & DROP STATUS');
++            console.log('==');
++            console.log('Document ready state:', document.readyState);
++            console.log('Window loaded:', window.performance.timing.loadEventEnd > 0);
++            
++            const dragDropAreas = document.querySelectorAll('.drag-drop-area');
++            console.log('Found drag drop areas:', dragDropAreas.length);
++            
++            dragDropAreas.forEach((area, index) => {
++                console.log(`Area ${index + 1}:`, {
++                    element: area,
++                    visible: area.offsetParent !== null,
++                    classes: area.className,
++                    hasEventListeners: area.onclick !== null
++                });
++            });
++            
++            // Check if file input exists
++            const fileInput = document.getElementById('hiddenFileInput');
++            console.log('File input exists:', !!fileInput);
++            
++            return {
++                areasFound: dragDropAreas.length,
++                fileInputExists: !!fileInput,
++                documentReady: document.readyState === 'complete'
++            };
++        };
++
+         // Debug function to test drag and drop functionality
+         window.testDragDrop = function() {
+             console.log('🎯 TESTING DRAG & DROP FUNCTIONALITY');
+@@ -3731,6 +3769,7 @@
+ 
+         // Show template based on product type selection
+         function showTemplate(productType) {
++            console.log('🎯 Showing template for product type:', productType);
+             const costBreakdown = document.getElementById('costBreakdown');
+             const ballcapsBreakdown = document.getElementById('ballcapsBreakdown');
+             const productSelection = document.querySelector('.product-selection-container');
+@@ -3740,12 +3779,25 @@
+                 costBreakdown.style.display = 'block';
+                 ballcapsBreakdown.style.display = 'none';
+                 productSelection.style.display = 'none';
++                console.log('✅ Beanie template shown');
+             } else if (productType === 'ballcaps') {
+                 // Show Template 2: Factory Cost Breakdown for BallCaps
+                 costBreakdown.style.display = 'none';
+                 ballcapsBreakdown.style.display = 'block';
+                 productSelection.style.display = 'none';
++                console.log('✅ Ballcaps template shown');
+             }
++            
++            // Reinitialize drag & drop after showing the template
++            setTimeout(() => {
++                console.log('🔄 Reinitializing drag & drop after template change...');
++                try {
++                    initializeDragDrop();
++                    console.log('✅ Drag & drop reinitialized after template change');
++                } catch (error) {
++                    console.error('❌ Error reinitializing drag & drop after template change:', error);
++                }
++            }, 100);
+         }
+ 
+         // Go back to product selection
+@@ -3762,12 +3814,17 @@
+         // Drag & Drop functionality for both templates
+         function initializeDragDrop() {
+             console.log('🚀 Initializing drag & drop functionality...');
+-            const dragDropAreas = document.querySelectorAll('.drag-drop-area');
++            console.log('Document body:', document.body);
++            console.log('Document ready state:', document.readyState);
+             
++            const dragDropAreas = document.querySelectorAll('.drag-drop-area');
+             console.log('Found drag drop areas:', dragDropAreas.length);
++            console.log('Drag drop areas:', dragDropAreas);
+             
+             if (dragDropAreas.length === 0) {
+                 console.error('❌ No drag drop areas found!');
++                console.error('Available elements with "drag" in class:', document.querySelectorAll('[class*="drag"]'));
++                console.error('Available elements with "drop" in class:', document.querySelectorAll('[class*="drop"]'));
+                 return;
+             }
+             
+@@ -3786,24 +3843,37 @@
+ 
+                 // Highlight drop area when item is dragged over it
+                 ['dragenter', 'dragover'].forEach(eventName => {
+-                    newDragDropArea.addEventListener(eventName, (e) => highlight(e, newDragDropArea), false);
++                    newDragDropArea.addEventListener(eventName, (e) => {
++                        console.log(`Drag ${eventName} detected on area ${index + 1}`);
++                        highlight(e, newDragDropArea);
++                    }, false);
+                 });
+ 
+                 ['dragleave', 'drop'].forEach(eventName => {
+-                    newDragDropArea.addEventListener(eventName, (e) => unhighlight(e, newDragDropArea), false);
++                    newDragDropArea.addEventListener(eventName, (e) => {
++                        console.log(`Drag ${eventName} detected on area ${index + 1}`);
++                        unhighlight(e, newDragDropArea);
++                    }, false);
+                 });
+ 
+                 // Handle dropped files
+                 newDragDropArea.addEventListener('drop', (e) => handleDrop(e, newDragDropArea), false);
+                 
+                 // Handle click to select file
+-                newDragDropArea.addEventListener('click', () => {
++                newDragDropArea.addEventListener('click', (e) => {
+                     console.log('Drag drop area clicked:', index);
++                    e.preventDefault();
++                    e.stopPropagation();
++                    
++                    // Test if click is working
++                    alert('Drag & drop area clicked! This means the click handler is working.');
++                    
+                     const fileInput = document.getElementById('hiddenFileInput');
+                     if (fileInput) {
+                         fileInput.click();
+                     } else {
+                         console.error('File input not found');
++                        alert('File input not found!');
+                     }
+                 });
+                 
+@@ -3856,6 +3926,9 @@
+                 uploadedFile = file;
+                 console.log('File stored globally:', uploadedFile.name);
+                 
++                // Clear previous data when new file is uploaded
++                clearPreviousData();
++                
+                 // Update ALL drag drop areas to show file name
+                 const dragDropTexts = document.querySelectorAll('.drag-drop-text');
+                 const dragDropIcons = document.querySelectorAll('.drag-drop-icon');
+@@ -3869,11 +3942,80 @@
+                 });
+                 
+                 console.log('✅ All drag drop areas updated with file name');
++                
++                // Automatically process the file
++                console.log('🔄 Auto-processing new file...');
++                setTimeout(() => {
++                    processImportedFile();
++                }, 100);
+             } else {
+                 console.log('No files in drop event');
+             }
+         }
+ 
++        // Function to clear previous data when new file is uploaded
++        function clearPreviousData() {
++            console.log('🧹 Clearing previous data...');
++            
++            // Clear global variables
++            window.lastExcelData = null;
++            window.fileContent = null;
++            window.currentFileType = null;
++            
++            // Clear any displayed data in the UI
++            const costBreakdown = document.getElementById('costBreakdown');
++            const ballcapsBreakdown = document.getElementById('ballcapsBreakdown');
++            
++            if (costBreakdown) {
++                // Clear beanie template data
++                const infoValues = costBreakdown.querySelectorAll('.info-value');
++                infoValues.forEach(element => {
++                    element.textContent = '';
++                });
++                
++                // Clear all cost sections
++                const costSections = costBreakdown.querySelectorAll('.cost-section');
++                costSections.forEach(section => {
++                    const rows = section.querySelectorAll('.cost-row:not(.header-row)');
++                    rows.forEach(row => {
++                        const cells = row.querySelectorAll('.cost-cell');
++                        cells.forEach(cell => {
++                            cell.textContent = '';
++                        });
++                    });
++                });
++            }
++            
++            if (ballcapsBreakdown) {
++                // Clear ballcaps template data
++                const infoValues = ballcapsBreakdown.querySelectorAll('.info-value');
++                infoValues.forEach(element => {
++                    element.textContent = '';
++                });
++                
++                // Clear all cost sections
++                const costSections = ballcapsBreakdown.querySelectorAll('.cost-section');
++                costSections.forEach(section => {
++                    const rows = section.querySelectorAll('.cost-row:not(.header-row)');
++                    rows.forEach(row => {
++                        const cells = row.querySelectorAll('.cost-cell');
++                        cells.forEach(cell => {
++                            cell.textContent = '';
++                        });
++                    });
++                });
++            }
++            
++            // Clear product images
++            const productImages = document.querySelectorAll('.product-image');
++            productImages.forEach(img => {
++                img.style.display = 'none';
++                img.src = '';
++            });
++            
++            console.log('✅ Previous data cleared');
++        }
++
+         function resetDragDrop() {
+             const dragDropText = document.querySelector('.drag-drop-text');
+             const dragDropIcon = document.querySelector('.drag-drop-icon');
+@@ -3891,6 +4033,9 @@
+                 console.log('File selected via click:', file.name, file.type);
+                 uploadedFile = file;
+                 
++                // Clear previous data when new file is uploaded
++                clearPreviousData();
++                
+                 // Update all drag drop areas to show file name
+                 const dragDropTexts = document.querySelectorAll('.drag-drop-text');
+                 const dragDropIcons = document.querySelectorAll('.drag-drop-icon');
+@@ -3902,6 +4047,12 @@
+                 dragDropIcons.forEach(dragDropIcon => {
+                     dragDropIcon.textContent = '✅';
+                 });
++                
++                // Automatically process the file
++                console.log('🔄 Auto-processing new file...');
++                setTimeout(() => {
++                    processImportedFile();
++                }, 100);
+             }
+         }
+ 
+@@ -3933,20 +4084,60 @@
+         // Store the uploaded file globally
+         let uploadedFile = null;
+ 
+-        // Initialize import utilities
+-        const excelUtils = new ExcelUtils();
+-        const beanieImporter = new TNFBeanieImporter();
+-        const ballcapsImporter = new TNFBallCapsImporter();
+-        
+         // Global variable to store raw Excel data for debugging
+         window.lastExcelData = null;
+ 
++        // Global utility variables
++        let excelUtils, beanieImporter, ballcapsImporter;
++
++        // Function to initialize utilities
++        function initializeUtilities() {
++            console.log('🔧 Initializing utilities...');
++            console.log('Available classes:', {
++                ExcelUtils: typeof ExcelUtils,
++                TNFBeanieImporter: typeof TNFBeanieImporter,
++                TNFBallCapsImporter: typeof TNFBallCapsImporter
++            });
++            
++            try {
++                if (typeof ExcelUtils !== 'undefined' && typeof TNFBeanieImporter !== 'undefined' && typeof TNFBallCapsImporter !== 'undefined') {
++                    excelUtils = new ExcelUtils();
++                    beanieImporter = new TNFBeanieImporter();
++                    ballcapsImporter = new TNFBallCapsImporter();
++                    console.log('✅ Utilities initialized successfully');
++                    return true;
++                } else {
++                    console.error('❌ Required classes not available:', {
++                        ExcelUtils: typeof ExcelUtils,
++                        TNFBeanieImporter: typeof TNFBeanieImporter,
++                        TNFBallCapsImporter: typeof TNFBallCapsImporter
++                    });
++                    console.log('🔄 Will retry initialization in 500ms...');
++                    return false;
++                }
++            } catch (error) {
++                console.error('❌ Error initializing utilities:', error);
++                console.error('Error details:', error.message, error.stack);
++                return false;
++            }
++        }
++
+         async function processImportedFile() {
+             if (!uploadedFile) {
+                 console.log('No file uploaded');
+                 return;
+             }
+ 
++            // Check if utilities are initialized
++            if (!excelUtils || !beanieImporter || !ballcapsImporter) {
++                console.log('🔄 Utilities not initialized, attempting to initialize...');
++                if (!initializeUtilities()) {
++                    console.error('❌ Failed to initialize utilities');
++                    alert('Import utilities not ready. Please refresh the page and try again.');
++                    return;
++                }
++            }
++
+             try {
+                 // Show loading state
+                 const importButton = document.querySelector('.import-template-button');
+@@ -4006,6 +4197,20 @@
+                 } catch (error) {
+                     console.error('Error processing file:', error);
+                 alert(`Error processing file: ${error.message}`);
++                
++                // Clear uploaded file state and reinitialize drag & drop even after error
++                uploadedFile = null;
++                console.log('🔄 Cleared uploaded file state after error');
++                
++                setTimeout(() => {
++                    console.log('🔄 Reinitializing drag & drop after error...');
++                    try {
++                        initializeDragDrop();
++                        console.log('✅ Drag & drop reinitialized after error');
++                    } catch (reinitError) {
++                        console.error('❌ Error reinitializing drag & drop after error:', reinitError);
++                    }
++                }, 500);
+             } finally {
+                 // Reset button and show success
+                 setTimeout(() => {
+@@ -4020,6 +4225,20 @@
+                     if (dragDropText) {
+                         dragDropText.innerHTML = 'Import successful!<br><small>Click to import another</small>';
+                     }
++                    
++                    // Clear uploaded file state and reinitialize drag & drop for next file upload
++                    uploadedFile = null;
++                    console.log('🔄 Cleared uploaded file state for next upload');
++                    
++                    setTimeout(() => {
++                        console.log('🔄 Reinitializing drag & drop after successful import...');
++                        try {
++                            initializeDragDrop();
++                            console.log('✅ Drag & drop reinitialized after import');
++                        } catch (error) {
++                            console.error('❌ Error reinitializing drag & drop after import:', error);
++                        }
++                    }, 500);
+                 }, 1000);
+             }
+         }
+@@ -4028,16 +4247,37 @@
+ 
+ 
+         function fillTemplateWithData(data) {
++            console.log('🔍 Debugging Beanie template population:');
++            console.log('- data.moq:', data.moq);
++            console.log('- data.costedQuantity:', data.costedQuantity);
++            console.log('- data keys:', Object.keys(data));
++            
++            // Map costedQuantity to moq if moq is not available
++            if (!data.moq && data.costedQuantity) {
++                data.moq = data.costedQuantity;
++                console.log('✅ Mapped costedQuantity to moq:', data.moq);
++            }
++            
+             // Fill Product Information
+             const productInfo = document.querySelector('.product-info');
+             if (productInfo) {
+                 const infoRows = productInfo.querySelectorAll('.info-row');
+-                const values = [data.customer, data.season, data.styleNumber, data.styleName, data.costedQuantity, data.leadtime];
++                const values = [data.customer, data.season, data.styleNumber, data.styleName, data.moq, data.leadtime];
++                const labels = ['customer', 'season', 'styleNumber', 'styleName', 'moq', 'leadtime'];
++                
++                console.log('- infoRows found:', infoRows.length);
++                console.log('- values:', values);
+                 
+                 infoRows.forEach((row, index) => {
+                     const valueSpan = row.querySelector('.info-value');
+-                    if (valueSpan && values[index]) {
+-                        valueSpan.textContent = values[index];
++                    const label = labels[index];
++                    const value = values[index];
++                    console.log(`- Processing ${label}:`, value);
++                    if (valueSpan && value) {
++                        valueSpan.textContent = value;
++                        console.log(`✅ Set ${label} to:`, value);
++                    } else {
++                        console.log(`❌ Skipped ${label} - no value or element`);
+                     }
+                 });
+             }
+@@ -4195,21 +4435,59 @@
+         // Initialize drag & drop when page loads
+         document.addEventListener('DOMContentLoaded', function() {
+             console.log('🚀 DOM Content Loaded - Initializing drag & drop...');
++            console.log('Document ready state:', document.readyState);
++            console.log('Window loaded:', document.readyState === 'complete');
+             
++            // Check which containers are visible
++            const costBreakdown = document.getElementById('costBreakdown');
++            const ballcapsBreakdown = document.getElementById('ballcapsBreakdown');
++            const productSelection = document.querySelector('.product-selection-container');
++            
++            console.log('Container visibility:', {
++                costBreakdown: costBreakdown ? costBreakdown.style.display : 'not found',
++                ballcapsBreakdown: ballcapsBreakdown ? ballcapsBreakdown.style.display : 'not found',
++                productSelection: productSelection ? productSelection.style.display : 'not found'
++            });
++            
++            // Initialize utilities with retry mechanism
++            let utilityRetryCount = 0;
++            const maxUtilityRetries = 10;
++            
++            function tryInitializeUtilities() {
++                if (initializeUtilities()) {
++                    console.log('✅ Utilities initialized successfully');
++                } else if (utilityRetryCount < maxUtilityRetries) {
++                    utilityRetryCount++;
++                    console.log(`🔄 Retrying utility initialization (${utilityRetryCount}/${maxUtilityRetries})...`);
++                    setTimeout(tryInitializeUtilities, 500);
++                } else {
++                    console.error('❌ Failed to initialize utilities after maximum retries');
++                }
++            }
++            
++            setTimeout(() => {
++                console.log('🔧 Starting utility initialization...');
++                tryInitializeUtilities();
++            }, 50);
++
+             // Add a small delay to ensure all elements are rendered
+             setTimeout(() => {
++                console.log('🔧 Attempting drag & drop initialization...');
+                 try {
+                     initializeDragDrop();
+                     console.log('✅ Drag & drop initialized successfully');
+                 } catch (error) {
+                     console.error('❌ Error initializing drag & drop:', error);
++                    console.error('Error details:', error.message, error.stack);
+                     // Try again after a longer delay
+                     setTimeout(() => {
++                        console.log('🔄 Retrying drag & drop initialization...');
+                         try {
+                             initializeDragDrop();
+                             console.log('✅ Drag & drop initialized on retry');
+                         } catch (retryError) {
+                             console.error('❌ Drag & drop initialization failed on retry:', retryError);
++                            console.error('Retry error details:', retryError.message, retryError.stack);
+                         }
+                     }, 1000);
+                 }
+@@ -4243,6 +4521,17 @@
+             }, 500);
+         });
+ 
++        // Force initialization after a delay to ensure everything is loaded
++        setTimeout(() => {
++            console.log('🔄 Force initialization after delay...');
++            try {
++                initializeDragDrop();
++                console.log('✅ Force initialization successful');
++            } catch (error) {
++                console.error('❌ Force initialization failed:', error);
++            }
++        }, 2000);
++
+         // Export table data to Excel
+         async function exportToExcel() {
+             try {
+@@ -6363,6 +6652,7 @@
+         function extractBallCapsData(data, extractedData) {
+             // Extract ballcaps specific data
+             console.log('Extracting BallCaps data...');
++            console.log('Data length:', data.length);
+             
+             // Look for ballcaps specific sections
+             let currentSection = '';
+@@ -6373,6 +6663,11 @@
+                 
+                 const firstCell = String(row[0] || '').trim();
+                 
++                // Debug: Log first few rows to see the data structure
++                if (i < 10) {
++                    console.log(`Row ${i}:`, firstCell, '|', row[1] || '');
++                }
++                
+                 // Detect sections
+                 if (firstCell === 'FABRIC') {
+                     currentSection = 'fabric';
+@@ -6403,12 +6698,16 @@
+                 }
+                 if (firstCell.includes('MOQ') && row[1]) {
+                     extractedData.moq = String(row[1]).trim();
++                    console.log('🔍 Found MOQ in row', i, ':', firstCell, '->', extractedData.moq);
+                 }
+                 if (firstCell.includes('Leadtime') && row[1]) {
+                     extractedData.leadtime = String(row[1]).trim();
+                 }
+             }
+             
++            console.log('🔍 Final extracted data:', extractedData);
++            console.log('MOQ value:', extractedData.moq);
++            
+             return extractedData;
+         }
+ 
+@@ -6568,9 +6867,28 @@
+             // Populate basic info
+             const infoValues = document.querySelectorAll('#ballcapsBreakdown .info-value');
+             const labels = ['customer', 'season', 'styleNumber', 'styleName', 'moq', 'leadtime'];
++            console.log('🔍 Debugging MOQ population:');
++            console.log('- infoValues found:', infoValues.length);
++            console.log('- labels:', labels);
++            console.log('- parsedData.moq:', parsedData.moq);
++            console.log('- parsedData.costedQuantity:', parsedData.costedQuantity);
++            console.log('- parsedData keys:', Object.keys(parsedData));
++            
++            // Map costedQuantity to moq if moq is not available
++            if (!parsedData.moq && parsedData.costedQuantity) {
++                parsedData.moq = parsedData.costedQuantity;
++                console.log('✅ Mapped costedQuantity to moq:', parsedData.moq);
++            }
++            
+             infoValues.forEach((element, index) => {
+-                if (labels[index] && parsedData[labels[index]]) {
+-                    element.textContent = parsedData[labels[index]];
++                const label = labels[index];
++                const value = parsedData[label];
++                console.log(`- Processing ${label}:`, value);
++                if (label && value) {
++                    element.textContent = value;
++                    console.log(`✅ Set ${label} to:`, value);
++                } else {
++                    console.log(`❌ Skipped ${label} - no value`);
+                 }
+             });
+             
+@@ -6605,55 +6923,183 @@
+             // Populate trim section
+             if (parsedData.trim && parsedData.trim.length > 0) {
+                 const trimRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(3) .cost-row:not(.header-row):not(.subtotal-row)');
++                let regularItemCount = 0;
++                let trimTotal = 0;
++                
+                 parsedData.trim.forEach((item, index) => {
+-                    if (trimRows[index]) {
+-                        const cells = trimRows[index].querySelectorAll('.cost-cell');
+-                        if (cells[0]) cells[0].textContent = item.material || '';
+-                        if (cells[1]) cells[1].textContent = item.consumption || '';
+-                        if (cells[2]) cells[2].textContent = item.price || '';
+-                        if (cells[3]) cells[3].textContent = item.cost || '';
++                    // Check if this is a subtotal row
++                    if (item.material && item.material.includes('TOTAL MATERIAL AND SUBMATERIALS COST')) {
++                        // Update the subtotal row
++                        const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(3) .subtotal-row');
++                        if (subtotalRow) {
++                            const cells = subtotalRow.querySelectorAll('.cost-cell');
++                            if (cells[0]) cells[0].textContent = item.material;
++                            if (cells[3]) cells[3].textContent = `$${item.cost}`;
++                            console.log('✅ Updated TRIM subtotal:', item.material, item.cost);
++                        }
++                    } else {
++                        // Regular item
++                        if (trimRows[regularItemCount]) {
++                            const cells = trimRows[regularItemCount].querySelectorAll('.cost-cell');
++                            if (cells[0]) cells[0].textContent = item.material || '';
++                            if (cells[1]) cells[1].textContent = item.consumption || '';
++                            if (cells[2]) cells[2].textContent = item.price || '';
++                            if (cells[3]) cells[3].textContent = item.cost || '';
++                            
++                            // Add to total for calculation
++                            const cost = parseFloat(item.cost) || 0;
++                            trimTotal += cost;
++                            regularItemCount++;
++                        }
+                     }
+                 });
++                
++                // If no subtotal row was found in data, calculate and display one
++                const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(3) .subtotal-row');
++                if (subtotalRow && trimTotal > 0) {
++                    const cells = subtotalRow.querySelectorAll('.cost-cell');
++                    if (cells[0] && !cells[0].textContent.includes('TOTAL')) {
++                        cells[0].textContent = 'SUB TOTAL';
++                        cells[3].textContent = `$${trimTotal.toFixed(2)}`;
++                        console.log('✅ Calculated TRIM subtotal:', trimTotal.toFixed(2));
++                    }
++                }
+             }
+             
+             // Populate operations section
+             if (parsedData.operations && parsedData.operations.length > 0) {
+                 const operationsRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(5) .cost-row:not(.header-row):not(.subtotal-row)');
++                let regularItemCount = 0;
++                let operationsTotal = 0;
++                
+                 parsedData.operations.forEach((item, index) => {
+-                    if (operationsRows[index]) {
+-                        const cells = operationsRows[index].querySelectorAll('.cost-cell');
+-                        if (cells[0]) cells[0].textContent = item.operation || '';
+-                        if (cells[1]) cells[1].textContent = item.time || '';
+-                        if (cells[2]) cells[2].textContent = item.cost || '';
+-                        if (cells[3]) cells[3].textContent = item.total || '';
++                    // Check if this is a subtotal row
++                    if (item.operation && (item.operation.includes('SUB TOTAL') || item.operation.includes('TOTAL'))) {
++                        // Update the subtotal row
++                        const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(5) .subtotal-row');
++                        if (subtotalRow) {
++                            const cells = subtotalRow.querySelectorAll('.cost-cell');
++                            if (cells[0]) cells[0].textContent = item.operation;
++                            if (cells[3]) cells[3].textContent = `$${item.total}`;
++                            console.log('✅ Updated OPERATIONS subtotal:', item.operation, item.total);
++                        }
++                    } else {
++                        // Regular item
++                        if (operationsRows[regularItemCount]) {
++                            const cells = operationsRows[regularItemCount].querySelectorAll('.cost-cell');
++                            if (cells[0]) cells[0].textContent = item.operation || '';
++                            if (cells[1]) cells[1].textContent = item.time || '';
++                            if (cells[2]) cells[2].textContent = item.cost || '';
++                            if (cells[3]) cells[3].textContent = item.total || '';
++                            
++                            // Add to total for calculation
++                            const cost = parseFloat(item.total) || 0;
++                            operationsTotal += cost;
++                            regularItemCount++;
++                        }
+                     }
+                 });
++                
++                // If no subtotal row was found in data, calculate and display one
++                const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(5) .subtotal-row');
++                if (subtotalRow && operationsTotal > 0) {
++                    const cells = subtotalRow.querySelectorAll('.cost-cell');
++                    if (cells[0] && !cells[0].textContent.includes('TOTAL')) {
++                        cells[0].textContent = 'SUB TOTAL';
++                        cells[3].textContent = `$${operationsTotal.toFixed(2)}`;
++                        console.log('✅ Calculated OPERATIONS subtotal:', operationsTotal.toFixed(2));
++                    }
++                }
+             }
+             
+             // Populate packaging section
+             if (parsedData.packaging && parsedData.packaging.length > 0) {
+                 const packagingRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(6) .cost-row:not(.header-row):not(.subtotal-row)');
++                let regularItemCount = 0;
++                let packagingTotal = 0;
++                
+                 parsedData.packaging.forEach((item, index) => {
+-                    if (packagingRows[index]) {
+-                        const cells = packagingRows[index].querySelectorAll('.cost-cell');
+-                        if (cells[0]) cells[0].textContent = item.type || '';
+-                        if (cells[1]) cells[1].textContent = item.notes || '';
+-                        if (cells[2]) cells[2].textContent = item.cost || '';
++                    // Check if this is a subtotal row
++                    if (item.type && (item.type.includes('SUB TOTAL') || item.type.includes('TOTAL'))) {
++                        // Update the subtotal row
++                        const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(6) .subtotal-row');
++                        if (subtotalRow) {
++                            const cells = subtotalRow.querySelectorAll('.cost-cell');
++                            if (cells[0]) cells[0].textContent = item.type;
++                            if (cells[2]) cells[2].textContent = `$${item.cost}`;
++                            console.log('✅ Updated PACKAGING subtotal:', item.type, item.cost);
++                        }
++                    } else {
++                        // Regular item
++                        if (packagingRows[regularItemCount]) {
++                            const cells = packagingRows[regularItemCount].querySelectorAll('.cost-cell');
++                            if (cells[0]) cells[0].textContent = item.type || '';
++                            if (cells[1]) cells[1].textContent = item.notes || '';
++                            if (cells[2]) cells[2].textContent = item.cost || '';
++                            
++                            // Add to total for calculation
++                            const cost = parseFloat(item.cost) || 0;
++                            packagingTotal += cost;
++                            regularItemCount++;
++                        }
+                     }
+                 });
++                
++                // If no subtotal row was found in data, calculate and display one
++                const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(6) .subtotal-row');
++                if (subtotalRow && packagingTotal > 0) {
++                    const cells = subtotalRow.querySelectorAll('.cost-cell');
++                    if (cells[0] && !cells[0].textContent.includes('TOTAL')) {
++                        cells[0].textContent = 'SUB TOTAL';
++                        cells[2].textContent = `$${packagingTotal.toFixed(2)}`;
++                        console.log('✅ Calculated PACKAGING subtotal:', packagingTotal.toFixed(2));
++                    }
++                }
+             }
+             
+             // Populate overhead section
+             if (parsedData.overhead && parsedData.overhead.length > 0) {
+                 const overheadRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(7) .cost-row:not(.header-row):not(.subtotal-row)');
++                let regularItemCount = 0;
++                let overheadTotal = 0;
++                
+                 parsedData.overhead.forEach((item, index) => {
+-                    if (overheadRows[index]) {
+-                        const cells = overheadRows[index].querySelectorAll('.cost-cell');
+-                        if (cells[0]) cells[0].textContent = item.type || '';
+-                        if (cells[1]) cells[1].textContent = item.notes || '';
+-                        if (cells[2]) cells[2].textContent = item.cost || '';
++                    // Check if this is a subtotal row
++                    if (item.type && (item.type.includes('SUB TOTAL') || item.type.includes('TOTAL'))) {
++                        // Update the subtotal row
++                        const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(7) .subtotal-row');
++                        if (subtotalRow) {
++                            const cells = subtotalRow.querySelectorAll('.cost-cell');
++                            if (cells[0]) cells[0].textContent = item.type;
++                            if (cells[2]) cells[2].textContent = `$${item.cost}`;
++                            console.log('✅ Updated OVERHEAD subtotal:', item.type, item.cost);
++                        }
++                    } else {
++                        // Regular item
++                        if (overheadRows[regularItemCount]) {
++                            const cells = overheadRows[regularItemCount].querySelectorAll('.cost-cell');
++                            if (cells[0]) cells[0].textContent = item.type || '';
++                            if (cells[1]) cells[1].textContent = item.notes || '';
++                            if (cells[2]) cells[2].textContent = item.cost || '';
++                            
++                            // Add to total for calculation
++                            const cost = parseFloat(item.cost) || 0;
++                            overheadTotal += cost;
++                            regularItemCount++;
++                        }
+                     }
+                 });
++                
++                // If no subtotal row was found in data, calculate and display one
++                const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(7) .subtotal-row');
++                if (subtotalRow && overheadTotal > 0) {
++                    const cells = subtotalRow.querySelectorAll('.cost-cell');
++                    if (cells[0] && !cells[0].textContent.includes('TOTAL')) {
++                        cells[0].textContent = 'SUB TOTAL';
++                        cells[2].textContent = `$${overheadTotal.toFixed(2)}`;
++                        console.log('✅ Calculated OVERHEAD subtotal:', overheadTotal.toFixed(2));
++                    }
++                }
+             }
+             
+             // Calculate and update subtotals for each section
+diff --git a/public/js/ballcapsImport.js b/public/js/ballcapsImport.js
+index 6f5b939..db35fa1 100644
+--- a/public/js/ballcapsImport.js
++++ b/public/js/ballcapsImport.js
+@@ -122,6 +122,11 @@ class TNFBallCapsImporter {
+                     console.log('🔍 Found TOTAL FACTORY COST');
+                 }
+                 
++                // Debug: Log current section and row data for operations/overhead
++                if (currentSection === 'operations' || currentSection === 'overhead') {
++                    console.log(`🔍 Current section: ${currentSection}, Row ${i}:`, firstCell, '|', row[1], '|', row[2], '|', row[3]);
++                }
++                
+                 // Detect header rows and set current section based on context
+                 if (firstCell.includes('(Name/Code/Description)Description') && row[1] && row[1].includes('CONSUMPTION')) {
+                     // This is a header row, determine section based on context
+@@ -176,12 +181,11 @@ class TNFBallCapsImporter {
+                 }
+                 
+                 if (currentSection === 'trim' && firstCell && 
+-                    !firstCell.includes('TRIM') && 
+                     !firstCell.includes('(Name/Code/Description)') && 
+                     !firstCell.includes('CONSUMPTION') && 
+                     !firstCell.includes('MATERIAL PRICE') && 
+                     !firstCell.includes('MATERIAL COST') && 
+-                    row[3] && !isNaN(parseFloat(row[3]))) {
++                    row[3] !== undefined && !isNaN(parseFloat(row[3]))) {
+                     result.trim.push({
+                         material: firstCell,
+                         consumption: String(row[1] || ''),
+@@ -191,19 +195,21 @@ class TNFBallCapsImporter {
+                     console.log('✅ TRIM:', firstCell, 'Cost:', row[3]);
+                 }
+                 
+-                if (currentSection === 'operations' && firstCell && !firstCell.includes('OPERATIONS') && !firstCell.includes('TIME') && !firstCell.includes('COST') && !firstCell.includes('SUB TOTAL') && !firstCell.includes('TOTAL')) {
+-                    if (row[3] && !isNaN(parseFloat(row[3]))) {
++                if (currentSection === 'operations' && !firstCell.includes('OPERATIONS') && !firstCell.includes('TIME') && !firstCell.includes('COST') && !firstCell.includes('SUB TOTAL') && !firstCell.includes('TOTAL')) {
++                    console.log(`🔍 Checking OPERATIONS: "${firstCell}" - Row:`, row, 'Cost in col 3:', row[3], 'Is number:', !isNaN(parseFloat(row[3])));
++                    // Check if this row has operations data (SMV in col 1, cost in col 3)
++                    if (row[1] && row[1].toString().trim() && row[3] && !isNaN(parseFloat(row[3]))) {
+                         result.operations.push({
+-                            operation: firstCell,
++                            operation: row[1].toString().trim() || 'Operation',
+                             time: String(row[1] || ''),
+                             cost: parseFloat(row[2] || 0).toFixed(2),
+                             total: parseFloat(row[3]).toFixed(2)
+                         });
+-                        console.log('✅ OPERATION:', firstCell, 'Cost:', row[3]);
++                        console.log('✅ OPERATION:', row[1], 'Time:', row[1], 'Cost:', row[3]);
+                     }
+                 }
+                 
+-                if (currentSection === 'packaging' && firstCell && !firstCell.includes('PACKAGING') && !firstCell.includes('Factory Notes') && !firstCell.includes('SUB TOTAL') && !firstCell.includes('TOTAL')) {
++                if (currentSection === 'packaging' && firstCell && !firstCell.includes('PACKAGING') && !firstCell.includes('Factory Notes') && !firstCell.includes('TOTAL')) {
+                     if (row[3] !== undefined && !isNaN(parseFloat(row[3]))) {
+                         result.packaging.push({
+                             type: firstCell,
+@@ -214,14 +220,15 @@ class TNFBallCapsImporter {
+                     }
+                 }
+                 
+-                if (currentSection === 'overhead' && firstCell && !firstCell.includes('OVERHEAD') && !firstCell.includes('PROFIT') && !firstCell.includes('Factory Notes') && !firstCell.includes('SUB TOTAL') && !firstCell.includes('TOTAL')) {
++                if (currentSection === 'overhead' && firstCell && !firstCell.includes('OVERHEAD/ PROFIT') && !firstCell.includes('Factory Notes') && !firstCell.includes('TOTAL')) {
++                    console.log(`🔍 Checking OVERHEAD: "${firstCell}" - Row:`, row, 'Cost in col 3:', row[3], 'Is number:', !isNaN(parseFloat(row[3])));
+                     if (row[3] !== undefined && !isNaN(parseFloat(row[3]))) {
+                         result.overhead.push({
+                             type: firstCell,
+                             notes: String(row[1] || ''),
+                             cost: parseFloat(row[3]).toFixed(2)
+                         });
+-                        console.log('✅ OVERHEAD:', firstCell, 'Cost:', row[3]);
++                        console.log('✅ OVERHEAD:', firstCell, 'Notes:', row[1], 'Cost:', row[3]);
+                     }
+                 }
+                 
+diff --git a/public/js/beanieImport.js b/public/js/beanieImport.js
+index c13927f..c67f7d7 100644
+--- a/public/js/beanieImport.js
++++ b/public/js/beanieImport.js
+@@ -460,16 +460,16 @@ class TNFBeanieImporter {
+     }
+ 
+     hasFabricData(row) {
+-        // FABRIC needs: material name and cost
++        // FABRIC needs: material name and cost (including zero cost items)
+         const hasMaterial = row[0] && String(row[0]).trim() && !String(row[0]).includes('FABRIC');
+-        const hasCost = row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) > 0;
++        const hasCost = row[3] !== undefined && !isNaN(parseFloat(row[3]));
+         return hasMaterial && hasCost;
+     }
+ 
+     hasTrimData(row) {
+-        // TRIM needs: material name and cost
+-        const hasMaterial = row[0] && String(row[0]).trim() && !String(row[0]).includes('TRIM');
+-        const hasCost = row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) > 0;
++        // TRIM needs: material name and cost (including zero cost items and subtotals)
++        const hasMaterial = row[0] && String(row[0]).trim();
++        const hasCost = row[3] !== undefined && !isNaN(parseFloat(row[3]));
+         return hasMaterial && hasCost;
+     }
+ 
+diff --git a/public/js/excelUtils.js b/public/js/excelUtils.js
+index f535b5a..f5f92d5 100644
+--- a/public/js/excelUtils.js
++++ b/public/js/excelUtils.js
+@@ -235,7 +235,7 @@ class ExcelUtils {
+                         const worksheetImages = this.extractImagesFromWorksheet(worksheet);
+                         
+                         // Combine workbook and worksheet images
+-                        const allImages = allImages.concat(worksheetImages);
++                        allImages = allImages.concat(worksheetImages);
+                         
+                         console.log(`Excel file processed: ${jsonData.length} rows, ${jsonData[0] ? jsonData[0].length : 0} columns`);
+                         console.log(`Found ${allImages.length} embedded images total`);
+diff --git a/public/test-dragdrop.html b/public/test-dragdrop.html
+new file mode 100644
+index 0000000..830ca3d
+--- /dev/null
++++ b/public/test-dragdrop.html
+@@ -0,0 +1,237 @@
++<!DOCTYPE html>
++<html lang="en">
++<head>
++    <meta charset="UTF-8">
++    <meta name="viewport" content="width=device-width, initial-scale=1.0">
++    <title>Drag & Drop Test</title>
++    <style>
++        body {
++            font-family: Arial, sans-serif;
++            padding: 20px;
++            background: #f5f5f5;
++        }
++        
++        .test-container {
++            max-width: 600px;
++            margin: 0 auto;
++            background: white;
++            padding: 20px;
++            border-radius: 10px;
++            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
++        }
++        
++        .drag-drop-area {
++            background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
++            border: 3px dashed #2196F3;
++            border-radius: 16px;
++            width: 200px;
++            height: 200px;
++            display: flex;
++            align-items: center;
++            justify-content: center;
++            margin: 20px auto;
++            transition: all 0.3s ease;
++            cursor: pointer;
++            pointer-events: auto;
++            z-index: 10;
++            position: relative;
++            overflow: hidden;
++        }
++        
++        .drag-drop-area:hover {
++            background: linear-gradient(135deg, #E1F5FE 0%, #B3E5FC 100%);
++            border-color: #1976D2;
++            transform: translateY(-3px) scale(1.02);
++            box-shadow: 0 8px 25px rgba(33, 150, 243, 0.3);
++        }
++        
++        .drag-drop-area.drag-over {
++            background: linear-gradient(135deg, #E8F5E8 0%, #C8E6C9 100%);
++            border-color: #4CAF50;
++            transform: scale(1.05);
++            box-shadow: 0 12px 30px rgba(76, 175, 80, 0.4);
++        }
++        
++        .drag-drop-content {
++            text-align: center;
++            color: #1976D2;
++            font-weight: 600;
++        }
++        
++        .drag-drop-icon {
++            font-size: 48px;
++            margin-bottom: 12px;
++        }
++        
++        .drag-drop-text {
++            font-size: 14px;
++        }
++        
++        .file-info {
++            margin-top: 20px;
++            padding: 15px;
++            background: #f8f9fa;
++            border-radius: 8px;
++            border-left: 4px solid #28a745;
++        }
++        
++        .console-log {
++            background: #000;
++            color: #0f0;
++            padding: 10px;
++            border-radius: 5px;
++            font-family: monospace;
++            font-size: 12px;
++            margin-top: 20px;
++            max-height: 200px;
++            overflow-y: auto;
++        }
++    </style>
++</head>
++<body>
++    <div class="test-container">
++        <h1>Drag & Drop Test</h1>
++        <p>This is a simple test to verify drag & drop functionality works.</p>
++        
++        <div class="drag-drop-area" id="testDragArea">
++            <div class="drag-drop-content">
++                <div class="drag-drop-icon">📁</div>
++                <div class="drag-drop-text">Drag & drop file here<br>or click to select</div>
++            </div>
++        </div>
++        
++        <div class="file-info" id="fileInfo" style="display: none;">
++            <h3>File Selected:</h3>
++            <p id="fileName"></p>
++            <p id="fileSize"></p>
++            <p id="fileType"></p>
++        </div>
++        
++        <div class="console-log" id="consoleLog">
++            <div>Console logs will appear here...</div>
++        </div>
++    </div>
++
++    <script>
++        // Console logging function
++        function logToConsole(message) {
++            const consoleDiv = document.getElementById('consoleLog');
++            const timestamp = new Date().toLocaleTimeString();
++            consoleDiv.innerHTML += `<div>[${timestamp}] ${message}</div>`;
++            consoleDiv.scrollTop = consoleDiv.scrollHeight;
++            console.log(message);
++        }
++
++        // Initialize drag & drop
++        function initializeDragDrop() {
++            logToConsole('🚀 Initializing drag & drop test...');
++            
++            const dragArea = document.getElementById('testDragArea');
++            const fileInfo = document.getElementById('fileInfo');
++            const fileName = document.getElementById('fileName');
++            const fileSize = document.getElementById('fileSize');
++            const fileType = document.getElementById('fileType');
++            
++            // Create file input
++            const fileInput = document.createElement('input');
++            fileInput.type = 'file';
++            fileInput.accept = '.xlsx,.xls,.xlsm,.csv';
++            fileInput.style.display = 'none';
++            fileInput.id = 'hiddenFileInput';
++            document.body.appendChild(fileInput);
++            
++            // Prevent default drag behaviors
++            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
++                dragArea.addEventListener(eventName, (e) => {
++                    e.preventDefault();
++                    e.stopPropagation();
++                    logToConsole(`Drag event: ${eventName}`);
++                });
++            });
++            
++            // Highlight on drag over
++            ['dragenter', 'dragover'].forEach(eventName => {
++                dragArea.addEventListener(eventName, (e) => {
++                    dragArea.classList.add('drag-over');
++                    logToConsole(`Drag over detected`);
++                });
++            });
++            
++            // Remove highlight on drag leave
++            ['dragleave', 'drop'].forEach(eventName => {
++                dragArea.addEventListener(eventName, (e) => {
++                    dragArea.classList.remove('drag-over');
++                    logToConsole(`Drag leave/drop detected`);
++                });
++            });
++            
++            // Handle file drop
++            dragArea.addEventListener('drop', (e) => {
++                logToConsole('File dropped!');
++                const files = e.dataTransfer.files;
++                if (files.length > 0) {
++                    handleFile(files[0]);
++                }
++            });
++            
++            // Handle click
++            dragArea.addEventListener('click', (e) => {
++                logToConsole('Drag area clicked!');
++                fileInput.click();
++            });
++            
++            // Handle file selection
++            fileInput.addEventListener('change', (e) => {
++                if (e.target.files.length > 0) {
++                    logToConsole('File selected via click!');
++                    handleFile(e.target.files[0]);
++                }
++            });
++            
++            logToConsole('✅ Drag & drop test initialized successfully');
++        }
++        
++        function handleFile(file) {
++            logToConsole(`File received: ${file.name} (${file.size} bytes, ${file.type})`);
++            
++            // Update UI
++            document.getElementById('fileName').textContent = `Name: ${file.name}`;
++            document.getElementById('fileSize').textContent = `Size: ${(file.size / 1024).toFixed(1)} KB`;
++            document.getElementById('fileType').textContent = `Type: ${file.type}`;
++            document.getElementById('fileInfo').style.display = 'block';
++            
++            // Update drag area
++            const icon = dragArea.querySelector('.drag-drop-icon');
++            const text = dragArea.querySelector('.drag-drop-text');
++            if (icon) icon.textContent = '✅';
++            if (text) text.innerHTML = `File: ${file.name}<br><small>Click to change</small>`;
++        }
++        
++        // Initialize when page loads
++        document.addEventListener('DOMContentLoaded', function() {
++            logToConsole('Page loaded, initializing...');
++            initializeDragDrop();
++        });
++        
++        // Test functions
++        window.testDragDrop = function() {
++            logToConsole('🧪 Testing drag & drop...');
++            const dragArea = document.getElementById('testDragArea');
++            logToConsole(`Drag area found: ${!!dragArea}`);
++            logToConsole(`Drag area visible: ${dragArea.offsetParent !== null}`);
++            logToConsole(`Drag area classes: ${dragArea.className}`);
++        };
++        
++        window.resetTest = function() {
++            logToConsole('🔄 Resetting test...');
++            const dragArea = document.getElementById('testDragArea');
++            const icon = dragArea.querySelector('.drag-drop-icon');
++            const text = dragArea.querySelector('.drag-drop-text');
++            if (icon) icon.textContent = '📁';
++            if (text) text.innerHTML = 'Drag & drop file here<br>or click to select';
++            document.getElementById('fileInfo').style.display = 'none';
++            document.getElementById('consoleLog').innerHTML = '<div>Console logs will appear here...</div>';
++        };
++    </script>
++</body>
++</html>
+-- 
+2.51.0.windows.1
+

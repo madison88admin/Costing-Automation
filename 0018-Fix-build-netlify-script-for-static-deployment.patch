@@ -1,0 +1,39 @@
+From a46fc2f3794d839cfeb4b9e2b255f60f11e481dc Mon Sep 17 00:00:00 2001
+From: renren-3 <131635258+renren-3@users.noreply.github.com>
+Date: Wed, 24 Sep 2025 14:23:00 +0800
+Subject: [PATCH 18/22] Fix build:netlify script for static deployment
+
+---
+ netlify.toml | 3 +++
+ package.json | 3 +--
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/netlify.toml b/netlify.toml
+index 90f58c1..fb83a39 100644
+--- a/netlify.toml
++++ b/netlify.toml
+@@ -1,4 +1,7 @@
+ [build]
++  # Build command - simple command for static site
++  command = "npm run build:netlify"
++  
+   # Directory to publish - Netlify will serve from the public folder
+   publish = "public"
+   
+diff --git a/package.json b/package.json
+index 29dd1e8..a1894e1 100644
+--- a/package.json
++++ b/package.json
+@@ -7,8 +7,7 @@
+     "start": "node dist/app.js",
+     "dev": "tsx watch src/app.ts",
+     "build": "tsc",
+-    "build:netlify": "tsc && npm run copy:public",
+-    "copy:public": "cp -r public/* dist/ 2>/dev/null || xcopy public\\* dist\\ /E /I /Y",
++    "build:netlify": "echo 'Static site - no build required'",
+     "test": "jest"
+   },
+   "keywords": [
+-- 
+2.51.0.windows.1
+
