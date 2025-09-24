@@ -5,7 +5,7 @@
   # Directory to publish - Netlify will serve from the public folder
   publish = "public"
   
-  # Functions directory for serverless functions (if needed)
+  # Functions directory for serverless functions
   functions = "netlify/functions"
 
 [build.environment]

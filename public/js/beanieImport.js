@@ -431,7 +431,7 @@ class TNFBeanieImporter {
                 totalFactoryCost: data.totalFactoryCost
             });
 
-            const response = await fetch('/api/beanie-data/save', {
+            const response = await fetch('/.netlify/functions/beanie-data-save', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
