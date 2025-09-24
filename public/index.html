@@ -1446,7 +1446,7 @@
                 </div>
                 <div class="form-group">
                     <label for="supabaseKey">Supabase Anon Key:</label>
-                    <input type="text" id="supabaseKey" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljYXZucHNwZ21jcnJxbXNwcnplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0NzEyMzMsImV4cCI6MjA3MzA0NzIzM30.5_-LPYwj5ks_KyCXwCae2mcbI-T7em48RsMiv4Oaurk" placeholder="Your anon key">
+                    <input type="text" id="supabaseKey" value="" placeholder="Your anon key">
                 </div>
             </div>
 
@@ -3121,10 +3121,18 @@
             document.getElementById('connectButton').style.display = 'none';
             
             try {
+                // Get Supabase credentials from the form or use defaults
+                const supabaseUrl = document.getElementById('supabaseUrl').value || 'https://icavnpspgmcrrqmsprze.supabase.co';
+                const supabaseKey = document.getElementById('supabaseKey').value || '';
+                
+                if (!supabaseKey) {
+                    throw new Error('Supabase key is required. Please enter it in the connection form.');
+                }
+                
                 const config = {
                     type: 'supabase',
-                    supabaseUrl: 'https://icavnpspgmcrrqmsprze.supabase.co',
-                    supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljYXZucHNwZ21jcnJxbXNwcnplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0NzEyMzMsImV4cCI6MjA3MzA0NzIzM30.5_-LPYwj5ks_KyCXwCae2mcbI-T7em48RsMiv4Oaurk'
+                    supabaseUrl: supabaseUrl,
+                    supabaseKey: supabaseKey
                 };
 
                 console.log('Sending connection request...', config);
