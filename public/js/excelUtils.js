@@ -151,7 +151,7 @@ class ExcelUtils {
                         
                         console.log('Available sheets:', workbook.SheetNames);
                         
-                        // Look for VANS or ROSSIGNOL data in any sheet
+                        // Look for the correct sheet with Fuzzy Wool Blend data
                         let targetSheet = null;
                         let targetSheetName = null;
                         let allImages = [];
@@ -163,76 +163,44 @@ class ExcelUtils {
                             allImages = allImages.concat(this.extractImagesFromWorkbook(workbook));
                         }
                         
+                        // Look for sheet with Fuzzy Wool Blend data
                         for (let i = 0; i < workbook.SheetNames.length; i++) {
                             const sheetName = workbook.SheetNames[i];
                             const worksheet = workbook.Sheets[sheetName];
                             const sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: true });
                             
-                            // Check if this sheet contains VANS or ROSSIGNOL data
-                            let hasVANS = false;
-                            let hasROSSIGNOL = false;
-                            let hasBANDIT = false;
-                            
-                            for (let j = 0; j < Math.min(20, sheetData.length); j++) {
-                                const row = sheetData[j];
-                                if (row) {
-                                    for (let k = 0; k < row.length; k++) {
-                                        const cell = String(row[k] || '').trim();
-                                        if (cell.includes('VANS')) {
-                                            hasVANS = true;
-                                            break;
-                                        }
-                                        if (cell.includes('ROSSIGNOL')) {
-                                            hasROSSIGNOL = true;
-                                        }
-                                        if (cell.includes('BANDIT CAP')) {
-                                            hasBANDIT = true;
-                                        }
-                                    }
-                                }
-                                if (hasVANS || hasBANDIT) break;
-                            }
-                            
-                            if (hasBANDIT) {
-                                targetSheet = worksheet;
+                            // Check if this sheet contains Fuzzy Wool Blend data
+                            const sheetString = JSON.stringify(sheetData).toLowerCase();
+                            if (sheetString.includes('fuzzy wool blend') || sheetString.includes('tnff27-014') || sheetString.includes('f27')) {
+                                console.log('🔍 Found Fuzzy Wool Blend data in sheet:', sheetName);
+                                targetSheet = sheetData;
                                 targetSheetName = sheetName;
-                                console.log('Found BANDIT CAP data in sheet:', sheetName);
                                 break;
-                            } else if (hasVANS) {
-                                targetSheet = worksheet;
-                                targetSheetName = sheetName;
-                                console.log('Found VANS data in sheet:', sheetName);
-                                break;
-                            } else if (hasROSSIGNOL && !targetSheet) {
-                                targetSheet = worksheet;
-                                targetSheetName = sheetName;
-                                console.log('Found ROSSIGNOL data in sheet:', sheetName);
                             }
                         }
                         
-                        // If no specific data found, use the first sheet
+                        // If no Fuzzy Wool Blend sheet found, use the first sheet as fallback
                         if (!targetSheet) {
-                            console.log('No specific data found, using first sheet:', workbook.SheetNames[0]);
-                            targetSheet = workbook.Sheets[workbook.SheetNames[0]];
-                            targetSheetName = workbook.SheetNames[0];
+                            console.log('🔍 No Fuzzy Wool Blend sheet found, using first sheet as fallback');
+                            const firstSheetName = workbook.SheetNames[0];
+                            const firstWorksheet = workbook.Sheets[firstSheetName];
+                            targetSheet = XLSX.utils.sheet_to_json(firstWorksheet, { header: 1, raw: true });
+                            targetSheetName = firstSheetName;
+                            console.log('Using first sheet as fallback:', firstSheetName);
                         }
                         
-                        const worksheet = targetSheet;
+                        // targetSheet is already converted to JSON data
+                        const jsonData = targetSheet;
                         
-                        if (!worksheet) {
-                            throw new Error('Could not read the target worksheet');
+                        if (!jsonData || jsonData.length === 0) {
+                            throw new Error('Could not read the target worksheet data');
                         }
                         
-                        // Convert to array format with optimized settings
-                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
-                            header: 1,
-                            defval: '',
-                            blankrows: false,
-                            raw: true  // Use raw values for speed
-                        });
-                        
-                        // Extract embedded images from the worksheet
-                        const worksheetImages = this.extractImagesFromWorksheet(worksheet);
+                        // Extract embedded images from the worksheet (if available)
+                        let worksheetImages = [];
+                        if (workbook.Sheets[targetSheetName]) {
+                            worksheetImages = this.extractImagesFromWorksheet(workbook.Sheets[targetSheetName]);
+                        }
                         
                         // Combine workbook and worksheet images
                         allImages = allImages.concat(worksheetImages);

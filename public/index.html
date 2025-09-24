@@ -475,6 +475,42 @@
             margin-bottom: 30px;
         }
 
+        .header-buttons {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .save-button {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+        }
+
+        .save-button:hover {
+            background: linear-gradient(135deg, #45a049, #3d8b40);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+        }
+
+        .save-button:active {
+            transform: translateY(0);
+        }
+
+        .save-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
         .header-content {
             display: flex;
             flex-direction: column;
@@ -1534,9 +1570,14 @@
                     <h2>Factory Cost Breakdown</h2>
                     <p class="template-description">Template for Beanie</p>
                 </div>
+                <div class="header-buttons">
+                    <button class="save-button" onclick="saveBeanieToDatabase()" id="saveBeanieBtn">
+                        💾 Save to Database
+                    </button>
                 <button class="back-button" onclick="goBackToSelection()">
                     ← Back to Selection
                 </button>
+                </div>
             </div>
             
             <div class="file-upload" onclick="document.getElementById('fileInput').click()">
@@ -1931,9 +1972,14 @@
                     <h2>Factory Cost Breakdown</h2>
                     <p class="template-description">Template for BallCaps</p>
                 </div>
+                <div class="header-buttons">
+                    <button class="save-button" onclick="saveBallCapsToDatabase()" id="saveBallCapsBtn">
+                        💾 Save to Database
+                    </button>
                 <button class="back-button" onclick="goBackToSelection()">
                     ← Back to Selection
                 </button>
+                </div>
             </div>
             
             <div class="cost-breakdown-content">
@@ -3029,6 +3075,15 @@
             console.log('Auto-connecting to Supabase...');
                 autoConnectToSupabase();
         });
+        
+        // Prevent database data from being displayed when Excel file is uploaded
+        window.addEventListener('beforeunload', function() {
+            // Clear any database data when leaving the page
+            if (window.currentParsedData) {
+                console.log('🧹 Clearing parsed data before page unload');
+                window.currentParsedData = null;
+            }
+        });
 
         // Show/hide database config based on type
         document.getElementById('dbType').addEventListener('change', function() {
@@ -3160,6 +3215,12 @@
         // Auto-load databank table data - LOAD ALL DATA FROM SUPABASE
         async function loadDatabankData() {
             console.log('🔄 Loading ALL data from Supabase database...');
+            
+            // Don't load database data if we're processing Excel
+            if (window.isProcessingExcel) {
+                console.log('🚫 Skipping database load - processing Excel file');
+                return;
+            }
             
             if (!connectionId) {
                 console.log('No connection ID available');
@@ -4147,17 +4208,28 @@
                 }
 
                 // Read file content using utility
+                console.log('🔍 DEBUGGING FILE READING:');
+                console.log('File name:', uploadedFile.name);
+                console.log('File size:', uploadedFile.size);
+                console.log('File type:', uploadedFile.type);
+                
                 const rawData = await excelUtils.readFileContent(uploadedFile);
                 
                 // Store raw data globally for debugging
                 window.lastExcelData = rawData;
                 console.log('Raw Excel data stored in window.lastExcelData for debugging');
+                console.log('Raw data type:', typeof rawData);
+                console.log('Raw data keys:', rawData ? Object.keys(rawData) : 'null');
+                console.log('Raw data length:', rawData && rawData.data ? rawData.data.length : 'no data');
                 
                 // Handle both old array format and new object format
                 let dataToProcess = rawData;
                 if (rawData && typeof rawData === 'object' && !Array.isArray(rawData)) {
                     dataToProcess = rawData.data || rawData;
                     console.log('Found', rawData.images ? rawData.images.length : 0, 'embedded images');
+                    console.log('Data to process type:', typeof dataToProcess);
+                    console.log('Data to process length:', dataToProcess ? dataToProcess.length : 'no data');
+                    console.log('First few rows of data:', dataToProcess ? dataToProcess.slice(0, 3) : 'no data');
                 }
                 
                 // Determine which importer to use based on file content
@@ -4170,18 +4242,58 @@
                     parsedData = ballcapsImporter.parseExcelData(rawData);
                 } else {
                     console.log('Using TNF Beanie Importer (default)');
-                    parsedData = beanieImporter.parseExcelData(rawData);
+                    console.log('🔍 DEBUGGING BEANIE PARSER:');
+                    console.log('Raw data being passed to parser:', rawData);
+                    console.log('Data to process:', dataToProcess);
+                    console.log('Data to process length:', dataToProcess ? dataToProcess.length : 'no data');
+                    
+                    try {
+                        parsedData = beanieImporter.parseExcelData(rawData);
+                        
+                        console.log('🔍 PARSER RESULT:');
+                        console.log('Parsed data type:', typeof parsedData);
+                        console.log('Parsed data keys:', parsedData ? Object.keys(parsedData) : 'null');
+                        console.log('Parsed data customer:', parsedData ? parsedData.customer : 'null');
+                        console.log('Parsed data season:', parsedData ? parsedData.season : 'null');
+                        console.log('Parsed data styleNumber:', parsedData ? parsedData.styleNumber : 'null');
+                        console.log('Parsed data styleName:', parsedData ? parsedData.styleName : 'null');
+                    } catch (parserError) {
+                        console.error('❌ PARSER ERROR:', parserError);
+                        alert('❌ Parser error: ' + parserError.message);
+                        return;
+                    }
                 }
                     
                 if (parsedData) {
+                    console.log('🔍 DEBUGGING PARSED DATA:');
                     console.log('Parsed data:', parsedData);
                     console.log('Data sections found:');
+                    console.log('- Customer:', parsedData.customer);
+                    console.log('- Season:', parsedData.season);
+                    console.log('- Style#:', parsedData.styleNumber);
+                    console.log('- Style Name:', parsedData.styleName);
+                    console.log('- YARN items:', parsedData.yarn?.length || 0);
                     console.log('- Fabric items:', parsedData.fabric?.length || 0);
                     console.log('- Embroidery items:', parsedData.embroidery?.length || 0);
                     console.log('- Trim items:', parsedData.trim?.length || 0);
                     console.log('- Operations items:', parsedData.operations?.length || 0);
                     console.log('- Packaging items:', parsedData.packaging?.length || 0);
                     console.log('- Overhead items:', parsedData.overhead?.length || 0);
+                    console.log('- Material Total:', parsedData.totalMaterialCost);
+                    console.log('- Factory Total:', parsedData.totalFactoryCost);
+                    
+                    // Check if parsed data is empty
+                    if (!parsedData.customer && !parsedData.season && !parsedData.styleNumber && !parsedData.styleName) {
+                        console.error('❌ PARSED DATA IS EMPTY! Excel file was not read correctly.');
+                        alert('❌ Excel file was not read correctly. Please check the file format and try again.');
+                        return;
+                    }
+                    
+                    // Clear any existing database data from the interface
+                    clearDatabaseData();
+                    
+                    // Prevent auto-loading of database data while processing Excel
+                    window.isProcessingExcel = true;
                     
                     // Populate the appropriate template based on detected type
                     if (templateType === 'ballcaps') {
@@ -4192,6 +4304,16 @@
                     
                     // Display product images if available
                     displayProductImages(parsedData.images);
+                    
+                    // Store parsed data globally for saving to database
+                    window.currentParsedData = parsedData;
+                    window.currentTemplateType = templateType;
+                    
+                    // Reset Excel processing flag
+                    window.isProcessingExcel = false;
+                } else {
+                    console.error('❌ NO PARSED DATA! Excel file parsing failed.');
+                    alert('❌ Excel file parsing failed. Please check the file format and try again.');
                 }
                     
                 } catch (error) {
@@ -4245,6 +4367,43 @@
 
 
 
+
+        // Clear any existing database data from the interface
+        function clearDatabaseData() {
+            console.log('🧹 Clearing database data from interface...');
+            
+            // Clear product information
+            const productInfo = document.querySelector('.product-info');
+            if (productInfo) {
+                const infoValues = productInfo.querySelectorAll('.info-value');
+                infoValues.forEach(value => {
+                    value.textContent = '';
+                });
+            }
+            
+            // Clear all cost sections
+            const sections = ['YARN', 'FABRIC', 'EMBROIDERY', 'TRIM', 'KNITTING', 'OPERATIONS', 'PACKAGING', 'OVERHEAD/ PROFIT'];
+            sections.forEach(sectionName => {
+                const section = document.querySelector(`[data-section="${sectionName}"]`);
+                if (section) {
+                    const rows = section.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                    rows.forEach(row => {
+                        const cells = row.querySelectorAll('.cost-cell');
+                        cells.forEach(cell => {
+                            cell.textContent = '';
+                        });
+                    });
+                }
+            });
+            
+            // Clear totals
+            const materialTotal = document.querySelector('.material-total');
+            const factoryTotal = document.querySelector('.factory-total');
+            if (materialTotal) materialTotal.textContent = '';
+            if (factoryTotal) factoryTotal.textContent = '';
+            
+            console.log('✅ Database data cleared from interface');
+        }
 
         function fillTemplateWithData(data) {
             console.log('🔍 Debugging Beanie template population:');
@@ -6327,8 +6486,8 @@
             console.log('Analyzing data for template detection...');
             
             // Check for Beanie template indicators
-            if (dataString.includes('yarn') || (dataString.includes('fabric') && dataString.includes('trim') && !dataString.includes('fabric/s'))) {
-                console.log('Beanie template detected based on YARN/FABRIC/TRIM sections');
+            if (dataString.includes('yarn') || dataString.includes('knitting') || (dataString.includes('fabric') && dataString.includes('trim') && !dataString.includes('fabric/s'))) {
+                console.log('Beanie template detected based on YARN/KNITTING/FABRIC/TRIM sections');
                 return 'beanie';
             }
             
@@ -7367,6 +7526,128 @@
         function showStatus(elementId, message, type) {
             const element = document.getElementById(elementId);
             element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        // Save beanie data to database
+        async function saveBeanieToDatabase() {
+            const saveBtn = document.getElementById('saveBeanieBtn');
+            const originalText = saveBtn.innerHTML;
+            
+            try {
+                // Check if we have parsed data
+                if (!window.currentParsedData) {
+                    alert('No data to save. Please upload and parse an Excel file first.');
+                    return;
+                }
+
+                // Check if we have a database connection
+                const connectionId = localStorage.getItem('currentConnectionId');
+                if (!connectionId) {
+                    alert('No database connection found. Please connect to database first.');
+                    return;
+                }
+
+                // Disable button and show loading
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '💾 Saving...';
+
+                // Prepare data for saving
+                const excelData = {
+                    data: window.currentParsedData,
+                    images: window.currentParsedData.images || []
+                };
+
+                // Send to backend
+                const response = await fetch('/api/beanie/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        connectionId: connectionId,
+                        excelData: excelData
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('✅ Beanie cost data saved successfully to database!');
+                    console.log('Saved data:', result.data);
+                } else {
+                    alert(`❌ Failed to save data: ${result.error || result.message}`);
+                    console.error('Save error:', result);
+                }
+
+            } catch (error) {
+                console.error('Error saving to database:', error);
+                alert(`❌ Error saving to database: ${error.message}`);
+            } finally {
+                // Re-enable button
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalText;
+            }
+        }
+
+        // Save ballcaps data to database
+        async function saveBallCapsToDatabase() {
+            const saveBtn = document.getElementById('saveBallCapsBtn');
+            const originalText = saveBtn.innerHTML;
+            
+            try {
+                // Check if we have parsed data
+                if (!window.currentParsedData) {
+                    alert('No data to save. Please upload and parse an Excel file first.');
+                    return;
+                }
+
+                // Check if we have a database connection
+                const connectionId = localStorage.getItem('currentConnectionId');
+                if (!connectionId) {
+                    alert('No database connection found. Please connect to database first.');
+                    return;
+                }
+
+                // Disable button and show loading
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '💾 Saving...';
+
+                // Prepare data for saving
+                const excelData = {
+                    data: window.currentParsedData,
+                    images: window.currentParsedData.images || []
+                };
+
+                // Send to backend
+                const response = await fetch('/api/ballcaps/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        connectionId: connectionId,
+                        excelData: excelData
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('✅ Ballcaps cost data saved successfully to database!');
+                    console.log('Saved data:', result.data);
+                } else {
+                    alert(`❌ Failed to save data: ${result.error || result.message}`);
+                    console.error('Save error:', result);
+                }
+
+            } catch (error) {
+                console.error('Error saving to database:', error);
+                alert(`❌ Error saving to database: ${error.message}`);
+            } finally {
+                // Re-enable button
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalText;
+            }
         }
 
     </script>
