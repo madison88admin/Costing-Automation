@@ -2924,6 +2924,27 @@
         let allTableData = [];
         let filteredData = null;
 
+        // Helper function to make API calls with fallback
+        async function apiCall(endpoint, options = {}) {
+            const netlifyUrl = `/.netlify/functions${endpoint}`;
+            const localUrl = `/api${endpoint}`;
+            
+            try {
+                // Try Netlify function first
+                console.log('🔄 Trying Netlify function:', netlifyUrl);
+                const response = await fetch(netlifyUrl, options);
+                
+                if (!response.ok) {
+                    throw new Error(`Netlify function failed: ${response.status}`);
+                }
+                return response;
+            } catch (netlifyError) {
+                console.log('⚠️ Netlify function failed, trying local API:', netlifyError.message);
+                // Fallback to local API
+                return await fetch(localUrl, options);
+            }
+        }
+
         // Intro loading animation
         let introHidden = false;
         function hideIntroOverlay() {
@@ -3107,18 +3128,21 @@
                 };
 
                 console.log('Sending connection request...', config);
-                // Detect if running on localhost or Netlify
-                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                const apiUrl = isLocalhost ? '/api/database/connect' : '/.netlify/functions/database-connect';
+                // Try Netlify functions first, then fallback to local API
+                const netlifyUrl = '/.netlify/functions/database-connect';
+                const localUrl = '/api/database/connect';
+                
                 console.log('🔍 Debug Info:', {
                     hostname: window.location.hostname,
-                    isLocalhost: isLocalhost,
-                    apiUrl: apiUrl,
+                    isLocalhost: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1',
+                    netlifyUrl: netlifyUrl,
+                    localUrl: localUrl,
                     fullUrl: window.location.href,
                     timestamp: new Date().toISOString()
                 });
                 console.log('🚀 FORCE DEBUG - This should appear if deployment updated!');
-                const response = await fetch(apiUrl, {
+                
+                const response = await apiCall('/database-connect', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(config)
@@ -3213,7 +3237,7 @@
             if (!connectionId) return;
 
             try {
-                const response = await fetch(`/api/database/tables/${connectionId}`);
+                const response = await apiCall(`/database-tables?connectionId=${connectionId}`);
                 const result = await response.json();
                 
                 if (result.tables) {
@@ -3333,7 +3357,7 @@
             if (!connectionId) return;
 
             try {
-                const response = await fetch(`/api/database/table-info/${connectionId}/${tableName}`);
+                const response = await apiCall(`/database-table-info?connectionId=${connectionId}&tableName=${tableName}`);
                 const result = await response.json();
                 
                 let html = `<h3>Table: ${tableName}</h3>`;
@@ -7050,14 +7074,9 @@
                     existingData = [];
                 }
                 
-                const response = await fetch(`/api/datatable/query/${connectionId}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        table: 'databank',
-                        select: 'season, customer, style_number, style_name',
-                        limit: 999999
-                    })
+                const response = await apiCall(`/datatable-data?table=databank&limit=999999`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
                 });
 
                 const result = await response.json();
@@ -7639,7 +7658,7 @@
                 };
 
                 // Send to backend
-                const response = await fetch('/api/beanie/save', {
+                const response = await apiCall('/beanie-data-save', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -7700,7 +7719,7 @@
                 };
 
                 // Send to backend
-                const response = await fetch('/api/ballcaps/save', {
+                const response = await apiCall('/ballcaps-data-save', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
