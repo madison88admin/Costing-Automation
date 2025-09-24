@@ -3141,6 +3141,8 @@
                     timestamp: new Date().toISOString()
                 });
                 console.log('🚀 FORCE DEBUG - This should appear if deployment updated!');
+                console.log('🔥 NEW DEPLOYMENT TEST - If you see this, the deployment updated!');
+                console.log('📅 Deployment timestamp:', new Date().toISOString());
                 
                 const response = await apiCall('/database-connect', {
                     method: 'POST',
