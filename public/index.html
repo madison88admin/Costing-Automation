@@ -3114,8 +3114,10 @@
                     hostname: window.location.hostname,
                     isLocalhost: isLocalhost,
                     apiUrl: apiUrl,
-                    fullUrl: window.location.href
+                    fullUrl: window.location.href,
+                    timestamp: new Date().toISOString()
                 });
+                console.log('🚀 FORCE DEBUG - This should appear if deployment updated!');
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
