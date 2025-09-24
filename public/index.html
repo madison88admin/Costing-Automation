@@ -1424,10 +1424,13 @@
         <div class="header">
             <img src="MadisonWhiteLogo.png" alt="Madison Logo" class="nav-logo">
             <h1 class="header-title">Costing Department</h1>
+            <button id="showConnectionBtn" class="btn btn-primary" style="margin-left: auto; background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                🔗 Database Connection
+            </button>
         </div>
 
-        <!-- Database Connection Section - Hidden -->
-        <div class="section" style="display: none;">
+        <!-- Database Connection Section -->
+        <div class="section" id="connectionSection">
             <h2>Database Connection</h2>
             <div class="form-group">
                 <label for="dbType">Database Type:</label>
@@ -1446,7 +1449,7 @@
                 </div>
                 <div class="form-group">
                     <label for="supabaseKey">Supabase Anon Key:</label>
-                    <input type="text" id="supabaseKey" value="" placeholder="Your anon key">
+                    <input type="text" id="supabaseKey" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljYXZucHNwZ21jcnJxbXNwcnplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0NzEyMzMsImV4cCI6MjA3MzA0NzIzM30.5_-LPYwj5ks_KyCXwCae2mcbI-T7em48RsMiv4Oaurk" placeholder="Your anon key">
                 </div>
             </div>
 
@@ -2944,6 +2947,18 @@
                 return await fetch(localUrl, options);
             }
         }
+
+        // Show connection form when button is clicked
+        document.addEventListener('DOMContentLoaded', function() {
+            const showConnectionBtn = document.getElementById('showConnectionBtn');
+            const connectionSection = document.getElementById('connectionSection');
+            
+            if (showConnectionBtn && connectionSection) {
+                showConnectionBtn.addEventListener('click', function() {
+                    connectionSection.style.display = connectionSection.style.display === 'none' ? 'block' : 'none';
+                });
+            }
+        });
 
         // Intro loading animation
         let introHidden = false;
