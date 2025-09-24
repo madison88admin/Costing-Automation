@@ -1,7 +1,4 @@
 [build]
-  # Build command - this will build your TypeScript and prepare the app
-  command = "npm run build"
-  
   # Directory to publish - Netlify will serve from the public folder
   publish = "public"
   
@@ -22,12 +19,12 @@
   to = "/index.html"
   status = 200
 
-# API proxy rules (if you want to proxy API calls to your backend)
-[[redirects]]
-  from = "/api/*"
-  to = "https://your-backend-url.herokuapp.com/api/:splat"
-  status = 200
-  force = true
+# API proxy rules (uncomment when you have a backend deployed)
+# [[redirects]]
+#   from = "/api/*"
+#   to = "https://your-backend-url.herokuapp.com/api/:splat"
+#   status = 200
+#   force = true
 
 # Security headers
 [[headers]]
