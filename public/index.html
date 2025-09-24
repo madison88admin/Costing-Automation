@@ -1426,8 +1426,8 @@
             <h1 class="header-title">Costing Department</h1>
         </div>
 
-        <!-- Database Connection Section -->
-        <div class="section" id="connectionSection">
+        <!-- Database Connection Section - Hidden -->
+        <div class="section" style="display: none;">
             <h2>Database Connection</h2>
             <div class="form-group">
                 <label for="dbType">Database Type:</label>
@@ -2925,9 +2925,9 @@
         let filteredData = null;
 
         // Helper function to make API calls with fallback
-        async function apiCall(endpoint, options = {}) {
-            const netlifyUrl = `/.netlify/functions${endpoint}`;
-            const localUrl = `/api${endpoint}`;
+        async function apiCall(netlifyEndpoint, localEndpoint, options = {}) {
+            const netlifyUrl = `/.netlify/functions${netlifyEndpoint}`;
+            const localUrl = `/api${localEndpoint}`;
             
             try {
                 // Try Netlify function first
@@ -3144,7 +3144,7 @@
                 console.log('🔥 NEW DEPLOYMENT TEST - If you see this, the deployment updated!');
                 console.log('📅 Deployment timestamp:', new Date().toISOString());
                 
-                const response = await apiCall('/database-connect', {
+                const response = await apiCall('/database-connect', '/database/connect', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(config)
@@ -3239,7 +3239,7 @@
             if (!connectionId) return;
 
             try {
-                const response = await apiCall(`/database-tables?connectionId=${connectionId}`);
+                const response = await apiCall(`/database-tables?connectionId=${connectionId}`, `/database/tables/${connectionId}`);
                 const result = await response.json();
                 
                 if (result.tables) {
@@ -3359,7 +3359,7 @@
             if (!connectionId) return;
 
             try {
-                const response = await apiCall(`/database-table-info?connectionId=${connectionId}&tableName=${tableName}`);
+                const response = await apiCall(`/database-table-info?connectionId=${connectionId}&tableName=${tableName}`, `/database/table-info/${connectionId}/${tableName}`);
                 const result = await response.json();
                 
                 let html = `<h3>Table: ${tableName}</h3>`;
@@ -7076,9 +7076,14 @@
                     existingData = [];
                 }
                 
-                const response = await apiCall(`/datatable-data?table=databank&limit=999999`, {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json' }
+                const response = await apiCall(`/datatable-data?table=databank&limit=999999`, `/datatable/query/${connectionId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        table: 'databank',
+                        select: 'season, customer, style_number, style_name',
+                        limit: 999999
+                    })
                 });
 
                 const result = await response.json();
@@ -7660,7 +7665,7 @@
                 };
 
                 // Send to backend
-                const response = await apiCall('/beanie-data-save', {
+                const response = await apiCall('/beanie-data-save', '/beanie/save', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -7721,7 +7726,7 @@
                 };
 
                 // Send to backend
-                const response = await apiCall('/ballcaps-data-save', {
+                const response = await apiCall('/ballcaps-data-save', '/ballcaps/save', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
