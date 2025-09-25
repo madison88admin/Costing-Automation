@@ -1,0 +1,1104 @@
+From 2634553a88eac40aba7890240d20a89ff22f1cdd Mon Sep 17 00:00:00 2001
+From: renren-3 <131635258+renren-3@users.noreply.github.com>
+Date: Wed, 24 Sep 2025 14:13:03 +0800
+Subject: [PATCH 16/22] Add Netlify deployment
+
+---
+ NETLIFY_DEPLOYMENT.md             | 172 ++++++++++++
+ logs/combined.log                 |  21 ++
+ netlify-env.example               |  11 +
+ netlify.toml                      |  65 +++++
+ package.json                      |   2 +
+ public/_redirects                 |   5 +
+ public/index.html                 |  55 ++++
+ public/js/beanieImport.js         |  42 +++
+ src/app.ts                        |   2 +
+ src/routes/beanieData.ts          | 133 ++++++++++
+ src/services/beanieDataService.ts | 417 ++++++++++++++++--------------
+ 11 files changed, 732 insertions(+), 193 deletions(-)
+ create mode 100644 NETLIFY_DEPLOYMENT.md
+ create mode 100644 netlify-env.example
+ create mode 100644 netlify.toml
+ create mode 100644 public/_redirects
+ create mode 100644 src/routes/beanieData.ts
+
+diff --git a/NETLIFY_DEPLOYMENT.md b/NETLIFY_DEPLOYMENT.md
+new file mode 100644
+index 0000000..00b9214
+--- /dev/null
++++ b/NETLIFY_DEPLOYMENT.md
+@@ -0,0 +1,172 @@
++# Netlify Deployment Guide for Costing Automation
++
++This guide will help you deploy your Costing Automation project on Netlify.
++
++## Prerequisites
++
++1. **GitHub Account**: Your code should be in a GitHub repository
++2. **Netlify Account**: Sign up at [netlify.com](https://netlify.com)
++3. **Environment Variables**: Have your production environment variables ready
++
++## Deployment Options
++
++### Option 1: Deploy Frontend Only (Recommended for Static Sites)
++
++Since your project has both frontend and backend components, you have two deployment strategies:
++
++#### For Frontend-Only Deployment:
++
++1. **Connect to GitHub**:
++   - Go to [Netlify Dashboard](https://app.netlify.com)
++   - Click "New site from Git"
++   - Choose GitHub and select your repository
++   - Select the branch (usually `main` or `master`)
++
++2. **Build Settings**:
++   - Build command: `npm run build:netlify`
++   - Publish directory: `public`
++   - Node version: 18
++
++3. **Environment Variables**:
++   - Go to Site settings > Environment variables
++   - Add your production environment variables:
++     ```
++     NODE_ENV=production
++     SUPABASE_URL=your_supabase_url
++     SUPABASE_ANON_KEY=your_supabase_anon_key
++     ```
++
++4. **Deploy**:
++   - Click "Deploy site"
++   - Netlify will build and deploy your site
++
++### Option 2: Full-Stack Deployment (Frontend + Backend)
++
++For a full-stack deployment, you'll need to deploy your backend separately:
++
++#### Backend Deployment (Heroku/Railway/Vercel):
++1. Deploy your Express.js backend to a service like:
++   - **Heroku**: Free tier available
++   - **Railway**: Modern alternative to Heroku
++   - **Vercel**: Good for serverless functions
++   - **Render**: Free tier available
++
++2. Update the API proxy in `netlify.toml`:
++   ```toml
++   [[redirects]]
++   from = "/api/*"
++   to = "https://your-backend-url.herokuapp.com/api/:splat"
++   status = 200
++   force = true
++   ```
++
++#### Frontend Deployment (Netlify):
++1. Follow the frontend-only deployment steps above
++2. Update the `_redirects` file in your `public` folder:
++   ```
++   /api/*    https://your-backend-url.herokuapp.com/api/:splat    200
++   ```
++
++## Step-by-Step Deployment
++
++### 1. Prepare Your Repository
++
++Make sure your code is committed and pushed to GitHub:
++
++```bash
++git add .
++git commit -m "Prepare for Netlify deployment"
++git push origin main
++```
++
++### 2. Deploy on Netlify
++
++1. **Go to Netlify Dashboard**
++   - Visit [app.netlify.com](https://app.netlify.com)
++   - Sign in with your GitHub account
++
++2. **Create New Site**
++   - Click "New site from Git"
++   - Choose "GitHub" as your Git provider
++   - Authorize Netlify to access your repositories
++   - Select your `Costing-Automation` repository
++
++3. **Configure Build Settings**
++   - Branch to deploy: `main` (or your default branch)
++   - Build command: `npm run build:netlify`
++   - Publish directory: `public`
++
++4. **Set Environment Variables**
++   - Go to Site settings > Environment variables
++   - Add the following variables:
++     ```
++     NODE_ENV=production
++     SUPABASE_URL=your_actual_supabase_url
++     SUPABASE_ANON_KEY=your_actual_supabase_anon_key
++     ```
++
++5. **Deploy**
++   - Click "Deploy site"
++   - Wait for the build to complete
++   - Your site will be available at a Netlify URL like `https://your-site-name.netlify.app`
++
++### 3. Custom Domain (Optional)
++
++1. Go to Site settings > Domain management
++2. Add your custom domain
++3. Configure DNS settings as instructed by Netlify
++
++## Important Notes
++
++### For Backend API Calls
++
++Since Netlify is primarily for static sites, your Express.js backend won't run on Netlify. You have several options:
++
++1. **Deploy Backend Separately**: Use Heroku, Railway, or Render for your backend
++2. **Use Netlify Functions**: Convert your API routes to serverless functions
++3. **External API**: Use an external service for your database operations
++
++### Environment Variables
++
++Make sure to set these in your Netlify dashboard:
++- `SUPABASE_URL`
++- `SUPABASE_ANON_KEY`
++- Any other environment variables your app needs
++
++### CORS Configuration
++
++If you deploy your backend separately, make sure to update CORS settings in your Express app to allow your Netlify domain.
++
++## Troubleshooting
++
++### Build Failures
++- Check the build logs in Netlify dashboard
++- Ensure all dependencies are in `package.json`
++- Verify Node.js version compatibility
++
++### API Issues
++- If using external backend, ensure CORS is configured
++- Check that environment variables are set correctly
++- Verify API endpoints are accessible
++
++### Static File Issues
++- Ensure all static files are in the `public` directory
++- Check that file paths in HTML are correct
++- Verify that `_redirects` file is in the `public` directory
++
++## Next Steps
++
++1. **Test Your Deployment**: Visit your Netlify URL and test all functionality
++2. **Set Up Continuous Deployment**: Every push to your main branch will trigger a new deployment
++3. **Monitor Performance**: Use Netlify's analytics to monitor your site
++4. **Set Up Custom Domain**: Configure your own domain name
++
++## Support
++
++If you encounter issues:
++1. Check Netlify's build logs
++2. Verify your environment variables
++3. Test your API endpoints separately
++4. Review the Netlify documentation
++
++Your site should now be live and accessible via the Netlify URL!
+diff --git a/logs/combined.log b/logs/combined.log
+index b7ff96a..7818f8d 100644
+--- a/logs/combined.log
++++ b/logs/combined.log
+@@ -1505,3 +1505,24 @@
+ {"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-24T06:00:00.328Z"}
+ {"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-24T06:00:00.470Z"}
+ {"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-24T06:00:00.471Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:04:39.272Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:04:54.831Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:05:03.718Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:05:08.790Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:05:10.042Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:06:30.059Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:06:31.227Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:06:32.723Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:06:51.346Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:06:53.366Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-24T06:07:30.786Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-24T06:07:31.250Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-24T06:07:31.572Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-24T06:07:31.764Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-24T06:07:31.765Z"}
++{"customer":"TNF","level":"info","message":"Received beanie data for saving:","season":"F27","service":"costing-automation","styleNumber":"TNFF27-014","timestamp":"2025-09-24T06:07:44.651Z"}
++{"level":"info","message":"Converting beanie data to database format...","service":"costing-automation","timestamp":"2025-09-24T06:07:45.012Z"}
++{"customer":"TNF","level":"info","message":"Saving beanie data to database:","season":"F27","service":"costing-automation","styleNumber":"TNFF27-014","table":"beanie_costs","timestamp":"2025-09-24T06:07:45.013Z"}
++{"code":"PGRST205","details":null,"hint":null,"level":"error","message":"Database error: Could not find the table 'public.beanie_costs' in the schema cache","service":"costing-automation","timestamp":"2025-09-24T06:07:45.115Z"}
++{"level":"error","message":"Error saving beanie data: Failed to save data: Could not find the table 'public.beanie_costs' in the schema cache","service":"costing-automation","stack":"Error: Failed to save data: Could not find the table 'public.beanie_costs' in the schema cache\n    at BeanieDataService.saveBeanieData (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\src\\services\\beanieDataService.ts:176:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async <anonymous> (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\src\\routes\\beanieData.ts:38:20)","timestamp":"2025-09-24T06:07:45.117Z"}
++{"level":"error","message":"Error saving beanie data: Failed to save data: Could not find the table 'public.beanie_costs' in the schema cache","service":"costing-automation","stack":"Error: Failed to save data: Could not find the table 'public.beanie_costs' in the schema cache\n    at BeanieDataService.saveBeanieData (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\src\\services\\beanieDataService.ts:176:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async <anonymous> (C:\\Users\\Dell\\OneDrive\\Desktop\\cost\\Costing-Automation\\src\\routes\\beanieData.ts:38:20)","timestamp":"2025-09-24T06:07:45.118Z"}
+diff --git a/netlify-env.example b/netlify-env.example
+new file mode 100644
+index 0000000..675ecb8
+--- /dev/null
++++ b/netlify-env.example
+@@ -0,0 +1,11 @@
++# Environment variables for Netlify deployment
++# Copy these to your Netlify dashboard under Site settings > Environment variables
++
++NODE_ENV=production
++PORT=3000
++
++# Add your production environment variables here:
++# SUPABASE_URL=your_supabase_url_here
++# SUPABASE_ANON_KEY=your_supabase_anon_key_here
++# DATABASE_URL=your_database_url_here
++# JWT_SECRET=your_jwt_secret_here
+diff --git a/netlify.toml b/netlify.toml
+new file mode 100644
+index 0000000..9b072b1
+--- /dev/null
++++ b/netlify.toml
+@@ -0,0 +1,65 @@
++[build]
++  # Build command - this will build your TypeScript and prepare the app
++  command = "npm run build"
++  
++  # Directory to publish - Netlify will serve from the public folder
++  publish = "public"
++  
++  # Functions directory for serverless functions (if needed)
++  functions = "netlify/functions"
++
++[build.environment]
++  # Node.js version
++  NODE_VERSION = "18"
++  
++  # Build environment
++  NODE_ENV = "production"
++
++# Redirect rules for SPA routing
++[[redirects]]
++  # Handle client-side routing for your SPA
++  from = "/*"
++  to = "/index.html"
++  status = 200
++
++# API proxy rules (if you want to proxy API calls to your backend)
++[[redirects]]
++  from = "/api/*"
++  to = "https://your-backend-url.herokuapp.com/api/:splat"
++  status = 200
++  force = true
++
++# Security headers
++[[headers]]
++  for = "/*"
++  [headers.values]
++    X-Frame-Options = "DENY"
++    X-XSS-Protection = "1; mode=block"
++    X-Content-Type-Options = "nosniff"
++    Referrer-Policy = "strict-origin-when-cross-origin"
++
++# Cache static assets
++[[headers]]
++  for = "/js/*"
++  [headers.values]
++    Cache-Control = "public, max-age=31536000"
++
++[[headers]]
++  for = "*.css"
++  [headers.values]
++    Cache-Control = "public, max-age=31536000"
++
++[[headers]]
++  for = "*.js"
++  [headers.values]
++    Cache-Control = "public, max-age=31536000"
++
++[[headers]]
++  for = "*.png"
++  [headers.values]
++    Cache-Control = "public, max-age=31536000"
++
++[[headers]]
++  for = "*.jpg"
++  [headers.values]
++    Cache-Control = "public, max-age=31536000"
+diff --git a/package.json b/package.json
+index d34bfb0..29dd1e8 100644
+--- a/package.json
++++ b/package.json
+@@ -7,6 +7,8 @@
+     "start": "node dist/app.js",
+     "dev": "tsx watch src/app.ts",
+     "build": "tsc",
++    "build:netlify": "tsc && npm run copy:public",
++    "copy:public": "cp -r public/* dist/ 2>/dev/null || xcopy public\\* dist\\ /E /I /Y",
+     "test": "jest"
+   },
+   "keywords": [
+diff --git a/public/_redirects b/public/_redirects
+new file mode 100644
+index 0000000..e96498a
+--- /dev/null
++++ b/public/_redirects
+@@ -0,0 +1,5 @@
++# SPA fallback - redirect all routes to index.html
++/*    /index.html   200
++
++# API proxy (uncomment and update with your backend URL when ready)
++# /api/*    https://your-backend-url.herokuapp.com/api/:splat    200
+diff --git a/public/index.html b/public/index.html
+index 0bfe884..14502e8 100644
+--- a/public/index.html
++++ b/public/index.html
+@@ -4467,6 +4467,61 @@
+             
+             // Update totals
+             updateTotals(data.totalMaterialCost, data.totalFactoryCost);
++            
++            // Save data to database
++            saveDataToDatabase(data);
++        }
++        
++        // Function to save data to database
++        async function saveDataToDatabase(data) {
++            try {
++                console.log('💾 Attempting to save data to database...');
++                
++                // Create beanie importer instance
++                const beanieImporter = new TNFBeanieImporter();
++                
++                // Save to database
++                const savedRecord = await beanieImporter.saveToDatabase(data, 'beanie_costs');
++                
++                // Show success message
++                showNotification('✅ Data saved to database successfully!', 'success');
++                
++            } catch (error) {
++                console.error('❌ Error saving to database:', error);
++                showNotification('❌ Failed to save to database: ' + error.message, 'error');
++            }
++        }
++        
++        // Function to show notifications
++        function showNotification(message, type = 'info') {
++            // Create notification element
++            const notification = document.createElement('div');
++            notification.className = `notification notification-${type}`;
++            notification.textContent = message;
++            notification.style.cssText = `
++                position: fixed;
++                top: 20px;
++                right: 20px;
++                padding: 15px 20px;
++                border-radius: 5px;
++                color: white;
++                font-weight: bold;
++                z-index: 10000;
++                max-width: 400px;
++                word-wrap: break-word;
++                ${type === 'success' ? 'background-color: #4CAF50;' : ''}
++                ${type === 'error' ? 'background-color: #f44336;' : ''}
++                ${type === 'info' ? 'background-color: #2196F3;' : ''}
++            `;
++            
++            document.body.appendChild(notification);
++            
++            // Remove notification after 5 seconds
++            setTimeout(() => {
++                if (notification.parentNode) {
++                    notification.parentNode.removeChild(notification);
++                }
++            }, 5000);
+         }
+ 
+         function fillCostSection(sectionName, data, columns) {
+diff --git a/public/js/beanieImport.js b/public/js/beanieImport.js
+index 474ba81..b159f02 100644
+--- a/public/js/beanieImport.js
++++ b/public/js/beanieImport.js
+@@ -415,6 +415,48 @@ class TNFBeanieImporter {
+         console.log('Parsed TNF Beanie data:', result);
+         return result;
+     }
++
++    /**
++     * Save parsed data to database
++     */
++    async saveToDatabase(data, tableName = 'beanie_costs') {
++        try {
++            console.log('💾 Saving beanie data to database...');
++            console.log('📊 Data to save:', {
++                customer: data.customer,
++                season: data.season,
++                styleNumber: data.styleNumber,
++                styleName: data.styleName,
++                totalMaterialCost: data.totalMaterialCost,
++                totalFactoryCost: data.totalFactoryCost
++            });
++
++            const response = await fetch('/api/beanie-data/save', {
++                method: 'POST',
++                headers: {
++                    'Content-Type': 'application/json',
++                },
++                body: JSON.stringify({
++                    data: data,
++                    tableName: tableName
++                })
++            });
++
++            const result = await response.json();
++
++            if (result.success) {
++                console.log('✅ Beanie data saved successfully to database!');
++                console.log('📋 Saved record:', result.data);
++                return result.data;
++            } else {
++                console.error('❌ Failed to save beanie data:', result.error);
++                throw new Error(result.error || 'Failed to save data');
++            }
++        } catch (error) {
++            console.error('❌ Error saving beanie data to database:', error);
++            throw error;
++        }
++    }
+ }
+ 
+ // Export for use in other modules
+diff --git a/src/app.ts b/src/app.ts
+index 5f1ebcd..c9b31aa 100644
+--- a/src/app.ts
++++ b/src/app.ts
+@@ -9,6 +9,7 @@ import dataTableRoutes from './routes/dataTable';
+ import importRoutes from './routes/import';
+ import beanieImportRoutes from './routes/beanieImport';
+ import ballcapsImportRoutes from './routes/ballcapsImport';
++import beanieDataRoutes from './routes/beanieData';
+ import logger from './utils/logger';
+ 
+ dotenv.config();
+@@ -55,6 +56,7 @@ app.use('/api/datatable', dataTableRoutes);
+ app.use('/api/import', importRoutes);
+ app.use('/api/beanie', beanieImportRoutes);
+ app.use('/api/ballcaps', ballcapsImportRoutes);
++app.use('/api/beanie-data', beanieDataRoutes);
+ 
+ // Health check endpoint
+ app.get('/health', (req: Request, res: Response) => {
+diff --git a/src/routes/beanieData.ts b/src/routes/beanieData.ts
+new file mode 100644
+index 0000000..7b0a167
+--- /dev/null
++++ b/src/routes/beanieData.ts
+@@ -0,0 +1,133 @@
++import { Router, Request, Response } from 'express';
++import { BeanieDataService, BeanieData } from '../services/beanieDataService';
++import logger from '../utils/logger';
++
++const router = Router();
++const beanieDataService = new BeanieDataService();
++
++/**
++ * Save beanie data to database
++ */
++router.post('/save', async (req: Request, res: Response) => {
++  try {
++    const { data, tableName } = req.body;
++    
++    if (!data) {
++      return res.status(400).json({ 
++        success: false, 
++        error: 'No data provided' 
++      });
++    }
++
++    logger.info('Received beanie data for saving:', {
++      customer: data.customer,
++      season: data.season,
++      styleNumber: data.styleNumber
++    });
++
++    // Ensure table exists
++    const tableExists = await beanieDataService.ensureTableExists(tableName);
++    if (!tableExists) {
++      return res.status(400).json({
++        success: false,
++        error: `Table '${tableName || 'beanie_costs'}' does not exist. Please create it in your Supabase dashboard.`
++      });
++    }
++
++    // Save data to database
++    const result = await beanieDataService.saveBeanieData(data, tableName);
++    
++    res.json({
++      success: true,
++      message: 'Beanie data saved successfully',
++      data: result
++    });
++
++  } catch (error) {
++    logger.error('Error saving beanie data:', error);
++    res.status(500).json({
++      success: false,
++      error: error instanceof Error ? error.message : 'Unknown error occurred'
++    });
++  }
++});
++
++/**
++ * Get all beanie records
++ */
++router.get('/records', async (req: Request, res: Response) => {
++  try {
++    const { tableName } = req.query;
++    const records = await beanieDataService.getBeanieRecords(tableName as string);
++    
++    res.json({
++      success: true,
++      data: records
++    });
++
++  } catch (error) {
++    logger.error('Error fetching beanie records:', error);
++    res.status(500).json({
++      success: false,
++      error: error instanceof Error ? error.message : 'Unknown error occurred'
++    });
++  }
++});
++
++/**
++ * Update beanie record
++ */
++router.put('/update/:id', async (req: Request, res: Response) => {
++  try {
++    const { id } = req.params;
++    const { data, tableName } = req.body;
++    
++    if (!data) {
++      return res.status(400).json({ 
++        success: false, 
++        error: 'No data provided' 
++      });
++    }
++
++    const result = await beanieDataService.updateBeanieData(id, data, tableName);
++    
++    res.json({
++      success: true,
++      message: 'Beanie data updated successfully',
++      data: result
++    });
++
++  } catch (error) {
++    logger.error('Error updating beanie data:', error);
++    res.status(500).json({
++      success: false,
++      error: error instanceof Error ? error.message : 'Unknown error occurred'
++    });
++  }
++});
++
++/**
++ * Delete beanie record
++ */
++router.delete('/delete/:id', async (req: Request, res: Response) => {
++  try {
++    const { id } = req.params;
++    const { tableName } = req.query;
++    
++    const success = await beanieDataService.deleteBeanieData(id, tableName as string);
++    
++    res.json({
++      success: true,
++      message: 'Beanie data deleted successfully'
++    });
++
++  } catch (error) {
++    logger.error('Error deleting beanie data:', error);
++    res.status(500).json({
++      success: false,
++      error: error instanceof Error ? error.message : 'Unknown error occurred'
++    });
++  }
++});
++
++export default router;
+diff --git a/src/services/beanieDataService.ts b/src/services/beanieDataService.ts
+index d61f724..0a7b395 100644
+--- a/src/services/beanieDataService.ts
++++ b/src/services/beanieDataService.ts
+@@ -1,250 +1,281 @@
+-import { SupabaseService } from './supabaseService';
+-import { TNFBeanieImporter } from '../../public/js/beanieImport';
++import { createClient, SupabaseClient } from '@supabase/supabase-js';
+ import logger from '../utils/logger';
+ 
+-export interface BeanieCostData {
++export interface BeanieData {
+   customer: string;
+   season: string;
+   styleNumber: string;
+   styleName: string;
+   costedQuantity: string;
+   leadtime: string;
+-  yarn: any[];
+-  fabric: any[];
+-  trim: any[];
+-  knitting: any[];
+-  operations: any[];
+-  packaging: any[];
+-  overhead: any[];
++  yarn: Array<{
++    material: string;
++    consumption: string;
++    price: string;
++    cost: string;
++  }>;
++  fabric: Array<{
++    material: string;
++    consumption: string;
++    price: string;
++    cost: string;
++  }>;
++  trim: Array<{
++    material: string;
++    consumption: string;
++    price: string;
++    cost: string;
++  }>;
++  knitting: Array<{
++    machine: string;
++    time: string;
++    sah: string;
++    cost: string;
++  }>;
++  operations: Array<{
++    operation: string;
++    time: string;
++    cost: string;
++    total: string;
++  }>;
++  packaging: Array<{
++    type: string;
++    notes: string;
++    cost: string;
++  }>;
++  overhead: Array<{
++    type: string;
++    notes: string;
++    cost: string;
++  }>;
+   totalMaterialCost: string;
+   totalFactoryCost: string;
+   images: any[];
+ }
+ 
++export interface DatabaseRecord {
++  Season: string;
++  Customer: string;
++  Style_Number: string;
++  Style_Name: string;
++  Main_Material: string;
++  Material_Consumption: string;
++  Material_Price: string;
++  Trim_Cost: string;
++  Total_Material_Cost: string;
++  Knitting_Machine: string;
++  Knitting_Time: string;
++  Knitting_CPM: string;
++  Knitting_Cost: string;
++  Ops_Cost: string;
++  Knitting_Ops_Cost: string;
++  Packaging: string;
++  OH: string;
++  Profit: string;
++  FTY_Adjustment: string;
++  TTL_FTY_Cost: string;
++}
++
+ export class BeanieDataService {
+-  private supabase: SupabaseService;
++  private supabase: SupabaseClient;
+ 
+-  constructor(supabase: SupabaseService) {
+-    this.supabase = supabase;
++  constructor() {
++    const supabaseUrl = 'https://icavnpspgmcrrqmsprze.supabase.co';
++    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljYXZucHNwZ21jcnJxbXNwcnplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0NzEyMzMsImV4cCI6MjA3MzA0NzIzM30.5_-LPYwj5ks_KyCXwCae2mcbI-T7em48RsMiv4Oaurk';
++    
++    this.supabase = createClient(supabaseUrl, supabaseKey);
+   }
+ 
+   /**
+-   * Parse Excel file and save beanie cost data to database
++   * Convert beanie data to database record format
+    */
+-  async saveBeanieCostData(excelData: any): Promise<{ success: boolean; message: string; data?: any }> {
+-    try {
+-      // Parse the Excel data using the TNFBeanieImporter
+-      const importer = new TNFBeanieImporter();
+-      const parsedData = importer.parseExcelData(excelData);
++  private convertToDatabaseRecord(data: BeanieData): DatabaseRecord {
++    // Get main material (first yarn item)
++    const mainMaterial = data.yarn.length > 0 ? data.yarn[0].material : '';
++    const materialConsumption = data.yarn.length > 0 ? data.yarn[0].consumption : '';
++    const materialPrice = data.yarn.length > 0 ? data.yarn[0].price : '';
+ 
+-      logger.info('Parsed beanie cost data:', parsedData);
++    // Calculate trim cost (sum of all trim items)
++    const trimCost = data.trim.reduce((sum, item) => sum + parseFloat(item.cost || '0'), 0).toFixed(2);
+ 
+-      // Save the main cost record
+-      const costRecord = await this.saveMainCostRecord(parsedData);
++    // Get knitting machine and details
++    const knittingMachine = data.knitting.length > 0 ? data.knitting[0].machine : '';
++    const knittingTime = data.knitting.length > 0 ? data.knitting[0].time : '';
++    const knittingCPM = data.knitting.length > 0 ? data.knitting[0].sah : '';
++    const knittingCost = data.knitting.length > 0 ? data.knitting[0].cost : '';
+ 
+-      // Save section data
+-      await this.saveSectionData(costRecord.id, parsedData);
++    // Calculate operations cost (sum of all operations)
++    const opsCost = data.operations.reduce((sum, item) => sum + parseFloat(item.total || '0'), 0).toFixed(2);
+ 
+-      return {
+-        success: true,
+-        message: 'Beanie cost data saved successfully',
+-        data: costRecord
+-      };
+-    } catch (error) {
+-      logger.error('Error saving beanie cost data:', error);
+-      return {
+-        success: false,
+-        message: `Failed to save beanie cost data: ${error instanceof Error ? error.message : 'Unknown error'}`
+-      };
+-    }
++    // Calculate knitting + ops cost
++    const knittingOpsCost = (parseFloat(knittingCost || '0') + parseFloat(opsCost)).toFixed(2);
++
++    // Calculate packaging cost (sum of all packaging items)
++    const packagingCost = data.packaging.reduce((sum, item) => sum + parseFloat(item.cost || '0'), 0).toFixed(2);
++
++    // Separate overhead and profit
++    const overheadItems = data.overhead.filter(item => item.type !== 'PROFIT');
++    const profitItems = data.overhead.filter(item => item.type === 'PROFIT');
++    
++    const ohCost = overheadItems.reduce((sum, item) => sum + parseFloat(item.cost || '0'), 0).toFixed(2);
++    const profitCost = profitItems.reduce((sum, item) => sum + parseFloat(item.cost || '0'), 0).toFixed(2);
++
++    // FTY Adjustment (if any adjustment items exist)
++    const ftyAdjustment = data.overhead
++      .filter(item => item.type.includes('adjustment') || item.type.includes('support'))
++      .reduce((sum, item) => sum + parseFloat(item.cost || '0'), 0)
++      .toFixed(2);
++
++    return {
++      Season: data.season,
++      Customer: data.customer,
++      Style_Number: data.styleNumber,
++      Style_Name: data.styleName,
++      Main_Material: mainMaterial,
++      Material_Consumption: materialConsumption,
++      Material_Price: materialPrice,
++      Trim_Cost: trimCost,
++      Total_Material_Cost: data.totalMaterialCost,
++      Knitting_Machine: knittingMachine,
++      Knitting_Time: knittingTime,
++      Knitting_CPM: knittingCPM,
++      Knitting_Cost: knittingCost,
++      Ops_Cost: opsCost,
++      Knitting_Ops_Cost: knittingOpsCost,
++      Packaging: packagingCost,
++      OH: ohCost,
++      Profit: profitCost,
++      FTY_Adjustment: ftyAdjustment,
++      TTL_FTY_Cost: data.totalFactoryCost
++    };
+   }
+ 
+   /**
+-   * Save the main cost record
++   * Save beanie data to database
+    */
+-  private async saveMainCostRecord(data: BeanieCostData): Promise<any> {
+-    const costRecord = {
+-      customer: data.customer,
+-      season: data.season,
+-      style_number: data.styleNumber,
+-      style_name: data.styleName,
+-      costed_quantity: data.costedQuantity,
+-      leadtime: data.leadtime,
+-      total_material_cost: parseFloat(data.totalMaterialCost) || 0,
+-      total_factory_cost: parseFloat(data.totalFactoryCost) || 0,
+-      product_type: 'beanie',
+-      created_at: new Date().toISOString(),
+-      updated_at: new Date().toISOString()
+-    };
++  async saveBeanieData(data: BeanieData, tableName: string = 'beanie_costs'): Promise<any> {
++    try {
++      logger.info('Converting beanie data to database format...');
++      const dbRecord = this.convertToDatabaseRecord(data);
++      
++      logger.info('Saving beanie data to database:', {
++        table: tableName,
++        season: dbRecord.Season,
++        customer: dbRecord.Customer,
++        styleNumber: dbRecord.Style_Number
++      });
++
++      const { data: result, error } = await this.supabase
++        .from(tableName)
++        .insert(dbRecord)
++        .select()
++        .single();
+ 
+-    return await this.supabase.insertRecord('costs', costRecord);
++      if (error) {
++        logger.error('Database error:', error);
++        throw new Error(`Failed to save data: ${error.message}`);
++      }
++
++      logger.info('Successfully saved beanie data to database:', result);
++      return result;
++    } catch (error) {
++      logger.error('Error saving beanie data:', error);
++      throw error;
++    }
+   }
+ 
+   /**
+-   * Save section data (yarn, fabric, trim, etc.)
++   * Get all beanie records from database
+    */
+-  private async saveSectionData(costId: number, data: BeanieCostData): Promise<void> {
+-    // Save YARN data
+-    if (data.yarn && data.yarn.length > 0) {
+-      const yarnRecords = data.yarn.map(item => ({
+-        cost_id: costId,
+-        section: 'yarn',
+-        material: item.material,
+-        consumption: item.consumption,
+-        price: parseFloat(item.price) || 0,
+-        cost: parseFloat(item.cost) || 0,
+-        is_subtotal: item.isSubtotal || false
+-      }));
+-      await this.supabase.bulkInsert('cost_items', yarnRecords);
+-    }
+-
+-    // Save FABRIC data
+-    if (data.fabric && data.fabric.length > 0) {
+-      const fabricRecords = data.fabric.map(item => ({
+-        cost_id: costId,
+-        section: 'fabric',
+-        material: item.material,
+-        consumption: item.consumption,
+-        price: parseFloat(item.price) || 0,
+-        cost: parseFloat(item.cost) || 0,
+-        is_subtotal: item.isSubtotal || false
+-      }));
+-      await this.supabase.bulkInsert('cost_items', fabricRecords);
+-    }
++  async getBeanieRecords(tableName: string = 'beanie_costs'): Promise<DatabaseRecord[]> {
++    try {
++      const { data, error } = await this.supabase
++        .from(tableName)
++        .select('*')
++        .order('created_at', { ascending: false });
+ 
+-    // Save TRIM data
+-    if (data.trim && data.trim.length > 0) {
+-      const trimRecords = data.trim.map(item => ({
+-        cost_id: costId,
+-        section: 'trim',
+-        material: item.material,
+-        consumption: item.consumption,
+-        price: parseFloat(item.price) || 0,
+-        cost: parseFloat(item.cost) || 0,
+-        is_subtotal: item.isSubtotal || false
+-      }));
+-      await this.supabase.bulkInsert('cost_items', trimRecords);
+-    }
++      if (error) {
++        logger.error('Database error:', error);
++        throw new Error(`Failed to fetch data: ${error.message}`);
++      }
+ 
+-    // Save KNITTING data
+-    if (data.knitting && data.knitting.length > 0) {
+-      const knittingRecords = data.knitting.map(item => ({
+-        cost_id: costId,
+-        section: 'knitting',
+-        operation: item.machine,
+-        time: item.time,
+-        cost: parseFloat(item.cost) || 0,
+-        total: parseFloat(item.total) || 0,
+-        is_subtotal: item.isSubtotal || false
+-      }));
+-      await this.supabase.bulkInsert('cost_items', knittingRecords);
++      return data || [];
++    } catch (error) {
++      logger.error('Error fetching beanie records:', error);
++      throw error;
+     }
++  }
+ 
+-    // Save OPERATIONS data
+-    if (data.operations && data.operations.length > 0) {
+-      const operationsRecords = data.operations.map(item => ({
+-        cost_id: costId,
+-        section: 'operations',
+-        operation: item.operation,
+-        time: item.time,
+-        cost: parseFloat(item.cost) || 0,
+-        total: parseFloat(item.total) || 0,
+-        is_subtotal: item.isSubtotal || false
+-      }));
+-      await this.supabase.bulkInsert('cost_items', operationsRecords);
+-    }
++  /**
++   * Update existing beanie record
++   */
++  async updateBeanieData(id: string | number, data: BeanieData, tableName: string = 'beanie_costs'): Promise<any> {
++    try {
++      const dbRecord = this.convertToDatabaseRecord(data);
++      
++      const { data: result, error } = await this.supabase
++        .from(tableName)
++        .update(dbRecord)
++        .eq('id', id)
++        .select()
++        .single();
+ 
+-    // Save PACKAGING data
+-    if (data.packaging && data.packaging.length > 0) {
+-      const packagingRecords = data.packaging.map(item => ({
+-        cost_id: costId,
+-        section: 'packaging',
+-        type: item.type,
+-        notes: item.notes,
+-        cost: parseFloat(item.cost) || 0,
+-        is_subtotal: item.isSubtotal || false
+-      }));
+-      await this.supabase.bulkInsert('cost_items', packagingRecords);
+-    }
++      if (error) {
++        logger.error('Database error:', error);
++        throw new Error(`Failed to update data: ${error.message}`);
++      }
+ 
+-    // Save OVERHEAD data
+-    if (data.overhead && data.overhead.length > 0) {
+-      const overheadRecords = data.overhead.map(item => ({
+-        cost_id: costId,
+-        section: 'overhead',
+-        type: item.type,
+-        notes: item.notes,
+-        cost: parseFloat(item.cost) || 0,
+-        is_subtotal: item.isSubtotal || false
+-      }));
+-      await this.supabase.bulkInsert('cost_items', overheadRecords);
++      logger.info('Successfully updated beanie data:', result);
++      return result;
++    } catch (error) {
++      logger.error('Error updating beanie data:', error);
++      throw error;
+     }
+   }
+ 
+   /**
+-   * Get beanie cost data by ID
++   * Delete beanie record
+    */
+-  async getBeanieCostData(costId: number): Promise<any> {
++  async deleteBeanieData(id: string | number, tableName: string = 'beanie_costs'): Promise<boolean> {
+     try {
+-      // Get main cost record
+-      const { data: costData, error: costError } = await this.supabase.supabase
+-        .from('costs')
+-        .select('*')
+-        .eq('id', costId)
+-        .single();
++      const { error } = await this.supabase
++        .from(tableName)
++        .delete()
++        .eq('id', id);
+ 
+-      if (costError) throw costError;
++      if (error) {
++        logger.error('Database error:', error);
++        throw new Error(`Failed to delete data: ${error.message}`);
++      }
+ 
+-      // Get cost items
+-      const { data: itemsData, error: itemsError } = await this.supabase.supabase
+-        .from('cost_items')
+-        .select('*')
+-        .eq('cost_id', costId)
+-        .order('section', { ascending: true });
+-
+-      if (itemsError) throw itemsError;
+-
+-      // Group items by section
+-      const groupedItems = itemsData.reduce((acc: any, item: any) => {
+-        if (!acc[item.section]) {
+-          acc[item.section] = [];
+-        }
+-        acc[item.section].push(item);
+-        return acc;
+-      }, {});
+-
+-      return {
+-        ...costData,
+-        yarn: groupedItems.yarn || [],
+-        fabric: groupedItems.fabric || [],
+-        trim: groupedItems.trim || [],
+-        knitting: groupedItems.knitting || [],
+-        operations: groupedItems.operations || [],
+-        packaging: groupedItems.packaging || [],
+-        overhead: groupedItems.overhead || []
+-      };
++      logger.info('Successfully deleted beanie data');
++      return true;
+     } catch (error) {
+-      logger.error('Error getting beanie cost data:', error);
+-      throw new Error('Failed to retrieve beanie cost data');
++      logger.error('Error deleting beanie data:', error);
++      throw error;
+     }
+   }
+ 
+   /**
+-   * Get all beanie cost records
++   * Check if table exists and create if needed
+    */
+-  async getAllBeanieCostData(): Promise<any[]> {
++  async ensureTableExists(tableName: string = 'beanie_costs'): Promise<boolean> {
+     try {
+-      const { data, error } = await this.supabase.supabase
+-        .from('costs')
+-        .select('*')
+-        .eq('product_type', 'beanie')
+-        .order('created_at', { ascending: false });
++      // Try to query the table to see if it exists
++      const { error } = await this.supabase
++        .from(tableName)
++        .select('id')
++        .limit(1);
+ 
+-      if (error) throw error;
+-      return data || [];
++      if (error && error.code === 'PGRST116') {
++        logger.info(`Table ${tableName} does not exist. Please create it in your Supabase dashboard.`);
++        return false;
++      }
++
++      return true;
+     } catch (error) {
+-      logger.error('Error getting all beanie cost data:', error);
+-      throw new Error('Failed to retrieve beanie cost data');
++      logger.error('Error checking table existence:', error);
++      return false;
+     }
+   }
+-}
++}
+\ No newline at end of file
+-- 
+2.51.0.windows.1
+

@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Content Viewer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM2t0EX7jF+JqJ4e8x8w8Q2E5VkNalCqtl4PV4/VvQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+
+        .file-upload-area {
+            background: rgba(255, 255, 255, 0.9);
+            border: 3px dashed #3498db;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .file-upload-area:hover {
+            border-color: #2980b9;
+            background: rgba(255, 255, 255, 0.95);
+            transform: translateY(-2px);
+        }
+
+        .file-upload-area.dragover {
+            border-color: #27ae60;
+            background: rgba(39, 174, 96, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .upload-subtext {
+            color: #7f8c8d;
+            font-size: 1rem;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-info {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .file-info h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .info-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #3498db;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .content-display {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .content-title {
+            color: #2c3e50;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .view-full-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .view-full-btn:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+
+        .table-container {
+            max-height: 500px;
+            overflow: auto;
+            border: 1px solid #ecf0f1;
+            border-radius: 10px;
+            background: white;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .data-table th {
+            background: #34495e;
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .data-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #ecf0f1;
+            color: #2c3e50;
+        }
+
+        .data-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .data-table tr:hover {
+            background: #e3f2fd;
+        }
+
+        .sheet-section {
+            margin-bottom: 30px;
+        }
+
+        .sheet-title {
+            color: #27ae60;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            background: #d5f4e6;
+            border-radius: 8px;
+            border-left: 4px solid #27ae60;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+            padding: 40px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #ecf0f1;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .status-success {
+            background: #d5f4e6;
+            color: #27ae60;
+            border-left: 4px solid #27ae60;
+        }
+
+        .status-error {
+            background: #fadbd8;
+            color: #e74c3c;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .status-info {
+            background: #d6eaf8;
+            color: #3498db;
+            border-left: 4px solid #3498db;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            overflow: auto;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 2% auto;
+            padding: 20px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .modal-title {
+            color: #2c3e50;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            background: #c0392b;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #3498db;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .file-upload-area {
+                padding: 30px 20px;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 File Content Viewer</h1>
+            <p>Upload any file to view its contents in a beautiful, organized format</p>
+        </div>
+
+        <div class="file-upload-area" id="fileUploadArea">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">Drop your file here or click to browse</div>
+            <div class="upload-subtext">Supports Excel, CSV, Text, Images, PDF, and more</div>
+            <input type="file" id="fileInput" class="file-input" accept="*/*">
+        </div>
+
+        <div id="fileInfo" class="file-info" style="display: none;">
+            <h3>📋 File Information</h3>
+            <div class="info-grid" id="infoGrid">
+                <!-- File info will be populated here -->
+            </div>
+        </div>
+
+        <div id="statusMessage" class="status-message" style="display: none;">
+            <!-- Status messages will appear here -->
+        </div>
+
+        <div id="progressBar" class="progress-bar" style="display: none;">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div id="contentDisplay" class="content-display" style="display: none;">
+            <div class="content-header">
+                <div class="content-title" id="contentTitle">File Contents</div>
+                <button class="view-full-btn" onclick="showFullContent()">View Full Content</button>
+            </div>
+            <div id="contentBody">
+                <!-- File content will be displayed here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Full Content Modal -->
+    <div id="fullContentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">Full File Contents</div>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modalBody">
+                <!-- Full content will be displayed here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFile = null;
+        let fileContent = null;
+
+        // File upload area interactions
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        const fileInput = document.getElementById('fileInput');
+
+        fileUploadArea.addEventListener('click', () => fileInput.click());
+        fileUploadArea.addEventListener('dragover', handleDragOver);
+        fileUploadArea.addEventListener('dragleave', handleDragLeave);
+        fileUploadArea.addEventListener('drop', handleDrop);
+        fileInput.addEventListener('change', handleFileSelect);
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            fileUploadArea.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            fileUploadArea.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            fileUploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                processFile(files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                processFile(file);
+            }
+        }
+
+        // Main file processing function
+        async function processFile(file) {
+            currentFile = file;
+            showStatus('info', `Processing ${file.name}...`);
+            showProgress(true);
+
+            try {
+                const fileType = getFileType(file);
+                const content = await readFile(file, fileType);
+                
+                fileContent = content;
+                displayFileInfo(file, fileType);
+                displayContent(content, file, fileType);
+                
+                showStatus('success', `File processed successfully!`);
+                showProgress(false);
+            } catch (error) {
+                console.error('Error processing file:', error);
+                showStatus('error', `Error processing file: ${error.message}`);
+                showProgress(false);
+            }
+        }
+
+        // File type detection
+        function getFileType(file) {
+            const extension = file.name.split('.').pop().toLowerCase();
+            const mimeType = file.type;
+
+            if (['xlsx', 'xls', 'xlsm'].includes(extension) || mimeType.includes('spreadsheet')) {
+                return 'excel';
+            } else if (extension === 'csv' || mimeType.includes('csv')) {
+                return 'csv';
+            } else if (['txt', 'log', 'md', 'json', 'xml', 'html', 'js', 'css', 'py', 'java', 'cpp', 'c'].includes(extension) || mimeType.includes('text')) {
+                return 'text';
+            } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'].includes(extension) || mimeType.includes('image')) {
+                return 'image';
+            } else if (extension === 'pdf' || mimeType.includes('pdf')) {
+                return 'pdf';
+            } else {
+                return 'text';
+            }
+        }
+
+        // File reading functions
+        async function readFile(file, fileType) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        if (fileType === 'excel') {
+                            resolve(readExcelFile(e.target.result));
+                        } else if (fileType === 'csv') {
+                            resolve(readCSVFile(e.target.result));
+                        } else if (fileType === 'text') {
+                            resolve(readTextFile(e.target.result));
+                        } else if (fileType === 'image') {
+                            resolve(readImageFile(e.target.result));
+                        } else if (fileType === 'pdf') {
+                            resolve(readPDFFile(file));
+                        } else {
+                            resolve(readTextFile(e.target.result));
+                        }
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                
+                reader.onerror = () => reject(new Error('Failed to read file'));
+                
+                if (fileType === 'excel') {
+                    reader.readAsArrayBuffer(file);
+                } else if (fileType === 'image' || fileType === 'pdf') {
+                    reader.readAsDataURL(file);
+                } else {
+                    reader.readAsText(file);
+                }
+            });
+        }
+
+        function readExcelFile(data) {
+            if (typeof XLSX === 'undefined') {
+                throw new Error('XLSX library not loaded');
+            }
+
+            const workbook = XLSX.read(data, { type: 'array', raw: true });
+            const result = [];
+
+            workbook.SheetNames.forEach(sheetName => {
+                const worksheet = workbook.Sheets[sheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+                result.push({
+                    sheetName: sheetName,
+                    data: jsonData
+                });
+            });
+
+            return result;
+        }
+
+        function readCSVFile(text) {
+            const lines = text.split(/\r?\n/);
+            const data = lines.map(line => line.split(',').map(cell => cell.trim()));
+            return [{ sheetName: 'CSV Data', data: data }];
+        }
+
+        function readTextFile(text) {
+            const lines = text.split(/\r?\n/);
+            return [{ sheetName: 'Text Content', data: lines }];
+        }
+
+        function readImageFile(dataUrl) {
+            return [{ 
+                sheetName: 'Image', 
+                data: [[dataUrl]], 
+                isImage: true,
+                imageUrl: dataUrl
+            }];
+        }
+
+        function readPDFFile(file) {
+            return [{ 
+                sheetName: 'PDF Document', 
+                data: [['PDF files cannot be directly parsed in the browser.']],
+                isPDF: true,
+                fileName: file.name,
+                fileSize: file.size
+            }];
+        }
+
+        // Display functions
+        function displayFileInfo(file, fileType) {
+            const fileInfo = document.getElementById('fileInfo');
+            const infoGrid = document.getElementById('infoGrid');
+            
+            infoGrid.innerHTML = `
+                <div class="info-item">
+                    <div class="info-label">File Name</div>
+                    <div class="info-value">${file.name}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">File Type</div>
+                    <div class="info-value">${fileType.toUpperCase()}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">File Size</div>
+                    <div class="info-value">${(file.size / 1024).toFixed(2)} KB</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Last Modified</div>
+                    <div class="info-value">${new Date(file.lastModified).toLocaleString()}</div>
+                </div>
+            `;
+            
+            fileInfo.style.display = 'block';
+        }
+
+        function displayContent(content, file, fileType) {
+            const contentDisplay = document.getElementById('contentDisplay');
+            const contentTitle = document.getElementById('contentTitle');
+            const contentBody = document.getElementById('contentBody');
+            
+            contentTitle.textContent = `Contents of ${file.name}`;
+            
+            let html = '';
+            
+            // Add statistics
+            const totalRows = content.reduce((sum, sheet) => sum + (sheet.data ? sheet.data.length : 0), 0);
+            const totalSheets = content.length;
+            
+            html += `
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-number">${totalSheets}</div>
+                        <div class="stat-label">Sheets/Sections</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${totalRows}</div>
+                        <div class="stat-label">Total Rows</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${fileType.toUpperCase()}</div>
+                        <div class="stat-label">File Type</div>
+                    </div>
+                </div>
+            `;
+            
+            content.forEach((sheet, index) => {
+                html += `<div class="sheet-section">`;
+                html += `<div class="sheet-title">📊 ${sheet.sheetName}</div>`;
+                
+                if (sheet.isImage) {
+                    html += `
+                        <div style="text-align: center; padding: 20px;">
+                            <img src="${sheet.imageUrl}" style="max-width: 100%; max-height: 400px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);" alt="Image preview">
+                        </div>
+                    `;
+                } else if (sheet.isPDF) {
+                    html += `
+                        <div style="text-align: center; padding: 40px; background: #f8f9fa; border-radius: 10px;">
+                            <div style="font-size: 4rem; color: #e74c3c; margin-bottom: 20px;">📄</div>
+                            <h3 style="color: #2c3e50; margin-bottom: 10px;">PDF Document</h3>
+                            <p style="color: #7f8c8d;">PDF files cannot be directly parsed in the browser.</p>
+                            <p style="color: #95a5a6; font-size: 0.9rem; margin-top: 10px;">File: ${sheet.fileName} (${(sheet.fileSize / 1024).toFixed(2)} KB)</p>
+                        </div>
+                    `;
+                } else if (sheet.data && sheet.data.length > 0) {
+                    html += `
+                        <div class="table-container">
+                            <table class="data-table">
+                    `;
+                    
+                    // Add headers
+                    if (sheet.data[0] && sheet.data[0].length > 1) {
+                        html += '<tr>';
+                        for (let i = 0; i < sheet.data[0].length; i++) {
+                            html += `<th>Column ${i + 1}</th>`;
+                        }
+                        html += '</tr>';
+                    }
+                    
+                    // Add data rows (limit to 50 for performance)
+                    const maxRows = Math.min(50, sheet.data.length);
+                    for (let i = 0; i < maxRows; i++) {
+                        const row = sheet.data[i];
+                        html += '<tr>';
+                        
+                        if (Array.isArray(row)) {
+                            row.forEach(cell => {
+                                const cellValue = cell !== null && cell !== undefined ? String(cell) : '';
+                                html += `<td title="${cellValue}">${cellValue}</td>`;
+                            });
+                        } else {
+                            html += `<td colspan="10">${row}</td>`;
+                        }
+                        html += '</tr>';
+                    }
+                    
+                    html += '</table></div>';
+                    
+                    if (sheet.data.length > 50) {
+                        html += `<p style="text-align: center; color: #7f8c8d; margin-top: 15px; font-size: 0.9rem;">Showing first 50 rows of ${sheet.data.length} total rows</p>`;
+                    }
+                } else {
+                    html += '<div class="no-data">No data found in this section</div>';
+                }
+                
+                html += '</div>';
+            });
+            
+            contentBody.innerHTML = html;
+            contentDisplay.style.display = 'block';
+        }
+
+        function showFullContent() {
+            if (!fileContent) return;
+            
+            const modal = document.getElementById('fullContentModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            
+            modalTitle.textContent = `Full Contents of ${currentFile ? currentFile.name : 'File'}`;
+            
+            let html = '';
+            fileContent.forEach((sheet, index) => {
+                html += `<div style="margin-bottom: 30px;">`;
+                html += `<h3 style="color: #2c3e50; margin-bottom: 15px; padding: 10px; background: #ecf0f1; border-radius: 8px;">📊 ${sheet.sheetName}</h3>`;
+                
+                if (sheet.isImage) {
+                    html += `<img src="${sheet.imageUrl}" style="max-width: 100%; border-radius: 10px;" alt="Image">`;
+                } else if (sheet.isPDF) {
+                    html += `<div style="text-align: center; padding: 40px; background: #f8f9fa; border-radius: 10px;">
+                        <div style="font-size: 4rem; color: #e74c3c; margin-bottom: 20px;">📄</div>
+                        <h3>PDF Document</h3>
+                        <p>File: ${sheet.fileName} (${(sheet.fileSize / 1024).toFixed(2)} KB)</p>
+                    </div>`;
+                } else if (sheet.data && sheet.data.length > 0) {
+                    html += `<table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">`;
+                    
+                    // Add headers
+                    if (sheet.data[0] && sheet.data[0].length > 1) {
+                        html += '<tr style="background: #34495e; color: white;">';
+                        for (let i = 0; i < sheet.data[0].length; i++) {
+                            html += `<th style="padding: 10px; text-align: left;">Column ${i + 1}</th>`;
+                        }
+                        html += '</tr>';
+                    }
+                    
+                    // Add all data rows
+                    sheet.data.forEach((row, rowIndex) => {
+                        const isEven = rowIndex % 2 === 0;
+                        html += `<tr style="background: ${isEven ? '#fff' : '#f8f9fa'};">`;
+                        
+                        if (Array.isArray(row)) {
+                            row.forEach(cell => {
+                                const cellValue = cell !== null && cell !== undefined ? String(cell) : '';
+                                html += `<td style="padding: 8px; border-bottom: 1px solid #ecf0f1;" title="${cellValue}">${cellValue}</td>`;
+                            });
+                        } else {
+                            html += `<td colspan="10" style="padding: 8px; border-bottom: 1px solid #ecf0f1;">${row}</td>`;
+                        }
+                        html += '</tr>';
+                    });
+                    
+                    html += '</table>';
+                } else {
+                    html += '<div style="text-align: center; color: #7f8c8d; padding: 40px;">No data found</div>';
+                }
+                
+                html += '</div>';
+            });
+            
+            modalBody.innerHTML = html;
+            modal.style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('fullContentModal').style.display = 'none';
+        }
+
+        function showStatus(type, message) {
+            const statusMessage = document.getElementById('statusMessage');
+            statusMessage.className = `status-message status-${type}`;
+            statusMessage.textContent = message;
+            statusMessage.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusMessage.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        function showProgress(show) {
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+            
+            if (show) {
+                progressBar.style.display = 'block';
+                progressFill.style.width = '0%';
+                
+                // Animate progress
+                let width = 0;
+                const interval = setInterval(() => {
+                    if (width >= 100) {
+                        clearInterval(interval);
+                    } else {
+                        width += Math.random() * 10;
+                        progressFill.style.width = Math.min(width, 100) + '%';
+                    }
+                }, 100);
+            } else {
+                progressFill.style.width = '100%';
+                setTimeout(() => {
+                    progressBar.style.display = 'none';
+                }, 500);
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('fullContentModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Demo function
+        window.demoFileViewer = function() {
+            console.log('🎬 DEMO: File Viewer Interface');
+            console.log('============================');
+            console.log('This is a clean, modern file viewer interface!');
+            console.log('Features:');
+            console.log('- Drag & drop file upload');
+            console.log('- Beautiful UI with gradients and animations');
+            console.log('- Support for Excel, CSV, Text, Images, PDF');
+            console.log('- Responsive design');
+            console.log('- Full content modal view');
+            console.log('- File statistics and information');
+            console.log('');
+            console.log('💡 Try uploading a file to see it in action!');
+        };
+    </script>
+</body>
+</html>

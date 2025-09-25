@@ -1,0 +1,303 @@
+From d6c347ca9e8a538cf240a35d7ca76070335b0a9b Mon Sep 17 00:00:00 2001
+From: renren-3 <131635258+renren-3@users.noreply.github.com>
+Date: Wed, 24 Sep 2025 14:40:03 +0800
+Subject: [PATCH 21/22] Add database connection and data table Netlify
+ functions
+
+---
+ logs/combined.log                     |   7 ++
+ netlify/functions/database-connect.js |  91 +++++++++++++++++++++
+ netlify/functions/datatable-data.js   | 109 ++++++++++++++++++++++++++
+ public/index.html                     |  12 +--
+ 4 files changed, 213 insertions(+), 6 deletions(-)
+ create mode 100644 netlify/functions/database-connect.js
+ create mode 100644 netlify/functions/datatable-data.js
+
+diff --git a/logs/combined.log b/logs/combined.log
+index a1258c7..f5814e6 100644
+--- a/logs/combined.log
++++ b/logs/combined.log
+@@ -1530,3 +1530,10 @@
+ {"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:31:36.323Z"}
+ {"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:31:46.269Z"}
+ {"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:32:43.266Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:37:55.876Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-24T06:38:42.363Z"}
++{"level":"info","message":"Total records in database: 2779","service":"costing-automation","timestamp":"2025-09-24T06:38:45.861Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-24T06:38:46.262Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-24T06:38:46.631Z"}
++{"level":"info","message":"Fetched batch: 779 records (total so far: 2779)","service":"costing-automation","timestamp":"2025-09-24T06:38:46.818Z"}
++{"level":"info","message":"Final result: 2779 records loaded, total count: 2779","service":"costing-automation","timestamp":"2025-09-24T06:38:46.820Z"}
+diff --git a/netlify/functions/database-connect.js b/netlify/functions/database-connect.js
+new file mode 100644
+index 0000000..92ed965
+--- /dev/null
++++ b/netlify/functions/database-connect.js
+@@ -0,0 +1,91 @@
++const { createClient } = require('@supabase/supabase-js');
++
++exports.handler = async (event, context) => {
++  // Set CORS headers
++  const headers = {
++    'Access-Control-Allow-Origin': '*',
++    'Access-Control-Allow-Headers': 'Content-Type',
++    'Access-Control-Allow-Methods': 'POST, OPTIONS',
++    'Content-Type': 'application/json'
++  };
++
++  // Handle preflight OPTIONS request
++  if (event.httpMethod === 'OPTIONS') {
++    return {
++      statusCode: 200,
++      headers,
++      body: ''
++    };
++  }
++
++  // Only allow POST requests
++  if (event.httpMethod !== 'POST') {
++    return {
++      statusCode: 405,
++      headers,
++      body: JSON.stringify({ error: 'Method not allowed' })
++    };
++  }
++
++  try {
++    // Initialize Supabase client
++    const supabaseUrl = process.env.SUPABASE_URL;
++    const supabaseKey = process.env.SUPABASE_ANON_KEY;
++    
++    if (!supabaseUrl || !supabaseKey) {
++      return {
++        statusCode: 500,
++        headers,
++        body: JSON.stringify({ 
++          success: false, 
++          error: 'Supabase configuration missing' 
++        })
++      };
++    }
++
++    const supabase = createClient(supabaseUrl, supabaseKey);
++
++    // Test the connection by querying a simple table
++    const { data, error } = await supabase
++      .from('databank')
++      .select('*')
++      .limit(1);
++
++    if (error) {
++      console.error('Supabase connection error:', error);
++      return {
++        statusCode: 500,
++        headers,
++        body: JSON.stringify({
++          success: false,
++          error: 'Failed to connect to database',
++          details: error.message
++        })
++      };
++    }
++
++    // Return connection success
++    return {
++      statusCode: 200,
++      headers,
++      body: JSON.stringify({
++        success: true,
++        message: 'Connected to Supabase successfully',
++        connectionId: 'supabase-connection',
++        database: 'Supabase',
++        tables: ['databank', 'beanie_costs'] // Add your actual table names
++      })
++    };
++
++  } catch (error) {
++    console.error('Function error:', error);
++    return {
++      statusCode: 500,
++      headers,
++      body: JSON.stringify({
++        success: false,
++        error: error.message || 'Unknown error occurred'
++      })
++    };
++  }
++};
+diff --git a/netlify/functions/datatable-data.js b/netlify/functions/datatable-data.js
+new file mode 100644
+index 0000000..efa1baf
+--- /dev/null
++++ b/netlify/functions/datatable-data.js
+@@ -0,0 +1,109 @@
++const { createClient } = require('@supabase/supabase-js');
++
++exports.handler = async (event, context) => {
++  // Set CORS headers
++  const headers = {
++    'Access-Control-Allow-Origin': '*',
++    'Access-Control-Allow-Headers': 'Content-Type',
++    'Access-Control-Allow-Methods': 'GET, OPTIONS',
++    'Content-Type': 'application/json'
++  };
++
++  // Handle preflight OPTIONS request
++  if (event.httpMethod === 'OPTIONS') {
++    return {
++      statusCode: 200,
++      headers,
++      body: ''
++    };
++  }
++
++  // Only allow GET requests
++  if (event.httpMethod !== 'GET') {
++    return {
++      statusCode: 405,
++      headers,
++      body: JSON.stringify({ error: 'Method not allowed' })
++    };
++  }
++
++  try {
++    // Parse query parameters
++    const { table, limit = 1000, offset = 0 } = event.queryStringParameters || {};
++
++    if (!table) {
++      return {
++        statusCode: 400,
++        headers,
++        body: JSON.stringify({
++          success: false,
++          error: 'Table name is required'
++        })
++      };
++    }
++
++    // Initialize Supabase client
++    const supabaseUrl = process.env.SUPABASE_URL;
++    const supabaseKey = process.env.SUPABASE_ANON_KEY;
++    
++    if (!supabaseUrl || !supabaseKey) {
++      return {
++        statusCode: 500,
++        headers,
++        body: JSON.stringify({ 
++          success: false, 
++          error: 'Supabase configuration missing' 
++        })
++      };
++    }
++
++    const supabase = createClient(supabaseUrl, supabaseKey);
++
++    // Get data from the specified table
++    const { data: records, error } = await supabase
++      .from(table)
++      .select('*')
++      .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
++
++    if (error) {
++      console.error('Supabase query error:', error);
++      return {
++        statusCode: 500,
++        headers,
++        body: JSON.stringify({
++          success: false,
++          error: 'Failed to fetch data from database',
++          details: error.message
++        })
++      };
++    }
++
++    // Get total count
++    const { count } = await supabase
++      .from(table)
++      .select('*', { count: 'exact', head: true });
++
++    return {
++      statusCode: 200,
++      headers,
++      body: JSON.stringify({
++        success: true,
++        data: records,
++        total: count,
++        limit: parseInt(limit),
++        offset: parseInt(offset)
++      })
++    };
++
++  } catch (error) {
++    console.error('Function error:', error);
++    return {
++      statusCode: 500,
++      headers,
++      body: JSON.stringify({
++        success: false,
++        error: error.message || 'Unknown error occurred'
++      })
++    };
++  }
++};
+diff --git a/public/index.html b/public/index.html
+index 14502e8..7d151cd 100644
+--- a/public/index.html
++++ b/public/index.html
+@@ -3107,7 +3107,7 @@
+                 };
+ 
+                 console.log('Sending connection request...', config);
+-                const response = await fetch('/api/database/connect', {
++                const response = await fetch('/.netlify/functions/database-connect', {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify(config)
+@@ -3173,7 +3173,7 @@
+             }
+ 
+             try {
+-                const response = await fetch('/api/database/connect', {
++                const response = await fetch('/.netlify/functions/database-connect', {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify(config)
+@@ -3231,7 +3231,7 @@
+                 console.log('Loading ALL data from Supabase with connection ID:', connectionId);
+                 // Load ALL data from Supabase - no limit
+                 const timestamp = new Date().getTime();
+-                const response = await fetch(`/api/datatable/data/${connectionId}?table=databank&limit=999999&_t=${timestamp}`);
++                const response = await fetch(`/.netlify/functions/datatable-data?${connectionId}?table=databank&limit=999999&_t=${timestamp}`);
+                 const result = await response.json();
+                 
+                 console.log('Fresh data loading result:', result);
+@@ -3344,7 +3344,7 @@
+             if (!tableName || !connectionId) return;
+ 
+             try {
+-                const response = await fetch(`/api/datatable/data/${connectionId}?table=${tableName}&limit=10`);
++                const response = await fetch(`/.netlify/functions/datatable-data?${connectionId}?table=${tableName}&limit=10`);
+                 const result = await response.json();
+                 
+                 if (result.data) {
+@@ -3791,7 +3791,7 @@
+ 
+             try {
+                 // Get just the count without loading data
+-                const response = await fetch(`/api/datatable/data/${connectionId}?table=databank&limit=1`);
++                const response = await fetch(`/.netlify/functions/datatable-data?${connectionId}?table=databank&limit=1`);
+                 const result = await response.json();
+                 
+                 if (result.total) {
+@@ -5129,7 +5129,7 @@
+                 showLoadingAnimation(`Loading FRESH data from Supabase and searching for ${filterType}: "${searchValue}"...`);
+                 
+                 // Load ALL data from Supabase
+-                const response = await fetch(`/api/datatable/data/${connectionId}?table=databank&limit=999999`);
++                const response = await fetch(`/.netlify/functions/datatable-data?${connectionId}?table=databank&limit=999999`);
+                 const result = await response.json();
+                 
+                 if (result.data && result.data.length > 0) {
+-- 
+2.51.0.windows.1
+

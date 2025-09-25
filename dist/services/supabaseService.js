@@ -95,6 +95,7 @@ class SupabaseService {
     async getTableData(query) {
         try {
             const { table, page = 1, limit = 10, sortBy, sortOrder = 'ASC', filters = {}, search } = query;
+            const isLargeDataset = limit > 1000;
             let queryBuilder = this.supabase.from(table).select('*', { count: 'exact' });
             Object.entries(filters).forEach(([key, value]) => {
                 if (value !== undefined && value !== null && value !== '') {
@@ -114,9 +115,53 @@ class SupabaseService {
             if (sortBy) {
                 queryBuilder = queryBuilder.order(sortBy, { ascending: sortOrder === 'ASC' });
             }
-            const offset = (page - 1) * limit;
-            queryBuilder = queryBuilder.range(offset, offset + limit - 1);
-            const { data, error, count } = await queryBuilder;
+            let data, error, count;
+            if (isLargeDataset) {
+                const countQuery = this.supabase.from(table).select('*', { count: 'exact', head: true });
+                const { count: totalCount, error: countError } = await countQuery;
+                if (countError) {
+                    error = countError;
+                    logger_1.default.error('Error getting total count:', countError);
+                }
+                else {
+                    logger_1.default.info(`Total records in database: ${totalCount}`);
+                    const allData = [];
+                    let offset = 0;
+                    const batchSize = 1000;
+                    let hasMoreData = true;
+                    while (hasMoreData) {
+                        const batchQuery = queryBuilder.range(offset, offset + batchSize - 1);
+                        const { data: batchData, error: batchError } = await batchQuery;
+                        if (batchError) {
+                            error = batchError;
+                            logger_1.default.error('Error fetching batch:', batchError);
+                            break;
+                        }
+                        if (batchData && batchData.length > 0) {
+                            allData.push(...batchData);
+                            offset += batchSize;
+                            logger_1.default.info(`Fetched batch: ${batchData.length} records (total so far: ${allData.length})`);
+                            if (batchData.length < batchSize) {
+                                hasMoreData = false;
+                            }
+                        }
+                        else {
+                            hasMoreData = false;
+                        }
+                    }
+                    data = allData;
+                    count = totalCount;
+                    logger_1.default.info(`Final result: ${allData.length} records loaded, total count: ${totalCount}`);
+                }
+            }
+            else {
+                const offset = (page - 1) * limit;
+                queryBuilder = queryBuilder.range(offset, offset + limit - 1);
+                const result = await queryBuilder;
+                data = result.data;
+                error = result.error;
+                count = result.count;
+            }
             if (error)
                 throw error;
             return {

@@ -1,0 +1,2609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Databank Data Management System</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('everest.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: #2c2c2c;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            padding: 30px 40px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .nav-logo {
+            height: 60px;
+            width: auto;
+        }
+
+        .header-title {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            font-size: 28px;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 0;
+            letter-spacing: 0.5px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .table th, .table td {
+            padding: 20px 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .table td {
+            color: #2c2c2c;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .table th {
+            background: #2c2c2c;
+            color: white;
+            font-weight: 500;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f8f9ff;
+            transition: background-color 0.2s ease;
+        }
+
+        .table tbody tr:nth-child(even) {
+            background-color: #fafbfc;
+        }
+
+        .data-table-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 20px 30px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .table-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c2c2c;
+            margin: 0;
+        }
+
+        .table-stats {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            color: #2c2c2c;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .search-container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 0;
+            margin-bottom: 40px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+        }
+
+        .search-header {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px 40px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .search-title {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            font-size: 22px;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 0;
+            letter-spacing: 0.5px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .search-form {
+            padding: 40px;
+            display: grid;
+            grid-template-columns: 1fr 2fr auto auto auto;
+            gap: 20px;
+            align-items: end;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 0 0 20px 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 12px;
+            font-weight: 500;
+            color: #2c2c2c;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .filter-select {
+            padding: 16px 20px;
+            border: 2px solid #d0d0d0;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: white;
+            color: #2c2c2c;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%232c2c2c' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 16px center;
+            background-repeat: no-repeat;
+            background-size: 16px;
+            padding-right: 50px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #2c2c2c;
+            box-shadow: none;
+        }
+
+        .search-input {
+            padding: 16px 20px;
+            border: 2px solid #d0d0d0;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: white;
+            color: #2c2c2c;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #2c2c2c;
+            box-shadow: none;
+        }
+
+        .search-input::placeholder {
+            color: #8a8a8a;
+        }
+
+        .search-button {
+            background: #2c2c2c;
+            color: white;
+            border: 2px solid #2c2c2c;
+            padding: 16px 30px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 120px;
+            justify-content: center;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .search-button:hover {
+            background: #1a1a1a;
+            transform: translateY(-1px);
+        }
+
+        .search-button:active {
+            transform: translateY(0);
+        }
+
+        .clear-button {
+            background: rgba(255, 255, 255, 0.9);
+            color: #2c2c2c;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 16px 25px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 100px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .clear-button:hover {
+            background: #faf9f7;
+            border-color: #2c2c2c;
+            color: #2c2c2c;
+        }
+
+        .import-button {
+            background: #3b82f6;
+            color: white;
+            border: 2px solid #3b82f6;
+            padding: 16px 25px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 100px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .import-button:hover {
+            background: #2563eb;
+            border-color: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+        }
+
+        .import-button:active {
+            transform: translateY(0);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .search-form {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
+            .search-header {
+                padding: 20px 24px;
+            }
+            
+            .search-form {
+                padding: 24px;
+            }
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .dropdown {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            font-size: 12px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .action-btn {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn-edit {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .action-btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .import-section {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 40px;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease-out;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: white;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { 
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .import-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .import-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .import-title {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            font-size: 24px;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 0;
+            letter-spacing: 0.5px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .import-subtitle {
+            color: #ffffff;
+            font-size: 16px;
+            margin: 8px 0 0 0;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .form-group-enhanced {
+            margin-bottom: 0;
+        }
+
+        .form-group-enhanced label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group-enhanced select {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .form-group-enhanced select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .file-upload {
+            border: 3px dashed #667eea;
+            padding: 40px 20px;
+            text-align: center;
+            border-radius: 12px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-upload::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .file-upload:hover {
+            border-color: #764ba2;
+            background: linear-gradient(135deg, #f0f2ff 0%, #ffffff 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+        }
+
+        .file-upload:hover::before {
+            left: 100%;
+        }
+
+        .file-upload-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .file-upload-icon {
+            font-size: 48px;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .file-upload-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+
+        .file-upload-subtext {
+            font-size: 14px;
+            color: #6c757d;
+            margin: 0;
+        }
+
+        .supported-formats {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .format-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-dots {
+            display: inline-block;
+            position: relative;
+            width: 80px;
+            height: 20px;
+        }
+
+        .loading-dots div {
+            position: absolute;
+            top: 0;
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            background: #667eea;
+            animation-timing-function: cubic-bezier(0, 1, 1, 0);
+        }
+
+        .loading-dots div:nth-child(1) {
+            left: 8px;
+            animation: loading-dots1 0.6s infinite;
+        }
+
+        .loading-dots div:nth-child(2) {
+            left: 8px;
+            animation: loading-dots2 0.6s infinite;
+        }
+
+        .loading-dots div:nth-child(3) {
+            left: 32px;
+            animation: loading-dots2 0.6s infinite;
+        }
+
+        .loading-dots div:nth-child(4) {
+            left: 56px;
+            animation: loading-dots3 0.6s infinite;
+        }
+
+        @keyframes loading-dots1 {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes loading-dots3 {
+            0% { transform: scale(1); }
+            100% { transform: scale(0); }
+        }
+
+        @keyframes loading-dots2 {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(24px, 0); }
+        }
+
+        .search-loading {
+            background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+            border: 2px solid #e3f2fd;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            margin: 20px 0;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-loading h3 {
+            color: #2c3e50;
+            margin: 0 0 15px 0;
+            font-size: 18px;
+        }
+
+        .search-loading p {
+            color: #6c757d;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background-color: #e9ecef;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 3px;
+            animation: progress 2s ease-in-out infinite;
+        }
+
+        @keyframes progress {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+
+        /* Intro Loading Animation */
+        .intro-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 1;
+            transition: opacity 1s ease-out;
+        }
+
+        .intro-overlay.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .intro-logo {
+            width: 300px;
+            height: auto;
+            max-width: 300px;
+            max-height: 300px;
+            object-fit: contain;
+            animation: logoPopFade 3s ease-in-out;
+        }
+
+        @keyframes logoPopFade {
+            0% { 
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            20% { 
+                opacity: 1;
+                transform: scale(1.1);
+            }
+            80% { 
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% { 
+                opacity: 0;
+                transform: scale(0.8);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Intro Loading Animation -->
+    <div class="intro-overlay" id="introOverlay">
+        <img src="MadisonLogoDark.png" alt="Madison Logo" class="intro-logo">
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <img src="MadisonWhiteLogo.png" alt="Madison Logo" class="nav-logo">
+            <h1 class="header-title">Costing Department</h1>
+        </div>
+
+        <!-- Database Connection Section - Hidden -->
+        <div class="section" style="display: none;">
+            <h2>Database Connection</h2>
+            <div class="form-group">
+                <label for="dbType">Database Type:</label>
+                <select id="dbType">
+                    <option value="supabase" selected>Supabase</option>
+                    <option value="mysql">MySQL</option>
+                    <option value="postgresql">PostgreSQL</option>
+                    <option value="sqlite">SQLite</option>
+                </select>
+            </div>
+            
+            <div id="supabaseConfig">
+                <div class="form-group">
+                    <label for="supabaseUrl">Supabase URL:</label>
+                    <input type="text" id="supabaseUrl" value="https://icavnpspgmcrrqmsprze.supabase.co" placeholder="https://your-project.supabase.co">
+                </div>
+                <div class="form-group">
+                    <label for="supabaseKey">Supabase Anon Key:</label>
+                    <input type="text" id="supabaseKey" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljYXZucHNwZ21jcnJxbXNwcnplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0NzEyMzMsImV4cCI6MjA3MzA0NzIzM30.5_-LPYwj5ks_KyCXwCae2mcbI-T7em48RsMiv4Oaurk" placeholder="Your anon key">
+                </div>
+            </div>
+
+            <div id="otherDbConfig" class="hidden">
+                <div class="form-group">
+                    <label for="dbHost">Host:</label>
+                    <input type="text" id="dbHost" placeholder="localhost">
+                </div>
+                <div class="form-group">
+                    <label for="dbPort">Port:</label>
+                    <input type="number" id="dbPort" placeholder="5432">
+                </div>
+                <div class="form-group">
+                    <label for="dbUsername">Username:</label>
+                    <input type="text" id="dbUsername" placeholder="username">
+                </div>
+                <div class="form-group">
+                    <label for="dbPassword">Password:</label>
+                    <input type="password" id="dbPassword" placeholder="password">
+                </div>
+                <div class="form-group">
+                    <label for="dbName">Database Name:</label>
+                    <input type="text" id="dbName" placeholder="database_name">
+                </div>
+            </div>
+
+            <button onclick="connectDatabase()" id="connectButton">Connect to Database</button>
+            <div id="connectionStatus"></div>
+            <div id="autoConnectStatus" style="display: block;">
+                <div class="loading">🔄 Auto-connecting to Supabase...</div>
+            </div>
+        </div>
+
+        <!-- Tables Section - Hidden -->
+        <div class="section" id="tablesSection" style="display: none;">
+            <h2>Database Tables</h2>
+            <button onclick="loadTables()">Refresh Tables</button>
+            <div id="tablesList"></div>
+        </div>
+
+        <!-- Data Table Section -->
+        <div class="data-table-container" id="dataTableSection" style="display: none;">
+            <div class="table-header">
+                <h2 class="table-title">Databank Data Management</h2>
+            </div>
+            
+            <div class="search-container">
+                <div class="search-form">
+                    <div class="filter-group">
+                        <label for="filterType">Filter By</label>
+                        <select id="filterType" class="filter-select" onchange="updateSearchPlaceholder()">
+                            <option value="">Select filter type</option>
+                            <option value="season">Season</option>
+                            <option value="customer">Customer</option>
+                            <option value="style_number">Style Number</option>
+                        </select>
+            </div>
+            
+                    <div class="filter-group">
+                        <label for="searchInput">Search Value</label>
+                        <input type="text" id="searchInput" class="search-input" placeholder="Select filter type first..." onkeyup="handleSearchKeyup(event)">
+                    </div>
+                    
+                    <button class="search-button" onclick="searchData()">
+                        Search
+                    </button>
+                    <button class="clear-button" onclick="clearSearch()">
+                        Clear
+                    </button>
+                    <button class="import-button" onclick="exportToExcel()">
+                        Export
+                    </button>
+                    <button class="import-button" onclick="openImportModal()" style="background: #6f42c1;">
+                        Import
+                    </button>
+                </div>
+            </div>
+            
+            <div id="tableData"></div>
+        </div>
+
+        <!-- Import Modal -->
+        <div class="modal-overlay" id="importModal">
+            <div class="modal-content">
+                <button class="modal-close" onclick="closeImportModal()">&times;</button>
+                
+                <div class="import-header">
+                    <div class="import-icon">
+                        📊
+                    </div>
+                    <div>
+                        <h2 class="import-title">Import Data</h2>
+                        <p class="import-subtitle">Upload your data files to the database</p>
+                    </div>
+                </div>
+                
+                <div class="file-upload" onclick="document.getElementById('fileInput').click()">
+                    <div class="file-upload-content">
+                        <div class="file-upload-icon">📁</div>
+                        <div class="file-upload-text">Click to select your file</div>
+                        <div class="file-upload-subtext">Drag and drop or click to browse</div>
+                        <div class="supported-formats">
+                            <span class="format-badge">CSV</span>
+                            <span class="format-badge">Excel</span>
+                            <span class="format-badge">XLSX</span>
+                        </div>
+                    </div>
+                    <input type="file" id="fileInput" accept=".csv,.xlsx" style="display: none;" onchange="handleFileSelect(event)">
+                </div>
+                
+                <!-- Data Review Panel -->
+                <div id="dataReviewPanel" style="display: none; margin-top: 20px;">
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px;">
+                        <h3>🔍 Data Review & Verification</h3>
+                        <p style="color: #6c757d; margin-bottom: 20px;">Please review the scanned data and verify column mappings before importing</p>
+                        
+                        <!-- Scanned Data Summary -->
+                        <div id="scannedDataSummary" style="background: white; border: 1px solid #ddd; border-radius: 4px; padding: 15px; margin-bottom: 20px;">
+                            <h4>📋 Scanned Data Summary</h4>
+                            <div id="summaryContent"></div>
+                        </div>
+                        
+                        <!-- Column Mapping Review -->
+                        <div id="columnMappingReview" style="background: white; border: 1px solid #ddd; border-radius: 4px; padding: 15px; margin-bottom: 20px;">
+                            <h4>🗂️ Column Mapping Review</h4>
+                            <div id="mappingContent"></div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div style="text-align: center; margin-top: 20px;">
+                            <button class="btn btn-secondary" onclick="cancelImport()" style="margin-right: 10px;">❌ Cancel</button>
+                            <button class="btn btn-primary" onclick="confirmImport()">✅ Confirm & Import Data</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="filePreview" style="display: none;">
+                    <h3>File Preview</h3>
+                    <div id="previewTable"></div>
+                    <button onclick="importFile()">Import Data</button>
+                </div>
+                
+                <div id="importStatus"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check if XLSX library loaded properly
+        window.addEventListener('load', function() {
+            if (typeof XLSX === 'undefined') {
+                console.error('XLSX library failed to load');
+                // Try loading from alternative CDN
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js';
+                script.onload = function() {
+                    console.log('XLSX library loaded from alternative CDN');
+                };
+                script.onerror = function() {
+                    console.error('Failed to load XLSX library from both CDNs');
+                };
+                document.head.appendChild(script);
+            } else {
+                console.log('XLSX library loaded successfully');
+            }
+        });
+
+        let connectionId = null;
+        let currentFile = null;
+        let filePreview = null;
+        let scannedData = null;
+        let columnMappings = null;
+        let totalRecords = 0;
+
+        // Intro loading animation
+        let introHidden = false;
+        function hideIntroOverlay() {
+            if (introHidden) return; // Prevent multiple calls
+            introHidden = true;
+            
+            const introOverlay = document.getElementById('introOverlay');
+            if (introOverlay) {
+                introOverlay.classList.add('fade-out');
+                setTimeout(() => {
+                    introOverlay.style.display = 'none';
+                }, 1000);
+            }
+        }
+
+        // Modal functions
+        function openImportModal() {
+            const modal = document.getElementById('importModal');
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        }
+
+        function closeImportModal() {
+            const modal = document.getElementById('importModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto'; // Restore scrolling
+            
+            // Reset import form
+            document.getElementById('fileInput').value = '';
+            document.getElementById('dataReviewPanel').style.display = 'none';
+            document.getElementById('filePreview').style.display = 'none';
+            document.getElementById('importStatus').innerHTML = '';
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('importModal');
+            if (event.target === modal) {
+                closeImportModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeImportModal();
+            }
+        });
+
+        // Auto-connect to Supabase when page loads
+        window.addEventListener('load', function() {
+            console.log('Page loaded, starting intro animation...');
+            
+            // Start connecting to Supabase immediately but don't hide intro yet
+            console.log('Auto-connecting to Supabase...');
+                autoConnectToSupabase();
+        });
+
+        // Show/hide database config based on type
+        document.getElementById('dbType').addEventListener('change', function() {
+            const isSupabase = this.value === 'supabase';
+            document.getElementById('supabaseConfig').style.display = isSupabase ? 'block' : 'none';
+            document.getElementById('otherDbConfig').style.display = isSupabase ? 'none' : 'block';
+        });
+
+        // Auto-connect function
+        async function autoConnectToSupabase() {
+            console.log('Starting auto-connect to Supabase...');
+            // Show loading status
+            document.getElementById('autoConnectStatus').style.display = 'block';
+            document.getElementById('connectButton').style.display = 'none';
+            
+            try {
+                const config = {
+                    type: 'supabase',
+                    supabaseUrl: 'https://icavnpspgmcrrqmsprze.supabase.co',
+                    supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljYXZucHNwZ21jcnJxbXNwcnplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0NzEyMzMsImV4cCI6MjA3MzA0NzIzM30.5_-LPYwj5ks_KyCXwCae2mcbI-T7em48RsMiv4Oaurk'
+                };
+
+                console.log('Sending connection request...', config);
+                const response = await fetch('/api/database/connect', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+
+                console.log('Response received:', response.status);
+                const result = await response.json();
+                console.log('Result:', result);
+                
+                if (result.success) {
+                    connectionId = result.connectionId;
+                    showStatus('connectionStatus', '✅ Auto-connected to Supabase successfully!', 'success');
+                    document.getElementById('dataTableSection').style.display = 'block';
+                    document.getElementById('autoConnectStatus').style.display = 'none';
+                    
+                    // Auto-load databank table data immediately
+                    setTimeout(() => {
+                        loadDatabankData().then(() => {
+                        // Also get the total count for button updates
+                            getTotalRecordCount().then(() => {
+                                // Everything is loaded, now hide the intro overlay
+                                setTimeout(() => {
+                                    hideIntroOverlay();
+                                }, 1000); // Small delay to ensure everything is rendered
+                            });
+                        });
+                    }, 500);
+                } else {
+                    showStatus('connectionStatus', '❌ Auto-connection failed: ' + (result.message || 'Unknown error'), 'error');
+                    document.getElementById('autoConnectStatus').style.display = 'none';
+                    document.getElementById('connectButton').style.display = 'inline-block';
+                    
+                    // Hide intro overlay even if connection fails
+                    setTimeout(() => {
+                        hideIntroOverlay();
+                    }, 2000);
+                }
+            } catch (error) {
+                showStatus('connectionStatus', '❌ Auto-connection error: ' + error.message, 'error');
+                document.getElementById('autoConnectStatus').style.display = 'none';
+                document.getElementById('connectButton').style.display = 'inline-block';
+                
+                // Hide intro overlay even if there's an error
+                setTimeout(() => {
+                    hideIntroOverlay();
+                }, 2000);
+            }
+        }
+
+        async function connectDatabase() {
+            const dbType = document.getElementById('dbType').value;
+            let config = { type: dbType };
+
+            if (dbType === 'supabase') {
+                config.supabaseUrl = document.getElementById('supabaseUrl').value;
+                config.supabaseKey = document.getElementById('supabaseKey').value;
+            } else {
+                config.host = document.getElementById('dbHost').value;
+                config.port = parseInt(document.getElementById('dbPort').value);
+                config.username = document.getElementById('dbUsername').value;
+                config.password = document.getElementById('dbPassword').value;
+                config.database = document.getElementById('dbName').value;
+            }
+
+            try {
+                const response = await fetch('/api/database/connect', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    connectionId = result.connectionId;
+                    showStatus('connectionStatus', 'Connected successfully!', 'success');
+                    document.getElementById('tablesSection').style.display = 'block';
+                    document.getElementById('importSection').style.display = 'block';
+                    loadTables();
+                } else {
+                    showStatus('connectionStatus', result.message || 'Connection failed', 'error');
+                }
+            } catch (error) {
+                showStatus('connectionStatus', 'Connection error: ' + error.message, 'error');
+            }
+        }
+
+        async function loadTables() {
+            if (!connectionId) return;
+
+            try {
+                const response = await fetch(`/api/database/tables/${connectionId}`);
+                const result = await response.json();
+                
+                if (result.tables) {
+                    displayTables(result.tables);
+                } else {
+                    showStatus('tablesList', 'No tables found', 'error');
+                }
+            } catch (error) {
+                showStatus('tablesList', 'Error loading tables: ' + error.message, 'error');
+            }
+        }
+
+        // Auto-load databank table data - ALWAYS FRESH FROM SUPABASE
+        async function loadDatabankData(limit = 100) {
+            console.log('🔄 loadDatabankData called with limit:', limit);
+            
+            if (!connectionId) {
+                console.log('No connection ID available');
+                return;
+            }
+
+            try {
+                console.log('Loading FRESH databank data from Supabase with connection ID:', connectionId);
+                // Always load fresh data from Supabase with timestamp to prevent caching
+                const timestamp = new Date().getTime();
+                const response = await fetch(`/api/datatable/data/${connectionId}?table=databank&limit=${limit}&_t=${timestamp}`);
+                const result = await response.json();
+                
+                console.log('Fresh data loading result:', result);
+                
+                if (result.data) {
+                    console.log('Fresh data received, calling displayTableData with:', result.data.length, 'records');
+                    
+                    // Store total records globally
+                    totalRecords = result.total || result.data.length;
+                    window.totalRecords = totalRecords;
+                    
+                    // Clear any cached data
+                    window.currentTableData = null;
+                    
+                    displayTableData(result.data);
+                    
+                    // Update button counts with actual data
+                    updateButtonCounts(totalRecords);
+                    
+                    showStatus('tableData', `📊 Loaded ${result.data.length} FRESH records from Supabase (Total: ${totalRecords} records)`, 'success');
+                } else {
+                    console.log('No data in result');
+                    showStatus('tableData', 'No data found in databank table', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading databank data:', error);
+                showStatus('tableData', 'Error loading databank data: ' + error.message, 'error');
+            }
+        }
+
+        function displayTables(tables) {
+            const tablesList = document.getElementById('tablesList');
+            const selectedTable = document.getElementById('selectedTable');
+            const importTable = document.getElementById('importTable');
+            
+            let html = '<h3>Available Tables:</h3><ul>';
+            tables.forEach(table => {
+                html += `<li><strong>${table}</strong> <button onclick="loadTableInfo('${table}')">View Info</button></li>`;
+            });
+            html += '</ul>';
+            
+            tablesList.innerHTML = html;
+            
+            // Populate select options
+            selectedTable.innerHTML = '<option value="">Select a table</option>';
+            importTable.innerHTML = '<option value="">Select a table</option>';
+            tables.forEach(table => {
+                selectedTable.innerHTML += `<option value="${table}">${table}</option>`;
+                importTable.innerHTML += `<option value="${table}">${table}</option>`;
+            });
+            
+            // Auto-select databank table if it exists
+            if (tables.includes('databank')) {
+                selectedTable.value = 'databank';
+                importTable.value = 'databank';
+            }
+        }
+
+        async function loadTableInfo(tableName) {
+            if (!connectionId) return;
+
+            try {
+                const response = await fetch(`/api/database/table-info/${connectionId}/${tableName}`);
+                const result = await response.json();
+                
+                let html = `<h3>Table: ${tableName}</h3>`;
+                html += `<p><strong>Rows:</strong> ${result.rowCount}</p>`;
+                html += '<h4>Columns:</h4><table class="table"><tr><th>Name</th><th>Type</th><th>Nullable</th><th>Primary Key</th></tr>';
+                
+                result.columns.forEach(col => {
+                    html += `<tr>
+                        <td>${col.name}</td>
+                        <td>${col.type}</td>
+                        <td>${col.nullable ? 'Yes' : 'No'}</td>
+                        <td>${col.primaryKey ? 'Yes' : 'No'}</td>
+                    </tr>`;
+                });
+                html += '</table>';
+                
+                document.getElementById('tablesList').innerHTML = html;
+            } catch (error) {
+                showStatus('tablesList', 'Error loading table info: ' + error.message, 'error');
+            }
+        }
+
+        async function loadTableData() {
+            const tableName = document.getElementById('selectedTable').value;
+            if (!tableName || !connectionId) return;
+
+            try {
+                const response = await fetch(`/api/datatable/data/${connectionId}?table=${tableName}&limit=10`);
+                const result = await response.json();
+                
+                if (result.data) {
+                    displayTableData(result.data);
+                } else {
+                    showStatus('tableData', 'No data found', 'error');
+                }
+            } catch (error) {
+                showStatus('tableData', 'Error loading table data: ' + error.message, 'error');
+            }
+        }
+
+        function displayTableData(data) {
+            console.log('🔍 displayTableData called with:', data);
+            console.log('🔍 Data length:', data ? data.length : 'undefined');
+            console.log('🔍 Data type:', typeof data);
+            
+            // Store current data globally for pagination
+            window.currentTableData = data;
+            
+            // Check if tableData element exists
+            const tableElement = document.getElementById('tableData');
+            console.log('🔍 Table element exists:', !!tableElement);
+            console.log('🔍 Table element:', tableElement);
+            
+            if (!tableElement) {
+                console.error('❌ tableData element not found!');
+                alert('Table element not found! Check console for details.');
+                return;
+            }
+            
+            if (!data || data.length === 0) {
+                console.log('📭 No data to display');
+                tableElement.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #6c757d;">
+                        <h3>📭 No Data Available</h3>
+                        <p>No records found in the databank table. Try importing some data!</p>
+                        <button onclick="loadDatabankData()" style="margin-top: 20px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            🔄 Try Loading Data Again
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Define the specific columns we want to display in order
+            const displayColumns = [
+                'Season',
+                'Customer', 
+                'Style Number',
+                'Style Name',
+                'Main Material',
+                'Material Consumption',
+                'Material Price',
+                'Trim Cost',
+                'Total Material Cost',
+                'Knitting Machine',
+                'Knitting Time',
+                'Knitting CPM',
+                'Knitting Cost',
+                'Ops Cost',
+                'Knitting + Ops Cost',
+                'Packaging',
+                'OH',
+                'Profit',
+                'FTY Adjustment',
+                'TTL FTY Cost'
+            ];
+
+            // Map display names to potential database column names
+            const columnMapping = {
+                'Season': ['season', 'Season', 'SEASON', 'seasons', 'SEASONS'],
+                'Customer': ['customer', 'Customer', 'CUSTOMER', 'customers', 'CUSTOMERS'],
+                'Style Number': ['style_number', 'styleNumber', 'Style Number', 'STYLE_NUMBER', 'style_no', 'styleNo', 'STYLE_NO'],
+                'Style Name': ['style_name', 'styleName', 'Style Name', 'STYLE_NAME', 'style', 'STYLE'],
+                'Main Material': ['main_material', 'mainMaterial', 'Main Material', 'MAIN_MATERIAL', 'material', 'MATERIAL', 'main_materials'],
+                'Material Consumption': ['material_consumption', 'materialConsumption', 'Material Consumption', 'MATERIAL_CONSUMPTION', 'consumption', 'CONSUMPTION'],
+                'Material Price': ['material_price', 'materialPrice', 'Material Price', 'MATERIAL_PRICE', 'price', 'PRICE'],
+                'Trim Cost': ['trim_cost', 'trimCost', 'Trim Cost', 'TRIM_COST', 'trim', 'TRIM'],
+                'Total Material Cost': ['total_material_cost', 'totalMaterialCost', 'Total Material Cost', 'TOTAL_MATERIAL_COST', 'total_cost', 'totalCost'],
+                'Knitting Machine': ['knitting_machine', 'knittingMachine', 'Knitting Machine', 'KNITTING_MACHINE', 'machine', 'MACHINE'],
+                'Knitting Time': ['knitting_time', 'knittingTime', 'Knitting Time', 'KNITTING_TIME', 'time', 'TIME'],
+                'Knitting CPM': ['knitting_cpm', 'knittingCpm', 'Knitting CPM', 'KNITTING_CPM', 'cpm', 'CPM'],
+                'Knitting Cost': ['knitting_cost', 'knittingCost', 'Knitting Cost', 'KNITTING_COST', 'knitting', 'KNITTING'],
+                'Ops Cost': ['ops_cost', 'opsCost', 'Ops Cost', 'OPS_COST', 'ops', 'OPS', 'operations', 'OPERATIONS'],
+                'Knitting + Ops Cost': ['knitting_ops_cost', 'knittingOpsCost', 'Knitting + Ops Cost', 'KNITTING_OPS_COST', 'total_ops', 'totalOps'],
+                'Packaging': ['packaging', 'Packaging', 'PACKAGING', 'package', 'PACKAGE'],
+                'OH': ['oh', 'OH', 'overhead', 'Overhead', 'OVERHEAD', 'overheads', 'OVERHEADS'],
+                'Profit': ['profit', 'Profit', 'PROFIT', 'profits', 'PROFITS'],
+                'FTY Adjustment': ['fty_adjustment', 'ftyAdjustment', 'FTY Adjustment', 'FTY_ADJUSTMENT', 'fty', 'FTY', 'adjustment', 'ADJUSTMENT'],
+                'TTL FTY Cost': ['ttl_fty_cost', 'ttlFtyCost', 'TTL FTY Cost', 'TTL_FTY_COST', 'total_fty', 'totalFty', 'ttl_cost', 'ttlCost']
+            };
+
+            // Find actual database columns that match our display columns
+            const availableColumns = Object.keys(data[0]);
+            const mappedColumns = [];
+            const columnHeaders = [];
+
+            displayColumns.forEach(displayName => {
+                const possibleNames = columnMapping[displayName] || [displayName];
+                const foundColumn = possibleNames.find(name => availableColumns.includes(name));
+                
+                if (foundColumn) {
+                    mappedColumns.push(foundColumn);
+                    columnHeaders.push(displayName);
+                } else {
+                    // If column not found, still add it but mark as missing
+                    mappedColumns.push(null);
+                    columnHeaders.push(displayName);
+                }
+            });
+
+            console.log('Mapped columns:', mappedColumns);
+            console.log('Column headers:', columnHeaders);
+
+            // Always show the table with the desired column headers
+            // Even if database columns don't match, we'll show the structure
+            console.log('Showing table with desired column structure');
+            console.log('Available database columns:', Object.keys(data[0]));
+            console.log('Desired display columns:', displayColumns);
+            
+            // Show the table with your specific column headers
+            console.log('About to show table with data:', data.length, 'rows');
+            console.log('Mapped columns:', mappedColumns);
+            console.log('Column headers:', columnHeaders);
+            
+            try {
+                // Show the actual table directly
+                console.log('Showing actual table with data...');
+                console.log('Table element before showActualTable:', tableElement);
+                
+                // First show a simple message
+            tableElement.innerHTML = `
+                    <div style="padding: 20px; background: #e8f5e8; border: 2px solid #28a745; border-radius: 8px; margin: 10px;">
+                        <h3>🔄 Loading Table...</h3>
+                        <p>Processing ${data.length} records with ${mappedColumns.filter(c => c !== null).length} mapped columns</p>
+                </div>
+            `;
+            
+                // Then call showActualTable
+            setTimeout(() => {
+                    showActualTable(data, mappedColumns, columnHeaders, tableElement, displayColumns);
+                }, 500);
+                
+            } catch (error) {
+                console.error('Error in displayTableData:', error);
+                tableElement.innerHTML = `
+                    <div style="padding: 20px; background: #f8d7da; border: 2px solid #dc3545; border-radius: 8px; margin: 10px;">
+                        <h3>❌ Display Error</h3>
+                        <p>Error: ${error.message}</p>
+                        <p>Stack: ${error.stack}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function showActualTable(data, mappedColumns, columnHeaders, tableElement, displayColumns) {
+            console.log('Building actual table...');
+            console.log('Mapped columns:', mappedColumns);
+            console.log('Column headers:', columnHeaders);
+            console.log('Display columns:', displayColumns);
+            
+            try {
+            
+            // Create table with specific columns
+            let html = `
+                <div style="border: 1px solid #ddd; border-radius: 8px; background: white; margin: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <div style="max-height: 500px; overflow-y: auto; overflow-x: auto;">
+                        <table class="table" style="width: 100%; border-collapse: collapse; min-width: ${columnHeaders.length * 150}px; margin: 0;">
+                            <thead style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; position: sticky; top: 0; z-index: 10;">
+                                <tr>
+            `;
+            
+            // Add column headers with display names
+            columnHeaders.forEach((header, index) => {
+                const isMissing = mappedColumns[index] === null;
+                const headerStyle = isMissing ? 
+                    'padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; background: #ffebee; color: #c62828; font-style: italic; font-weight: 600;' :
+                    'padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600;';
+                html += `<th style="${headerStyle}">${header}${isMissing ? ' (Missing)' : ''}</th>`;
+            });
+            
+            html += `
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
+            
+            // Add data rows (show first 20 rows with mapped columns)
+            console.log('First row data:', data[0]);
+            console.log('Mapped columns for data:', mappedColumns);
+            
+            // Check if first row contains column names instead of data
+            const firstRowKeys = Object.keys(data[0]);
+            const firstRowValues = Object.values(data[0]);
+            console.log('First row keys:', firstRowKeys);
+            console.log('First row values:', firstRowValues);
+            
+            // More robust check for header row
+            let dataToShow = data;
+            
+            // Check if first row values match column names (case-insensitive)
+            const isHeaderRow = firstRowValues.every(val => {
+                const valStr = String(val).toLowerCase();
+                return firstRowKeys.some(key => key.toLowerCase() === valStr);
+            });
+            
+            // Also check if first row contains our specific display column names
+            const containsDisplayNames = firstRowValues.some(val => {
+                const valStr = String(val).toLowerCase();
+                return displayColumns.some(displayName => displayName.toLowerCase() === valStr);
+            });
+            
+            // Check for common header patterns
+            const commonHeaders = ['season', 'customer', 'style number', 'style name', 'main material'];
+            const containsCommonHeaders = firstRowValues.some(val => {
+                const valStr = String(val).toLowerCase();
+                return commonHeaders.includes(valStr);
+            });
+            
+            console.log('Is header row (keys match):', isHeaderRow);
+            console.log('Contains display names:', containsDisplayNames);
+            console.log('Contains common headers:', containsCommonHeaders);
+            
+            if (isHeaderRow || containsDisplayNames || containsCommonHeaders) {
+                console.log('Detected header row, skipping first row');
+                dataToShow = data.slice(1);
+            } else {
+                console.log('First row appears to be data, keeping all rows');
+            }
+            
+            console.log('Data to show (first 3 rows):', dataToShow.slice(0, 3));
+            
+            dataToShow.slice(0, 20).forEach((row, rowIndex) => {
+                const rowStyle = `background: ${rowIndex % 2 === 0 ? 'white' : '#f8f9fa'}; transition: background-color 0.2s ease;`;
+                html += `<tr style="${rowStyle}" onmouseover="this.style.backgroundColor='#e3f2fd'" onmouseout="this.style.backgroundColor='${rowIndex % 2 === 0 ? 'white' : '#f8f9fa'}'">`;
+                
+                mappedColumns.forEach((col, colIndex) => {
+                    if (col === null) {
+                        // Column not found in database - show placeholder
+                        html += `<td style="padding: 10px 8px; border: 1px solid #ddd; font-size: 13px; color: #c62828; font-style: italic; text-align: center; background: #ffebee; vertical-align: middle;">—</td>`;
+                    } else {
+                        const value = row[col];
+                        console.log(`Row ${rowIndex}, Column ${col}: value =`, value, 'type =', typeof value);
+                        
+                        // Handle different value types
+                        let displayValue = '';
+                        if (value === null || value === undefined) {
+                            displayValue = '';
+                        } else if (typeof value === 'object') {
+                            displayValue = JSON.stringify(value);
+                        } else {
+                            displayValue = String(value);
+                        }
+                        
+                        // Truncate if too long
+                        if (displayValue.length > 50) {
+                            displayValue = displayValue.substring(0, 50) + '...';
+                        }
+                        
+                        html += `<td style="padding: 10px 8px; border: 1px solid #ddd; font-size: 13px; vertical-align: middle;">${displayValue}</td>`;
+                    }
+                });
+                
+                html += `</tr>`;
+            });
+            
+            html += `
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="padding: 15px; background: #f8f9fa; text-align: center; border-top: 1px solid #ddd; border-radius: 0 0 8px 8px;">
+                        <div style="font-weight: 600; color: #495057; margin-bottom: 5px;">
+                            Showing ${Math.min(20, dataToShow.length)} of ${window.totalRecords || data.length} records
+                        </div>
+                        <small style="color: #6c757d;">
+                            <span style="color: #c62828;">●</span> Columns in red are missing from database
+                        </small>
+                    </div>
+                </div>
+            `;
+            
+            console.log('Setting filtered table...');
+            console.log('Table element before setting HTML:', tableElement);
+            console.log('HTML length:', html.length);
+            
+            tableElement.innerHTML = html;
+            console.log('Filtered table set successfully');
+            console.log('Table element after setting HTML:', tableElement);
+            console.log('Table element innerHTML length:', tableElement.innerHTML.length);
+            
+            // Force the table to be visible
+            tableElement.style.display = 'block';
+            tableElement.style.visibility = 'visible';
+            tableElement.style.minHeight = '200px';
+            
+            // Also ensure the parent container is visible
+            const parentContainer = tableElement.parentElement;
+            if (parentContainer) {
+                parentContainer.style.display = 'block';
+                parentContainer.style.visibility = 'visible';
+            }
+            
+            // Add a test div to verify something is being displayed
+            setTimeout(() => {
+                const testDiv = document.createElement('div');
+                testDiv.style.cssText = 'padding: 10px; background: #d4edda; border: 1px solid #c3e6cb; margin: 10px; border-radius: 4px; position: absolute; top: 10px; right: 10px; z-index: 1000;';
+                testDiv.innerHTML = '✅ Table rendered!';
+                document.body.appendChild(testDiv);
+                
+                // Remove after 3 seconds
+                setTimeout(() => {
+                    if (testDiv.parentNode) {
+                        testDiv.parentNode.removeChild(testDiv);
+                    }
+                }, 3000);
+            }, 100);
+            
+            } catch (error) {
+                console.error('Error in showActualTable:', error);
+                tableElement.innerHTML = `
+                    <div style="padding: 20px; background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; margin: 10px;">
+                        <h3>⚠️ Table Rendering Error</h3>
+                        <p>Error: ${error.message}</p>
+                        <p>Stack: ${error.stack}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function showColumnMappingDebug(availableColumns, displayColumns, mappedColumns) {
+            // Create a debug panel to show column mapping
+            const debugPanel = document.createElement('div');
+            debugPanel.style.cssText = `
+                margin: 20px;
+                padding: 15px;
+                background: #f8f9fa;
+                border: 1px solid #dee2e6;
+                border-radius: 8px;
+                font-size: 12px;
+            `;
+            
+            let debugHtml = '<h4>🔍 Column Mapping Debug</h4>';
+            debugHtml += '<div style="display: flex; gap: 20px;">';
+            
+            // Show available database columns
+            debugHtml += '<div style="flex: 1;">';
+            debugHtml += '<h5>Available Database Columns:</h5>';
+            debugHtml += '<ul style="margin: 0; padding-left: 20px;">';
+            availableColumns.forEach(col => {
+                debugHtml += `<li>${col}</li>`;
+            });
+            debugHtml += '</ul></div>';
+            
+            // Show mapping status
+            debugHtml += '<div style="flex: 1;">';
+            debugHtml += '<h5>Column Mapping Status:</h5>';
+            debugHtml += '<ul style="margin: 0; padding-left: 20px;">';
+            displayColumns.forEach((displayCol, index) => {
+                const mappedCol = mappedColumns[index];
+                const status = mappedCol ? '✅' : '❌';
+                const statusText = mappedCol ? `→ ${mappedCol}` : 'Not found';
+                debugHtml += `<li>${status} ${displayCol} ${statusText}</li>`;
+            });
+            debugHtml += '</ul></div>';
+            
+            debugHtml += '</div>';
+            debugPanel.innerHTML = debugHtml;
+            
+            // Insert after the table
+            const tableContainer = document.getElementById('tableData');
+            if (tableContainer && tableContainer.parentNode) {
+                tableContainer.parentNode.insertBefore(debugPanel, tableContainer.nextSibling);
+            }
+        }
+
+        function formatCellValue(value, columnName) {
+            if (value === null) return '<span style="color: #6c757d; font-style: italic;">—</span>';
+            if (value === undefined) return '<span style="color: #6c757d; font-style: italic;">—</span>';
+            if (typeof value === 'object') return `<code style="font-size: 12px; background: #f8f9fa; padding: 2px 6px; border-radius: 3px;">${JSON.stringify(value)}</code>`;
+            
+            // Format based on column name patterns
+            const lowerCol = columnName.toLowerCase();
+            if (lowerCol.includes('status') || lowerCol.includes('state')) {
+                const statusStyle = value.toLowerCase().includes('active') ? 'background: #d4edda; color: #155724;' : 
+                                  value.toLowerCase().includes('inactive') ? 'background: #f8d7da; color: #721c24;' : 
+                                  'background: #fff3cd; color: #856404;';
+                return `<span style="display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; ${statusStyle}">${value}</span>`;
+            }
+            
+            if (lowerCol.includes('date') || lowerCol.includes('time')) {
+                return `<span style="color: #6c757d; font-size: 14px;">${value}</span>`;
+            }
+            
+            if (lowerCol.includes('email')) {
+                return `<a href="mailto:${value}" style="color: #007bff; text-decoration: underline;">${value}</a>`;
+            }
+            
+            if (lowerCol.includes('url') || lowerCol.includes('link')) {
+                return `<a href="${value}" target="_blank" style="color: #007bff; text-decoration: underline;">${value}</a>`;
+            }
+            
+            return `<span style="color: #212529;">${String(value)}</span>`;
+        }
+
+        function scrollTableLeft() {
+            const container = document.getElementById('tableScrollContainer');
+            if (container) {
+                container.scrollBy({ left: -300, behavior: 'smooth' });
+            }
+        }
+
+        function scrollTableRight() {
+            const container = document.getElementById('tableScrollContainer');
+            if (container) {
+                container.scrollBy({ left: 300, behavior: 'smooth' });
+            }
+        }
+
+        function toggleYesBlank(columnName, rowIndex) {
+            console.log('Toggle Yes/Blank for column:', columnName, 'row:', rowIndex);
+            // Implementation for Yes/Blank toggle
+        }
+
+
+        function updateButtonCounts(count) {
+            const loadMoreBtn = document.getElementById('loadMoreBtn');
+            const loadAllBtn = document.getElementById('loadAllBtn');
+            
+            if (count) {
+                totalRecords = count;
+                window.totalRecords = totalRecords;
+            }
+            
+            if (loadMoreBtn) {
+                loadMoreBtn.textContent = `📄 Load More (100)`;
+            }
+            
+            if (loadAllBtn) {
+                loadAllBtn.textContent = `📚 Load All (${totalRecords.toLocaleString()})`;
+            }
+        }
+
+        // Get total record count from database
+        async function getTotalRecordCount() {
+            if (!connectionId) return Promise.resolve();
+
+            try {
+                // Get just the count without loading data
+                const response = await fetch(`/api/datatable/data/${connectionId}?table=databank&limit=1`);
+                const result = await response.json();
+                
+                if (result.total) {
+                    totalRecords = result.total;
+                    window.totalRecords = totalRecords;
+                    updateButtonCounts(totalRecords);
+                    console.log('Total records in database:', totalRecords);
+                }
+                return Promise.resolve();
+            } catch (error) {
+                console.error('Error getting total record count:', error);
+                return Promise.reject(error);
+            }
+        }
+
+        // Update search placeholder based on selected filter type
+        function updateSearchPlaceholder() {
+            const filterType = document.getElementById('filterType').value;
+            const searchInput = document.getElementById('searchInput');
+            
+            switch(filterType) {
+                case 'season':
+                    searchInput.placeholder = 'Enter season (e.g., F27, S28)...';
+                    break;
+                case 'customer':
+                    searchInput.placeholder = 'Enter customer name (e.g., TNF, Nike)...';
+                    break;
+                case 'style_number':
+                    searchInput.placeholder = 'Enter style number (e.g., TNFF27-014)...';
+                    break;
+                default:
+                    searchInput.placeholder = 'Select filter type first...';
+            }
+        }
+
+        // Export table data to Excel
+        function exportToExcel() {
+            try {
+                // Check if XLSX library is loaded
+                if (typeof XLSX === 'undefined') {
+                    console.log('XLSX library not found, falling back to CSV export...');
+                    exportToCSV();
+                    return;
+                }
+
+                // Get the current table data
+                const tableData = window.currentTableData || [];
+                
+                if (tableData.length === 0) {
+                    alert('No data available to export. Please load data first.');
+                    return;
+                }
+
+                // Get table headers from the actual table
+                const table = document.querySelector('.table');
+                if (!table) {
+                    alert('No table found. Please ensure data is loaded.');
+                    return;
+                }
+
+                const headers = [];
+                const headerCells = table.querySelectorAll('thead th');
+                headerCells.forEach(cell => {
+                    headers.push(cell.textContent.trim());
+                });
+
+                // Prepare data for Excel (skip header row, only include data)
+                const excelData = [];
+                
+                // Add data rows only (skip the header row)
+                tableData.forEach(row => {
+                    const rowData = [];
+                    headers.forEach(header => {
+                        // Map header names to data properties
+                        let value = '';
+                        switch(header.toLowerCase()) {
+                            case 'season':
+                                value = row.season || '';
+                                break;
+                            case 'customer':
+                                value = row.customer || '';
+                                break;
+                            case 'style number':
+                                value = row.style_number || '';
+                                break;
+                            case 'style name':
+                                value = row.style_name || '';
+                                break;
+                            case 'main material':
+                                value = row.main_material || '';
+                                break;
+                            case 'material consumption':
+                                value = row.material_consumption || '';
+                                break;
+                            case 'material price':
+                                value = row.material_price || '';
+                                break;
+                            default:
+                                value = row[header.toLowerCase().replace(/\s+/g, '_')] || '';
+                        }
+                        rowData.push(value);
+                    });
+                    excelData.push(rowData);
+                });
+
+                // Create workbook and worksheet
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet(excelData);
+
+                // Set column widths for better formatting
+                const colWidths = [];
+                headers.forEach((header, index) => {
+                    let maxWidth = header.length;
+                    excelData.forEach(row => {
+                        if (row[index] && row[index].toString().length > maxWidth) {
+                            maxWidth = row[index].toString().length;
+                        }
+                    });
+                    colWidths.push({ wch: Math.min(maxWidth + 2, 50) });
+                });
+                ws['!cols'] = colWidths;
+
+                // Add worksheet to workbook
+                XLSX.utils.book_append_sheet(wb, ws, 'Databank Data');
+
+                // Generate filename with timestamp (XLSM format)
+                const now = new Date();
+                const timestamp = now.toISOString().slice(0, 19).replace(/:/g, '-');
+                const filename = `Databank_Data_${timestamp}.xlsm`;
+
+                // Save the file as XLSM
+                XLSX.writeFile(wb, filename, { bookType: 'xlsm' });
+
+                // Show success message
+                showStatus('tableData', `✅ Excel file exported successfully: ${filename}`, 'success');
+                
+            } catch (error) {
+                console.error('Error exporting to Excel:', error);
+                showStatus('tableData', `❌ Error exporting to Excel: ${error.message}`, 'error');
+            }
+        }
+
+        // Fallback CSV export function
+        function exportToCSV() {
+            try {
+                const tableData = window.currentTableData || [];
+                
+                if (tableData.length === 0) {
+                    alert('No data available to export. Please load data first.');
+                    return;
+                }
+
+                const table = document.querySelector('.table');
+                if (!table) {
+                    alert('No table found. Please ensure data is loaded.');
+                    return;
+                }
+
+                const headers = [];
+                const headerCells = table.querySelectorAll('thead th');
+                headerCells.forEach(cell => {
+                    headers.push(cell.textContent.trim());
+                });
+
+                // Create CSV content (skip header row, only include data)
+                let csvContent = '';
+                
+                tableData.forEach(row => {
+                    const rowData = [];
+                    headers.forEach(header => {
+                        let value = '';
+                        switch(header.toLowerCase()) {
+                            case 'season':
+                                value = row.season || '';
+                                break;
+                            case 'customer':
+                                value = row.customer || '';
+                                break;
+                            case 'style number':
+                                value = row.style_number || '';
+                                break;
+                            case 'style name':
+                                value = row.style_name || '';
+                                break;
+                            case 'main material':
+                                value = row.main_material || '';
+                                break;
+                            case 'material consumption':
+                                value = row.material_consumption || '';
+                                break;
+                            case 'material price':
+                                value = row.material_price || '';
+                                break;
+                            default:
+                                value = row[header.toLowerCase().replace(/\s+/g, '_')] || '';
+                        }
+                        // Escape commas and quotes in CSV
+                        value = value.toString().replace(/"/g, '""');
+                        if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+                            value = '"' + value + '"';
+                        }
+                        rowData.push(value);
+                    });
+                    csvContent += rowData.join(',') + '\n';
+                });
+
+                // Create and download CSV file
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                
+                const now = new Date();
+                const timestamp = now.toISOString().slice(0, 19).replace(/:/g, '-');
+                const filename = `Databank_Data_${timestamp}.csv`;
+                link.setAttribute('download', filename);
+                
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                showStatus('tableData', `✅ CSV file exported successfully: ${filename}`, 'success');
+                
+            } catch (error) {
+                console.error('Error exporting to CSV:', error);
+                showStatus('tableData', `❌ Error exporting to CSV: ${error.message}`, 'error');
+            }
+        }
+
+        // Handle search input keyup event
+        function handleSearchKeyup(event) {
+            if (event.key === 'Enter') {
+                searchData();
+            }
+        }
+
+        // Search data based on selected filter and search value - LOADS FRESH DATA FROM SUPABASE
+        async function searchData() {
+            const filterType = document.getElementById('filterType').value;
+            const searchValue = document.getElementById('searchInput').value.trim();
+            
+            if (!filterType) {
+                showStatus('tableData', 'Please select a filter type first', 'error');
+                return;
+            }
+            
+            if (!searchValue) {
+                showStatus('tableData', 'Please enter a search value', 'error');
+                return;
+            }
+            
+            if (!connectionId) {
+                showStatus('tableData', 'No database connection available', 'error');
+                return;
+            }
+            
+            try {
+                // Show beautiful loading animation
+                showLoadingAnimation(`Loading FRESH data from Supabase and searching for ${filterType}: "${searchValue}"...`);
+                
+                // Load fresh data from Supabase with a high limit to get all data
+                const response = await fetch(`/api/datatable/data/${connectionId}?table=databank&limit=10000`);
+                const result = await response.json();
+                
+                if (result.data && result.data.length > 0) {
+                    console.log(`Fresh data loaded: ${result.data.length} records`);
+                    
+                    // Store the fresh data
+                    window.currentTableData = result.data;
+                    
+                    // Show searching animation
+                    showSearchingAnimation(`Searching through ${result.data.length} FRESH records for ${filterType}: "${searchValue}"...`);
+                    
+                    // Add a small delay to show the searching animation
+                    await new Promise(resolve => setTimeout(resolve, 800));
+                    
+                    // Filter the data on the client side
+                    const filteredData = result.data.filter(row => {
+                        const fieldValue = String(row[filterType] || '').toLowerCase();
+                        const searchTerm = searchValue.toLowerCase();
+                        return fieldValue.includes(searchTerm);
+                    });
+                    
+                    console.log(`Found ${filteredData.length} matching records out of ${result.data.length} total`);
+                    
+                    if (filteredData.length > 0) {
+                        displayTableData(filteredData);
+                        showStatus('tableData', `✅ Found ${filteredData.length} records matching "${searchValue}" in ${filterType} (searched ${result.data.length} FRESH records from Supabase)`, 'success');
+                    } else {
+                        showStatus('tableData', `❌ No records found matching "${searchValue}" in ${filterType} (searched ${result.data.length} FRESH records from Supabase)`, 'error');
+                    }
+                } else {
+                    showStatus('tableData', `❌ No data available in database`, 'error');
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+                showStatus('tableData', 'Error searching data: ' + error.message, 'error');
+            }
+        }
+
+        // Show beautiful loading animation
+        function showLoadingAnimation(message) {
+            const tableElement = document.getElementById('tableData');
+            tableElement.innerHTML = `
+                <div class="search-loading">
+                    <div class="loading-spinner"></div>
+                    <h3>🔍 ${message}</h3>
+                    <p>Please wait while we fetch the latest data from Supabase...</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Show searching animation
+        function showSearchingAnimation(message) {
+            const tableElement = document.getElementById('tableData');
+            tableElement.innerHTML = `
+                <div class="search-loading">
+                    <div class="loading-dots">
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                    </div>
+                    <h3>🔍 ${message}</h3>
+                    <p>Analyzing data and finding matches...</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Clear search and reset to show all data - ALWAYS FRESH
+        function clearSearch() {
+            document.getElementById('filterType').value = '';
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchInput').placeholder = 'Select filter type first...';
+            
+            // Clear cached data and reload fresh data from Supabase
+            window.currentTableData = null;
+            loadDatabankData(100);
+        }
+
+        function filterTable() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const table = document.getElementById('dataTable');
+            if (!table) return;
+            
+            const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+            
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const text = row.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        }
+
+        function sortTable(column) {
+            // Simple sorting functionality
+            console.log('Sorting by:', column);
+        }
+
+        function editRecord(index) {
+            console.log('Edit record:', index);
+            alert('Edit functionality coming soon!');
+        }
+
+        function deleteRecord(index) {
+            if (confirm('Are you sure you want to delete this record?')) {
+                console.log('Delete record:', index);
+                alert('Delete functionality coming soon!');
+            }
+        }
+
+        function exportData() {
+            console.log('Export data');
+            alert('Export functionality coming soon!');
+        }
+
+        // Load more data (incremental)
+        async function loadMoreData() {
+            const currentData = window.currentTableData || [];
+            const currentLimit = currentData.length;
+            const increment = 100;
+            const newLimit = Math.min(currentLimit + increment, 10000); // Cap at 10k for performance
+            
+            console.log(`Loading more data: ${currentLimit} -> ${newLimit}`);
+            await loadDatabankData(newLimit);
+        }
+
+        // Load all data (dynamic count)
+        async function loadAllData() {
+            // Get the total count from the button text
+            const loadAllBtn = document.getElementById('loadAllBtn');
+            const totalText = loadAllBtn ? loadAllBtn.textContent.match(/\(([0-9,]+)\)/) : null;
+            const totalCount = totalText ? parseInt(totalText[1].replace(/,/g, '')) : 1000;
+            
+            console.log(`Loading all ${totalCount} records...`);
+            showStatus('tableData', `🔄 Loading all ${totalCount.toLocaleString()} records... This may take a moment.`, 'info');
+            await loadDatabankData(totalCount);
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            currentFile = file;
+            console.log('File selected:', file.name, file.type);
+            
+            // Check if it's an Excel file for factory cost scanning
+            if (file.name.toLowerCase().endsWith('.xlsx') || file.name.toLowerCase().endsWith('.xls')) {
+                // Show loading state
+                showStatus('importStatus', '🔄 Scanning Excel file for factory cost data...', 'info');
+                
+                // Start the scanning process
+                scanExcelFile(file);
+            } else {
+                // Use the original CSV preview functionality
+            previewFile(file);
+            }
+        }
+
+        async function previewFile(file) {
+            if (!connectionId) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('maxRows', '5');
+
+            try {
+                const response = await fetch(`/api/import/preview/${connectionId}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    filePreview = result.data;
+                    displayFilePreview(result.data, result.columns);
+                } else {
+                    showStatus('importStatus', 'Error previewing file: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showStatus('importStatus', 'Error previewing file: ' + error.message, 'error');
+            }
+        }
+
+        function displayFilePreview(data, columns) {
+            let html = '<table class="table"><tr>';
+            columns.forEach(col => {
+                html += `<th>${col}</th>`;
+            });
+            html += '</tr>';
+            
+            data.forEach(row => {
+                html += '<tr>';
+                columns.forEach(col => {
+                    html += `<td>${row[col] || ''}</td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</table>';
+            
+            document.getElementById('previewTable').innerHTML = html;
+            document.getElementById('filePreview').style.display = 'block';
+        }
+
+        async function importFile() {
+            if (!currentFile || !filePreview || !connectionId) return;
+
+            const tableName = document.getElementById('importTable').value;
+            if (!tableName) {
+                showStatus('importStatus', 'Please select a target table', 'error');
+                return;
+            }
+
+            // Create column mappings (simplified - maps file columns to database columns with same name)
+            const mappings = filePreview.length > 0 ? 
+                Object.keys(filePreview[0]).map(col => ({
+                    fileColumn: col,
+                    databaseColumn: col,
+                    required: false
+                })) : [];
+
+            const config = {
+                table: tableName,
+                mappings: mappings,
+                skipFirstRow: true,
+                updateExisting: false,
+                batchSize: 100
+            };
+
+            const formData = new FormData();
+            formData.append('file', currentFile);
+            formData.append('config', JSON.stringify(config));
+
+            try {
+                const response = await fetch(`/api/import/csv/${connectionId}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showStatus('importStatus', 
+                        `Import successful! Processed: ${result.rowsProcessed}, Inserted: ${result.rowsInserted}`, 
+                        'success');
+                } else {
+                    showStatus('importStatus', 'Import failed: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showStatus('importStatus', 'Import error: ' + error.message, 'error');
+            }
+        }
+
+        function showStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        // Excel file scanning and data extraction
+        async function scanExcelFile(file) {
+            try {
+                console.log('Starting Excel file scan...');
+                
+                // Simulate Excel parsing (in real implementation, you'd use a library like SheetJS)
+                const mockScannedData = await simulateExcelScan(file);
+                
+                scannedData = mockScannedData;
+                columnMappings = generateColumnMappings(mockScannedData);
+                
+                // Show the review panel
+                showDataReviewPanel();
+                
+            } catch (error) {
+                console.error('Error scanning Excel file:', error);
+                showStatus('importStatus', '❌ Error scanning file: ' + error.message, 'error');
+            }
+        }
+
+        // Simulate Excel file scanning (replace with actual Excel parsing)
+        async function simulateExcelScan(file) {
+            // This would be replaced with actual Excel parsing using SheetJS or similar
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    const mockData = {
+                        customer: 'TNF',
+                        season: 'F27',
+                        styleNumber: 'TNFF27-014',
+                        styleName: 'Fuzzy Wool Blend Beanie',
+                        costedQuantity: '2000pcs',
+                        leadtime: '130 days',
+                        
+                        // Yarn section
+                        yarn: [
+                            { material: '(UJ-F19-011) 100% Nylon, 1/7.2 Nm', consumption: '50', price: '14.79', cost: '0.74' },
+                            { material: '(HYDD ECO) 65% RWS 21.5mic Merino Wool 35%', consumption: '66', price: '19.38', cost: '1.28' }
+                        ],
+                        
+                        // Fabric section
+                        fabric: [
+                            { material: 'Fabric 1', consumption: '0', price: '0.00', cost: '0.00' }
+                        ],
+                        
+                        // Trim section
+                        trim: [
+                            { material: 'Sewing Thread (Coats EcoV)', consumption: '1', price: '0.02', cost: '0.02' }
+                        ],
+                        
+                        // Knitting section
+                        knitting: [
+                            { operation: 'Flat-3GG', time: '8', rate: '0.100', cost: '0.80' }
+                        ],
+                        
+                        // Operations section
+                        operations: [
+                            { operation: 'Labeling', cost: '0.10' },
+                            { operation: 'Neaten/Steaming/Packing (Beanie)', cost: '0.40' },
+                            { operation: 'Linking Beanie (Flat/ 1 Layer/ Cuff)', cost: '0.17' },
+                            { operation: 'Washing (Hat/ Glove)', cost: '0.17' },
+                            { operation: 'Hand Closing (9-3GG)', cost: '0.12' }
+                        ],
+                        
+                        // Packaging section
+                        packaging: [
+                            { type: 'Standard Packaging', cost: '0.10' },
+                            { type: 'Special Packaging', cost: '0.00' }
+                        ],
+                        
+                        // Totals
+                        totals: {
+                            materialCost: '2.04',
+                            knittingCost: '0.80',
+                            operationsCost: '0.96',
+                            packagingCost: '0.10',
+                            overhead: '0.20',
+                            profit: '0.59',
+                            totalFactoryCost: '4.69'
+                        }
+                    };
+                    resolve(mockData);
+                }, 2000); // Simulate processing time
+            });
+        }
+
+        // Generate column mappings for the scanned data
+        function generateColumnMappings(data) {
+            const mappings = {
+                'Season': data.season || '',
+                'Customer': data.customer || '',
+                'Style Number': data.styleNumber || '',
+                'Style Name': data.styleName || '',
+                'Main Material': data.yarn && data.yarn[0] ? data.yarn[0].material : '',
+                'Material Consumption': data.yarn && data.yarn[0] ? data.yarn[0].consumption : '',
+                'Material Price': data.yarn && data.yarn[0] ? data.yarn[0].price : '',
+                'Trim Cost': data.totals ? data.totals.materialCost : '',
+                'Total Material Cost': data.totals ? data.totals.materialCost : '',
+                'Knitting Machine': data.knitting && data.knitting[0] ? data.knitting[0].operation : '',
+                'Knitting Time': data.knitting && data.knitting[0] ? data.knitting[0].time : '',
+                'Knitting CPM': data.knitting && data.knitting[0] ? data.knitting[0].rate : '',
+                'Knitting Cost': data.knitting && data.knitting[0] ? data.knitting[0].cost : '',
+                'Ops Cost': data.totals ? data.totals.operationsCost : '',
+                'Knitting + Ops Cost': data.totals ? (parseFloat(data.totals.knittingCost || 0) + parseFloat(data.totals.operationsCost || 0)).toFixed(2) : '',
+                'Packaging': data.totals ? data.totals.packagingCost : '',
+                'OH': data.totals ? data.totals.overhead : '',
+                'Profit': data.totals ? data.totals.profit : '',
+                'FTY Adjustment': '0.00',
+                'TTL FTY Cost': data.totals ? data.totals.totalFactoryCost : ''
+            };
+            
+            return mappings;
+        }
+
+        // Show the data review panel
+        function showDataReviewPanel() {
+            document.getElementById('dataReviewPanel').style.display = 'block';
+            
+            // Populate scanned data summary
+            const summaryContent = document.getElementById('summaryContent');
+            summaryContent.innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px;">
+                    <div>
+                        <strong>Customer:</strong> ${scannedData.customer}<br>
+                        <strong>Season:</strong> ${scannedData.season}<br>
+                        <strong>Style #:</strong> ${scannedData.styleNumber}
+                    </div>
+                    <div>
+                        <strong>Style Name:</strong> ${scannedData.styleName}<br>
+                        <strong>Quantity:</strong> ${scannedData.costedQuantity}<br>
+                        <strong>Leadtime:</strong> ${scannedData.leadtime}
+                    </div>
+                </div>
+                <div style="background: #e8f5e8; padding: 10px; border-radius: 4px;">
+                    <strong>Total Factory Cost:</strong> $${scannedData.totals.totalFactoryCost}
+                </div>
+            `;
+            
+            // Populate column mapping review
+            const mappingContent = document.getElementById('mappingContent');
+            let mappingHtml = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">';
+            
+            Object.entries(columnMappings).forEach(([column, value]) => {
+                mappingHtml += `
+                    <div style="display: flex; justify-content: space-between; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <span><strong>${column}:</strong></span>
+                        <span style="color: #007bff;">${value || '—'}</span>
+                    </div>
+                `;
+            });
+            
+            mappingHtml += '</div>';
+            mappingContent.innerHTML = mappingHtml;
+            
+            showStatus('importStatus', '✅ Excel file scanned successfully! Please review the data below.', 'success');
+        }
+
+        // Cancel import
+        function cancelImport() {
+            document.getElementById('dataReviewPanel').style.display = 'none';
+            document.getElementById('fileInput').value = '';
+            currentFile = null;
+            scannedData = null;
+            columnMappings = null;
+            showStatus('importStatus', 'Import cancelled', 'info');
+        }
+
+        // Confirm and import data
+        async function confirmImport() {
+            try {
+                showStatus('importStatus', '🔄 Importing data to database...', 'info');
+                
+                // Convert mappings to database format
+                const dbRecord = {
+                    season: columnMappings['Season'],
+                    customer: columnMappings['Customer'],
+                    style_number: columnMappings['Style Number'],
+                    style_name: columnMappings['Style Name'],
+                    main_material: columnMappings['Main Material'],
+                    material_consumption: columnMappings['Material Consumption'],
+                    material_price: columnMappings['Material Price'],
+                    trim_cost: columnMappings['Trim Cost'],
+                    total_material_cost: columnMappings['Total Material Cost'],
+                    knitting_machine: columnMappings['Knitting Machine'],
+                    knitting_time: columnMappings['Knitting Time'],
+                    knitting_cpm: columnMappings['Knitting CPM'],
+                    knitting_cost: columnMappings['Knitting Cost'],
+                    ops_cost: columnMappings['Ops Cost'],
+                    knitting_ops_cost: columnMappings['Knitting + Ops Cost'],
+                    packaging: columnMappings['Packaging'],
+                    oh: columnMappings['OH'],
+                    profit: columnMappings['Profit'],
+                    fty_adjustment: columnMappings['FTY Adjustment'],
+                    ttl_fty_cost: columnMappings['TTL FTY Cost']
+                };
+                
+                console.log('Importing record to Supabase:', dbRecord);
+                
+                // Send data to your backend API
+                const response = await fetch(`/api/datatable/insert/${connectionId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        table: 'databank',
+                        data: dbRecord
+                    })
+                });
+                
+                const result = await response.json();
+                console.log('Insert result:', result);
+                
+                if (result.success) {
+                    showStatus('importStatus', '✅ Data imported successfully to Supabase! Refreshing table...', 'success');
+                    
+                    // Hide review panel and refresh table
+                    document.getElementById('dataReviewPanel').style.display = 'none';
+                    document.getElementById('fileInput').value = '';
+                    
+                    // Refresh the main table and update counts
+                    setTimeout(() => {
+                        loadDatabankData();
+                        getTotalRecordCount();
+                    }, 1000);
+                } else {
+                    console.error('Insert failed:', result);
+                    throw new Error(result.error || result.message || 'Failed to insert data');
+                }
+                
+            } catch (error) {
+                console.error('Error importing data:', error);
+                showStatus('importStatus', '❌ Error importing data: ' + error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

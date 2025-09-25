@@ -1,0 +1,5 @@
+# SPA fallback - redirect all routes to index.html
+/*    /index.html   200
+
+# API proxy (uncomment and update with your backend URL when ready)
+# /api/*    https://your-backend-url.herokuapp.com/api/:splat    200

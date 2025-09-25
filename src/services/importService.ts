@@ -1,4 +1,3 @@
-import * as XLSX from 'xlsx';
 import csv from 'csv-parser';
 import { Readable } from 'stream';
 import { DatabaseConnection } from '../config/database';
@@ -28,21 +27,6 @@ export class ImportService {
     }
   }
 
-  async importExcel(file: FileUpload, config: ImportConfig, sheetName?: string): Promise<ImportResult> {
-    try {
-      const data = await this.parseExcel(file.buffer, sheetName);
-      return await this.processData(data, config);
-    } catch (error) {
-      logger.error('Excel import error:', error);
-      return {
-        success: false,
-        message: `Excel import failed: ${error}`,
-        rowsProcessed: 0,
-        rowsInserted: 0,
-        errors: [error instanceof Error ? error.message : String(error)]
-      };
-    }
-  }
 
   private async parseCSV(buffer: Buffer): Promise<any[]> {
     return new Promise((resolve, reject) => {
@@ -57,16 +41,6 @@ export class ImportService {
     });
   }
 
-  private async parseExcel(buffer: Buffer, sheetName?: string): Promise<any[]> {
-    const workbook = XLSX.read(buffer, { type: 'buffer' });
-    const sheet = sheetName ? workbook.Sheets[sheetName] : workbook.Sheets[workbook.SheetNames[0]];
-    
-    if (!sheet) {
-      throw new Error(`Sheet "${sheetName || workbook.SheetNames[0]}" not found`);
-    }
-
-    return XLSX.utils.sheet_to_json(sheet);
-  }
 
   private async processData(data: any[], config: ImportConfig): Promise<ImportResult> {
     const errors: string[] = [];
@@ -237,8 +211,6 @@ export class ImportService {
       
       if (file.mimetype === 'text/csv' || file.originalname.endsWith('.csv')) {
         data = await this.parseCSV(file.buffer);
-      } else if (file.mimetype.includes('spreadsheet') || file.originalname.endsWith('.xlsx')) {
-        data = await this.parseExcel(file.buffer);
       } else {
         throw new Error('Unsupported file type');
       }

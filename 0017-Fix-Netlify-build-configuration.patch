@@ -1,0 +1,43 @@
+From de8b93f0178c34ea0efc0e4369158007478f6764 Mon Sep 17 00:00:00 2001
+From: renren-3 <131635258+renren-3@users.noreply.github.com>
+Date: Wed, 24 Sep 2025 14:21:18 +0800
+Subject: [PATCH 17/22] Fix Netlify build configuration
+
+---
+ netlify.toml | 15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
+
+diff --git a/netlify.toml b/netlify.toml
+index 9b072b1..90f58c1 100644
+--- a/netlify.toml
++++ b/netlify.toml
+@@ -1,7 +1,4 @@
+ [build]
+-  # Build command - this will build your TypeScript and prepare the app
+-  command = "npm run build"
+-  
+   # Directory to publish - Netlify will serve from the public folder
+   publish = "public"
+   
+@@ -22,12 +19,12 @@
+   to = "/index.html"
+   status = 200
+ 
+-# API proxy rules (if you want to proxy API calls to your backend)
+-[[redirects]]
+-  from = "/api/*"
+-  to = "https://your-backend-url.herokuapp.com/api/:splat"
+-  status = 200
+-  force = true
++# API proxy rules (uncomment when you have a backend deployed)
++# [[redirects]]
++#   from = "/api/*"
++#   to = "https://your-backend-url.herokuapp.com/api/:splat"
++#   status = 200
++#   force = true
+ 
+ # Security headers
+ [[headers]]
+-- 
+2.51.0.windows.1
+

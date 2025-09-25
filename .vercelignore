@@ -1,0 +1,11 @@
+src/
+dist/
+node_modules/
+*.ts
+*.tsx
+tsconfig.json
+.env
+.env.local
+.env.production
+logs/
+*.log

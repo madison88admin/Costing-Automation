@@ -1,0 +1,2747 @@
+From b06f4702ccf44fdfee02066fca32d48c70ab3871 Mon Sep 17 00:00:00 2001
+From: renren-3 <131635258+renren-3@users.noreply.github.com>
+Date: Fri, 19 Sep 2025 16:58:00 +0800
+Subject: [PATCH 10/22] ballcaps
+
+---
+ logs/combined.log             |  96 +++++
+ public/index.html             | 577 ++++++++++++++++++++++++----
+ public/js/ballcapsImport.js   | 234 ++++++++++--
+ public/simple-viewer.html     | 690 ----------------------------------
+ public/ultra-fast-reader.html | 554 ---------------------------
+ src/app.ts                    |   2 +-
+ temp_head.log                 | Bin 0 -> 53630 bytes
+ temp_merge.log                | Bin 0 -> 74610 bytes
+ 8 files changed, 794 insertions(+), 1359 deletions(-)
+ delete mode 100644 public/simple-viewer.html
+ delete mode 100644 public/ultra-fast-reader.html
+ create mode 100644 temp_head.log
+ create mode 100644 temp_merge.log
+
+diff --git a/logs/combined.log b/logs/combined.log
+index a00c960..c3fc959 100644
+--- a/logs/combined.log
++++ b/logs/combined.log
+@@ -374,3 +374,99 @@
+ {"level":"info","message":"Fetched batch: 777 records (total so far: 2777)","service":"costing-automation","timestamp":"2025-09-19T01:52:46.383Z"}
+ {"level":"info","message":"Final result: 2777 records loaded, total count: 2777","service":"costing-automation","timestamp":"2025-09-19T01:52:46.384Z"}
+ {"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-19T06:55:19.819Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-19T07:53:46.510Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-19T07:55:50.878Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-19T07:57:28.256Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-19T07:57:44.036Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-19T07:59:55.530Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-19T08:00:41.559Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-19T08:00:42.023Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-19T08:00:42.987Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-19T08:00:43.368Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-19T08:00:43.369Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-19T08:07:59.380Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-19T08:08:21.995Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-19T08:08:22.384Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-19T08:08:22.695Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-19T08:08:22.877Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-19T08:08:22.878Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-19T08:11:24.115Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-19T08:11:24.562Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-19T08:11:25.439Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-19T08:11:25.821Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-19T08:11:25.822Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-19T08:13:20.273Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-19T08:13:21.270Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-19T08:13:22.521Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-19T08:13:22.915Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-19T08:13:22.915Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-19T08:15:58.001Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-19T08:15:58.354Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-19T08:15:58.641Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-19T08:15:58.977Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-19T08:15:58.978Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-19T08:18:56.547Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-19T08:18:57.356Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-19T08:18:59.430Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-19T08:18:59.845Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-19T08:18:59.845Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-19T08:21:57.855Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-19T08:21:58.208Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-19T08:21:59.564Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-19T08:21:59.850Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-19T08:21:59.850Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-19T08:26:11.838Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-19T08:26:12.254Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-19T08:26:13.225Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-19T08:26:13.798Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-19T08:26:13.798Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-19T08:29:28.527Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-19T08:29:28.869Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-19T08:29:29.054Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-19T08:29:29.303Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-19T08:29:29.303Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-19T08:31:31.658Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-19T08:31:32.003Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-19T08:31:33.574Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-19T08:31:34.108Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-19T08:31:34.108Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-19T08:32:41.701Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-19T08:32:42.058Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-19T08:32:43.098Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-19T08:32:43.432Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-19T08:32:43.432Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-19T08:34:53.393Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-19T08:34:55.924Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-19T08:34:56.330Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-19T08:34:56.647Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-19T08:34:56.648Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-19T08:38:09.049Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-19T08:38:10.851Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-19T08:38:11.420Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-19T08:38:11.678Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-19T08:38:11.678Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-19T08:41:04.884Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-19T08:41:06.489Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-19T08:41:08.831Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-19T08:41:09.199Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-19T08:41:09.199Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-19T08:45:27.304Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-19T08:45:28.784Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-19T08:45:29.763Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-19T08:45:30.136Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-19T08:45:30.136Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-19T08:48:18.492Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-19T08:48:21.659Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-19T08:48:22.049Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-19T08:48:22.325Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-19T08:48:22.325Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-19T08:54:16.799Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-19T08:54:17.162Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-19T08:54:17.413Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-19T08:54:17.742Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-19T08:54:17.743Z"}
++{"level":"info","message":"Total records in database: 2784","service":"costing-automation","timestamp":"2025-09-19T08:56:50.803Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-19T08:56:51.416Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-19T08:56:53.019Z"}
++{"level":"info","message":"Fetched batch: 784 records (total so far: 2784)","service":"costing-automation","timestamp":"2025-09-19T08:56:53.180Z"}
++{"level":"info","message":"Final result: 2784 records loaded, total count: 2784","service":"costing-automation","timestamp":"2025-09-19T08:56:53.180Z"}
+diff --git a/public/index.html b/public/index.html
+index 893189a..47cd9cc 100644
+--- a/public/index.html
++++ b/public/index.html
+@@ -5,7 +5,7 @@
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Databank Data Management System</title>
+     <!-- Primary XLSX CDN with fallback -->
+-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM2t0EX7jF+JqJ4e8x8w8Q2E5VkNalCqtl4PV4/VvQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
++    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+     <!-- Local XLSX fallback -->
+     <script src="xlsx.min.js"></script>
+     <!-- Application scripts -->
+@@ -549,6 +549,26 @@
+         .cost-table {
+             display: flex;
+             flex-direction: column;
++            max-height: 300px;
++            overflow-y: auto;
++        }
++        
++        .cost-table::-webkit-scrollbar {
++            width: 8px;
++        }
++        
++        .cost-table::-webkit-scrollbar-track {
++            background: rgba(255, 255, 255, 0.1);
++            border-radius: 4px;
++        }
++        
++        .cost-table::-webkit-scrollbar-thumb {
++            background: rgba(255, 255, 255, 0.3);
++            border-radius: 4px;
++        }
++        
++        .cost-table::-webkit-scrollbar-thumb:hover {
++            background: rgba(255, 255, 255, 0.5);
+         }
+ 
+         .cost-row {
+@@ -1517,7 +1537,6 @@
+                 </button>
+             </div>
+             
+-<<<<<<< HEAD
+             <div class="file-upload" onclick="document.getElementById('fileInput').click()">
+                     <div class="file-upload-content">
+                         <div class="file-upload-icon">📁</div>
+@@ -1549,7 +1568,18 @@
+                             <li>FABRIC section</li>
+                             <li>TRIM section</li>
+                         </ul>
+-=======
++                    </div>
++                    <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px;">
++                        <h5 style="color: #4CAF50; margin-bottom: 10px;">✅ BallCaps Template</h5>
++                        <ul style="color: rgba(255, 255, 255, 0.9); font-size: 14px; margin: 0; padding-left: 20px;">
++                            <li>FABRIC section</li>
++                            <li>OTHER FABRIC/S - TRIM/S section</li>
++                            <li>TRIM section</li>
++                        </ul>
++                    </div>
++                </div>
++            </div>
++
+             <div class="cost-breakdown-content">
+                 <!-- Left Side - Cost Breakdown -->
+                 <div class="cost-sections">
+@@ -1625,7 +1655,6 @@
+                                 <div class="cost-cell"></div>
+                             </div>
+                         </div>
+->>>>>>> 1ed43684206c70a13dcbcd74a13007c251ded6ca
+                     </div>
+ 
+                     <!-- TRIM Section -->
+@@ -1881,7 +1910,7 @@
+                     <div class="drag-drop-area">
+                         <div class="drag-drop-content">
+                             <div class="drag-drop-icon">📁</div>
+-                            <div class="drag-drop-text">drag & drop<br>function here</div>
++                            <div class="drag-drop-text">drag & drop<br>or click to select</div>
+                             <div class="file-formats">CSV • XLSX • XLSM</div>
+                         </div>
+                     </div>
+@@ -1942,6 +1971,12 @@
+                                 <div class="cost-cell"></div>
+                                 <div class="cost-cell"></div>
+                             </div>
++                            <div class="cost-row subtotal-row">
++                                <div class="cost-cell">SUB TOTAL</div>
++                                <div class="cost-cell"></div>
++                                <div class="cost-cell"></div>
++                                <div class="cost-cell">$0.00</div>
++                            </div>
+                         </div>
+                     </div>
+ 
+@@ -1950,7 +1985,7 @@
+                         <div class="section-header">OTHER FABRIC/S - TRIM/S</div>
+                         <div class="cost-table">
+                             <div class="cost-row header-row">
+-                                <div class="cost-cell">(Name/Code/Description)Description</div>
++                                <div class="cost-cell">OTHER FABRIC/S - TRIM/S</div>
+                                 <div class="cost-cell">CONSUMPTION (YARD)</div>
+                                 <div class="cost-cell">MATERIAL PRICE (USD/YD)</div>
+                                 <div class="cost-cell">MATERIAL COST</div>
+@@ -1979,11 +2014,11 @@
+                                 <div class="cost-cell"></div>
+                                 <div class="cost-cell"></div>
+                             </div>
+-                            <div class="cost-row">
+-                                <div class="cost-cell"></div>
+-                                <div class="cost-cell"></div>
++                            <div class="cost-row subtotal-row">
++                                <div class="cost-cell">SUB TOTAL</div>
+                                 <div class="cost-cell"></div>
+                                 <div class="cost-cell"></div>
++                                <div class="cost-cell">$0.00</div>
+                             </div>
+                         </div>
+                     </div>
+@@ -2044,28 +2079,39 @@
+                         <div class="section-header">OPERATIONS</div>
+                         <div class="cost-table">
+                             <div class="cost-row header-row">
+-                                <div class="cost-cell">SMV</div>
++                                <div class="cost-cell">OPERATION</div>
++                                <div class="cost-cell">TIME (MINS)</div>
+                                 <div class="cost-cell">COST (USD/MIN)</div>
+-                                <div class="cost-cell">MATERIAL COST</div>
++                                <div class="cost-cell">TOTAL</div>
+                             </div>
+                             <div class="cost-row">
+                                 <div class="cost-cell"></div>
+                                 <div class="cost-cell"></div>
+                                 <div class="cost-cell"></div>
++                                <div class="cost-cell"></div>
+                             </div>
+                             <div class="cost-row">
+                                 <div class="cost-cell"></div>
+                                 <div class="cost-cell"></div>
+                                 <div class="cost-cell"></div>
++                                <div class="cost-cell"></div>
++                            </div>
++                            <div class="cost-row">
++                                <div class="cost-cell"></div>
++                                <div class="cost-cell"></div>
++                                <div class="cost-cell"></div>
++                                <div class="cost-cell"></div>
+                             </div>
+                             <div class="cost-row">
+                                 <div class="cost-cell"></div>
+                                 <div class="cost-cell"></div>
+                                 <div class="cost-cell"></div>
++                                <div class="cost-cell"></div>
+                             </div>
+                             <div class="cost-row subtotal-row">
+                                 <div class="cost-cell">SUB TOTAL</div>
+                                 <div class="cost-cell"></div>
++                                <div class="cost-cell"></div>
+                                 <div class="cost-cell">$0.00</div>
+                             </div>
+                         </div>
+@@ -2076,19 +2122,28 @@
+                         <div class="section-header">PACKAGING</div>
+                         <div class="cost-table">
+                             <div class="cost-row header-row">
+-                                <div class="cost-cell">Factory Notes</div>
++                                <div class="cost-cell">TYPE</div>
++                                <div class="cost-cell">NOTES</div>
+                                 <div class="cost-cell">COST</div>
+                             </div>
+                             <div class="cost-row">
+                                 <div class="cost-cell"></div>
+                                 <div class="cost-cell"></div>
++                                <div class="cost-cell"></div>
++                            </div>
++                            <div class="cost-row">
++                                <div class="cost-cell"></div>
++                                <div class="cost-cell"></div>
++                                <div class="cost-cell"></div>
+                             </div>
+                             <div class="cost-row">
+                                 <div class="cost-cell"></div>
+                                 <div class="cost-cell"></div>
++                                <div class="cost-cell"></div>
+                             </div>
+                             <div class="cost-row subtotal-row">
+                                 <div class="cost-cell">SUB TOTAL</div>
++                                <div class="cost-cell"></div>
+                                 <div class="cost-cell">$0.00</div>
+                             </div>
+                         </div>
+@@ -2099,19 +2154,28 @@
+                         <div class="section-header">OVERHEAD/PROFIT</div>
+                         <div class="cost-table">
+                             <div class="cost-row header-row">
+-                                <div class="cost-cell">Factory Notes</div>
++                                <div class="cost-cell">TYPE</div>
++                                <div class="cost-cell">NOTES</div>
+                                 <div class="cost-cell">COST</div>
+                             </div>
+                             <div class="cost-row">
+                                 <div class="cost-cell"></div>
+                                 <div class="cost-cell"></div>
++                                <div class="cost-cell"></div>
++                            </div>
++                            <div class="cost-row">
++                                <div class="cost-cell"></div>
++                                <div class="cost-cell"></div>
++                                <div class="cost-cell"></div>
+                             </div>
+                             <div class="cost-row">
+                                 <div class="cost-cell"></div>
+                                 <div class="cost-cell"></div>
++                                <div class="cost-cell"></div>
+                             </div>
+                             <div class="cost-row subtotal-row">
+                                 <div class="cost-cell">SUB TOTAL</div>
++                                <div class="cost-cell"></div>
+                                 <div class="cost-cell">$0.00</div>
+                             </div>
+                         </div>
+@@ -2185,7 +2249,7 @@
+                     <div class="drag-drop-area">
+                         <div class="drag-drop-content">
+                             <div class="drag-drop-icon">📁</div>
+-                            <div class="drag-drop-text">drag & drop<br>function here</div>
++                            <div class="drag-drop-text">drag & drop<br>or click to select</div>
+                             <div class="file-formats">CSV • XLSX • XLSM</div>
+                         </div>
+                     </div>
+@@ -2200,7 +2264,6 @@
+ 
+ 
+     <script>
+-<<<<<<< HEAD
+         // Enhanced and more reliable XLSX library loading
+         function ensureXLSXLoaded() {
+             return new Promise((resolve, reject) => {
+@@ -2231,7 +2294,6 @@
+                 // Use the most reliable CDN with integrity check
+                 const script = document.createElement('script');
+                 script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+-                script.integrity = 'sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQC5QZQ8ghUzqyHJEwXaVg/2b4d0P7N4a4L0g+ce0qA==';
+                 script.crossOrigin = 'anonymous';
+                 
+                 script.onload = () => {
+@@ -2264,8 +2326,6 @@
+ 
+ 
+ 
+-=======
+->>>>>>> 1ed43684206c70a13dcbcd74a13007c251ded6ca
+         // Debug function for testing Excel processing (can be called from browser console)
+         window.testExcelProcessing = function() {
+             console.log('Testing Excel processing...');
+@@ -2284,7 +2344,6 @@
+             }
+         };
+ 
+-<<<<<<< HEAD
+         // Simple test function to check XLSX loading
+         window.testXLSXLoading = function() {
+             console.log('🧪 Testing XLSX library loading...');
+@@ -2305,7 +2364,7 @@
+         // Demo function to show how Excel contents are displayed
+         window.demoExcelContentDisplay = function() {
+             console.log('📊 DEMO: How Excel file contents are displayed after reading');
+-            console.log('================================================');
++            console.log('======');
+             
+             // Create a sample Excel file structure to demonstrate
+             const sampleExcelContent = [
+@@ -2414,7 +2473,7 @@
+             }
+             
+             console.log('📊 ACTUAL EXCEL FILE DATA STRUCTURE:');
+-            console.log('=====================================');
++            console.log('==');
+             console.log(`File Type: ${fileType}`);
+             console.log(`Number of Sheets: ${fileContent.length}`);
+             console.log('');
+@@ -2452,7 +2511,7 @@
+         // Demo function for ULTRA FAST file reading
+         window.demoUltraFastReading = function() {
+             console.log('⚡ ULTRA FAST FILE READING DEMO');
+-            console.log('===============================');
++            console.log('===');
+             console.log('The main index.html now has ULTRA FAST file reading!');
+             console.log('');
+             console.log('🚀 Optimizations applied:');
+@@ -2480,7 +2539,7 @@
+         // Test XLSX loading status
+         window.testXLSXStatus = function() {
+             console.log('🔍 XLSX Library Status Check');
+-            console.log('============================');
++            console.log('');
+             if (typeof XLSX !== 'undefined') {
+                 console.log('✅ XLSX library is loaded and ready');
+                 console.log('📊 Version:', XLSX.version || 'Unknown');
+@@ -2522,7 +2581,7 @@
+             }
+             
+             console.log('📊 CURRENT FILE CONTENTS:');
+-            console.log('=========================');
++            console.log('====');
+             console.log(`File Type: ${fileType}`);
+             console.log(`Number of Sheets/Sections: ${fileContent.length}`);
+             console.log('');
+@@ -2551,7 +2610,7 @@
+         // Demo function to immediately display sample file contents
+         window.demoDisplayContents = function() {
+             console.log('🎬 DEMO: Displaying sample file contents');
+-            console.log('=====================================');
++            console.log('==');
+             
+             // Create sample Excel-like content
+             const sampleContent = [
+@@ -2640,8 +2699,6 @@
+             });
+         });
+ 
+-=======
+->>>>>>> 1ed43684206c70a13dcbcd74a13007c251ded6ca
+         let connectionId = null;
+         let totalRecords = 0;
+         
+@@ -3571,11 +3628,15 @@
+             productSelection.style.display = 'block';
+         }
+ 
+-        // Drag & Drop functionality for Template 1
++        // Drag & Drop functionality for both templates
+         function initializeDragDrop() {
+-            const dragDropArea = document.querySelector('.drag-drop-area');
++            const dragDropAreas = document.querySelectorAll('.drag-drop-area');
++            
++            console.log('Found drag drop areas:', dragDropAreas.length);
+             
+-            if (dragDropArea) {
++            dragDropAreas.forEach((dragDropArea, index) => {
++                console.log(`Initializing drag drop area ${index + 1}`);
++                
+                 // Prevent default drag behaviors
+                 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                     dragDropArea.addEventListener(eventName, preventDefaults, false);
+@@ -3584,19 +3645,21 @@
+ 
+                 // Highlight drop area when item is dragged over it
+                 ['dragenter', 'dragover'].forEach(eventName => {
+-                    dragDropArea.addEventListener(eventName, highlight, false);
++                    dragDropArea.addEventListener(eventName, (e) => highlight(e, dragDropArea), false);
+                 });
+ 
+                 ['dragleave', 'drop'].forEach(eventName => {
+-                    dragDropArea.addEventListener(eventName, unhighlight, false);
++                    dragDropArea.addEventListener(eventName, (e) => unhighlight(e, dragDropArea), false);
+                 });
+ 
+                 // Handle dropped files
+-                dragDropArea.addEventListener('drop', handleDrop, false);
++                dragDropArea.addEventListener('drop', (e) => handleDrop(e, dragDropArea), false);
+                 
+                 // Handle click to reset
+                 dragDropArea.addEventListener('click', resetDragDrop);
+-            }
++            });
++            
++            console.log('Drag & Drop initialized successfully for all areas');
+         }
+ 
+         function preventDefaults(e) {
+@@ -3604,15 +3667,15 @@
+             e.stopPropagation();
+         }
+ 
+-        function highlight(e) {
+-            document.querySelector('.drag-drop-area').classList.add('drag-over');
++        function highlight(e, dragDropArea) {
++            dragDropArea.classList.add('drag-over');
+         }
+ 
+-        function unhighlight(e) {
+-            document.querySelector('.drag-drop-area').classList.remove('drag-over');
++        function unhighlight(e, dragDropArea) {
++            dragDropArea.classList.remove('drag-over');
+         }
+ 
+-        function handleDrop(e) {
++        function handleDrop(e, dragDropArea) {
+             const dt = e.dataTransfer;
+             const files = dt.files;
+             
+@@ -3623,9 +3686,9 @@
+                 // Store the file globally for processing
+                 uploadedFile = file;
+                 
+-                // Update the drag drop area to show file name
+-                const dragDropText = document.querySelector('.drag-drop-text');
+-                const dragDropIcon = document.querySelector('.drag-drop-icon');
++                // Update the specific drag drop area to show file name
++                const dragDropText = dragDropArea.querySelector('.drag-drop-text');
++                const dragDropIcon = dragDropArea.querySelector('.drag-drop-icon');
+                 
+                 if (dragDropText && dragDropIcon) {
+                     dragDropIcon.textContent = '✅';
+@@ -3640,18 +3703,38 @@
+             
+             if (dragDropText && dragDropIcon) {
+                 dragDropIcon.textContent = '📁';
+-                dragDropText.innerHTML = 'drag & drop<br>function here';
++                dragDropText.innerHTML = 'drag & drop<br>or click to select';
++            }
++        }
++
++        // Handle file selection from click
++        function handleFileSelect(event) {
++            const file = event.target.files[0];
++            if (file) {
++                console.log('File selected via click:', file.name, file.type);
++                uploadedFile = file;
++                
++                // Update all drag drop areas to show file name
++                const dragDropTexts = document.querySelectorAll('.drag-drop-text');
++                const dragDropIcons = document.querySelectorAll('.drag-drop-icon');
++                
++                dragDropTexts.forEach(dragDropText => {
++                    dragDropText.innerHTML = `File: ${file.name}<br><small>Click to change</small>`;
++                });
++                
++                dragDropIcons.forEach(dragDropIcon => {
++                    dragDropIcon.textContent = '✅';
++                });
+             }
+         }
+ 
+         function handleTemplateImport() {
+-            // Check if a file has been dropped
+-            const dragDropText = document.querySelector('.drag-drop-text');
+-            const dragDropIcon = document.querySelector('.drag-drop-icon');
++            // Check if a file has been uploaded (more reliable than checking UI elements)
++            console.log('Checking for uploaded file:', uploadedFile);
+             
+-            if (dragDropIcon && dragDropIcon.textContent === '✅') {
++            if (uploadedFile) {
+                 // File has been selected, proceed with import
+-                console.log('Importing file...');
++                console.log('Importing file:', uploadedFile.name, uploadedFile.type);
+                 
+                 // Show loading state
+                 const importButton = document.querySelector('.import-template-button');
+@@ -3665,7 +3748,7 @@
+                 
+             } else {
+                 // No file selected, show message
+-                console.log('Please drop a file first');
++                console.log('No file found in uploadedFile variable');
+                 alert('Please drop a file in the drag & drop area first!');
+             }
+         }
+@@ -3702,23 +3785,36 @@
+                 window.lastExcelData = rawData;
+                 console.log('Raw Excel data stored in window.lastExcelData for debugging');
+                 
+-                // Determine which importer to use based on file content or name
+-                    let parsedData = null;
+-                    
+-                // For now, default to beanie importer (you can add logic to detect product type)
+-                if (beanieImporter.isSupportedFile(uploadedFile.name)) {
+-                    console.log('Using TNF Beanie Importer');
+-                    parsedData = beanieImporter.parseExcelData(rawData);
+-                } else if (ballcapsImporter.isSupportedFile(uploadedFile.name)) {
++                // Determine which importer to use based on file content
++                let parsedData = null;
++                const templateType = detectTemplateType(rawData);
++                console.log('Detected template type:', templateType);
++                
++                if (templateType === 'ballcaps') {
+                     console.log('Using TNF Ball Caps Importer');
+                     parsedData = ballcapsImporter.parseExcelData(rawData);
+-                    } else {
+-                    throw new Error('Unsupported file type or format');
+-                    }
++                } else {
++                    console.log('Using TNF Beanie Importer (default)');
++                    parsedData = beanieImporter.parseExcelData(rawData);
++                }
++                    
++                if (parsedData) {
++                    console.log('Parsed data:', parsedData);
++                    console.log('Data sections found:');
++                    console.log('- Fabric items:', parsedData.fabric?.length || 0);
++                    console.log('- Embroidery items:', parsedData.embroidery?.length || 0);
++                    console.log('- Trim items:', parsedData.trim?.length || 0);
++                    console.log('- Operations items:', parsedData.operations?.length || 0);
++                    console.log('- Packaging items:', parsedData.packaging?.length || 0);
++                    console.log('- Overhead items:', parsedData.overhead?.length || 0);
+                     
+-                    if (parsedData) {
++                    // Populate the appropriate template based on detected type
++                    if (templateType === 'ballcaps') {
++                        populateBallCapsTemplate(parsedData);
++                    } else {
+                         fillTemplateWithData(parsedData);
+                     }
++                }
+                     
+                 } catch (error) {
+                     console.error('Error processing file:', error);
+@@ -3765,6 +3861,9 @@
+             // Fill FABRIC section
+             fillCostSection('FABRIC', data.fabric, ['material', 'consumption', 'price', 'cost']);
+             
++            // Fill EMBROIDERY section (for ballcaps)
++            fillCostSection('EMBROIDERY', data.embroidery, ['design', 'stitches', 'price', 'cost']);
++            
+             // Fill TRIM section
+             fillCostSection('TRIM', data.trim, ['material', 'consumption', 'price', 'cost']);
+             
+@@ -3838,11 +3937,11 @@
+             
+             let total = 0;
+             if (data && Array.isArray(data)) {
+-            data.forEach(item => {
++                data.forEach(item => {
+                     if (item && item[costColumn] && item[costColumn] !== null && item[costColumn] !== undefined && !isNaN(parseFloat(item[costColumn]))) {
+-                    total += parseFloat(item[costColumn]);
+-                }
+-            });
++                        total += parseFloat(item[costColumn]);
++                    }
++                });
+             }
+             
+             // Update the subtotal cell
+@@ -3850,6 +3949,8 @@
+             if (subtotalCells[costColumnIndex]) {
+                 subtotalCells[costColumnIndex].textContent = `$${total.toFixed(2)}`;
+             }
++            
++            console.log(`Subtotal calculated for ${costColumn}: $${total.toFixed(2)}`);
+         }
+ 
+         function updateTotals(materialTotal, factoryTotal) {
+@@ -3875,6 +3976,24 @@
+         // Initialize drag & drop when page loads
+         document.addEventListener('DOMContentLoaded', function() {
+             initializeDragDrop();
++            
++            // Add file input for click functionality
++            const fileInput = document.createElement('input');
++            fileInput.type = 'file';
++            fileInput.accept = '.xlsx,.xls,.xlsm,.csv';
++            fileInput.style.display = 'none';
++            fileInput.onchange = handleFileSelect;
++            fileInput.id = 'hiddenFileInput';
++            document.body.appendChild(fileInput);
++            
++            // Make drag drop areas clickable
++            const dragDropAreas = document.querySelectorAll('.drag-drop-area');
++            dragDropAreas.forEach(area => {
++                area.style.cursor = 'pointer';
++                area.onclick = function() {
++                    fileInput.click();
++                };
++            });
+         });
+ 
+         // Export table data to Excel
+@@ -4411,8 +4530,11 @@
+             document.getElementById('importStatus').innerHTML = fileInfo;
+         }
+ 
++        // Handle file selection
++        function handleFileSelect(event) {
++            const file = event.target.files[0];
++            if (!file) return;
+ 
+-<<<<<<< HEAD
+             // Reset previous state
+             resetImportState();
+             
+@@ -5606,9 +5728,7 @@
+                 throw new Error('Failed to parse CSV file. Please check the file format.');
+             }
+         }
+-=======
+ 
+->>>>>>> 1ed43684206c70a13dcbcd74a13007c251ded6ca
+ 
+         // Template Detection
+         function detectTemplateType(data) {
+@@ -5626,10 +5746,10 @@
+                 return 'beanie';
+             }
+             
+-            // Check for Cap template indicators
+-            if (dataString.includes('fabric/s') || dataString.includes('other fabric/s') || dataString.includes('trim/s')) {
+-                console.log('Cap template detected based on FABRIC/S sections');
+-                return 'cap';
++            // Check for BallCaps template indicators
++            if (dataString.includes('fabric/s') || dataString.includes('other fabric/s') || dataString.includes('trim/s') || dataString.includes('embroidery')) {
++                console.log('BallCaps template detected based on FABRIC/S/EMBROIDERY sections');
++                return 'ballcaps';
+             }
+             
+             // Check for style name patterns
+@@ -5638,9 +5758,9 @@
+                 return 'beanie';
+             }
+             
+-            if (dataString.includes('cap') || dataString.includes('baseball')) {
+-                console.log('Cap template detected based on style name');
+-                return 'cap';
++            if (dataString.includes('cap') || dataString.includes('baseball') || dataString.includes('ballcap')) {
++                console.log('BallCaps template detected based on style name');
++                return 'ballcaps';
+             }
+             
+             console.log('No specific template indicators found, defaulting to beanie');
+@@ -5674,8 +5794,10 @@
+ 
+             if (templateType === 'beanie') {
+                 return extractBeanieData(data, extractedData);
++            } else if (templateType === 'ballcaps') {
++                return extractBallCapsData(data, extractedData);
+             } else {
+-                return extractCapData(data, extractedData);
++                return extractBeanieData(data, extractedData); // Default to beanie
+             }
+         }
+ 
+@@ -5986,14 +6108,61 @@
+                 materialPrice: extractedData.materialPrice || 'Not found',
+                 totalMaterialCost: extractedData.totalMaterialCost || 'Not found'
+             });
+-            console.log('========================');
++            console.log('===');
+ 
+             return extractedData;
+         }
+ 
+-        function extractCapData(data, extractedData) {
+-            // Similar to beanie but adapted for cap template structure
+-            return extractBeanieData(data, extractedData); // Simplified for now
++        function extractBallCapsData(data, extractedData) {
++            // Extract ballcaps specific data
++            console.log('Extracting BallCaps data...');
++            
++            // Look for ballcaps specific sections
++            let currentSection = '';
++            
++            for (let i = 0; i < data.length; i++) {
++                const row = data[i];
++                if (!row || row.length === 0) continue;
++                
++                const firstCell = String(row[0] || '').trim();
++                
++                // Detect sections
++                if (firstCell === 'FABRIC') {
++                    currentSection = 'fabric';
++                } else if (firstCell === 'EMBROIDERY') {
++                    currentSection = 'embroidery';
++                } else if (firstCell === 'TRIM') {
++                    currentSection = 'trim';
++                } else if (firstCell === 'OPERATIONS') {
++                    currentSection = 'operations';
++                } else if (firstCell === 'PACKAGING') {
++                    currentSection = 'packaging';
++                } else if (firstCell === 'OVERHEAD' || firstCell === 'OVERHEAD/PROFIT') {
++                    currentSection = 'overhead';
++                }
++                
++                // Extract basic info
++                if (firstCell.includes('Customer') && row[1]) {
++                    extractedData.customer = String(row[1]).trim();
++                }
++                if (firstCell.includes('Season') && row[1]) {
++                    extractedData.season = String(row[1]).trim();
++                }
++                if (firstCell.includes('Style#') && row[1]) {
++                    extractedData.styleNumber = String(row[1]).trim();
++                }
++                if (firstCell.includes('Style Name') && row[1]) {
++                    extractedData.styleName = String(row[1]).trim();
++                }
++                if (firstCell.includes('MOQ') && row[1]) {
++                    extractedData.moq = String(row[1]).trim();
++                }
++                if (firstCell.includes('Leadtime') && row[1]) {
++                    extractedData.leadtime = String(row[1]).trim();
++                }
++            }
++            
++            return extractedData;
+         }
+ 
+         function findSection(data, keywords) {
+@@ -6135,6 +6304,254 @@
+             document.getElementById('progressText').textContent = text;
+         }
+ 
++        function populateBallCapsTemplate(parsedData) {
++            console.log('Populating BallCaps template with data:', parsedData);
++            console.log('BallCaps template sections:');
++            console.log('- Customer:', parsedData.customer);
++            console.log('- Season:', parsedData.season);
++            console.log('- Style#:', parsedData.styleNumber);
++            console.log('- Style Name:', parsedData.styleName);
++            console.log('- Fabric items:', parsedData.fabric?.length || 0);
++            console.log('- Embroidery items:', parsedData.embroidery?.length || 0);
++            console.log('- Trim items:', parsedData.trim?.length || 0);
++            console.log('- Operations items:', parsedData.operations?.length || 0);
++            console.log('- Packaging items:', parsedData.packaging?.length || 0);
++            console.log('- Overhead items:', parsedData.overhead?.length || 0);
++            
++            // Populate basic info
++            const infoValues = document.querySelectorAll('#ballcapsBreakdown .info-value');
++            const labels = ['customer', 'season', 'styleNumber', 'styleName', 'moq', 'leadtime'];
++            infoValues.forEach((element, index) => {
++                if (labels[index] && parsedData[labels[index]]) {
++                    element.textContent = parsedData[labels[index]];
++                }
++            });
++            
++            // Populate fabric/s section
++            if (parsedData.fabric && parsedData.fabric.length > 0) {
++                const fabricRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(1) .cost-row:not(.header-row):not(.subtotal-row)');
++                parsedData.fabric.forEach((item, index) => {
++                    if (fabricRows[index]) {
++                        const cells = fabricRows[index].querySelectorAll('.cost-cell');
++                        if (cells[0]) cells[0].textContent = item.material || '';
++                        if (cells[1]) cells[1].textContent = item.consumption || '';
++                        if (cells[2]) cells[2].textContent = item.price || '';
++                        if (cells[3]) cells[3].textContent = item.cost || '';
++                    }
++                });
++            }
++            
++            // Populate other fabric/s - trim/s section (formerly embroidery)
++            if (parsedData.embroidery && parsedData.embroidery.length > 0) {
++                const otherFabricRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(2) .cost-row:not(.header-row):not(.subtotal-row)');
++                parsedData.embroidery.forEach((item, index) => {
++                    if (otherFabricRows[index]) {
++                        const cells = otherFabricRows[index].querySelectorAll('.cost-cell');
++                        if (cells[0]) cells[0].textContent = item.material || item.design || '';
++                        if (cells[1]) cells[1].textContent = item.consumption || item.stitches || '';
++                        if (cells[2]) cells[2].textContent = item.price || '';
++                        if (cells[3]) cells[3].textContent = item.cost || '';
++                    }
++                });
++            }
++            
++            // Populate trim section
++            if (parsedData.trim && parsedData.trim.length > 0) {
++                const trimRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(3) .cost-row:not(.header-row):not(.subtotal-row)');
++                parsedData.trim.forEach((item, index) => {
++                    if (trimRows[index]) {
++                        const cells = trimRows[index].querySelectorAll('.cost-cell');
++                        if (cells[0]) cells[0].textContent = item.material || '';
++                        if (cells[1]) cells[1].textContent = item.consumption || '';
++                        if (cells[2]) cells[2].textContent = item.price || '';
++                        if (cells[3]) cells[3].textContent = item.cost || '';
++                    }
++                });
++            }
++            
++            // Populate operations section
++            if (parsedData.operations && parsedData.operations.length > 0) {
++                const operationsRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(5) .cost-row:not(.header-row):not(.subtotal-row)');
++                parsedData.operations.forEach((item, index) => {
++                    if (operationsRows[index]) {
++                        const cells = operationsRows[index].querySelectorAll('.cost-cell');
++                        if (cells[0]) cells[0].textContent = item.operation || '';
++                        if (cells[1]) cells[1].textContent = item.time || '';
++                        if (cells[2]) cells[2].textContent = item.cost || '';
++                        if (cells[3]) cells[3].textContent = item.total || '';
++                    }
++                });
++            }
++            
++            // Populate packaging section
++            if (parsedData.packaging && parsedData.packaging.length > 0) {
++                const packagingRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(6) .cost-row:not(.header-row):not(.subtotal-row)');
++                parsedData.packaging.forEach((item, index) => {
++                    if (packagingRows[index]) {
++                        const cells = packagingRows[index].querySelectorAll('.cost-cell');
++                        if (cells[0]) cells[0].textContent = item.type || '';
++                        if (cells[1]) cells[1].textContent = item.notes || '';
++                        if (cells[2]) cells[2].textContent = item.cost || '';
++                    }
++                });
++            }
++            
++            // Populate overhead section
++            if (parsedData.overhead && parsedData.overhead.length > 0) {
++                const overheadRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(7) .cost-row:not(.header-row):not(.subtotal-row)');
++                parsedData.overhead.forEach((item, index) => {
++                    if (overheadRows[index]) {
++                        const cells = overheadRows[index].querySelectorAll('.cost-cell');
++                        if (cells[0]) cells[0].textContent = item.type || '';
++                        if (cells[1]) cells[1].textContent = item.notes || '';
++                        if (cells[2]) cells[2].textContent = item.cost || '';
++                    }
++                });
++            }
++            
++            // Calculate and update subtotals for each section
++            calculateBallCapsSubtotals(parsedData);
++            
++            // Calculate and update grand totals
++            calculateBallCapsGrandTotals(parsedData);
++            
++            // Update totals (use calculated totals if available)
++            const materialTotal = document.querySelector('#ballcapsBreakdown .total-material-cost .total-value');
++            const factoryTotal = document.querySelector('#ballcapsBreakdown .total-factory-cost .total-value');
++            
++            if (materialTotal) {
++                const calculatedMaterialTotal = calculateMaterialTotal(parsedData);
++                materialTotal.textContent = '$' + (parsedData.totalMaterialCost || calculatedMaterialTotal);
++            }
++            
++            if (factoryTotal) {
++                const calculatedFactoryTotal = calculateFactoryTotal(parsedData);
++                factoryTotal.textContent = '$' + (parsedData.totalFactoryCost || calculatedFactoryTotal);
++            }
++        }
++
++        function calculateBallCapsSubtotals(parsedData) {
++            console.log('Calculating BallCaps subtotals...');
++            
++            // Calculate fabric/s subtotal
++            if (parsedData.fabric && parsedData.fabric.length > 0) {
++                const fabricTotal = parsedData.fabric.reduce((sum, item) => {
++                    return sum + (parseFloat(item.cost) || 0);
++                }, 0);
++                updateBallCapsSubtotal('#ballcapsBreakdown .cost-section:nth-child(1)', fabricTotal);
++            }
++            
++            // Calculate other fabric/s - trim/s subtotal (formerly embroidery)
++            if (parsedData.embroidery && parsedData.embroidery.length > 0) {
++                const otherFabricTotal = parsedData.embroidery.reduce((sum, item) => {
++                    return sum + (parseFloat(item.cost) || 0);
++                }, 0);
++                updateBallCapsSubtotal('#ballcapsBreakdown .cost-section:nth-child(2)', otherFabricTotal);
++            }
++            
++            // Calculate trim subtotal
++            if (parsedData.trim && parsedData.trim.length > 0) {
++                const trimTotal = parsedData.trim.reduce((sum, item) => {
++                    return sum + (parseFloat(item.cost) || 0);
++                }, 0);
++                updateBallCapsSubtotal('#ballcapsBreakdown .cost-section:nth-child(3)', trimTotal);
++            }
++            
++            // Calculate operations subtotal
++            if (parsedData.operations && parsedData.operations.length > 0) {
++                const operationsTotal = parsedData.operations.reduce((sum, item) => {
++                    return sum + (parseFloat(item.total) || 0);
++                }, 0);
++                updateBallCapsSubtotal('#ballcapsBreakdown .cost-section:nth-child(5)', operationsTotal);
++            }
++            
++            // Calculate packaging subtotal
++            if (parsedData.packaging && parsedData.packaging.length > 0) {
++                const packagingTotal = parsedData.packaging.reduce((sum, item) => {
++                    return sum + (parseFloat(item.cost) || 0);
++                }, 0);
++                updateBallCapsSubtotal('#ballcapsBreakdown .cost-section:nth-child(6)', packagingTotal);
++            }
++            
++            // Calculate overhead subtotal
++            if (parsedData.overhead && parsedData.overhead.length > 0) {
++                const overheadTotal = parsedData.overhead.reduce((sum, item) => {
++                    return sum + (parseFloat(item.cost) || 0);
++                }, 0);
++                updateBallCapsSubtotal('#ballcapsBreakdown .cost-section:nth-child(7)', overheadTotal);
++            }
++        }
++
++        function updateBallCapsSubtotal(selector, total) {
++            const section = document.querySelector(selector);
++            if (section) {
++                const subtotalRow = section.querySelector('.subtotal-row');
++                if (subtotalRow) {
++                    const subtotalCells = subtotalRow.querySelectorAll('.cost-cell');
++                    // Update the last cell (cost column)
++                    if (subtotalCells[subtotalCells.length - 1]) {
++                        subtotalCells[subtotalCells.length - 1].textContent = `$${total.toFixed(2)}`;
++                    }
++                }
++            }
++        }
++
++        function calculateBallCapsGrandTotals(parsedData) {
++            console.log('Calculating BallCaps grand totals...');
++            
++            // Calculate material total (fabric + trim)
++            const materialTotal = calculateMaterialTotal(parsedData);
++            console.log('Calculated Material Total:', materialTotal);
++            
++            // Calculate factory total (embroidery + operations + packaging + overhead)
++            const factoryTotal = calculateFactoryTotal(parsedData);
++            console.log('Calculated Factory Total:', factoryTotal);
++            
++            return { materialTotal, factoryTotal };
++        }
++
++        function calculateMaterialTotal(parsedData) {
++            let total = 0;
++            
++            // Add fabric costs
++            if (parsedData.fabric && parsedData.fabric.length > 0) {
++                total += parsedData.fabric.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
++            }
++            
++            // Add trim costs
++            if (parsedData.trim && parsedData.trim.length > 0) {
++                total += parsedData.trim.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
++            }
++            
++            return total.toFixed(2);
++        }
++
++        function calculateFactoryTotal(parsedData) {
++            let total = 0;
++            
++            // Add other fabric/s - trim/s costs (formerly embroidery)
++            if (parsedData.embroidery && parsedData.embroidery.length > 0) {
++                total += parsedData.embroidery.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
++            }
++            
++            // Add operations costs
++            if (parsedData.operations && parsedData.operations.length > 0) {
++                total += parsedData.operations.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
++            }
++            
++            // Add packaging costs
++            if (parsedData.packaging && parsedData.packaging.length > 0) {
++                total += parsedData.packaging.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
++            }
++            
++            // Add overhead costs
++            if (parsedData.overhead && parsedData.overhead.length > 0) {
++                total += parsedData.overhead.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
++            }
++            
++            return total.toFixed(2);
++        }
++
+         function showDataReview() {
+             // Clear any previous status messages
+             document.getElementById('importStatus').innerHTML = '';
+diff --git a/public/js/ballcapsImport.js b/public/js/ballcapsImport.js
+index 809f90a..3f686c2 100644
+--- a/public/js/ballcapsImport.js
++++ b/public/js/ballcapsImport.js
+@@ -40,44 +40,207 @@ class TNFBallCapsImporter {
+             totalFactoryCost: "0.00"
+         };
+ 
+-        // Parse the Excel data based on the TNF ball caps format
+-        let currentSection = '';
+-        let materialCostTotal = 0;
+-        let factoryCostTotal = 0;
+-
+-        for (let i = 0; i < excelData.length; i++) {
+-            const row = excelData[i];
+-            if (!row || row.length === 0) continue;
+-
+-            const firstCell = String(row[0] || '').trim();
+-
+-            // Extract basic info from specific rows
+-            this.extractBasicInfo(result, row, i);
+-
+-            // Parse sections
+-            currentSection = this.parseSectionHeader(firstCell, currentSection);
+-
+-            // Skip empty rows and headers
+-            if (!firstCell || firstCell === ' ' || firstCell.includes('TOTAL') || firstCell.includes('SUB TOTAL')) {
+-                continue;
++        // FLEXIBLE PARSING - Search through all rows for data patterns
++        try {
++            // Search for basic info in any row
++            for (let i = 0; i < excelData.length; i++) {
++                const row = excelData[i];
++                if (!row) continue;
++                
++                // Look for Customer info
++                for (let j = 0; j < row.length; j++) {
++                    const cell = String(row[j] || '').trim();
++                    if (cell.includes('Customer') && j + 1 < row.length && row[j + 1]) {
++                        result.customer = String(row[j + 1]).trim();
++                        console.log('✅ Customer:', result.customer);
++                    }
++                    if (cell.includes('Season') && j + 1 < row.length && row[j + 1]) {
++                        result.season = String(row[j + 1]).trim();
++                        console.log('✅ Season:', result.season);
++                    }
++                    if ((cell.includes('Style#') || cell.includes('Style:')) && j + 1 < row.length && row[j + 1]) {
++                        result.styleNumber = String(row[j + 1]).trim();
++                        console.log('✅ Style#:', result.styleNumber);
++                    }
++                    if (cell.includes('Style Name') && j + 1 < row.length && row[j + 1]) {
++                        result.styleName = String(row[j + 1]).trim();
++                        console.log('✅ Style Name:', result.styleName);
++                    }
++                    if (cell.includes('MOQ') && j + 1 < row.length && row[j + 1]) {
++                        result.costedQuantity = String(row[j + 1]).trim();
++                        console.log('✅ MOQ:', result.costedQuantity);
++                    }
++                    if (cell.includes('Leadtime') && j + 1 < row.length && row[j + 1]) {
++                        result.leadtime = String(row[j + 1]).trim();
++                        console.log('✅ Leadtime:', result.leadtime);
++                    }
++                }
+             }
+ 
+-            // Parse data based on current section
+-            const costs = this.parseSectionData(result, currentSection, row, firstCell);
+-            materialCostTotal += costs.material;
+-            factoryCostTotal += costs.factory;
++            // FLEXIBLE COST DATA PARSING - Search through all rows
++            let currentSection = '';
++            
++            for (let i = 0; i < excelData.length; i++) {
++                const row = excelData[i];
++                if (!row || row.length === 0) continue;
++                
++                const firstCell = String(row[0] || '').trim();
++                
++                // Detect sections
++                if (firstCell === 'FABRIC' || firstCell === 'FABRIC/S') {
++                    currentSection = 'fabric';
++                    console.log('🔍 Found FABRIC section');
++                } else if (firstCell === 'EMBROIDERY' || firstCell === 'OTHER FABRIC/S - TRIM/S') {
++                    currentSection = 'embroidery';
++                    console.log('🔍 Found OTHER FABRIC/S - TRIM/S section');
++                } else if (firstCell === 'TRIM' || firstCell === 'TRIM/S') {
++                    currentSection = 'trim';
++                    console.log('🔍 Found TRIM section');
++                } else if (firstCell === 'OPERATIONS') {
++                    currentSection = 'operations';
++                    console.log('🔍 Found OPERATIONS section');
++                } else if (firstCell === 'PACKAGING') {
++                    currentSection = 'packaging';
++                    console.log('🔍 Found PACKAGING section');
++                } else if (firstCell === 'OVERHEAD/ PROFIT' || firstCell === 'OVERHEAD/PROFIT' || firstCell === 'OVERHEAD') {
++                    currentSection = 'overhead';
++                    console.log('🔍 Found OVERHEAD section');
++                } else if (firstCell === 'TOTAL FACTORY COST') {
++                    console.log('🔍 Found TOTAL FACTORY COST');
++                }
++                
++                // Detect header rows and set current section based on context
++                if (firstCell.includes('(Name/Code/Description)Description') && row[1] && row[1].includes('CONSUMPTION')) {
++                    // This is a header row, determine section based on context
++                    if (row[1].includes('YARD') && row[2] && row[2].includes('USD/YD')) {
++                        currentSection = 'fabric';
++                        console.log('🔍 Found FABRIC header row');
++                    } else if (row[1].includes('PIECE') && row[2] && row[2].includes('USD/PC')) {
++                        currentSection = 'trim';
++                        console.log('🔍 Found TRIM header row');
++                    }
++                }
++                
++                // Detect OTHER FABRIC/S - TRIM/S header
++                if (firstCell.includes('OTHER FABRIC/S - TRIM/S') && row[1] && row[1].includes('CONSUMPTION (YARD)')) {
++                    currentSection = 'embroidery';
++                    console.log('🔍 Found OTHER FABRIC/S - TRIM/S header row');
++                }
++                
++                // Parse data based on section
++                if (currentSection === 'fabric' && firstCell && 
++                    !firstCell.includes('FABRIC') && 
++                    !firstCell.includes('(Name/Code/Description)') && 
++                    !firstCell.includes('CONSUMPTION') && 
++                    !firstCell.includes('MATERIAL PRICE') && 
++                    !firstCell.includes('MATERIAL COST') && 
++                    !firstCell.includes('TOTAL') && 
++                    row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) > 0) {
++                    result.fabric.push({
++                        material: firstCell,
++                        consumption: String(row[1] || ''),
++                        price: parseFloat(row[2] || 0).toFixed(2),
++                        cost: parseFloat(row[3]).toFixed(2)
++                    });
++                    console.log('✅ FABRIC:', firstCell, 'Cost:', row[3]);
++                }
++                
++                if (currentSection === 'embroidery' && firstCell && 
++                    !firstCell.includes('EMBROIDERY') && 
++                    !firstCell.includes('OTHER FABRIC/S') && 
++                    !firstCell.includes('(Name/Code/Description)') && 
++                    !firstCell.includes('CONSUMPTION') && 
++                    !firstCell.includes('MATERIAL PRICE') && 
++                    !firstCell.includes('MATERIAL COST') && 
++                    row[3] && !isNaN(parseFloat(row[3]))) {
++                    result.embroidery.push({
++                        material: firstCell,
++                        consumption: String(row[1] || ''),
++                        price: parseFloat(row[2] || 0).toFixed(2),
++                        cost: parseFloat(row[3]).toFixed(2)
++                    });
++                    console.log('✅ OTHER FABRIC/S - TRIM/S:', firstCell, 'Cost:', row[3]);
++                }
++                
++                if (currentSection === 'trim' && firstCell && 
++                    !firstCell.includes('TRIM') && 
++                    !firstCell.includes('(Name/Code/Description)') && 
++                    !firstCell.includes('CONSUMPTION') && 
++                    !firstCell.includes('MATERIAL PRICE') && 
++                    !firstCell.includes('MATERIAL COST') && 
++                    row[3] && !isNaN(parseFloat(row[3]))) {
++                    result.trim.push({
++                        material: firstCell,
++                        consumption: String(row[1] || ''),
++                        price: parseFloat(row[2] || 0).toFixed(2),
++                        cost: parseFloat(row[3]).toFixed(2)
++                    });
++                    console.log('✅ TRIM:', firstCell, 'Cost:', row[3]);
++                }
++                
++                if (currentSection === 'operations' && firstCell && !firstCell.includes('OPERATIONS') && !firstCell.includes('TIME') && !firstCell.includes('COST') && !firstCell.includes('SUB TOTAL') && !firstCell.includes('TOTAL')) {
++                    if (row[3] && !isNaN(parseFloat(row[3]))) {
++                        result.operations.push({
++                            operation: firstCell,
++                            time: String(row[1] || ''),
++                            cost: parseFloat(row[2] || 0).toFixed(2),
++                            total: parseFloat(row[3]).toFixed(2)
++                        });
++                        console.log('✅ OPERATION:', firstCell, 'Cost:', row[3]);
++                    }
++                }
++                
++                if (currentSection === 'packaging' && firstCell && !firstCell.includes('PACKAGING') && !firstCell.includes('Factory Notes') && !firstCell.includes('SUB TOTAL') && !firstCell.includes('TOTAL')) {
++                    if (row[3] !== undefined && !isNaN(parseFloat(row[3]))) {
++                        result.packaging.push({
++                            type: firstCell,
++                            notes: String(row[1] || ''),
++                            cost: parseFloat(row[3]).toFixed(2)
++                        });
++                        console.log('✅ PACKAGING:', firstCell, 'Cost:', row[3]);
++                    }
++                }
++                
++                if (currentSection === 'overhead' && firstCell && !firstCell.includes('OVERHEAD') && !firstCell.includes('PROFIT') && !firstCell.includes('Factory Notes') && !firstCell.includes('SUB TOTAL') && !firstCell.includes('TOTAL')) {
++                    if (row[3] !== undefined && !isNaN(parseFloat(row[3]))) {
++                        result.overhead.push({
++                            type: firstCell,
++                            notes: String(row[1] || ''),
++                            cost: parseFloat(row[3]).toFixed(2)
++                        });
++                        console.log('✅ OVERHEAD:', firstCell, 'Cost:', row[3]);
++                    }
++                }
++                
++                // Extract totals
++                if (firstCell.includes('TOTAL MATERIAL') && row[3]) {
++                    result.totalMaterialCost = parseFloat(row[3]).toFixed(2);
++                    console.log('✅ Material Total:', result.totalMaterialCost);
++                }
++                if (firstCell.includes('TOTAL FACTORY') && row[3]) {
++                    result.totalFactoryCost = parseFloat(row[3]).toFixed(2);
++                    console.log('✅ Factory Total:', result.totalFactoryCost);
++                }
++            }
+ 
+-            // Extract totals
+-            this.extractTotals(result, firstCell, row);
++        } catch (error) {
++            console.error('Error in flexible parsing:', error);
+         }
+ 
+-        // Use calculated totals if extraction didn't work
+-        if (result.totalMaterialCost === "0.00" && materialCostTotal > 0) {
+-            result.totalMaterialCost = materialCostTotal.toFixed(2);
+-        }
+-        if (result.totalFactoryCost === "0.00" && factoryCostTotal > 0) {
+-            result.totalFactoryCost = factoryCostTotal.toFixed(2);
+-        }
++        console.log('=== FINAL RESULT ===');
++        console.log('Customer:', result.customer);
++        console.log('Season:', result.season);
++        console.log('Style#:', result.styleNumber);
++        console.log('Style Name:', result.styleName);
++        console.log('FABRIC items:', result.fabric.length, result.fabric);
++        console.log('EMBROIDERY items:', result.embroidery.length, result.embroidery);
++        console.log('TRIM items:', result.trim.length, result.trim);
++        console.log('OPERATIONS items:', result.operations.length, result.operations);
++        console.log('PACKAGING items:', result.packaging.length, result.packaging);
++        console.log('OVERHEAD items:', result.overhead.length, result.overhead);
++        console.log('Material Total:', result.totalMaterialCost);
++        console.log('Factory Total:', result.totalFactoryCost);
++        console.log('=== END RESULT ===');
+ 
+         console.log('Parsed TNF Ball Caps data:', result);
+         return result;
+@@ -124,11 +287,14 @@ class TNFBallCapsImporter {
+     parseSectionHeader(firstCell, currentSection) {
+         const sectionMap = {
+             'FABRIC': 'fabric',
++            'FABRIC/S': 'fabric',
+             'TRIM': 'trim',
++            'TRIM/S': 'trim',
+             'EMBROIDERY': 'embroidery',
+             'OPERATIONS': 'operations',
+             'PACKAGING': 'packaging',
+-            'OVERHEAD/ PROFIT': 'overhead'
++            'OVERHEAD/ PROFIT': 'overhead',
++            'OVERHEAD/PROFIT': 'overhead'
+         };
+ 
+         return sectionMap[firstCell] || currentSection;
+diff --git a/public/simple-viewer.html b/public/simple-viewer.html
+deleted file mode 100644
+index 988cde6..0000000
+--- a/public/simple-viewer.html
++++ /dev/null
+@@ -1,690 +0,0 @@
+-<!DOCTYPE html>
+-<html lang="en">
+-<head>
+-    <meta charset="UTF-8">
+-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Simple File Viewer</title>
+-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM2t0EX7jF+JqJ4e8x8w8Q2E5VkNalCqtl4PV4/VvQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+-    <style>
+-        * {
+-            margin: 0;
+-            padding: 0;
+-            box-sizing: border-box;
+-        }
+-
+-        body {
+-            font-family: Arial, sans-serif;
+-            background: #f0f2f5;
+-            color: #333;
+-        }
+-
+-        .container {
+-            max-width: 1200px;
+-            margin: 0 auto;
+-            padding: 20px;
+-        }
+-
+-        .header {
+-            background: #2c3e50;
+-            color: white;
+-            padding: 30px;
+-            border-radius: 10px;
+-            margin-bottom: 20px;
+-            text-align: center;
+-        }
+-
+-        .header h1 {
+-            font-size: 2.5rem;
+-            margin-bottom: 10px;
+-        }
+-
+-        .upload {
+-            background: white;
+-            padding: 30px;
+-            border-radius: 10px;
+-            margin-bottom: 20px;
+-            text-align: center;
+-            border: 2px dashed #bdc3c7;
+-            cursor: pointer;
+-            transition: all 0.3s ease;
+-        }
+-
+-        .upload:hover {
+-            border-color: #3498db;
+-            background: #f8f9fa;
+-        }
+-
+-        .upload.dragover {
+-            border-color: #27ae60;
+-            background: #d5f4e6;
+-        }
+-
+-        .file-input {
+-            display: none;
+-        }
+-
+-        .file-info {
+-            background: white;
+-            padding: 20px;
+-            border-radius: 10px;
+-            margin-bottom: 20px;
+-            display: none;
+-        }
+-
+-        .file-info h3 {
+-            color: #2c3e50;
+-            margin-bottom: 15px;
+-        }
+-
+-        .info-row {
+-            display: flex;
+-            justify-content: space-between;
+-            padding: 8px 0;
+-            border-bottom: 1px solid #ecf0f1;
+-        }
+-
+-        .info-row:last-child {
+-            border-bottom: none;
+-        }
+-
+-        .info-label {
+-            font-weight: bold;
+-            color: #7f8c8d;
+-        }
+-
+-        .info-value {
+-            color: #2c3e50;
+-        }
+-
+-        .content {
+-            background: white;
+-            border-radius: 10px;
+-            padding: 20px;
+-            display: none;
+-        }
+-
+-        .content h3 {
+-            color: #2c3e50;
+-            margin-bottom: 15px;
+-        }
+-
+-        .table {
+-            width: 100%;
+-            border-collapse: collapse;
+-            margin-top: 15px;
+-        }
+-
+-        .table th {
+-            background: #34495e;
+-            color: white;
+-            padding: 12px;
+-            text-align: left;
+-            font-weight: bold;
+-        }
+-
+-        .table td {
+-            padding: 10px 12px;
+-            border-bottom: 1px solid #ecf0f1;
+-        }
+-
+-        .table tr:nth-child(even) {
+-            background: #f8f9fa;
+-        }
+-
+-        .table tr:hover {
+-            background: #e3f2fd;
+-        }
+-
+-        .text-content {
+-            background: #f8f9fa;
+-            padding: 15px;
+-            border-radius: 5px;
+-            font-family: monospace;
+-            white-space: pre-wrap;
+-            max-height: 400px;
+-            overflow-y: auto;
+-        }
+-
+-        .image-content {
+-            text-align: center;
+-        }
+-
+-        .image-content img {
+-            max-width: 100%;
+-            max-height: 400px;
+-            border-radius: 5px;
+-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+-        }
+-
+-        .pdf-content {
+-            text-align: center;
+-            padding: 40px;
+-            background: #f8f9fa;
+-            border-radius: 5px;
+-        }
+-
+-        .pdf-icon {
+-            font-size: 4rem;
+-            color: #e74c3c;
+-            margin-bottom: 15px;
+-        }
+-
+-        .message {
+-            padding: 15px;
+-            border-radius: 5px;
+-            margin-bottom: 20px;
+-            font-weight: bold;
+-        }
+-
+-        .message.success {
+-            background: #d5f4e6;
+-            color: #27ae60;
+-            border-left: 4px solid #27ae60;
+-        }
+-
+-        .message.error {
+-            background: #fadbd8;
+-            color: #e74c3c;
+-            border-left: 4px solid #e74c3c;
+-        }
+-
+-        .message.info {
+-            background: #d6eaf8;
+-            color: #3498db;
+-            border-left: 4px solid #3498db;
+-        }
+-
+-        .btn {
+-            background: #3498db;
+-            color: white;
+-            border: none;
+-            padding: 10px 20px;
+-            border-radius: 5px;
+-            cursor: pointer;
+-            font-size: 14px;
+-            margin: 5px;
+-        }
+-
+-        .btn:hover {
+-            background: #2980b9;
+-        }
+-
+-        .btn-success {
+-            background: #27ae60;
+-        }
+-
+-        .btn-success:hover {
+-            background: #229954;
+-        }
+-
+-        .btn-danger {
+-            background: #e74c3c;
+-        }
+-
+-        .btn-danger:hover {
+-            background: #c0392b;
+-        }
+-
+-        .controls {
+-            margin-bottom: 20px;
+-            display: none;
+-        }
+-
+-        .search-box {
+-            width: 300px;
+-            padding: 8px 12px;
+-            border: 1px solid #bdc3c7;
+-            border-radius: 5px;
+-            margin-right: 10px;
+-        }
+-
+-        .search-box:focus {
+-            outline: none;
+-            border-color: #3498db;
+-        }
+-
+-        @media (max-width: 768px) {
+-            .container {
+-                padding: 10px;
+-            }
+-            
+-            .header h1 {
+-                font-size: 2rem;
+-            }
+-            
+-            .search-box {
+-                width: 100%;
+-                margin-bottom: 10px;
+-            }
+-            
+-            .table {
+-                font-size: 12px;
+-            }
+-            
+-            .table th,
+-            .table td {
+-                padding: 8px 6px;
+-            }
+-        }
+-    </style>
+-</head>
+-<body>
+-    <div class="container">
+-        <div class="header">
+-            <h1>📄 Simple File Viewer</h1>
+-            <p>Upload any file to view its contents</p>
+-        </div>
+-
+-        <div class="upload" id="uploadArea">
+-            <h3>📁 Choose a file to view</h3>
+-            <p>Click here or drag and drop a file</p>
+-            <input type="file" id="fileInput" class="file-input" accept="*/*">
+-        </div>
+-
+-        <div id="fileInfo" class="file-info">
+-            <h3>📋 File Information</h3>
+-            <div id="fileDetails"></div>
+-        </div>
+-
+-        <div id="controls" class="controls">
+-            <input type="text" id="searchBox" class="search-box" placeholder="Search content...">
+-            <button class="btn" onclick="exportData()">Export Data</button>
+-            <button class="btn btn-success" onclick="downloadFile()">Download File</button>
+-            <button class="btn btn-danger" onclick="clearViewer()">Clear</button>
+-        </div>
+-
+-        <div id="content" class="content">
+-            <h3>📊 File Contents</h3>
+-            <div id="contentBody"></div>
+-        </div>
+-
+-        <div id="messageArea"></div>
+-    </div>
+-
+-    <script>
+-        let currentFile = null;
+-        let currentData = null;
+-
+-        // File upload handling
+-        const uploadArea = document.getElementById('uploadArea');
+-        const fileInput = document.getElementById('fileInput');
+-
+-        uploadArea.addEventListener('click', () => fileInput.click());
+-        uploadArea.addEventListener('dragover', handleDragOver);
+-        uploadArea.addEventListener('dragleave', handleDragLeave);
+-        uploadArea.addEventListener('drop', handleDrop);
+-        fileInput.addEventListener('change', handleFileSelect);
+-
+-        function handleDragOver(e) {
+-            e.preventDefault();
+-            uploadArea.classList.add('dragover');
+-        }
+-
+-        function handleDragLeave(e) {
+-            e.preventDefault();
+-            uploadArea.classList.remove('dragover');
+-        }
+-
+-        function handleDrop(e) {
+-            e.preventDefault();
+-            uploadArea.classList.remove('dragover');
+-            const files = e.dataTransfer.files;
+-            if (files.length > 0) {
+-                processFile(files[0]);
+-            }
+-        }
+-
+-        function handleFileSelect(e) {
+-            const file = e.target.files[0];
+-            if (file) {
+-                processFile(file);
+-            }
+-        }
+-
+-        // File processing
+-        async function processFile(file) {
+-            currentFile = file;
+-            showMessage('info', `Processing ${file.name}...`);
+-
+-            try {
+-                const fileType = getFileType(file);
+-                const data = await readFile(file, fileType);
+-                
+-                currentData = data;
+-                displayFileInfo(file, fileType);
+-                displayContent(data, fileType);
+-                showControls();
+-                
+-                showMessage('success', `File processed successfully!`);
+-            } catch (error) {
+-                console.error('Error processing file:', error);
+-                showMessage('error', `Error: ${error.message}`);
+-            }
+-        }
+-
+-        function getFileType(file) {
+-            const extension = file.name.split('.').pop().toLowerCase();
+-            const mimeType = file.type;
+-
+-            if (['xlsx', 'xls', 'xlsm'].includes(extension) || mimeType.includes('spreadsheet')) {
+-                return 'excel';
+-            } else if (extension === 'csv' || mimeType.includes('csv')) {
+-                return 'csv';
+-            } else if (['txt', 'log', 'md', 'json', 'xml', 'html', 'js', 'css', 'py', 'java', 'cpp', 'c'].includes(extension) || mimeType.includes('text')) {
+-                return 'text';
+-            } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'].includes(extension) || mimeType.includes('image')) {
+-                return 'image';
+-            } else if (extension === 'pdf' || mimeType.includes('pdf')) {
+-                return 'pdf';
+-            } else {
+-                return 'text';
+-            }
+-        }
+-
+-        async function readFile(file, fileType) {
+-            return new Promise((resolve, reject) => {
+-                const reader = new FileReader();
+-                
+-                reader.onload = function(e) {
+-                    try {
+-                        if (fileType === 'excel') {
+-                            resolve(readExcelFile(e.target.result));
+-                        } else if (fileType === 'csv') {
+-                            resolve(readCSVFile(e.target.result));
+-                        } else if (fileType === 'text') {
+-                            resolve(readTextFile(e.target.result));
+-                        } else if (fileType === 'image') {
+-                            resolve(readImageFile(e.target.result));
+-                        } else if (fileType === 'pdf') {
+-                            resolve(readPDFFile(file));
+-                        } else {
+-                            resolve(readTextFile(e.target.result));
+-                        }
+-                    } catch (error) {
+-                        reject(error);
+-                    }
+-                };
+-                
+-                reader.onerror = () => reject(new Error('Failed to read file'));
+-                
+-                if (fileType === 'excel') {
+-                    reader.readAsArrayBuffer(file);
+-                } else if (fileType === 'image' || fileType === 'pdf') {
+-                    reader.readAsDataURL(file);
+-                } else {
+-                    reader.readAsText(file);
+-                }
+-            });
+-        }
+-
+-        function readExcelFile(data) {
+-            if (typeof XLSX === 'undefined') {
+-                throw new Error('XLSX library not loaded');
+-            }
+-
+-            const workbook = XLSX.read(data, { type: 'array', raw: true });
+-            const result = [];
+-
+-            workbook.SheetNames.forEach(sheetName => {
+-                const worksheet = workbook.Sheets[sheetName];
+-                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+-                result.push({
+-                    sheetName: sheetName,
+-                    data: jsonData
+-                });
+-            });
+-
+-            return result;
+-        }
+-
+-        function readCSVFile(text) {
+-            const lines = text.split(/\r?\n/);
+-            const data = lines.map(line => line.split(',').map(cell => cell.trim()));
+-            return [{ sheetName: 'CSV Data', data: data }];
+-        }
+-
+-        function readTextFile(text) {
+-            return text;
+-        }
+-
+-        function readImageFile(dataUrl) {
+-            return { type: 'image', url: dataUrl };
+-        }
+-
+-        function readPDFFile(file) {
+-            return { 
+-                type: 'pdf', 
+-                fileName: file.name,
+-                fileSize: file.size
+-            };
+-        }
+-
+-        // Display functions
+-        function displayFileInfo(file, fileType) {
+-            const fileInfo = document.getElementById('fileInfo');
+-            const fileDetails = document.getElementById('fileDetails');
+-            
+-            fileDetails.innerHTML = `
+-                <div class="info-row">
+-                    <span class="info-label">File Name:</span>
+-                    <span class="info-value">${file.name}</span>
+-                </div>
+-                <div class="info-row">
+-                    <span class="info-label">File Type:</span>
+-                    <span class="info-value">${fileType.toUpperCase()}</span>
+-                </div>
+-                <div class="info-row">
+-                    <span class="info-label">File Size:</span>
+-                    <span class="info-value">${(file.size / 1024).toFixed(2)} KB</span>
+-                </div>
+-                <div class="info-row">
+-                    <span class="info-label">Last Modified:</span>
+-                    <span class="info-value">${new Date(file.lastModified).toLocaleString()}</span>
+-                </div>
+-            `;
+-            
+-            fileInfo.style.display = 'block';
+-        }
+-
+-        function displayContent(data, fileType) {
+-            const content = document.getElementById('content');
+-            const contentBody = document.getElementById('contentBody');
+-            
+-            let html = '';
+-            
+-            if (fileType === 'image') {
+-                html = `
+-                    <div class="image-content">
+-                        <img src="${data.url}" alt="Image preview">
+-                    </div>
+-                `;
+-            } else if (fileType === 'pdf') {
+-                html = `
+-                    <div class="pdf-content">
+-                        <div class="pdf-icon">📄</div>
+-                        <h3>PDF Document</h3>
+-                        <p>PDF files cannot be directly parsed in the browser.</p>
+-                        <p><strong>File:</strong> ${data.fileName}</p>
+-                        <p><strong>Size:</strong> ${(data.fileSize / 1024).toFixed(2)} KB</p>
+-                    </div>
+-                `;
+-            } else if (fileType === 'text') {
+-                html = `
+-                    <div class="text-content">${data}</div>
+-                `;
+-            } else {
+-                // Excel or CSV data
+-                data.forEach((sheet, index) => {
+-                    html += `<h4>📊 ${sheet.sheetName}</h4>`;
+-                    
+-                    if (sheet.data && sheet.data.length > 0) {
+-                        html += '<table class="table">';
+-                        
+-                        // Add headers
+-                        if (sheet.data[0] && sheet.data[0].length > 1) {
+-                            html += '<tr>';
+-                            for (let i = 0; i < sheet.data[0].length; i++) {
+-                                html += `<th>Column ${i + 1}</th>`;
+-                            }
+-                            html += '</tr>';
+-                        }
+-                        
+-                        // Add data rows (limit to 100 for performance)
+-                        const maxRows = Math.min(100, sheet.data.length);
+-                        for (let i = 0; i < maxRows; i++) {
+-                            const row = sheet.data[i];
+-                            html += '<tr>';
+-                            
+-                            if (Array.isArray(row)) {
+-                                row.forEach(cell => {
+-                                    const cellValue = cell !== null && cell !== undefined ? String(cell) : '';
+-                                    html += `<td title="${cellValue}">${cellValue}</td>`;
+-                                });
+-                            } else {
+-                                html += `<td colspan="10">${row}</td>`;
+-                            }
+-                            html += '</tr>';
+-                        }
+-                        
+-                        html += '</table>';
+-                        
+-                        if (sheet.data.length > 100) {
+-                            html += `<p style="text-align: center; color: #7f8c8d; margin-top: 10px;">Showing first 100 rows of ${sheet.data.length} total rows</p>`;
+-                        }
+-                    } else {
+-                        html += '<p>No data found in this sheet</p>';
+-                    }
+-                });
+-            }
+-            
+-            contentBody.innerHTML = html;
+-            content.style.display = 'block';
+-        }
+-
+-        function showControls() {
+-            document.getElementById('controls').style.display = 'block';
+-        }
+-
+-        function showMessage(type, message) {
+-            const messageArea = document.getElementById('messageArea');
+-            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+-            
+-            messageArea.innerHTML = `<div class="message ${className}">${message}</div>`;
+-            
+-            if (type === 'success' || type === 'info') {
+-                setTimeout(() => {
+-                    messageArea.innerHTML = '';
+-                }, 3000);
+-            }
+-        }
+-
+-        // Control functions
+-        function exportData() {
+-            if (!currentData) {
+-                showMessage('error', 'No data to export');
+-                return;
+-            }
+-
+-            if (Array.isArray(currentData)) {
+-                // Excel/CSV data
+-                const csvContent = currentData.map(sheet => {
+-                    if (sheet.data && sheet.data.length > 0) {
+-                        return sheet.data.map(row => 
+-                            Array.isArray(row) ? row.join(',') : row
+-                        ).join('\n');
+-                    }
+-                    return '';
+-                }).join('\n\n');
+-                
+-                downloadFile(csvContent, 'export.csv', 'text/csv');
+-            } else {
+-                // Text data
+-                downloadFile(currentData, 'export.txt', 'text/plain');
+-            }
+-            
+-            showMessage('success', 'Data exported successfully!');
+-        }
+-
+-        function downloadFile() {
+-            if (!currentFile) {
+-                showMessage('error', 'No file to download');
+-                return;
+-            }
+-
+-            const url = URL.createObjectURL(currentFile);
+-            const link = document.createElement('a');
+-            link.href = url;
+-            link.download = currentFile.name;
+-            document.body.appendChild(link);
+-            link.click();
+-            document.body.removeChild(link);
+-            URL.revokeObjectURL(url);
+-            
+-            showMessage('success', 'File downloaded successfully!');
+-        }
+-
+-        function downloadFile(content, filename, mimeType) {
+-            const blob = new Blob([content], { type: mimeType });
+-            const url = URL.createObjectURL(blob);
+-            const link = document.createElement('a');
+-            link.href = url;
+-            link.download = filename;
+-            document.body.appendChild(link);
+-            link.click();
+-            document.body.removeChild(link);
+-            URL.revokeObjectURL(url);
+-        }
+-
+-        function clearViewer() {
+-            currentFile = null;
+-            currentData = null;
+-            
+-            document.getElementById('fileInfo').style.display = 'none';
+-            document.getElementById('controls').style.display = 'none';
+-            document.getElementById('content').style.display = 'none';
+-            document.getElementById('fileInput').value = '';
+-            
+-            showMessage('success', 'Viewer cleared successfully!');
+-        }
+-
+-        // Search functionality
+-        document.getElementById('searchBox').addEventListener('input', function() {
+-            const searchTerm = this.value.toLowerCase();
+-            const contentBody = document.getElementById('contentBody');
+-            
+-            if (searchTerm === '') {
+-                // Reset to original content
+-                if (currentData) {
+-                    displayContent(currentData, getFileType(currentFile));
+-                }
+-                return;
+-            }
+-            
+-            // Simple search implementation
+-            const content = contentBody.innerHTML;
+-            const highlightedContent = content.replace(
+-                new RegExp(`(${searchTerm})`, 'gi'),
+-                '<mark style="background: yellow;">$1</mark>'
+-            );
+-            
+-            contentBody.innerHTML = highlightedContent;
+-        });
+-
+-        // Demo function
+-        window.demoSimpleViewer = function() {
+-            console.log('🎬 DEMO: Simple File Viewer');
+-            console.log('==========================');
+-            console.log('This is a simple, clean file viewer!');
+-            console.log('Features:');
+-            console.log('- Drag & drop file upload');
+-            console.log('- Simple, clean interface');
+-            console.log('- Support for all file types');
+-            console.log('- Search functionality');
+-            console.log('- Export and download options');
+-            console.log('- Mobile responsive');
+-            console.log('');
+-            console.log('💡 Try uploading a file to see it in action!');
+-        };
+-    </script>
+-</body>
+-</html>
+diff --git a/public/ultra-fast-reader.html b/public/ultra-fast-reader.html
+deleted file mode 100644
+index 0def4a5..0000000
+--- a/public/ultra-fast-reader.html
++++ /dev/null
+@@ -1,554 +0,0 @@
+-<!DOCTYPE html>
+-<html lang="en">
+-<head>
+-    <meta charset="UTF-8">
+-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Ultra Fast File Reader</title>
+-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM2t0EX7jF+JqJ4e8x8w8Q2E5VkNalCqtl4PV4/VvQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+-    <!-- Fallback XLSX loading -->
+-    <script>
+-        // Fallback XLSX loading if CDN fails
+-        window.addEventListener('load', function() {
+-            if (typeof XLSX === 'undefined') {
+-                console.warn('⚠️ Primary XLSX CDN failed, trying fallback...');
+-                const fallbackScript = document.createElement('script');
+-                fallbackScript.src = 'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js';
+-                fallbackScript.onload = function() {
+-                    console.log('✅ Fallback XLSX library loaded successfully');
+-                };
+-                fallbackScript.onerror = function() {
+-                    console.error('❌ Both XLSX CDN sources failed to load');
+-                };
+-                document.head.appendChild(fallbackScript);
+-            } else {
+-                console.log('✅ Primary XLSX CDN loaded successfully');
+-            }
+-        });
+-    </script>
+-    <style>
+-        * {
+-            margin: 0;
+-            padding: 0;
+-            box-sizing: border-box;
+-        }
+-
+-        body {
+-            font-family: Arial, sans-serif;
+-            background: #f0f2f5;
+-            color: #333;
+-        }
+-
+-        .container {
+-            max-width: 1200px;
+-            margin: 0 auto;
+-            padding: 20px;
+-        }
+-
+-        .header {
+-            background: #2c3e50;
+-            color: white;
+-            padding: 30px;
+-            border-radius: 10px;
+-            margin-bottom: 20px;
+-            text-align: center;
+-        }
+-
+-        .upload-area {
+-            background: white;
+-            padding: 40px;
+-            border-radius: 10px;
+-            text-align: center;
+-            border: 3px dashed #3498db;
+-            cursor: pointer;
+-            transition: all 0.3s ease;
+-        }
+-
+-        .upload-area:hover {
+-            border-color: #2980b9;
+-            background: #f8f9fa;
+-        }
+-
+-        .file-input {
+-            display: none;
+-        }
+-
+-        .progress {
+-            width: 100%;
+-            height: 20px;
+-            background: #ecf0f1;
+-            border-radius: 10px;
+-            overflow: hidden;
+-            margin: 20px 0;
+-            display: none;
+-        }
+-
+-        .progress-bar {
+-            height: 100%;
+-            background: linear-gradient(90deg, #3498db, #2ecc71);
+-            width: 0%;
+-            transition: width 0.3s ease;
+-        }
+-
+-        .content {
+-            background: white;
+-            border-radius: 10px;
+-            padding: 20px;
+-            margin-top: 20px;
+-            display: none;
+-        }
+-
+-        .table {
+-            width: 100%;
+-            border-collapse: collapse;
+-            font-size: 12px;
+-        }
+-
+-        .table th {
+-            background: #34495e;
+-            color: white;
+-            padding: 8px;
+-            text-align: left;
+-        }
+-
+-        .table td {
+-            padding: 6px 8px;
+-            border-bottom: 1px solid #ecf0f1;
+-        }
+-
+-        .table tr:nth-child(even) {
+-            background: #f8f9fa;
+-        }
+-
+-        .stats {
+-            display: flex;
+-            gap: 20px;
+-            margin-bottom: 20px;
+-            flex-wrap: wrap;
+-        }
+-
+-        .stat {
+-            background: #ecf0f1;
+-            padding: 15px;
+-            border-radius: 8px;
+-            text-align: center;
+-            min-width: 100px;
+-        }
+-
+-        .stat-number {
+-            font-size: 1.5rem;
+-            font-weight: bold;
+-            color: #2c3e50;
+-        }
+-
+-        .stat-label {
+-            font-size: 0.9rem;
+-            color: #7f8c8d;
+-        }
+-
+-        .message {
+-            padding: 15px;
+-            border-radius: 8px;
+-            margin-bottom: 20px;
+-            font-weight: bold;
+-        }
+-
+-        .message.success {
+-            background: #d5f4e6;
+-            color: #27ae60;
+-        }
+-
+-        .message.error {
+-            background: #fadbd8;
+-            color: #e74c3c;
+-        }
+-
+-        .message.info {
+-            background: #d6eaf8;
+-            color: #3498db;
+-        }
+-    </style>
+-</head>
+-<body>
+-    <div class="container">
+-        <div class="header">
+-            <h1>⚡ Ultra Fast File Reader</h1>
+-            <p>Optimized for maximum speed - reads files in milliseconds!</p>
+-        </div>
+-
+-        <div class="upload-area" id="uploadArea">
+-            <h3>📁 Drop file here or click to browse</h3>
+-            <p>Supports Excel, CSV, Text files</p>
+-            <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls,.csv,.txt">
+-        </div>
+-
+-        <div class="progress" id="progress">
+-            <div class="progress-bar" id="progressBar"></div>
+-        </div>
+-
+-        <div id="messageArea"></div>
+-
+-        <div id="stats" class="stats" style="display: none;"></div>
+-
+-        <div id="content" class="content">
+-            <div id="contentBody"></div>
+-        </div>
+-    </div>
+-
+-    <script>
+-        let currentData = null;
+-
+-        // File upload handling
+-        const uploadArea = document.getElementById('uploadArea');
+-        const fileInput = document.getElementById('fileInput');
+-
+-        // Ensure XLSX library is loaded before setting up event listeners
+-        (async function initializeApp() {
+-            try {
+-                console.log('🚀 Initializing Ultra Fast File Reader...');
+-                await ensureXLSXLoaded();
+-                console.log('✅ XLSX library loaded successfully - App ready!');
+-                showMessage('success', 'Ultra Fast File Reader ready! Upload any file to get started.');
+-            } catch (error) {
+-                console.error('❌ Failed to load XLSX library:', error);
+-                showMessage('error', 'Failed to load XLSX library. Please check your internet connection and refresh the page.');
+-                return;
+-            }
+-        })();
+-
+-        uploadArea.addEventListener('click', () => fileInput.click());
+-        uploadArea.addEventListener('dragover', handleDragOver);
+-        uploadArea.addEventListener('dragleave', handleDragLeave);
+-        uploadArea.addEventListener('drop', handleDrop);
+-        fileInput.addEventListener('change', handleFileSelect);
+-
+-        function handleDragOver(e) {
+-            e.preventDefault();
+-            uploadArea.style.borderColor = '#27ae60';
+-            uploadArea.style.background = '#d5f4e6';
+-        }
+-
+-        function handleDragLeave(e) {
+-            e.preventDefault();
+-            uploadArea.style.borderColor = '#3498db';
+-            uploadArea.style.background = 'white';
+-        }
+-
+-        function handleDrop(e) {
+-            e.preventDefault();
+-            uploadArea.style.borderColor = '#3498db';
+-            uploadArea.style.background = 'white';
+-            const files = e.dataTransfer.files;
+-            if (files.length > 0) {
+-                processFile(files[0]);
+-            }
+-        }
+-
+-        function handleFileSelect(e) {
+-            const file = e.target.files[0];
+-            if (file) {
+-                processFile(file);
+-            }
+-        }
+-
+-        // ULTRA FAST file processing
+-        async function processFile(file) {
+-            const startTime = performance.now();
+-            showMessage('info', `⚡ Processing ${file.name}...`);
+-            showProgress(true);
+-
+-            try {
+-                const fileType = getFileType(file);
+-                const data = await readFileUltraFast(file, fileType);
+-                
+-                const endTime = performance.now();
+-                const processingTime = ((endTime - startTime) / 1000).toFixed(3);
+-                
+-                currentData = data;
+-                displayStats(data, processingTime);
+-                displayContent(data);
+-                
+-                showMessage('success', `⚡ File processed in ${processingTime} seconds!`);
+-                showProgress(false);
+-            } catch (error) {
+-                console.error('Error:', error);
+-                showMessage('error', `Error: ${error.message}`);
+-                showProgress(false);
+-            }
+-        }
+-
+-        function getFileType(file) {
+-            const ext = file.name.split('.').pop().toLowerCase();
+-            if (['xlsx', 'xls'].includes(ext)) return 'excel';
+-            if (ext === 'csv') return 'csv';
+-            return 'text';
+-        }
+-
+-        // ULTRA FAST file reading with minimal processing
+-        async function readFileUltraFast(file, fileType) {
+-            return new Promise((resolve, reject) => {
+-                const reader = new FileReader();
+-                
+-                reader.onload = async function(e) {
+-                    try {
+-                        if (fileType === 'excel') {
+-                            const data = new Uint8Array(e.target.result);
+-                            const result = await readExcelUltraFast(data);
+-                            resolve(result);
+-                        } else if (fileType === 'csv') {
+-                            resolve(readCSVUltraFast(e.target.result));
+-                        } else {
+-                            resolve(readTextUltraFast(e.target.result));
+-                        }
+-                    } catch (error) {
+-                        reject(error);
+-                    }
+-                };
+-                
+-                reader.onerror = () => reject(new Error('Failed to read file'));
+-                
+-                if (fileType === 'excel') {
+-                    reader.readAsArrayBuffer(file);
+-                } else {
+-                    reader.readAsText(file);
+-                }
+-            });
+-        }
+-
+-        // Ensure XLSX library is loaded with enhanced debugging
+-        function ensureXLSXLoaded() {
+-            return new Promise((resolve, reject) => {
+-                console.log('🔍 Checking XLSX library availability...');
+-                
+-                if (typeof XLSX !== 'undefined') {
+-                    console.log('✅ XLSX library is already available');
+-                    resolve();
+-                    return;
+-                }
+-
+-                console.log('⏳ XLSX library not ready, waiting for it to load...');
+-                
+-                // Wait for XLSX to load
+-                let attempts = 0;
+-                const maxAttempts = 100; // Increased to 10 seconds
+-                const checkInterval = setInterval(() => {
+-                    attempts++;
+-                    console.log(`🔄 Attempt ${attempts}/${maxAttempts} - Checking for XLSX...`);
+-                    
+-                    if (typeof XLSX !== 'undefined') {
+-                        console.log('✅ XLSX library loaded successfully!');
+-                        clearInterval(checkInterval);
+-                        resolve();
+-                    } else if (attempts >= maxAttempts) {
+-                        console.error('❌ XLSX library failed to load after 10 seconds');
+-                        clearInterval(checkInterval);
+-                        reject(new Error('XLSX library failed to load after 10 seconds. Please check your internet connection and refresh the page.'));
+-                    }
+-                }, 100);
+-            });
+-        }
+-
+-        // ULTRA FAST Excel reading with minimal options
+-        async function readExcelUltraFast(data) {
+-            console.log('📊 Starting Excel processing...');
+-            
+-            try {
+-                await ensureXLSXLoaded();
+-            } catch (error) {
+-                console.error('❌ XLSX library loading failed:', error);
+-                throw new Error('XLSX library not available. Please refresh the page and try again.');
+-            }
+-            
+-            if (typeof XLSX === 'undefined') {
+-                throw new Error('XLSX library not loaded after waiting');
+-            }
+-            
+-            console.log('✅ XLSX library confirmed available, processing Excel...');
+-
+-            // Ultra minimal XLSX options for maximum speed
+-            const workbook = XLSX.read(data, { 
+-                type: 'array',
+-                raw: true,           // Skip all formatting
+-                cellDates: false,    // Skip date parsing
+-                cellNF: false,       // Skip number formatting
+-                cellText: false,     // Skip text formatting
+-                cellStyles: false,   // Skip style processing
+-                cellHTML: false,     // Skip HTML processing
+-                cellFormula: false,  // Skip formula processing
+-                cellHyperlinks: false, // Skip hyperlink processing
+-                cellComments: false, // Skip comment processing
+-                dense: true,         // Use dense arrays
+-                codepage: 65001      // UTF-8
+-            });
+-
+-            const result = [];
+-            workbook.SheetNames.forEach(sheetName => {
+-                const worksheet = workbook.Sheets[sheetName];
+-                // Ultra fast conversion with minimal options
+-                const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+-                    header: 1,       // Array format
+-                    defval: '',      // Empty default
+-                    blankrows: false, // Skip blank rows
+-                    raw: true        // Raw values
+-                });
+-                result.push({
+-                    sheetName: sheetName,
+-                    data: jsonData
+-                });
+-            });
+-
+-            return result;
+-        }
+-
+-        // ULTRA FAST CSV reading
+-        function readCSVUltraFast(text) {
+-            // Pre-compiled regex for maximum speed
+-            const lines = text.split(/\r?\n/);
+-            const data = lines.map(line => line.split(','));
+-            
+-            return [{
+-                sheetName: 'CSV Data',
+-                data: data
+-            }];
+-        }
+-
+-        // ULTRA FAST text reading
+-        function readTextUltraFast(text) {
+-            const lines = text.split(/\r?\n/);
+-            return [{
+-                sheetName: 'Text Content',
+-                data: lines.map(line => [line])
+-            }];
+-        }
+-
+-        function displayStats(data, processingTime) {
+-            const stats = document.getElementById('stats');
+-            const totalRows = data.reduce((sum, sheet) => sum + (sheet.data ? sheet.data.length : 0), 0);
+-            const totalSheets = data.length;
+-            
+-            stats.innerHTML = `
+-                <div class="stat">
+-                    <div class="stat-number">${totalSheets}</div>
+-                    <div class="stat-label">Sheets</div>
+-                </div>
+-                <div class="stat">
+-                    <div class="stat-number">${totalRows}</div>
+-                    <div class="stat-label">Rows</div>
+-                </div>
+-                <div class="stat">
+-                    <div class="stat-number">${processingTime}s</div>
+-                    <div class="stat-label">Time</div>
+-                </div>
+-            `;
+-            stats.style.display = 'flex';
+-        }
+-
+-        function displayContent(data) {
+-            const content = document.getElementById('content');
+-            const contentBody = document.getElementById('contentBody');
+-            
+-            let html = '';
+-            
+-            data.forEach((sheet, index) => {
+-                html += `<h3>📊 ${sheet.sheetName}</h3>`;
+-                
+-                if (sheet.data && sheet.data.length > 0) {
+-                    html += '<table class="table">';
+-                    
+-                    // Add headers
+-                    if (sheet.data[0] && sheet.data[0].length > 1) {
+-                        html += '<tr>';
+-                        for (let i = 0; i < sheet.data[0].length; i++) {
+-                            html += `<th>Col ${i + 1}</th>`;
+-                        }
+-                        html += '</tr>';
+-                    }
+-                    
+-                    // Add data rows (limit to 50 for speed)
+-                    const maxRows = Math.min(50, sheet.data.length);
+-                    for (let i = 0; i < maxRows; i++) {
+-                        const row = sheet.data[i];
+-                        html += '<tr>';
+-                        
+-                        if (Array.isArray(row)) {
+-                            row.forEach(cell => {
+-                                const cellValue = cell !== null && cell !== undefined ? String(cell) : '';
+-                                html += `<td title="${cellValue}">${cellValue}</td>`;
+-                            });
+-                        } else {
+-                            html += `<td colspan="10">${row}</td>`;
+-                        }
+-                        html += '</tr>';
+-                    }
+-                    
+-                    html += '</table>';
+-                    
+-                    if (sheet.data.length > 50) {
+-                        html += `<p style="text-align: center; color: #7f8c8d; margin-top: 10px;">Showing first 50 rows of ${sheet.data.length} total rows</p>`;
+-                    }
+-                } else {
+-                    html += '<p>No data found</p>';
+-                }
+-            });
+-            
+-            contentBody.innerHTML = html;
+-            content.style.display = 'block';
+-        }
+-
+-        function showMessage(type, message) {
+-            const messageArea = document.getElementById('messageArea');
+-            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+-            
+-            messageArea.innerHTML = `<div class="message ${className}">${message}</div>`;
+-            
+-            if (type === 'success' || type === 'info') {
+-                setTimeout(() => {
+-                    messageArea.innerHTML = '';
+-                }, 3000);
+-            }
+-        }
+-
+-        function showProgress(show) {
+-            const progress = document.getElementById('progress');
+-            const progressBar = document.getElementById('progressBar');
+-            
+-            if (show) {
+-                progress.style.display = 'block';
+-                progressBar.style.width = '0%';
+-                
+-                // Animate progress
+-                let width = 0;
+-                const interval = setInterval(() => {
+-                    if (width >= 100) {
+-                        clearInterval(interval);
+-                    } else {
+-                        width += Math.random() * 15;
+-                        progressBar.style.width = Math.min(width, 100) + '%';
+-                    }
+-                }, 50);
+-            } else {
+-                progressBar.style.width = '100%';
+-                setTimeout(() => {
+-                    progress.style.display = 'none';
+-                }, 500);
+-            }
+-        }
+-
+-        // Demo function
+-        window.demoUltraFast = function() {
+-            console.log('⚡ ULTRA FAST FILE READER DEMO');
+-            console.log('==============================');
+-            console.log('This reader is optimized for MAXIMUM SPEED!');
+-            console.log('Optimizations:');
+-            console.log('- Minimal XLSX processing options');
+-            console.log('- Pre-compiled regex patterns');
+-            console.log('- Raw data processing only');
+-            console.log('- Limited display rows (50 max)');
+-            console.log('- No unnecessary formatting');
+-            console.log('- Dense array structures');
+-            console.log('- UTF-8 codepage for speed');
+-            console.log('');
+-            console.log('💡 Try uploading a file - it should read in milliseconds!');
+-        };
+-    </script>
+-</body>
+-</html>
+diff --git a/src/app.ts b/src/app.ts
+index 8a7357b..6d61640 100644
+--- a/src/app.ts
++++ b/src/app.ts
+@@ -20,7 +20,7 @@ app.use(helmet({
+     directives: {
+       defaultSrc: ["'self'"],
+       styleSrc: ["'self'", "'unsafe-inline'"],
+-      scriptSrc: ["'self'", "'unsafe-inline'"],
++      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://unpkg.com"],
+       scriptSrcAttr: ["'unsafe-inline'"],
+       imgSrc: ["'self'", "data:"],
+       connectSrc: ["'self'"],
+diff --git a/temp_head.log b/temp_head.log
+new file mode 100644
+index 0000000000000000000000000000000000000000..4c36e13676365102703f88e9e4c3556cb12515df
+GIT binary patch
+literal 53630
+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
+Xh>IlA$>&(R52sTjB<0zv53&CMB0g-(
+
+literal 0
+HcmV?d00001
+
+diff --git a/temp_merge.log b/temp_merge.log
+new file mode 100644
+index 0000000000000000000000000000000000000000..6d156ccde9c5ca41a9508627d1c39ac52a690d6c
+GIT binary patch
+literal 74610
+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
+
+literal 0
+HcmV?d00001
+
+-- 
+2.51.0.windows.1
+

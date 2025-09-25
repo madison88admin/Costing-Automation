@@ -1,0 +1,2314 @@
+From afb3b54faf1b69e941fdd0bd032a96842b6ba23d Mon Sep 17 00:00:00 2001
+From: wardKawaii <mendz0908@gmail.com>
+Date: Tue, 16 Sep 2025 16:00:02 +0800
+Subject: [PATCH 02/22] Enchancing the import function of the excel to
+ database.
+
+---
+ index.html                      |  219 +++-
+ logs/combined.log               |   23 +
+ public/index.html               | 1696 +++++++++++++++++++++++++++++--
+ src/services/supabaseService.ts |   63 +-
+ 4 files changed, 1816 insertions(+), 185 deletions(-)
+
+diff --git a/index.html b/index.html
+index a202bec..146abde 100644
+--- a/index.html
++++ b/index.html
+@@ -504,6 +504,76 @@
+             margin-bottom: 40px;
+         }
+ 
++        /* Modal Styles */
++        .modal-overlay {
++            position: fixed;
++            top: 0;
++            left: 0;
++            width: 100%;
++            height: 100%;
++            background: rgba(0, 0, 0, 0.7);
++            backdrop-filter: blur(10px);
++            z-index: 1000;
++            display: none;
++            justify-content: center;
++            align-items: center;
++            animation: fadeIn 0.3s ease-out;
++        }
++
++        .modal-content {
++            background: rgba(255, 255, 255, 0.15);
++            backdrop-filter: blur(20px);
++            border: 1px solid rgba(255, 255, 255, 0.2);
++            border-radius: 20px;
++            padding: 40px;
++            max-width: 600px;
++            width: 90%;
++            max-height: 80vh;
++            overflow-y: auto;
++            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
++            animation: slideIn 0.3s ease-out;
++            position: relative;
++        }
++
++        .modal-close {
++            position: absolute;
++            top: 15px;
++            right: 20px;
++            background: none;
++            border: none;
++            font-size: 24px;
++            color: white;
++            cursor: pointer;
++            padding: 5px;
++            border-radius: 50%;
++            width: 35px;
++            height: 35px;
++            display: flex;
++            align-items: center;
++            justify-content: center;
++            transition: background-color 0.3s ease;
++        }
++
++        .modal-close:hover {
++            background: rgba(255, 255, 255, 0.2);
++        }
++
++        @keyframes fadeIn {
++            from { opacity: 0; }
++            to { opacity: 1; }
++        }
++
++        @keyframes slideIn {
++            from { 
++                opacity: 0;
++                transform: translateY(-50px) scale(0.9);
++            }
++            to { 
++                opacity: 1;
++                transform: translateY(0) scale(1);
++            }
++        }
++
+         .import-header {
+             display: flex;
+             align-items: center;
+@@ -928,72 +998,78 @@
+                     <button class="import-button" onclick="exportToExcel()">
+                         Export
+                     </button>
++                    <button class="import-button" onclick="openImportModal()" style="background: #6f42c1;">
++                        Import
++                    </button>
+                 </div>
+             </div>
+             
+             <div id="tableData"></div>
+         </div>
+ 
+-        <!-- File Import Section -->
+-        <div class="import-section" id="importSection" style="display: none;">
+-            <div class="import-header">
+-                <div class="import-icon">
+-                    📊
+-                </div>
+-                <div>
+-                    <h2 class="import-title">Import Data</h2>
+-                    <p class="import-subtitle">Upload your data files to the database</p>
+-                </div>
+-            </div>
+-            
+-            
+-            <div class="file-upload" onclick="document.getElementById('fileInput').click()">
+-                <div class="file-upload-content">
+-                    <div class="file-upload-icon">📁</div>
+-                    <div class="file-upload-text">Click to select your file</div>
+-                    <div class="file-upload-subtext">Drag and drop or click to browse</div>
+-                    <div class="supported-formats">
+-                        <span class="format-badge">CSV</span>
+-                        <span class="format-badge">Excel</span>
+-                        <span class="format-badge">XLSX</span>
++        <!-- Import Modal -->
++        <div class="modal-overlay" id="importModal">
++            <div class="modal-content">
++                <button class="modal-close" onclick="closeImportModal()">&times;</button>
++                
++                <div class="import-header">
++                    <div class="import-icon">
++                        📊
+                     </div>
+-                </div>
+-                <input type="file" id="fileInput" accept=".csv,.xlsx" style="display: none;" onchange="handleFileSelect(event)">
+-            </div>
+-            
+-            <!-- Data Review Panel -->
+-            <div id="dataReviewPanel" style="display: none; margin-top: 20px;">
+-                <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px;">
+-                    <h3>🔍 Data Review & Verification</h3>
+-                    <p style="color: #6c757d; margin-bottom: 20px;">Please review the scanned data and verify column mappings before importing</p>
+-                    
+-                    <!-- Scanned Data Summary -->
+-                    <div id="scannedDataSummary" style="background: white; border: 1px solid #ddd; border-radius: 4px; padding: 15px; margin-bottom: 20px;">
+-                        <h4>📋 Scanned Data Summary</h4>
+-                        <div id="summaryContent"></div>
++                    <div>
++                        <h2 class="import-title">Import Data</h2>
++                        <p class="import-subtitle">Upload your data files to the database</p>
+                     </div>
+-                    
+-                    <!-- Column Mapping Review -->
+-                    <div id="columnMappingReview" style="background: white; border: 1px solid #ddd; border-radius: 4px; padding: 15px; margin-bottom: 20px;">
+-                        <h4>🗂️ Column Mapping Review</h4>
+-                        <div id="mappingContent"></div>
++                </div>
++                
++                <div class="file-upload" onclick="document.getElementById('fileInput').click()">
++                    <div class="file-upload-content">
++                        <div class="file-upload-icon">📁</div>
++                        <div class="file-upload-text">Click to select your file</div>
++                        <div class="file-upload-subtext">Drag and drop or click to browse</div>
++                        <div class="supported-formats">
++                            <span class="format-badge">CSV</span>
++                            <span class="format-badge">Excel</span>
++                            <span class="format-badge">XLSX</span>
++                        </div>
+                     </div>
+-                    
+-                    <!-- Action Buttons -->
+-                    <div style="text-align: center; margin-top: 20px;">
+-                        <button class="btn btn-secondary" onclick="cancelImport()" style="margin-right: 10px;">❌ Cancel</button>
+-                        <button class="btn btn-primary" onclick="confirmImport()">✅ Confirm & Import Data</button>
++                    <input type="file" id="fileInput" accept=".csv,.xlsx" style="display: none;" onchange="handleFileSelect(event)">
++                </div>
++                
++                <!-- Data Review Panel -->
++                <div id="dataReviewPanel" style="display: none; margin-top: 20px;">
++                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px;">
++                        <h3>🔍 Data Review & Verification</h3>
++                        <p style="color: #6c757d; margin-bottom: 20px;">Please review the scanned data and verify column mappings before importing</p>
++                        
++                        <!-- Scanned Data Summary -->
++                        <div id="scannedDataSummary" style="background: white; border: 1px solid #ddd; border-radius: 4px; padding: 15px; margin-bottom: 20px;">
++                            <h4>📋 Scanned Data Summary</h4>
++                            <div id="summaryContent"></div>
++                        </div>
++                        
++                        <!-- Column Mapping Review -->
++                        <div id="columnMappingReview" style="background: white; border: 1px solid #ddd; border-radius: 4px; padding: 15px; margin-bottom: 20px;">
++                            <h4>🗂️ Column Mapping Review</h4>
++                            <div id="mappingContent"></div>
++                        </div>
++                        
++                        <!-- Action Buttons -->
++                        <div style="text-align: center; margin-top: 20px;">
++                            <button class="btn btn-secondary" onclick="cancelImport()" style="margin-right: 10px;">❌ Cancel</button>
++                            <button class="btn btn-primary" onclick="confirmImport()">✅ Confirm & Import Data</button>
++                        </div>
+                     </div>
+                 </div>
++                
++                <div id="filePreview" style="display: none;">
++                    <h3>File Preview</h3>
++                    <div id="previewTable"></div>
++                    <button onclick="importFile()">Import Data</button>
++                </div>
++                
++                <div id="importStatus"></div>
+             </div>
+-            
+-            <div id="filePreview" style="display: none;">
+-                <h3>File Preview</h3>
+-                <div id="previewTable"></div>
+-                <button onclick="importFile()">Import Data</button>
+-            </div>
+-            
+-            <div id="importStatus"></div>
+         </div>
+     </div>
+ 
+@@ -1039,6 +1115,40 @@
+             }
+         }
+ 
++        // Modal functions
++        function openImportModal() {
++            const modal = document.getElementById('importModal');
++            modal.style.display = 'flex';
++            document.body.style.overflow = 'hidden'; // Prevent background scrolling
++        }
++
++        function closeImportModal() {
++            const modal = document.getElementById('importModal');
++            modal.style.display = 'none';
++            document.body.style.overflow = 'auto'; // Restore scrolling
++            
++            // Reset import form
++            document.getElementById('fileInput').value = '';
++            document.getElementById('dataReviewPanel').style.display = 'none';
++            document.getElementById('filePreview').style.display = 'none';
++            document.getElementById('importStatus').innerHTML = '';
++        }
++
++        // Close modal when clicking outside
++        document.addEventListener('click', function(event) {
++            const modal = document.getElementById('importModal');
++            if (event.target === modal) {
++                closeImportModal();
++            }
++        });
++
++        // Close modal with Escape key
++        document.addEventListener('keydown', function(event) {
++            if (event.key === 'Escape') {
++                closeImportModal();
++            }
++        });
++
+         // Auto-connect to Supabase when page loads
+         window.addEventListener('load', function() {
+             console.log('Page loaded, starting intro animation...');
+@@ -1084,7 +1194,6 @@
+                     connectionId = result.connectionId;
+                     showStatus('connectionStatus', '✅ Auto-connected to Supabase successfully!', 'success');
+                     document.getElementById('dataTableSection').style.display = 'block';
+-                    document.getElementById('importSection').style.display = 'block';
+                     document.getElementById('autoConnectStatus').style.display = 'none';
+                     
+                     // Auto-load databank table data immediately
+diff --git a/logs/combined.log b/logs/combined.log
+index 2ff0c63..396b8f9 100644
+--- a/logs/combined.log
++++ b/logs/combined.log
+@@ -54,3 +54,26 @@
+ {"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-16T00:20:47.970Z"}
+ {"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-16T01:54:00.774Z"}
+ {"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-16T02:19:41.876Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-16T06:03:49.871Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-16T06:04:00.269Z"}
++{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-09-16T06:04:17.236Z"}
++{"level":"info","message":"Total records in database: 2773","service":"costing-automation","timestamp":"2025-09-16T06:04:20.097Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-16T06:04:20.501Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-16T06:04:20.744Z"}
++{"level":"info","message":"Fetched batch: 773 records (total so far: 2773)","service":"costing-automation","timestamp":"2025-09-16T06:04:20.914Z"}
++{"level":"info","message":"Final result: 2773 records loaded, total count: 2773","service":"costing-automation","timestamp":"2025-09-16T06:04:20.915Z"}
++{"level":"info","message":"Total records in database: 2773","service":"costing-automation","timestamp":"2025-09-16T06:07:38.943Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-16T06:07:39.615Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-16T06:07:39.978Z"}
++{"level":"info","message":"Fetched batch: 773 records (total so far: 2773)","service":"costing-automation","timestamp":"2025-09-16T06:07:40.218Z"}
++{"level":"info","message":"Final result: 2773 records loaded, total count: 2773","service":"costing-automation","timestamp":"2025-09-16T06:07:40.219Z"}
++{"level":"info","message":"Total records in database: 2773","service":"costing-automation","timestamp":"2025-09-16T06:10:28.013Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-16T06:10:28.483Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-16T06:10:28.947Z"}
++{"level":"info","message":"Fetched batch: 773 records (total so far: 2773)","service":"costing-automation","timestamp":"2025-09-16T06:10:29.280Z"}
++{"level":"info","message":"Final result: 2773 records loaded, total count: 2773","service":"costing-automation","timestamp":"2025-09-16T06:10:29.281Z"}
++{"level":"info","message":"Total records in database: 2773","service":"costing-automation","timestamp":"2025-09-16T06:17:05.658Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-09-16T06:17:06.388Z"}
++{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-09-16T06:17:06.723Z"}
++{"level":"info","message":"Fetched batch: 773 records (total so far: 2773)","service":"costing-automation","timestamp":"2025-09-16T06:17:06.958Z"}
++{"level":"info","message":"Final result: 2773 records loaded, total count: 2773","service":"costing-automation","timestamp":"2025-09-16T06:17:06.959Z"}
+diff --git a/public/index.html b/public/index.html
+index a202bec..4b242fe 100644
+--- a/public/index.html
++++ b/public/index.html
+@@ -4,7 +4,7 @@
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Databank Data Management System</title>
+-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
++    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM2t0EX7jF+JqJ4e8x8w8Q2E5VkNalCqtl4PV4/VvQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+     <style>
+         * {
+             margin: 0;
+@@ -504,6 +504,148 @@
+             margin-bottom: 40px;
+         }
+ 
++        /* Modal Styles */
++        .modal-overlay {
++            position: fixed;
++            top: 0;
++            left: 0;
++            width: 100%;
++            height: 100%;
++            background: rgba(0, 0, 0, 0.7);
++            backdrop-filter: blur(10px);
++            z-index: 1000;
++            display: none;
++            justify-content: center;
++            align-items: center;
++            animation: fadeIn 0.3s ease-out;
++        }
++
++        .modal-content {
++            background: rgba(255, 255, 255, 0.15);
++            backdrop-filter: blur(20px);
++            border: 1px solid rgba(255, 255, 255, 0.2);
++            border-radius: 20px;
++            padding: 40px;
++            max-width: 600px;
++            width: 90%;
++            max-height: 80vh;
++            overflow-y: auto;
++            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
++            animation: slideIn 0.3s ease-out;
++            position: relative;
++        }
++
++        .modal-close {
++            position: absolute;
++            top: 15px;
++            right: 20px;
++            background: none;
++            border: none;
++            font-size: 24px;
++            color: white;
++            cursor: pointer;
++            padding: 5px;
++            border-radius: 50%;
++            width: 35px;
++            height: 35px;
++            display: flex;
++            align-items: center;
++            justify-content: center;
++            transition: background-color 0.3s ease;
++        }
++
++        .modal-close:hover {
++            background: rgba(255, 255, 255, 0.2);
++        }
++
++        @keyframes fadeIn {
++            from { opacity: 0; }
++            to { opacity: 1; }
++        }
++
++        @keyframes slideIn {
++            from { 
++                opacity: 0;
++                transform: translateY(-50px) scale(0.9);
++            }
++            to { 
++                opacity: 1;
++                transform: translateY(0) scale(1);
++            }
++        }
++
++        /* Pagination Styles */
++        .pagination {
++            display: flex;
++            justify-content: center;
++            align-items: center;
++            margin: 20px 0;
++            gap: 6px;
++            background: rgba(0, 0, 0, 0.8);
++            border-radius: 12px;
++            padding: 12px 16px;
++            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
++        }
++
++        .pagination-button {
++            background: rgba(255, 255, 255, 0.1);
++            border: 1px solid rgba(255, 255, 255, 0.2);
++            color: white;
++            padding: 8px 12px;
++            border-radius: 6px;
++            cursor: pointer;
++            transition: all 0.2s ease;
++            font-weight: 500;
++            min-width: 40px;
++            text-align: center;
++            font-size: 14px;
++        }
++
++        .pagination-button:hover {
++            background: rgba(255, 255, 255, 0.2);
++            color: white;
++        }
++
++        .pagination-button.active {
++            background: #6f42c1;
++            border-color: #5a32a3;
++            color: white;
++            font-weight: 600;
++        }
++
++        .pagination-info {
++            color: white;
++            margin: 0 15px;
++            font-size: 14px;
++            font-weight: 500;
++            background: rgba(255, 255, 255, 0.1);
++            padding: 8px 12px;
++            border-radius: 6px;
++        }
++
++        .pagination-nav {
++            background: rgba(255, 255, 255, 0.1);
++            border: 1px solid rgba(255, 255, 255, 0.2);
++            color: white;
++            padding: 8px 12px;
++            border-radius: 6px;
++            cursor: pointer;
++            transition: all 0.2s ease;
++            font-weight: 500;
++            font-size: 14px;
++        }
++
++        .pagination-nav:hover {
++            background: rgba(255, 255, 255, 0.2);
++            color: white;
++        }
++
++        .pagination-nav:disabled {
++            opacity: 0.3;
++            cursor: not-allowed;
++            background: rgba(255, 255, 255, 0.05);
++        }
++
+         .import-header {
+             display: flex;
+             align-items: center;
+@@ -928,61 +1070,165 @@
+                     <button class="import-button" onclick="exportToExcel()">
+                         Export
+                     </button>
++                    <button class="import-button" onclick="openImportModal()" style="background: #6f42c1;">
++                        Import
++                    </button>
+                 </div>
+             </div>
+             
+             <div id="tableData"></div>
++            
++            <!-- Pagination -->
++            <div id="pagination" class="pagination" style="display: none;">
++                <button class="pagination-nav" id="firstPage" onclick="goToPage(1)" disabled>
++                    First
++                </button>
++                <button class="pagination-nav" id="prevPage" onclick="goToPreviousPage()" disabled>
++                    Previous
++                </button>
++                
++                <div id="pageNumbers"></div>
++                
++                <button class="pagination-nav" id="nextPage" onclick="goToNextPage()" disabled>
++                    Next
++                </button>
++                <button class="pagination-nav" id="lastPage" onclick="goToLastPage()" disabled>
++                    Last
++                </button>
++                
++                <div class="pagination-info" id="paginationInfo">
++                    Page 1 of 1
++                </div>
++            </div>
+         </div>
+ 
+-        <!-- File Import Section -->
+-        <div class="import-section" id="importSection" style="display: none;">
+-            <div class="import-header">
+-                <div class="import-icon">
+-                    📊
++        <!-- Import Modal -->
++        <div class="modal-overlay" id="importModal">
++            <div class="modal-content">
++                <button class="modal-close" onclick="closeImportModal()">&times;</button>
++                
++                <div class="import-header">
++                    <div class="import-icon">
++                        🤖
++                    </div>
++                    <div>
++                        <h2 class="import-title">Intelligent Import System</h2>
++                        <p class="import-subtitle">AI-powered data extraction and validation</p>
++                    </div>
++            </div>
++            
++            <div class="file-upload" onclick="document.getElementById('fileInput').click()">
++                    <div class="file-upload-content">
++                        <div class="file-upload-icon">📁</div>
++                        <div class="file-upload-text">Click to select your file</div>
++                        <div class="file-upload-subtext">Drag and drop or click to browse</div>
++                        <div class="supported-formats">
++                            <span class="format-badge">CSV</span>
++                            <span class="format-badge">XLSX</span>
++                            <span class="format-badge">XLS</span>
++                            <span class="format-badge">XLSM</span>
++                        </div>
++                    </div>
++                <input type="file" id="fileInput" accept=".csv,.xlsx,.xls,.xlsm" style="display: none;" onchange="handleFileSelect(event)">
++            </div>
++            
++            <!-- Template Detection Info -->
++            <div class="template-info" style="background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid rgba(255, 255, 255, 0.2);">
++                <h4 style="color: white; margin-bottom: 15px;">🎯 Supported Templates</h4>
++                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
++                    <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px;">
++                        <h5 style="color: #4CAF50; margin-bottom: 10px;">✅ Beanie Template</h5>
++                        <ul style="color: rgba(255, 255, 255, 0.9); font-size: 14px; margin: 0; padding-left: 20px;">
++                            <li>YARN section</li>
++                            <li>FABRIC section</li>
++                            <li>TRIM section</li>
++                        </ul>
++                    </div>
++                    <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px;">
++                        <h5 style="color: #2196F3; margin-bottom: 10px;">✅ Cap Template</h5>
++                        <ul style="color: rgba(255, 255, 255, 0.9); font-size: 14px; margin: 0; padding-left: 20px;">
++                            <li>FABRIC/S section</li>
++                            <li>OTHER FABRIC/S section</li>
++                            <li>TRIM/S section</li>
++                        </ul>
++                    </div>
+                 </div>
+-                <div>
+-                    <h2 class="import-title">Import Data</h2>
+-                    <p class="import-subtitle">Upload your data files to the database</p>
++                
++                <!-- Excel Library Status -->
++                <div id="excelStatus" style="background: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.3); border-radius: 8px; padding: 15px; margin-top: 15px;">
++                    <h5 style="color: #ffc107; margin-bottom: 10px;">⚠️ Excel Library Status</h5>
++                    <p style="color: rgba(255, 255, 255, 0.9); font-size: 14px; margin: 0;">
++                        Excel library will load automatically when needed. If Excel files don't work, try converting to CSV format.
++                    </p>
+                 </div>
+             </div>
+             
++            <!-- Import Options -->
++            <div class="import-options" style="background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid rgba(255, 255, 255, 0.2);">
++                <h4 style="color: white; margin-bottom: 15px;">⚙️ Import Settings</h4>
++                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
++                    <label style="display: flex; align-items: center; color: white; cursor: pointer;">
++                        <input type="checkbox" id="skipDuplicates" checked style="margin-right: 10px; transform: scale(1.2);">
++                        Skip duplicate entries
++                    </label>
++                    <label style="display: flex; align-items: center; color: white; cursor: pointer;">
++                        <input type="checkbox" id="validateData" checked style="margin-right: 10px; transform: scale(1.2);">
++                        Validate data before import
++                    </label>
++                    <label style="display: flex; align-items: center; color: white; cursor: pointer;">
++                        <input type="checkbox" id="autoCalculate" checked style="margin-right: 10px; transform: scale(1.2);">
++                        Auto-calculate missing values
++                    </label>
++                    <label style="display: flex; align-items: center; color: white; cursor: pointer;">
++                        <input type="checkbox" id="showValidationPage" checked style="margin-right: 10px; transform: scale(1.2);">
++                        Show validation page for errors
++                    </label>
++                </div>
++            </div>
+             
+-            <div class="file-upload" onclick="document.getElementById('fileInput').click()">
+-                <div class="file-upload-content">
+-                    <div class="file-upload-icon">📁</div>
+-                    <div class="file-upload-text">Click to select your file</div>
+-                    <div class="file-upload-subtext">Drag and drop or click to browse</div>
+-                    <div class="supported-formats">
+-                        <span class="format-badge">CSV</span>
+-                        <span class="format-badge">Excel</span>
+-                        <span class="format-badge">XLSX</span>
+-                    </div>
++            <!-- Progress Indicator -->
++            <div id="importProgress" class="import-progress" style="display: none; background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid rgba(255, 255, 255, 0.2);">
++                <h4 style="color: white; margin-bottom: 15px;">🔄 Processing File...</h4>
++                <div class="progress-bar" style="background: rgba(0, 0, 0, 0.3); border-radius: 10px; height: 20px; overflow: hidden; margin-bottom: 10px;">
++                    <div class="progress-fill" id="progressFill" style="background: linear-gradient(90deg, #4CAF50, #2196F3); height: 100%; width: 0%; transition: width 0.3s ease;"></div>
+                 </div>
+-                <input type="file" id="fileInput" accept=".csv,.xlsx" style="display: none;" onchange="handleFileSelect(event)">
++                <p id="progressText" style="color: rgba(255, 255, 255, 0.9); margin: 0; text-align: center;">Analyzing file structure...</p>
+             </div>
+             
+             <!-- Data Review Panel -->
+             <div id="dataReviewPanel" style="display: none; margin-top: 20px;">
+-                <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px;">
+-                    <h3>🔍 Data Review & Verification</h3>
+-                    <p style="color: #6c757d; margin-bottom: 20px;">Please review the scanned data and verify column mappings before importing</p>
++                <div style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 20px; backdrop-filter: blur(10px);">
++                    <h3 style="color: white; margin-bottom: 15px;">🔍 Data Review & Verification</h3>
++                    <p style="color: rgba(255, 255, 255, 0.8); margin-bottom: 20px;">Please review the scanned data and verify column mappings before importing</p>
++                    
++                    <!-- Template Detection Result -->
++                    <div id="templateDetectionResult" style="background: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 15px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.2);">
++                        <h4 style="color: #4CAF50; margin-bottom: 10px;">🎯 Template Detection</h4>
++                        <div id="templateInfo" style="color: rgba(255, 255, 255, 0.9);"></div>
++                    </div>
+                     
+                     <!-- Scanned Data Summary -->
+-                    <div id="scannedDataSummary" style="background: white; border: 1px solid #ddd; border-radius: 4px; padding: 15px; margin-bottom: 20px;">
+-                        <h4>📋 Scanned Data Summary</h4>
+-                        <div id="summaryContent"></div>
++                    <div id="scannedDataSummary" style="background: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 15px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.2);">
++                        <h4 style="color: #2196F3; margin-bottom: 10px;">📋 Scanned Data Summary</h4>
++                        <div id="summaryContent" style="color: rgba(255, 255, 255, 0.9);"></div>
+                     </div>
+                     
+                     <!-- Column Mapping Review -->
+-                    <div id="columnMappingReview" style="background: white; border: 1px solid #ddd; border-radius: 4px; padding: 15px; margin-bottom: 20px;">
+-                        <h4>🗂️ Column Mapping Review</h4>
+-                        <div id="mappingContent"></div>
++                    <div id="columnMappingReview" style="background: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 15px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.2);">
++                        <h4 style="color: #FF9800; margin-bottom: 10px;">🗂️ Column Mapping Review</h4>
++                        <div id="mappingContent" style="color: rgba(255, 255, 255, 0.9);"></div>
++                    </div>
++                    
++                    <!-- Validation Results -->
++                    <div id="validationResults" style="background: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 15px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.2);">
++                        <h4 style="color: #F44336; margin-bottom: 10px;">⚠️ Validation Results</h4>
++                        <div id="validationContent" style="color: rgba(255, 255, 255, 0.9);"></div>
+                     </div>
+                     
+                     <!-- Action Buttons -->
+                     <div style="text-align: center; margin-top: 20px;">
+-                        <button class="btn btn-secondary" onclick="cancelImport()" style="margin-right: 10px;">❌ Cancel</button>
+-                        <button class="btn btn-primary" onclick="confirmImport()">✅ Confirm & Import Data</button>
++                        <button class="btn btn-secondary" onclick="cancelImport()" style="margin-right: 10px; background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">❌ Cancel</button>
++                        <button class="btn btn-primary" onclick="confirmImport()" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">✅ Confirm & Import Data</button>
+                     </div>
+                 </div>
+             </div>
+@@ -994,27 +1240,141 @@
+             </div>
+             
+             <div id="importStatus"></div>
++            </div>
++        </div>
++    </div>
++
++    <!-- Validation Page -->
++    <div id="validationPage" class="validation-page" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 10000; overflow-y: auto;">
++        <div class="validation-container" style="max-width: 1200px; margin: 20px auto; background: rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 30px; backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.2);">
++            <div class="validation-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
++                <h2 style="color: white; margin: 0;">🔧 Data Validation & Correction</h2>
++                <button onclick="closeValidationPage()" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 16px;">✕ Close</button>
++            </div>
++            
++            <div class="validation-content">
++                <div id="validationSummary" style="background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.2);">
++                    <h3 style="color: #FF9800; margin-bottom: 15px;">📊 Validation Summary</h3>
++                    <div id="validationSummaryContent" style="color: rgba(255, 255, 255, 0.9);"></div>
++                </div>
++                
++                <div id="errorList" style="background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.2);">
++                    <h3 style="color: #F44336; margin-bottom: 15px;">⚠️ Errors Found</h3>
++                    <div id="errorListContent" style="color: rgba(255, 255, 255, 0.9);"></div>
++                </div>
++                
++                <div id="editableData" style="background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.2);">
++                    <h3 style="color: #4CAF50; margin-bottom: 15px;">✏️ Edit Data</h3>
++                    <div id="editableDataContent" style="color: rgba(255, 255, 255, 0.9);"></div>
++                </div>
++                
++                <div class="validation-actions" style="text-align: center; margin-top: 30px;">
++                    <button onclick="saveValidationChanges()" class="btn btn-primary" style="background: #28a745; color: white; border: none; padding: 12px 30px; border-radius: 6px; cursor: pointer; font-size: 16px; margin-right: 15px;">💾 Save Changes</button>
++                    <button onclick="skipValidation()" class="btn btn-secondary" style="background: #6c757d; color: white; border: none; padding: 12px 30px; border-radius: 6px; cursor: pointer; font-size: 16px;">⏭️ Skip Validation</button>
++                </div>
++            </div>
+         </div>
+     </div>
+ 
+     <script>
+-        // Check if XLSX library loaded properly
+-        window.addEventListener('load', function() {
+-            if (typeof XLSX === 'undefined') {
+-                console.error('XLSX library failed to load');
+-                // Try loading from alternative CDN
++        // Enhanced and more reliable XLSX library loading
++        function ensureXLSXLoaded() {
++            return new Promise((resolve, reject) => {
++                if (typeof XLSX !== 'undefined') {
++                    console.log('XLSX library already loaded');
++                    resolve();
++                    return;
++                }
++
++                console.log('Loading XLSX library...');
++                
++                // Check if script is already being loaded
++                const existingScript = document.querySelector('script[src*="xlsx"]');
++                if (existingScript) {
++                    console.log('XLSX script already exists, waiting for it to load...');
++                    existingScript.onload = () => {
++                        if (typeof XLSX !== 'undefined') {
++                            resolve();
++                        } else {
++                            reject(new Error('XLSX library loaded but not available'));
++                        }
++                    };
++                    return;
++                }
++                
++                // Use the most reliable CDN with integrity check
+                 const script = document.createElement('script');
+-                script.src = 'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js';
+-                script.onload = function() {
+-                    console.log('XLSX library loaded from alternative CDN');
++                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
++                script.integrity = 'sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQC5QZQ8ghUzqyHJEwXaVg/2b4d0P7N4a4L0g+ce0qA==';
++                script.crossOrigin = 'anonymous';
++                
++                script.onload = () => {
++                    console.log('XLSX library script loaded, checking availability...');
++                    // Wait a bit for the library to initialize
++                    setTimeout(() => {
++                        if (typeof XLSX !== 'undefined') {
++                            console.log('XLSX library is available');
++                            resolve();
++                        } else {
++                            console.error('XLSX library loaded but not available');
++                            reject(new Error('XLSX library loaded but not available'));
++                        }
++                    }, 100);
+                 };
+-                script.onerror = function() {
+-                    console.error('Failed to load XLSX library from both CDNs');
++                
++                script.onerror = (error) => {
++                    console.error('Failed to load XLSX library:', error);
++                    reject(new Error('Failed to load XLSX library. Please check your internet connection.'));
+                 };
++                
+                 document.head.appendChild(script);
+-            } else {
+-                console.log('XLSX library loaded successfully');
++            });
++        }
++
++
++
++        // Debug function for testing Excel processing (can be called from browser console)
++        window.testExcelProcessing = function() {
++            console.log('Testing Excel processing...');
++            console.log('XLSX library available:', typeof XLSX !== 'undefined');
++            if (typeof XLSX !== 'undefined') {
++                console.log('XLSX version:', XLSX.version);
++                console.log('XLSX utils available:', typeof XLSX.utils !== 'undefined');
+             }
++        };
++
++        // Ensure XLSX is loaded when page loads
++        window.addEventListener('load', function() {
++            console.log('Page loaded, pre-loading XLSX library for Excel support...');
++            
++            // Pre-load XLSX library in background for better user experience
++            ensureXLSXLoaded().then(() => {
++                console.log('✅ XLSX library pre-loaded successfully');
++                // Update Excel status in import modal if it exists
++                const statusDiv = document.getElementById('excelStatus');
++                if (statusDiv) {
++                    statusDiv.style.background = 'rgba(76, 175, 80, 0.1)';
++                    statusDiv.style.border = '1px solid rgba(76, 175, 80, 0.3)';
++                    statusDiv.innerHTML = `
++                        <h5 style="color: #4CAF50; margin-bottom: 10px;">✅ Excel Library Ready</h5>
++                        <p style="color: rgba(255, 255, 255, 0.9); font-size: 14px; margin: 0;">
++                            Excel files (.xlsx, .xls, .xlsm) are fully supported! Upload any Excel file to get started.
++                        </p>
++                    `;
++                }
++            }).catch(error => {
++                console.warn('XLSX library pre-loading failed, will load on-demand:', error);
++                // Update Excel status to show it will load on-demand
++                const statusDiv = document.getElementById('excelStatus');
++                if (statusDiv) {
++                    statusDiv.innerHTML = `
++                        <h5 style="color: #ffc107; margin-bottom: 10px;">⚠️ Excel Library</h5>
++                        <p style="color: rgba(255, 255, 255, 0.9); font-size: 14px; margin: 0;">
++                            Excel library will load automatically when you upload an Excel file. CSV files work immediately.
++                        </p>
++                    `;
++                }
++            });
+         });
+ 
+         let connectionId = null;
+@@ -1023,6 +1383,19 @@
+         let scannedData = null;
+         let columnMappings = null;
+         let totalRecords = 0;
++        
++        // Enhanced import system variables
++        let templateType = null;
++        let validationErrors = [];
++        let existingData = [];
++        let isProcessing = false;
++        
++        // Pagination variables
++        let currentPage = 1;
++        let recordsPerPage = 20;
++        let totalPages = 1;
++        let allTableData = [];
++        let filteredData = null;
+ 
+         // Intro loading animation
+         let introHidden = false;
+@@ -1039,6 +1412,164 @@
+             }
+         }
+ 
++        // Modal functions
++        function openImportModal() {
++            const modal = document.getElementById('importModal');
++            modal.style.display = 'flex';
++            document.body.style.overflow = 'hidden'; // Prevent background scrolling
++        }
++
++        function closeImportModal() {
++            const modal = document.getElementById('importModal');
++            modal.style.display = 'none';
++            document.body.style.overflow = 'auto'; // Restore scrolling
++            
++            // Reset import form
++            document.getElementById('fileInput').value = '';
++            document.getElementById('dataReviewPanel').style.display = 'none';
++            document.getElementById('filePreview').style.display = 'none';
++            document.getElementById('importStatus').innerHTML = '';
++        }
++
++        // Close modal when clicking outside
++        document.addEventListener('click', function(event) {
++            const modal = document.getElementById('importModal');
++            if (event.target === modal) {
++                closeImportModal();
++            }
++        });
++
++        // Close modal with Escape key
++        document.addEventListener('keydown', function(event) {
++            if (event.key === 'Escape') {
++                closeImportModal();
++            }
++        });
++
++        // Pagination functions
++        function updatePagination() {
++            const pagination = document.getElementById('pagination');
++            const pageNumbers = document.getElementById('pageNumbers');
++            const firstPage = document.getElementById('firstPage');
++            const prevPage = document.getElementById('prevPage');
++            const nextPage = document.getElementById('nextPage');
++            const lastPage = document.getElementById('lastPage');
++            const paginationInfo = document.getElementById('paginationInfo');
++            
++            console.log('updatePagination called - totalPages:', totalPages, 'totalRecords:', totalRecords, 'recordsPerPage:', recordsPerPage);
++            
++            if (totalPages <= 1) {
++                pagination.style.display = 'none';
++                return;
++            }
++            
++            pagination.style.display = 'flex';
++            
++            // Update navigation buttons
++            firstPage.disabled = currentPage === 1;
++            prevPage.disabled = currentPage === 1;
++            nextPage.disabled = currentPage === totalPages;
++            lastPage.disabled = currentPage === totalPages;
++            
++            // Generate simple page number buttons
++            pageNumbers.innerHTML = '';
++            
++            // Show 5 pages around current page
++            const startPage = Math.max(1, currentPage - 2);
++            const endPage = Math.min(totalPages, currentPage + 2);
++            
++            // Show first page if not in range
++            if (startPage > 1) {
++                const button = document.createElement('button');
++                button.className = 'pagination-button';
++                if (1 === currentPage) button.classList.add('active');
++                button.textContent = '1';
++                button.onclick = () => goToPage(1);
++                pageNumbers.appendChild(button);
++                
++                if (startPage > 2) {
++                    const ellipsis = document.createElement('span');
++                    ellipsis.textContent = '...';
++                    ellipsis.style.color = 'white';
++                    ellipsis.style.padding = '0 8px';
++                    pageNumbers.appendChild(ellipsis);
++                }
++            }
++            
++            // Show page numbers
++            for (let i = startPage; i <= endPage; i++) {
++                const button = document.createElement('button');
++                button.className = 'pagination-button';
++                if (i === currentPage) button.classList.add('active');
++                button.textContent = i;
++                button.onclick = () => goToPage(i);
++                pageNumbers.appendChild(button);
++            }
++            
++            // Show last page if not in range
++            if (endPage < totalPages) {
++                if (endPage < totalPages - 1) {
++                    const ellipsis = document.createElement('span');
++                    ellipsis.textContent = '...';
++                    ellipsis.style.color = 'white';
++                    ellipsis.style.padding = '0 8px';
++                    pageNumbers.appendChild(ellipsis);
++                }
++                
++                const button = document.createElement('button');
++                button.className = 'pagination-button';
++                if (totalPages === currentPage) button.classList.add('active');
++                button.textContent = totalPages;
++                button.onclick = () => goToPage(totalPages);
++                pageNumbers.appendChild(button);
++            }
++            
++            // Update pagination info
++            const startRecord = (currentPage - 1) * recordsPerPage + 1;
++            const endRecord = Math.min(currentPage * recordsPerPage, totalRecords);
++            paginationInfo.textContent = `Page ${currentPage} of ${totalPages} (${startRecord}-${endRecord} of ${totalRecords})`;
++            
++            console.log('Pagination updated - showing pages', startPage, 'to', endPage, 'of', totalPages);
++        }
++
++        function goToPage(page) {
++            if (page < 1 || page > totalPages) return;
++            currentPage = page;
++            displayCurrentPageData();
++            updatePagination();
++        }
++
++        function goToPreviousPage() {
++            if (currentPage > 1) {
++                goToPage(currentPage - 1);
++            }
++        }
++
++        function goToNextPage() {
++            if (currentPage < totalPages) {
++                goToPage(currentPage + 1);
++            }
++        }
++
++        function goToLastPage() {
++            goToPage(totalPages);
++        }
++
++
++        function displayCurrentPageData() {
++            const dataToShow = filteredData || allTableData;
++            const startIndex = (currentPage - 1) * recordsPerPage;
++            const endIndex = startIndex + recordsPerPage;
++            const pageData = dataToShow.slice(startIndex, endIndex);
++            
++            console.log('displayCurrentPageData - currentPage:', currentPage, 'startIndex:', startIndex, 'endIndex:', endIndex);
++            console.log('dataToShow.length:', dataToShow.length, 'pageData.length:', pageData.length);
++            console.log('pageData sample:', pageData.slice(0, 2));
++            
++            displayTableData(pageData);
++        }
++
++
+         // Auto-connect to Supabase when page loads
+         window.addEventListener('load', function() {
+             console.log('Page loaded, starting intro animation...');
+@@ -1084,7 +1615,6 @@
+                     connectionId = result.connectionId;
+                     showStatus('connectionStatus', '✅ Auto-connected to Supabase successfully!', 'success');
+                     document.getElementById('dataTableSection').style.display = 'block';
+-                    document.getElementById('importSection').style.display = 'block';
+                     document.getElementById('autoConnectStatus').style.display = 'none';
+                     
+                     // Auto-load databank table data immediately
+@@ -1176,9 +1706,9 @@
+             }
+         }
+ 
+-        // Auto-load databank table data - ALWAYS FRESH FROM SUPABASE
+-        async function loadDatabankData(limit = 100) {
+-            console.log('🔄 loadDatabankData called with limit:', limit);
++        // Auto-load databank table data - LOAD ALL DATA FROM SUPABASE
++        async function loadDatabankData() {
++            console.log('🔄 Loading ALL data from Supabase database...');
+             
+             if (!connectionId) {
+                 console.log('No connection ID available');
+@@ -1186,30 +1716,53 @@
+             }
+ 
+             try {
+-                console.log('Loading FRESH databank data from Supabase with connection ID:', connectionId);
+-                // Always load fresh data from Supabase with timestamp to prevent caching
++                console.log('Loading ALL data from Supabase with connection ID:', connectionId);
++                // Load ALL data from Supabase - no limit
+                 const timestamp = new Date().getTime();
+-                const response = await fetch(`/api/datatable/data/${connectionId}?table=databank&limit=${limit}&_t=${timestamp}`);
++                const response = await fetch(`/api/datatable/data/${connectionId}?table=databank&limit=999999&_t=${timestamp}`);
+                 const result = await response.json();
+                 
+                 console.log('Fresh data loading result:', result);
+                 
+                 if (result.data) {
+                     console.log('Fresh data received, calling displayTableData with:', result.data.length, 'records');
++                    console.log('Total records from API:', result.total);
++                    console.log('Data sample:', result.data.slice(0, 3));
++                    console.log('Last few records:', result.data.slice(-3));
+                     
+-                    // Store total records globally
++                    // Store all data for pagination
++                    allTableData = result.data;
++                    filteredData = null; // Clear any previous filters
++                    
++                    // Store total records globally - use the actual count from API
+                     totalRecords = result.total || result.data.length;
+                     window.totalRecords = totalRecords;
+                     
++                    console.log('Setting totalRecords to:', totalRecords);
++                    console.log('Calculating totalPages:', Math.ceil(totalRecords / recordsPerPage));
++                    console.log('API returned total:', result.total, 'but data length:', result.data.length);
++                    
++                    // If API total is different from data length, there might be more data
++                    if (result.total && result.total > result.data.length) {
++                        console.warn('⚠️ API reports more records than returned! Total:', result.total, 'Returned:', result.data.length);
++                        showStatus('tableData', `⚠️ Warning: API reports ${result.total} total records but only ${result.data.length} were returned. This may indicate a backend limit.`, 'error');
++                    }
++                    
++                    // Calculate total pages
++                    totalPages = Math.ceil(totalRecords / recordsPerPage);
++                    currentPage = 1;
++                    
+                     // Clear any cached data
+                     window.currentTableData = null;
+                     
+-                    displayTableData(result.data);
++                    // Display first page of data
++                    displayCurrentPageData();
++                    updatePagination();
+                     
+                     // Update button counts with actual data
+                     updateButtonCounts(totalRecords);
+                     
+-                    showStatus('tableData', `📊 Loaded ${result.data.length} FRESH records from Supabase (Total: ${totalRecords} records)`, 'success');
++                    showStatus('tableData', `📊 Scanned entire database: ${result.data.length} records loaded (Total: ${totalRecords} records)`, 'success');
+                 } else {
+                     console.log('No data in result');
+                     showStatus('tableData', 'No data found in databank table', 'error');
+@@ -1553,9 +2106,6 @@
+                         </table>
+                     </div>
+                     <div style="padding: 15px; background: #f8f9fa; text-align: center; border-top: 1px solid #ddd; border-radius: 0 0 8px 8px;">
+-                        <div style="font-weight: 600; color: #495057; margin-bottom: 5px;">
+-                            Showing ${Math.min(20, dataToShow.length)} of ${window.totalRecords || data.length} records
+-                        </div>
+                         <small style="color: #6c757d;">
+                             <span style="color: #c62828;">●</span> Columns in red are missing from database
+                         </small>
+@@ -1767,13 +2317,18 @@
+         }
+ 
+         // Export table data to Excel
+-        function exportToExcel() {
++        async function exportToExcel() {
+             try {
+-                // Check if XLSX library is loaded
++                // Ensure XLSX library is loaded
+                 if (typeof XLSX === 'undefined') {
+-                    console.log('XLSX library not found, falling back to CSV export...');
+-                    exportToCSV();
+-                    return;
++                    console.log('XLSX library not found, loading...');
++                    try {
++                        await ensureXLSXLoaded();
++                    } catch (error) {
++                        console.log('Failed to load XLSX, falling back to CSV export...');
++                        exportToCSV();
++                        return;
++                    }
+                 }
+ 
+                 // Get the current table data
+@@ -1992,8 +2547,8 @@
+                 // Show beautiful loading animation
+                 showLoadingAnimation(`Loading FRESH data from Supabase and searching for ${filterType}: "${searchValue}"...`);
+                 
+-                // Load fresh data from Supabase with a high limit to get all data
+-                const response = await fetch(`/api/datatable/data/${connectionId}?table=databank&limit=10000`);
++                // Load ALL data from Supabase
++                const response = await fetch(`/api/datatable/data/${connectionId}?table=databank&limit=999999`);
+                 const result = await response.json();
+                 
+                 if (result.data && result.data.length > 0) {
+@@ -2018,7 +2573,15 @@
+                     console.log(`Found ${filteredData.length} matching records out of ${result.data.length} total`);
+                     
+                     if (filteredData.length > 0) {
+-                        displayTableData(filteredData);
++                        // Update pagination for filtered results
++                        totalRecords = filteredData.length;
++                        totalPages = Math.ceil(totalRecords / recordsPerPage);
++                        currentPage = 1;
++                        
++                        // Display first page of filtered data
++                        displayCurrentPageData();
++                        updatePagination();
++                        
+                         showStatus('tableData', `✅ Found ${filteredData.length} records matching "${searchValue}" in ${filterType} (searched ${result.data.length} FRESH records from Supabase)`, 'success');
+                     } else {
+                         showStatus('tableData', `❌ No records found matching "${searchValue}" in ${filterType} (searched ${result.data.length} FRESH records from Supabase)`, 'error');
+@@ -2073,9 +2636,17 @@
+             document.getElementById('searchInput').value = '';
+             document.getElementById('searchInput').placeholder = 'Select filter type first...';
+             
+-            // Clear cached data and reload fresh data from Supabase
+-            window.currentTableData = null;
+-            loadDatabankData(100);
++            // Reset pagination to show all data
++            filteredData = null;
++            totalRecords = allTableData.length;
++            totalPages = Math.ceil(totalRecords / recordsPerPage);
++            currentPage = 1;
++            
++            // Display first page of all data
++            displayCurrentPageData();
++            updatePagination();
++            
++            showStatus('tableData', '🔍 Search cleared - showing all data', 'info');
+         }
+ 
+         function filterTable() {
+@@ -2141,50 +2712,878 @@
+             await loadDatabankData(totalCount);
+         }
+ 
++        // Enhanced file type detection
++        function getFileType(file) {
++            const extension = file.name.toLowerCase().split('.').pop();
++            const mimeType = file.type.toLowerCase();
++            
++            console.log('File type detection:', {
++                name: file.name,
++                extension: extension,
++                mimeType: mimeType
++            });
++            
++            if (extension === 'csv' || mimeType.includes('csv')) {
++                console.log('Detected as CSV');
++                return 'csv';
++            } else if (extension === 'xlsx' || mimeType.includes('spreadsheetml')) {
++                console.log('Detected as XLSX');
++                return 'xlsx';
++            } else if (extension === 'xls' || mimeType.includes('excel')) {
++                console.log('Detected as XLS');
++                return 'xls';
++            } else if (extension === 'xlsm') {
++                console.log('Detected as XLSM');
++                return 'xlsm';
++            } else {
++                console.log('Detected as unknown type');
++                return 'unknown';
++            }
++        }
++
++        // Enhanced file validation
++        function validateFile(file) {
++            const fileType = getFileType(file);
++            const maxSize = 10 * 1024 * 1024; // 10MB limit
++            
++            if (file.size > maxSize) {
++                throw new Error('File size too large. Please use files smaller than 10MB.');
++            }
++            
++            if (fileType === 'unknown') {
++                throw new Error('Unsupported file type. Please use CSV, XLSX, XLS, or XLSM files.');
++            }
++            
++            return fileType;
++        }
++
++        function resetImportState() {
++            isProcessing = false;
++            scannedData = null;
++            templateType = null;
++            columnMappings = null;
++            validationErrors = [];
++            existingData = [];
++            document.getElementById('dataReviewPanel').style.display = 'none';
++            document.getElementById('importProgress').style.display = 'none';
++        }
++
++        function showFileInfo(file, fileType) {
++            const fileInfo = `
++                <div style="background: rgba(76, 175, 80, 0.1); border: 1px solid rgba(76, 175, 80, 0.3); border-radius: 8px; padding: 15px; margin: 15px 0;">
++                    <h5 style="color: #4CAF50; margin-bottom: 10px;">📁 File Selected</h5>
++                    <p style="color: rgba(255, 255, 255, 0.9); margin: 5px 0;"><strong>Name:</strong> ${file.name}</p>
++                    <p style="color: rgba(255, 255, 255, 0.9); margin: 5px 0;"><strong>Type:</strong> ${fileType.toUpperCase()}</p>
++                    <p style="color: rgba(255, 255, 255, 0.9); margin: 5px 0;"><strong>Size:</strong> ${(file.size / 1024).toFixed(1)} KB</p>
++                </div>
++            `;
++            document.getElementById('importStatus').innerHTML = fileInfo;
++        }
++
+         function handleFileSelect(event) {
+             const file = event.target.files[0];
+             if (!file) return;
+ 
+-            currentFile = file;
+-            console.log('File selected:', file.name, file.type);
++            // Reset previous state
++            resetImportState();
+             
+-            // Check if it's an Excel file for factory cost scanning
+-            if (file.name.toLowerCase().endsWith('.xlsx') || file.name.toLowerCase().endsWith('.xls')) {
+-                // Show loading state
+-                showStatus('importStatus', '🔄 Scanning Excel file for factory cost data...', 'info');
++            try {
++                // Validate file
++                const fileType = validateFile(file);
++                currentFile = file;
+                 
+-                // Start the scanning process
+-                scanExcelFile(file);
+-            } else {
+-                // Use the original CSV preview functionality
+-            previewFile(file);
++                console.log('File selected:', {
++                    name: file.name,
++                    type: file.type,
++                    size: file.size,
++                    detectedType: fileType
++                });
++                
++                // Show file info
++                showFileInfo(file, fileType);
++                
++                // Start intelligent import process
++                processIntelligentImport(file, fileType);
++                
++            } catch (error) {
++                console.error('File validation failed:', error);
++                showStatus('importStatus', '❌ ' + error.message, 'error');
++                resetImportState();
+             }
+         }
+ 
+-        async function previewFile(file) {
+-            if (!connectionId) return;
+-
+-            const formData = new FormData();
+-            formData.append('file', file);
+-            formData.append('maxRows', '5');
++        // Enhanced Intelligent Import System - Main Processing Function
++        async function processIntelligentImport(file, fileType) {
++            if (isProcessing) {
++                console.warn('Import already in progress, ignoring new request');
++                return;
++            }
+ 
++            isProcessing = true;
++            
+             try {
+-                const response = await fetch(`/api/import/preview/${connectionId}`, {
+-                    method: 'POST',
+-                    body: formData
++                console.log('Starting enhanced intelligent import for file:', file.name, 'Type:', fileType);
++                
++                // Show progress
++                showProgress(true);
++                updateProgress(5, 'Initializing...');
++                
++                // Read file content with enhanced error handling
++                updateProgress(10, `Reading ${fileType.toUpperCase()} file...`);
++                console.log('About to call readFileContent with fileType:', fileType);
++                const fileContent = await readFileContent(file, fileType);
++                console.log('File content loaded successfully, rows:', fileContent.length);
++                
++                // Validate file content
++                if (!fileContent || fileContent.length === 0) {
++                    throw new Error('File appears to be empty or invalid. Please check the file and try again.');
++                }
++                
++                updateProgress(25, 'Analyzing file structure...');
++                
++                // Detect template type with enhanced detection
++                templateType = detectTemplateType(fileContent);
++                console.log('Template detected:', templateType);
++                updateProgress(40, `Detected template: ${templateType.toUpperCase()}`);
++                
++                // Extract data based on template with better error handling
++                updateProgress(55, 'Extracting data...');
++                scannedData = await extractDataFromTemplate(fileContent, templateType);
++                console.log('Data extracted:', scannedData);
++                
++                // Check for duplicates with enhanced error handling
++                updateProgress(70, 'Checking for duplicates...');
++                if (document.getElementById('skipDuplicates').checked) {
++                    try {
++                        await checkDuplicates(scannedData);
++                        console.log('Duplicate check completed, existing records:', existingData ? existingData.length : 0);
++                    } catch (error) {
++                        console.warn('Duplicate check failed, continuing without duplicate checking:', error);
++                        existingData = [];
++                    }
++                } else {
++                    existingData = [];
++                }
++                
++                // Validate data with comprehensive validation
++                updateProgress(85, 'Validating data...');
++                if (document.getElementById('validateData').checked) {
++                    validationErrors = validateData(scannedData);
++                    console.log('Validation completed, errors:', validationErrors.length);
++                } else {
++                    validationErrors = [];
++                }
++                
++                // Map columns to database structure
++                updateProgress(95, 'Mapping columns...');
++                columnMappings = mapColumnsToDatabase(scannedData, templateType);
++                console.log('Column mappings created:', Object.keys(columnMappings).length);
++                
++                updateProgress(100, 'Complete!');
++                
++                // Show results with enhanced display
++                showDataReview();
++                
++            } catch (error) {
++                console.error('Error in enhanced intelligent import:', error);
++                showStatus('importStatus', '❌ Error processing file: ' + error.message, 'error');
++                resetImportState();
++            } finally {
++                isProcessing = false;
++                showProgress(false);
++            }
++        }
++
++        // Optimized File Reading Functions
++        async function readFileContent(file, fileType) {
++            return new Promise((resolve, reject) => {
++                const reader = new FileReader();
++                
++                reader.onload = async (e) => {
++                    try {
++                        if (fileType === 'csv') {
++                            resolve(parseCSV(e.target.result));
++                        } else {
++                            // For Excel files (XLSX, XLS, XLSM), ensure XLSX is loaded
++                            console.log(`Processing ${fileType.toUpperCase()} file...`);
++                            try {
++                                // Check if XLSX is already loaded
++                                if (typeof XLSX === 'undefined') {
++                                    console.log('Loading XLSX library...');
++                                    await ensureXLSXLoaded();
++                                } else {
++                                    console.log('XLSX library already available');
++                                }
++                                
++                                const data = new Uint8Array(e.target.result);
++                                
++                                // Optimized XLSX reading with minimal options for speed
++                                const workbook = XLSX.read(data, { 
++                                    type: 'array',
++                                    cellDates: false,  // Disable date parsing for speed
++                                    cellNF: false,    // Disable number formatting for speed
++                                    cellText: false,  // Disable text formatting for speed
++                                    raw: true,        // Use raw values for speed
++                                    dense: true       // Use dense array for speed
++                                });
++                                
++                                if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
++                                    throw new Error('No worksheets found in the Excel file');
++                                }
++                                
++                                const sheetName = workbook.SheetNames[0];
++                                const worksheet = workbook.Sheets[sheetName];
++                                
++                                if (!worksheet) {
++                                    throw new Error('Could not read the first worksheet');
++                                }
++                                
++                                // Convert to array format with optimized settings
++                                const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
++                                    header: 1,
++                                    defval: '',
++                                    blankrows: false,
++                                    raw: true  // Use raw values for speed
++                                });
++                                
++                                console.log(`Excel file processed: ${jsonData.length} rows, ${jsonData[0] ? jsonData[0].length : 0} columns`);
++                                resolve(jsonData);
++                                
++                            } catch (xlsxError) {
++                                console.error('Excel processing failed:', xlsxError);
++                                reject(new Error(`Excel file processing failed: ${xlsxError.message}. Please try converting to CSV format.`));
++                            }
++                        }
++                    } catch (error) {
++                        reject(error);
++                    }
++                };
++                
++                reader.onerror = (error) => {
++                    console.error('File reading error:', error);
++                    reject(new Error('Failed to read file. Please check if the file is corrupted or try a different file.'));
++                };
++                
++                // Choose reading method based on file type
++                if (fileType === 'csv') {
++                    reader.readAsText(file, 'UTF-8');
++                } else {
++                    reader.readAsArrayBuffer(file);
++                }
++            });
++        }
++
++        function parseCSV(csvText) {
++            try {
++                const lines = csvText.split(/\r?\n/);
++                const result = [];
++                
++                for (let i = 0; i < lines.length; i++) {
++                    const line = lines[i].trim();
++                    if (line) {
++                        // Simple CSV parsing - handles quoted fields
++                        const row = [];
++                        let current = '';
++                        let inQuotes = false;
++                        
++                        for (let j = 0; j < line.length; j++) {
++                            const char = line[j];
++                            
++                            if (char === '"') {
++                                inQuotes = !inQuotes;
++                            } else if (char === ',' && !inQuotes) {
++                                row.push(current.trim());
++                                current = '';
++                            } else {
++                                current += char;
++                            }
++                        }
++                        
++                        // Add the last field
++                        row.push(current.trim());
++                        result.push(row);
++                    }
++                }
++                
++                console.log(`CSV file parsed: ${result.length} rows, ${result[0] ? result[0].length : 0} columns`);
++                return result;
++            } catch (error) {
++                console.error('CSV parsing error:', error);
++                throw new Error('Failed to parse CSV file. Please check the file format.');
++            }
++        }
++
++        // Template Detection
++        function detectTemplateType(data) {
++            if (!data || data.length === 0) {
++                console.warn('No data provided for template detection');
++                return 'unknown';
++            }
++            
++            const dataString = JSON.stringify(data).toLowerCase();
++            console.log('Analyzing data for template detection...');
++            
++            // Check for Beanie template indicators
++            if (dataString.includes('yarn') || (dataString.includes('fabric') && dataString.includes('trim') && !dataString.includes('fabric/s'))) {
++                console.log('Beanie template detected based on YARN/FABRIC/TRIM sections');
++                return 'beanie';
++            }
++            
++            // Check for Cap template indicators
++            if (dataString.includes('fabric/s') || dataString.includes('other fabric/s') || dataString.includes('trim/s')) {
++                console.log('Cap template detected based on FABRIC/S sections');
++                return 'cap';
++            }
++            
++            // Check for style name patterns
++            if (dataString.includes('beanie') || dataString.includes('hat')) {
++                console.log('Beanie template detected based on style name');
++                return 'beanie';
++            }
++            
++            if (dataString.includes('cap') || dataString.includes('baseball')) {
++                console.log('Cap template detected based on style name');
++                return 'cap';
++            }
++            
++            console.log('No specific template indicators found, defaulting to beanie');
++            return 'beanie'; // Default
++        }
++
++        // Data Extraction
++        async function extractDataFromTemplate(data, templateType) {
++            const extractedData = {
++                season: '',
++                customer: '',
++                styleNumber: '',
++                styleName: '',
++                mainMaterial: '',
++                materialConsumption: 0,
++                materialPrice: 0,
++                trimCost: 0,
++                totalMaterialCost: 0,
++                knittingMachine: '',
++                knittingTime: 0,
++                knittingCPM: 0,
++                knittingCost: 0,
++                opsCost: 0,
++                knittingOpsCost: 0,
++                packaging: 0,
++                oh: 0,
++                profit: 0,
++                ftyAdjustment: 0,
++                ttlFtyCost: 0
++            };
++
++            if (templateType === 'beanie') {
++                return extractBeanieData(data, extractedData);
++            } else {
++                return extractCapData(data, extractedData);
++            }
++        }
++
++        function extractBeanieData(data, extractedData) {
++            console.log('Starting optimized data extraction...');
++            
++            // Optimized header extraction - only search first 10 rows for basic info
++            for (let i = 0; i < Math.min(10, data.length); i++) {
++                const row = data[i];
++                if (!row || row.length === 0) continue;
++                
++                for (let j = 0; j < row.length; j++) {
++                    const cell = String(row[j] || '').toLowerCase().trim();
++                    
++                    // Extract Season
++                    if ((cell.includes('season') || cell.includes('seas')) && j + 1 < row.length) {
++                        const value = String(row[j + 1] || '').trim();
++                        if (value && value !== 'undefined') {
++                            extractedData.season = value;
++                        }
++                    }
++                    
++                    // Extract Customer
++                    if ((cell.includes('customer') || cell.includes('cust')) && j + 1 < row.length) {
++                        const value = String(row[j + 1] || '').trim();
++                        if (value && value !== 'undefined') {
++                            extractedData.customer = value;
++                        }
++                    }
++                    
++                    // Extract Style Number
++                    if ((cell.includes('style') && (cell.includes('#') || cell.includes('no') || cell.includes('number'))) && j + 1 < row.length) {
++                        const value = String(row[j + 1] || '').trim();
++                        if (value && value !== 'undefined') {
++                            extractedData.styleNumber = value;
++                        }
++                    }
++                    
++                    // Extract Style Name
++                    if ((cell.includes('style') && cell.includes('name')) && j + 1 < row.length) {
++                        const value = String(row[j + 1] || '').trim();
++                        if (value && value !== 'undefined') {
++                            extractedData.styleName = value;
++                        }
++                    }
++                }
++            }
++
++            // Optimized material and cost extraction - limit search scope for speed
++            console.log('Searching for material and cost data...');
++            
++            // Limit search to first 50 rows for speed (cost forms are usually in top section)
++            const searchLimit = Math.min(50, data.length);
++            const materialKeywords = ['yarn', 'fabric', 'material', 'fabric/s', 'main material'];
++            const priceKeywords = ['price', 'rate', 'cost per unit', 'unit price', 'per unit'];
++            const consumptionKeywords = ['consumption', 'qty', 'quantity', 'amount', 'usage'];
++            
++            // Single pass through limited rows for all material data
++            for (let i = 0; i < searchLimit; i++) {
++                const row = data[i];
++                if (!row || row.length === 0) continue;
++                
++                for (let j = 0; j < row.length; j++) {
++                    const cell = String(row[j] || '').toLowerCase().trim();
++                    
++                    // Look for material type
++                    if (materialKeywords.some(keyword => cell.includes(keyword)) && !extractedData.mainMaterial) {
++                        for (let k = j + 1; k < Math.min(j + 3, row.length); k++) {
++                            const value = String(row[k] || '').trim();
++                            if (value && value !== 'undefined' && !isNaN(parseFloat(value)) === false) {
++                                extractedData.mainMaterial = value;
++                                break;
++                            }
++                        }
++                    }
++                    
++                    // Look for material price
++                    if (priceKeywords.some(keyword => cell.includes(keyword)) && extractedData.materialPrice === 0) {
++                        for (let k = j + 1; k < Math.min(j + 4, row.length); k++) {
++                            const value = parseFloat(String(row[k] || '').replace(/[^0-9.-]/g, ''));
++                            if (!isNaN(value) && value > 0) {
++                                extractedData.materialPrice = value;
++                                break;
++                            }
++                        }
++                    }
++                    
++                    // Look for material consumption
++                    if (consumptionKeywords.some(keyword => cell.includes(keyword)) && extractedData.materialConsumption === 0) {
++                        for (let k = j + 1; k < Math.min(j + 4, row.length); k++) {
++                            const value = parseFloat(String(row[k] || '').replace(/[^0-9.-]/g, ''));
++                            if (!isNaN(value) && value > 0) {
++                                extractedData.materialConsumption = value;
++                                break;
++                            }
++                        }
++                    }
++                }
++            }
++
++            // Look for trim cost (optimized)
++            const trimKeywords = ['trim', 'trim cost', 'accessories'];
++            for (let i = 0; i < searchLimit; i++) {
++                const row = data[i];
++                if (!row || row.length === 0) continue;
++                
++                for (let j = 0; j < row.length; j++) {
++                    const cell = String(row[j] || '').toLowerCase().trim();
++                    
++                    if (trimKeywords.some(keyword => cell.includes(keyword)) && extractedData.trimCost === 0) {
++                        for (let k = j + 1; k < Math.min(j + 4, row.length); k++) {
++                            const value = parseFloat(String(row[k] || '').replace(/[^0-9.-]/g, ''));
++                            if (!isNaN(value) && value > 0) {
++                                extractedData.trimCost = value;
++                                break;
++                            }
++                        }
++                    }
++                }
++            }
++
++            // Calculate total material cost
++            if (extractedData.materialConsumption > 0 && extractedData.materialPrice > 0) {
++                extractedData.totalMaterialCost = (extractedData.materialConsumption * extractedData.materialPrice) + extractedData.trimCost;
++                console.log('Calculated Total Material Cost:', extractedData.totalMaterialCost);
++            } else {
++                console.log('Cannot calculate total material cost - missing consumption or price');
++            }
++
++            // Optimized knitting information extraction
++            const knittingKeywords = ['knitting', 'knit', 'machine', 'machine type'];
++            const timeKeywords = ['time', 'hours', 'hrs', 'duration'];
++            const cpmKeywords = ['cpm', 'cost per minute', 'rate', 'cost per hour'];
++            
++            for (let i = 0; i < searchLimit; i++) {
++                const row = data[i];
++                if (!row || row.length === 0) continue;
++                
++                for (let j = 0; j < row.length; j++) {
++                    const cell = String(row[j] || '').toLowerCase().trim();
++                    
++                    // Look for knitting machine
++                    if (knittingKeywords.some(keyword => cell.includes(keyword)) && !extractedData.knittingMachine) {
++                        for (let k = j + 1; k < Math.min(j + 3, row.length); k++) {
++                            const value = String(row[k] || '').trim();
++                            if (value && value !== 'undefined' && !isNaN(parseFloat(value)) === false) {
++                                extractedData.knittingMachine = value;
++                                break;
++                            }
++                        }
++                    }
++                    
++                    // Look for knitting time
++                    if (timeKeywords.some(keyword => cell.includes(keyword)) && extractedData.knittingTime === 0) {
++                        for (let k = j + 1; k < Math.min(j + 4, row.length); k++) {
++                            const value = parseFloat(String(row[k] || '').replace(/[^0-9.-]/g, ''));
++                            if (!isNaN(value) && value > 0) {
++                                extractedData.knittingTime = value;
++                                break;
++                            }
++                        }
++                    }
++                    
++                    // Look for knitting CPM
++                    if (cpmKeywords.some(keyword => cell.includes(keyword)) && extractedData.knittingCPM === 0) {
++                        for (let k = j + 1; k < Math.min(j + 4, row.length); k++) {
++                            const value = parseFloat(String(row[k] || '').replace(/[^0-9.-]/g, ''));
++                            if (!isNaN(value) && value > 0) {
++                                extractedData.knittingCPM = value;
++                                break;
++                            }
++                        }
++                    }
++                }
++            }
++
++            // Calculate knitting cost
++            if (extractedData.knittingTime > 0 && extractedData.knittingCPM > 0) {
++                extractedData.knittingCost = extractedData.knittingTime * extractedData.knittingCPM;
++                console.log('Calculated Knitting Cost:', extractedData.knittingCost);
++            }
++
++            // Optimized operations cost extraction
++            const opsKeywords = ['ops', 'operations', 'labor', 'ops cost', 'labor cost'];
++            
++            for (let i = 0; i < searchLimit; i++) {
++                const row = data[i];
++                if (!row || row.length === 0) continue;
++                
++                for (let j = 0; j < row.length; j++) {
++                    const cell = String(row[j] || '').toLowerCase().trim();
++                    
++                    if (opsKeywords.some(keyword => cell.includes(keyword)) && extractedData.opsCost === 0) {
++                        for (let k = j + 1; k < Math.min(j + 4, row.length); k++) {
++                            const value = parseFloat(String(row[k] || '').replace(/[^0-9.-]/g, ''));
++                            if (!isNaN(value) && value > 0) {
++                                extractedData.opsCost = value;
++                                break;
++                            }
++                        }
++                    }
++                }
++            }
++
++            // Calculate knitting + ops cost
++            extractedData.knittingOpsCost = extractedData.knittingCost + extractedData.opsCost;
++            console.log('Calculated Knitting + Ops Cost:', extractedData.knittingOpsCost);
++
++            // Optimized packaging cost extraction
++            const packagingKeywords = ['packaging', 'pack', 'packaging cost'];
++            
++            for (let i = 0; i < searchLimit; i++) {
++                const row = data[i];
++                if (!row || row.length === 0) continue;
++                
++                for (let j = 0; j < row.length; j++) {
++                    const cell = String(row[j] || '').toLowerCase().trim();
++                    
++                    if (packagingKeywords.some(keyword => cell.includes(keyword)) && extractedData.packaging === 0) {
++                        for (let k = j + 1; k < Math.min(j + 4, row.length); k++) {
++                            const value = parseFloat(String(row[k] || '').replace(/[^0-9.-]/g, ''));
++                            if (!isNaN(value) && value > 0) {
++                                extractedData.packaging = value;
++                                break;
++                            }
++                        }
++                    }
++                }
++            }
++
++            // Optimized overhead cost extraction
++            const ohKeywords = ['oh', 'overhead', 'oh cost', 'overhead cost'];
++            
++            for (let i = 0; i < searchLimit; i++) {
++                const row = data[i];
++                if (!row || row.length === 0) continue;
++                
++                for (let j = 0; j < row.length; j++) {
++                    const cell = String(row[j] || '').toLowerCase().trim();
++                    
++                    if (ohKeywords.some(keyword => cell.includes(keyword)) && extractedData.oh === 0) {
++                        for (let k = j + 1; k < Math.min(j + 4, row.length); k++) {
++                            const value = parseFloat(String(row[k] || '').replace(/[^0-9.-]/g, ''));
++                            if (!isNaN(value) && value > 0) {
++                                extractedData.oh = value;
++                                break;
++                            }
++                        }
++                    }
++                }
++            }
++
++            // Optimized profit extraction
++            const profitKeywords = ['profit', 'margin', 'profit cost', 'profit margin'];
++            
++            for (let i = 0; i < searchLimit; i++) {
++                const row = data[i];
++                if (!row || row.length === 0) continue;
++                
++                for (let j = 0; j < row.length; j++) {
++                    const cell = String(row[j] || '').toLowerCase().trim();
++                    
++                    if (profitKeywords.some(keyword => cell.includes(keyword)) && extractedData.profit === 0) {
++                        for (let k = j + 1; k < Math.min(j + 4, row.length); k++) {
++                            const value = parseFloat(String(row[k] || '').replace(/[^0-9.-]/g, ''));
++                            if (!isNaN(value) && value > 0) {
++                                extractedData.profit = value;
++                                break;
++                            }
++                        }
++                    }
++                }
++            }
++
++            // Optimized FTY adjustment extraction
++            const ftyKeywords = ['fty', 'factory', 'adjustment', 'fty adjustment', 'factory adjustment'];
++            
++            for (let i = 0; i < searchLimit; i++) {
++                const row = data[i];
++                if (!row || row.length === 0) continue;
++                
++                for (let j = 0; j < row.length; j++) {
++                    const cell = String(row[j] || '').toLowerCase().trim();
++                    
++                    if (ftyKeywords.some(keyword => cell.includes(keyword)) && extractedData.ftyAdjustment === 0) {
++                        for (let k = j + 1; k < Math.min(j + 4, row.length); k++) {
++                            const value = parseFloat(String(row[k] || '').replace(/[^0-9.-]/g, ''));
++                            if (!isNaN(value) && value > 0) {
++                                extractedData.ftyAdjustment = value;
++                                break;
++                            }
++                        }
++                    }
++                }
++            }
++
++            // Calculate total FTY cost
++            extractedData.ttlFtyCost = extractedData.totalMaterialCost + extractedData.knittingOpsCost + 
++                                     extractedData.packaging + extractedData.oh + extractedData.profit + extractedData.ftyAdjustment;
++            console.log('Calculated Total FTY Cost:', extractedData.ttlFtyCost);
++
++            // Quick summary of key extracted data
++            console.log('=== EXTRACTION COMPLETE ===');
++            console.log('Key Data Found:', {
++                season: extractedData.season || 'Not found',
++                customer: extractedData.customer || 'Not found',
++                styleNumber: extractedData.styleNumber || 'Not found',
++                materialPrice: extractedData.materialPrice || 'Not found',
++                totalMaterialCost: extractedData.totalMaterialCost || 'Not found'
++            });
++            console.log('========================');
++
++            return extractedData;
++        }
++
++        function extractCapData(data, extractedData) {
++            // Similar to beanie but adapted for cap template structure
++            return extractBeanieData(data, extractedData); // Simplified for now
++        }
++
++        function findSection(data, keywords) {
++            for (let i = 0; i < data.length; i++) {
++                const row = data[i];
++                if (!row || row.length === 0) continue;
++                
++                for (let j = 0; j < row.length; j++) {
++                    const cell = String(row[j] || '').toLowerCase().trim();
++                    if (keywords.some(keyword => cell.includes(keyword))) {
++                        return { 
++                            startRow: i, 
++                            data: data.slice(i, Math.min(i + 15, data.length)) 
++                        };
++                    }
++                }
++            }
++            return null;
++        }
++
++        function extractValueFromSection(section, keywords) {
++            if (!section || !section.data) return '';
++            
++            for (let i = 0; i < section.data.length; i++) {
++                const row = section.data[i];
++                if (!row || row.length === 0) continue;
++                
++                for (let j = 0; j < row.length; j++) {
++                    const cell = String(row[j] || '').toLowerCase().trim();
++                    if (keywords.some(keyword => cell.includes(keyword))) {
++                        // Look for value in adjacent cells (up to 5 cells to the right)
++                        for (let k = j + 1; k < Math.min(j + 6, row.length); k++) {
++                            const value = String(row[k] || '').trim();
++                            if (value && value !== 'undefined' && value !== 'null' && value !== '0') {
++                                return value;
++                            }
++                        }
++                    }
++                }
++            }
++            return '';
++        }
++
++        // Duplicate Checking
++        async function checkDuplicates(data) {
++            try {
++                // Initialize existingData as empty array if not already set
++                if (typeof existingData === 'undefined') {
++                    existingData = [];
++                }
++                
++                const response = await fetch(`/api/datatable/query/${connectionId}`, {
++                    method: 'POST',
++                    headers: { 'Content-Type': 'application/json' },
++                    body: JSON.stringify({
++                        table: 'databank',
++                        select: 'season, customer, style_number, style_name',
++                        limit: 999999
++                    })
+                 });
+ 
+                 const result = await response.json();
+-                
+-                if (result.success) {
+-                    filePreview = result.data;
+-                    displayFilePreview(result.data, result.columns);
++                if (result.success && result.data) {
++                    existingData = result.data;
++                    console.log('Duplicate check completed, found', existingData.length, 'existing records');
+                 } else {
+-                    showStatus('importStatus', 'Error previewing file: ' + result.message, 'error');
++                    console.warn('Duplicate check failed, continuing without duplicate checking');
++                    existingData = [];
+                 }
+             } catch (error) {
+-                showStatus('importStatus', 'Error previewing file: ' + error.message, 'error');
++                console.error('Error checking duplicates:', error);
++                // Continue without duplicate checking if it fails
++                existingData = [];
++            }
++        }
++
++        // Validation
++        function validateData(data) {
++            const errors = [];
++            
++            if (!data.season) errors.push({ field: 'season', message: 'Season is required' });
++            if (!data.customer) errors.push({ field: 'customer', message: 'Customer is required' });
++            if (!data.styleNumber) errors.push({ field: 'styleNumber', message: 'Style Number is required' });
++            if (!data.styleName) errors.push({ field: 'styleName', message: 'Style Name is required' });
++            
++            if (data.materialConsumption < 0) errors.push({ field: 'materialConsumption', message: 'Material Consumption must be positive' });
++            if (data.materialPrice < 0) errors.push({ field: 'materialPrice', message: 'Material Price must be positive' });
++            if (data.trimCost < 0) errors.push({ field: 'trimCost', message: 'Trim Cost must be positive' });
++            
++            // Check for duplicates only if existingData is available and skipDuplicates is checked
++            if (typeof existingData !== 'undefined' && existingData && existingData.length > 0) {
++                const isDuplicate = existingData.some(existing => 
++                    existing.season === data.season &&
++                    existing.customer === data.customer &&
++                    existing.style_number === data.styleNumber
++                );
++                
++                if (isDuplicate) {
++                    errors.push({ field: 'duplicate', message: 'This record already exists in the database' });
++                }
++            }
++            
++            return errors;
++        }
++
++        // Column Mapping
++        function mapColumnsToDatabase(data, templateType) {
++            return {
++                'Season': data.season,
++                'Customer': data.customer,
++                'Style Number': data.styleNumber,
++                'Style Name': data.styleName,
++                'Main Material': data.mainMaterial,
++                'Material Consumption': data.materialConsumption,
++                'Material Price': data.materialPrice,
++                'Trim Cost': data.trimCost,
++                'Total Material Cost': data.totalMaterialCost,
++                'Knitting Machine': data.knittingMachine,
++                'Knitting Time': data.knittingTime,
++                'Knitting CPM': data.knittingCPM,
++                'Knitting Cost': data.knittingCost,
++                'Ops Cost': data.opsCost,
++                'Knitting + Ops Cost': data.knittingOpsCost,
++                'Packaging': data.packaging,
++                'OH': data.oh,
++                'Profit': data.profit,
++                'FTY Adjustment': data.ftyAdjustment,
++                'TTL FTY Cost': data.ttlFtyCost
++            };
++        }
++
++        // Progress and UI Functions
++        function showProgress(show) {
++            document.getElementById('importProgress').style.display = show ? 'block' : 'none';
++        }
++
++        function updateProgress(percent, text) {
++            document.getElementById('progressFill').style.width = percent + '%';
++            document.getElementById('progressText').textContent = text;
++        }
++
++        function showDataReview() {
++            // Clear any previous status messages
++            document.getElementById('importStatus').innerHTML = '';
++            
++            document.getElementById('templateInfo').innerHTML = `
++                <p><strong>Template Type:</strong> ${templateType.toUpperCase()}</p>
++                <p><strong>Detection Confidence:</strong> High</p>
++                <p><strong>File Processed:</strong> ${currentFile.name}</p>
++            `;
++            
++            const mappedFields = Object.values(columnMappings).filter(value => value && value !== '' && value !== 0).length;
++            document.getElementById('summaryContent').innerHTML = `
++                <p><strong>Records Found:</strong> 1</p>
++                <p><strong>Fields Mapped:</strong> ${mappedFields}/20</p>
++                <p><strong>Validation Errors:</strong> ${validationErrors.length}</p>
++                <p><strong>Template Confidence:</strong> ${mappedFields >= 15 ? 'High' : mappedFields >= 10 ? 'Medium' : 'Low'}</p>
++            `;
++            
++            let mappingHtml = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">';
++            Object.entries(columnMappings).forEach(([key, value]) => {
++                const hasValue = value && value !== '' && value !== 0;
++                mappingHtml += `
++                    <div style="background: rgba(255, 255, 255, 0.1); padding: 10px; border-radius: 6px; ${hasValue ? 'border-left: 4px solid #4CAF50;' : 'border-left: 4px solid #ff6b6b;'}">
++                        <strong>${key}:</strong> ${hasValue ? value : '<em style="color: #ff6b6b;">Not found</em>'}
++                    </div>
++                `;
++            });
++            mappingHtml += '</div>';
++            document.getElementById('mappingContent').innerHTML = mappingHtml;
++            
++            if (validationErrors.length > 0) {
++                let validationHtml = '<ul style="list-style: none; padding: 0;">';
++                validationErrors.forEach(error => {
++                    validationHtml += `
++                        <li style="margin-bottom: 10px; padding: 10px; background: rgba(255, 107, 107, 0.1); border-radius: 6px; border-left: 4px solid #ff6b6b;">
++                            <strong>${error.field}:</strong> ${error.message}
++                        </li>
++                    `;
++                });
++                validationHtml += '</ul>';
++                document.getElementById('validationContent').innerHTML = validationHtml;
++            } else {
++                document.getElementById('validationContent').innerHTML = '<p style="color: #4CAF50; padding: 15px; background: rgba(76, 175, 80, 0.1); border-radius: 6px; border-left: 4px solid #4CAF50;">✅ No validation errors found</p>';
+             }
++            
++            document.getElementById('dataReviewPanel').style.display = 'block';
+         }
+ 
+         function displayFilePreview(data, columns) {
+@@ -2420,19 +3819,73 @@
+             showStatus('importStatus', '✅ Excel file scanned successfully! Please review the data below.', 'success');
+         }
+ 
+-        // Cancel import
++        // Validation Page Functions
++        function closeValidationPage() {
++            document.getElementById('validationPage').style.display = 'none';
++        }
++
++        function saveValidationChanges() {
++            // Get edited values from the validation page
++            const editedData = getEditedDataFromValidationPage();
++            
++            // Update the scanned data with edited values
++            Object.assign(scannedData, editedData);
++            
++            // Re-validate the data
++            validationErrors = validateData(scannedData);
++            
++            // Re-map columns
++            columnMappings = mapColumnsToDatabase(scannedData, templateType);
++            
++            // Close validation page and show updated review
++            closeValidationPage();
++            showDataReview();
++        }
++
++        function skipValidation() {
++            closeValidationPage();
++            showDataReview();
++        }
++
++        function getEditedDataFromValidationPage() {
++            // Extract edited values from the validation page form
++            const editedData = {};
++            
++            Object.keys(columnMappings).forEach(key => {
++                const inputId = `edit_${key.replace(/\s+/g, '_')}`;
++                const inputElement = document.getElementById(inputId);
++                if (inputElement) {
++                    const value = inputElement.value.trim();
++                    
++                    // Convert to appropriate data type
++                    if (key.includes('Consumption') || key.includes('Price') || key.includes('Cost') || 
++                        key.includes('Time') || key.includes('CPM') || key.includes('Adjustment')) {
++                        editedData[key.toLowerCase().replace(/\s+/g, '')] = parseFloat(value) || 0;
++                    } else {
++                        editedData[key.toLowerCase().replace(/\s+/g, '')] = value;
++                    }
++                }
++            });
++            
++            return editedData;
++        }
++
++        // Enhanced Import Functions
+         function cancelImport() {
+-            document.getElementById('dataReviewPanel').style.display = 'none';
++            resetImportState();
+             document.getElementById('fileInput').value = '';
+             currentFile = null;
+-            scannedData = null;
+-            columnMappings = null;
+             showStatus('importStatus', 'Import cancelled', 'info');
+         }
+ 
+-        // Confirm and import data
+         async function confirmImport() {
+             try {
++                // Check if validation errors exist and show validation page if needed
++                if (validationErrors.length > 0 && document.getElementById('showValidationPage').checked) {
++                    showValidationPage();
++                    return;
++                }
++
+                 showStatus('importStatus', '🔄 Importing data to database...', 'info');
+                 
+                 // Convert mappings to database format
+@@ -2461,12 +3914,10 @@
+                 
+                 console.log('Importing record to Supabase:', dbRecord);
+                 
+-                // Send data to your backend API
++                // Send data to backend API
+                 const response = await fetch(`/api/datatable/insert/${connectionId}`, {
+                     method: 'POST',
+-                    headers: {
+-                        'Content-Type': 'application/json',
+-                    },
++                    headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify({
+                         table: 'databank',
+                         data: dbRecord
+@@ -2477,19 +3928,18 @@
+                 console.log('Insert result:', result);
+                 
+                 if (result.success) {
+-                    showStatus('importStatus', '✅ Data imported successfully to Supabase! Refreshing table...', 'success');
++                    showStatus('importStatus', '✅ Data imported successfully! Refreshing table...', 'success');
+                     
+                     // Hide review panel and refresh table
+                     document.getElementById('dataReviewPanel').style.display = 'none';
+                     document.getElementById('fileInput').value = '';
+                     
+-                    // Refresh the main table and update counts
++                    // Refresh the main table
+                     setTimeout(() => {
+                         loadDatabankData();
+                         getTotalRecordCount();
+                     }, 1000);
+                 } else {
+-                    console.error('Insert failed:', result);
+                     throw new Error(result.error || result.message || 'Failed to insert data');
+                 }
+                 
+@@ -2498,6 +3948,42 @@
+                 showStatus('importStatus', '❌ Error importing data: ' + error.message, 'error');
+             }
+         }
++
++        function showValidationPage() {
++            // Populate validation page with current data and errors
++            document.getElementById('validationSummaryContent').innerHTML = `
++                <p><strong>Template:</strong> ${templateType.toUpperCase()}</p>
++                <p><strong>Total Errors:</strong> ${validationErrors.length}</p>
++                <p><strong>Fields with Issues:</strong> ${validationErrors.map(e => e.field).join(', ')}</p>
++            `;
++            
++            let errorHtml = '<ul>';
++            validationErrors.forEach(error => {
++                errorHtml += `<li style="margin-bottom: 10px; padding: 10px; background: rgba(255, 0, 0, 0.1); border-radius: 6px;">
++                    <strong>${error.field}:</strong> ${error.message}
++                </li>`;
++            });
++            errorHtml += '</ul>';
++            document.getElementById('errorListContent').innerHTML = errorHtml;
++            
++            // Create editable form for the data
++            let editableHtml = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">';
++            Object.entries(columnMappings).forEach(([key, value]) => {
++                const hasError = validationErrors.some(e => e.field === key.toLowerCase().replace(/\s+/g, ''));
++                editableHtml += `
++                    <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px; ${hasError ? 'border: 2px solid #ff6b6b;' : ''}">
++                        <label style="display: block; margin-bottom: 5px; color: white; font-weight: bold;">${key}:</label>
++                        <input type="text" id="edit_${key.replace(/\s+/g, '_')}" value="${value || ''}" 
++                               style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.3); background: rgba(255, 255, 255, 0.1); color: white;">
++                    </div>
++                `;
++            });
++            editableHtml += '</div>';
++            document.getElementById('editableDataContent').innerHTML = editableHtml;
++            
++            // Show validation page
++            document.getElementById('validationPage').style.display = 'block';
++        }
+     </script>
+ </body>
+ </html>
+diff --git a/src/services/supabaseService.ts b/src/services/supabaseService.ts
+index 12d747a..7b141b1 100644
+--- a/src/services/supabaseService.ts
++++ b/src/services/supabaseService.ts
+@@ -145,36 +145,49 @@ export class SupabaseService {
+ 
+       if (isLargeDataset) {
+         // For large datasets, fetch all data without pagination
+-        // We'll use multiple requests to get all data
+-        const allData = [];
+-        let offset = 0;
+-        const batchSize = 1000; // Supabase's max per request
+-        let hasMoreData = true;
+-
+-        while (hasMoreData) {
+-          const batchQuery = queryBuilder.range(offset, offset + batchSize - 1);
+-          const { data: batchData, error: batchError } = await batchQuery;
+-          
+-          if (batchError) {
+-            error = batchError;
+-            break;
+-          }
+-
+-          if (batchData && batchData.length > 0) {
+-            allData.push(...batchData);
+-            offset += batchSize;
++        // First, get the total count
++        const countQuery = this.supabase.from(table).select('*', { count: 'exact', head: true });
++        const { count: totalCount, error: countError } = await countQuery;
++        
++        if (countError) {
++          error = countError;
++          logger.error('Error getting total count:', countError);
++        } else {
++          logger.info(`Total records in database: ${totalCount}`);
++          // Now fetch all data in batches
++          const allData = [];
++          let offset = 0;
++          const batchSize = 1000; // Supabase's max per request
++          let hasMoreData = true;
++
++          while (hasMoreData) {
++            const batchQuery = queryBuilder.range(offset, offset + batchSize - 1);
++            const { data: batchData, error: batchError } = await batchQuery;
+             
+-            // If we got less than batchSize, we've reached the end
+-            if (batchData.length < batchSize) {
++            if (batchError) {
++              error = batchError;
++              logger.error('Error fetching batch:', batchError);
++              break;
++            }
++
++            if (batchData && batchData.length > 0) {
++              allData.push(...batchData);
++              offset += batchSize;
++              logger.info(`Fetched batch: ${batchData.length} records (total so far: ${allData.length})`);
++              
++              // If we got less than batchSize, we've reached the end
++              if (batchData.length < batchSize) {
++                hasMoreData = false;
++              }
++            } else {
+               hasMoreData = false;
+             }
+-          } else {
+-            hasMoreData = false;
+           }
+-        }
+ 
+-        data = allData;
+-        count = allData.length;
++          data = allData;
++          count = totalCount; // Use the actual count from database, not data length
++          logger.info(`Final result: ${allData.length} records loaded, total count: ${totalCount}`);
++        }
+       } else {
+         // For normal pagination, use the original approach
+         const offset = (page - 1) * limit;
+-- 
+2.51.0.windows.1
+
