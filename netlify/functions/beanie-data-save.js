@@ -62,30 +62,44 @@ exports.handler = async (event, context) => {
     console.log('Request body received:', JSON.stringify(requestBody, null, 2));
     console.log('Request body keys:', Object.keys(requestBody));
     
-    // Handle both old format (data, tableName) and new format (connectionId, excelData)
+    // Handle multiple formats: old format (data, tableName), new format (connectionId, excelData), and direct data
     let data, tableName;
     console.log('Checking format conditions...');
     console.log('Has data && tableName:', !!(requestBody.data && requestBody.tableName));
-    console.log('Has excelData && excelData.data:', !!(requestBody.excelData && requestBody.excelData.data));
+    console.log('Has excelData:', !!requestBody.excelData);
+    console.log('Has connectionId:', !!requestBody.connectionId);
+    console.log('Request body keys:', Object.keys(requestBody));
     
     if (requestBody.data && requestBody.tableName) {
-      // Old format
+      // Old format: {data, tableName}
       console.log('Using old format');
       data = requestBody.data;
       tableName = requestBody.tableName;
-    } else if (requestBody.excelData && requestBody.excelData.data) {
-      // Format from frontend (connectionId may be null)
+    } else if (requestBody.excelData) {
+      // Frontend format: {connectionId, excelData: {data, images}}
       console.log('Using frontend format');
-      data = requestBody.excelData.data;
-      tableName = requestBody.excelData.tableName || 'beanie_costs';
+      if (requestBody.excelData.data) {
+        data = requestBody.excelData.data;
+        tableName = requestBody.excelData.tableName || 'beanie_costs';
+      } else {
+        // If excelData itself is the data object
+        data = requestBody.excelData;
+        tableName = 'beanie_costs';
+      }
+    } else if (requestBody.customer || requestBody.season || requestBody.styleNumber) {
+      // Direct data format - the data object itself
+      console.log('Using direct data format');
+      data = requestBody;
+      tableName = 'beanie_costs';
     } else {
       console.log('No matching format found');
+      console.log('Available keys:', Object.keys(requestBody));
       return {
         statusCode: 400,
         headers,
         body: JSON.stringify({ 
           success: false, 
-          error: 'Invalid request format. Expected {data, tableName} or {excelData: {data, tableName}}' 
+          error: 'Invalid request format. Expected {data, tableName}, {excelData: {data, tableName}}, or direct data object' 
         })
       };
     }
@@ -105,20 +119,28 @@ exports.handler = async (event, context) => {
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_ANON_KEY;
     
-    console.log('Supabase URL:', supabaseUrl ? 'Set' : 'Missing');
-    console.log('Supabase Key:', supabaseKey ? 'Set' : 'Missing');
+    console.log('Environment check:');
+    console.log('- NODE_ENV:', process.env.NODE_ENV);
+    console.log('- SUPABASE_URL:', supabaseUrl ? 'Set' : 'Missing');
+    console.log('- SUPABASE_ANON_KEY:', supabaseKey ? 'Set' : 'Missing');
     
     if (!supabaseUrl || !supabaseKey) {
       console.error('Supabase configuration missing:', {
         url: !!supabaseUrl,
-        key: !!supabaseKey
+        key: !!supabaseKey,
+        allEnvKeys: Object.keys(process.env).filter(key => key.includes('SUPABASE'))
       });
       return {
         statusCode: 500,
         headers,
         body: JSON.stringify({ 
           success: false, 
-          error: 'Supabase configuration missing. Please check environment variables.' 
+          error: 'Supabase configuration missing. Please check environment variables.',
+          details: {
+            hasUrl: !!supabaseUrl,
+            hasKey: !!supabaseKey,
+            availableEnvVars: Object.keys(process.env).filter(key => key.includes('SUPABASE'))
+          }
         })
       };
     }
@@ -147,13 +169,29 @@ exports.handler = async (event, context) => {
 
     // Prepare data for insertion
     console.log('Data to insert:', JSON.stringify(data, null, 2));
+    console.log('Data type:', typeof data);
+    console.log('Data keys:', Object.keys(data));
+    
+    // Validate required fields
+    if (!data.customer && !data.season && !data.styleNumber) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({
+          success: false,
+          error: 'Invalid data format. Missing required fields (customer, season, styleNumber)',
+          receivedData: Object.keys(data)
+        })
+      };
+    }
+    
     const insertData = {
-      customer: data.customer,
-      season: data.season,
-      style_number: data.styleNumber,
-      style_name: data.styleName,
-      costed_quantity: data.costedQuantity,
-      leadtime: data.leadtime,
+      customer: data.customer || '',
+      season: data.season || '',
+      style_number: data.styleNumber || data.style_number || '',
+      style_name: data.styleName || data.style_name || '',
+      costed_quantity: data.costedQuantity || data.costed_quantity || 0,
+      leadtime: data.leadtime || '',
       yarn: JSON.stringify(data.yarn || []),
       fabric: JSON.stringify(data.fabric || []),
       trim: JSON.stringify(data.trim || []),
