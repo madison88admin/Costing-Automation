@@ -172,15 +172,24 @@ exports.handler = async (event, context) => {
     console.log('Data type:', typeof data);
     console.log('Data keys:', Object.keys(data));
     
-    // Validate required fields
-    if (!data.customer && !data.season && !data.styleNumber) {
+    // Validate required fields - make it less strict for debugging
+    console.log('Validation check:');
+    console.log('- customer:', data.customer);
+    console.log('- season:', data.season);
+    console.log('- styleNumber:', data.styleNumber);
+    console.log('- All data keys:', Object.keys(data));
+    
+    // Only require at least one field to be present
+    const hasAnyData = data.customer || data.season || data.styleNumber || data.style_name || data.costed_quantity;
+    if (!hasAnyData) {
       return {
         statusCode: 400,
         headers,
         body: JSON.stringify({
           success: false,
-          error: 'Invalid data format. Missing required fields (customer, season, styleNumber)',
-          receivedData: Object.keys(data)
+          error: 'Invalid data format. No valid data fields found',
+          receivedData: Object.keys(data),
+          dataSample: data
         })
       };
     }
