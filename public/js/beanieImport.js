@@ -464,47 +464,6 @@ var TNFBeanieImporter = class TNFBeanieImporter {
         return result;
     }
 
-    /**
-     * Save parsed data to database
-     */
-    async saveToDatabase(data, tableName = 'beanie_costs') {
-        try {
-            console.log('💾 Saving beanie data to database...');
-            console.log('📊 Data to save:', {
-                customer: data.customer,
-                season: data.season,
-                styleNumber: data.styleNumber,
-                styleName: data.styleName,
-                totalMaterialCost: data.totalMaterialCost,
-                totalFactoryCost: data.totalFactoryCost
-            });
-
-            const response = await fetch('/.netlify/functions/beanie-data-save', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    data: data,
-                    tableName: tableName
-                })
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                console.log('✅ Beanie data saved successfully to database!');
-                console.log('📋 Saved record:', result.data);
-                return result.data;
-            } else {
-                console.error('❌ Failed to save beanie data:', result.error);
-                throw new Error(result.error || 'Failed to save data');
-            }
-        } catch (error) {
-            console.error('❌ Error saving beanie data to database:', error);
-            throw error;
-        }
-    }
 }
 
 // Export for use in other modules

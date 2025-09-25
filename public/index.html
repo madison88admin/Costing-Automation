@@ -4497,29 +4497,9 @@
             // Update totals
             updateTotals(data.totalMaterialCost, data.totalFactoryCost);
             
-            // Save data to database
-            saveDataToDatabase(data);
         }
         
         // Function to save data to database
-        async function saveDataToDatabase(data) {
-            try {
-                console.log('💾 Attempting to save data to database...');
-                
-                // Create beanie importer instance
-                const beanieImporter = new TNFBeanieImporter();
-                
-                // Save to database
-                const savedRecord = await beanieImporter.saveToDatabase(data, 'beanie_costs');
-                
-                // Show success message
-                showNotification('✅ Data saved to database successfully!', 'success');
-                
-            } catch (error) {
-                console.error('❌ Error saving to database:', error);
-                showNotification('❌ Failed to save to database: ' + error.message, 'error');
-            }
-        }
         
         // Function to show notifications
         function showNotification(message, type = 'info') {
