@@ -29,30 +29,63 @@ exports.handler = async (event, context) => {
 
   try {
     // Parse request body
-    const requestBody = JSON.parse(event.body);
+    console.log('Raw event body:', event.body);
+    console.log('Event body type:', typeof event.body);
+    
+    if (!event.body) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({
+          success: false,
+          error: 'No request body provided'
+        })
+      };
+    }
+    
+    let requestBody;
+    try {
+      requestBody = JSON.parse(event.body);
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({
+          success: false,
+          error: 'Invalid JSON in request body',
+          details: parseError.message
+        })
+      };
+    }
+    
     console.log('Request body received:', JSON.stringify(requestBody, null, 2));
+    console.log('Request body keys:', Object.keys(requestBody));
     
     // Handle both old format (data, tableName) and new format (connectionId, excelData)
     let data, tableName;
+    console.log('Checking format conditions...');
+    console.log('Has data && tableName:', !!(requestBody.data && requestBody.tableName));
+    console.log('Has excelData && excelData.data:', !!(requestBody.excelData && requestBody.excelData.data));
+    
     if (requestBody.data && requestBody.tableName) {
       // Old format
+      console.log('Using old format');
       data = requestBody.data;
       tableName = requestBody.tableName;
     } else if (requestBody.excelData && requestBody.excelData.data) {
-      // New format from frontend
+      // Format from frontend (connectionId may be null)
+      console.log('Using frontend format');
       data = requestBody.excelData.data;
       tableName = requestBody.excelData.tableName || 'beanie_costs';
-    } else if (requestBody.connectionId && requestBody.excelData && requestBody.excelData.data) {
-      // Format from beanie importer
-      data = requestBody.excelData.data;
-      tableName = 'beanie_costs'; // Default table for beanie data
     } else {
+      console.log('No matching format found');
       return {
         statusCode: 400,
         headers,
         body: JSON.stringify({ 
           success: false, 
-          error: 'Invalid request format. Expected {data, tableName} or {excelData: {data, tableName}} or {connectionId, excelData: {data}}' 
+          error: 'Invalid request format. Expected {data, tableName} or {excelData: {data, tableName}}' 
         })
       };
     }
