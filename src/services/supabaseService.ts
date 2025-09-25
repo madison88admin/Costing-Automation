@@ -210,12 +210,12 @@ export class SupabaseService {
       };
     } catch (error) {
       logger.error('Error getting table data:', error);
-      // Return partial data if available, don't fail completely
+      // Return empty data if error occurs
       return {
-        data: allData || [],
-        total: allData?.length || 0,
+        data: [],
+        total: 0,
         page: 1,
-        limit: allData?.length || 0,
+        limit: 0,
         totalPages: 1
       };
     }
