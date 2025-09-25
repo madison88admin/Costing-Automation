@@ -30,6 +30,7 @@ exports.handler = async (event, context) => {
   try {
     // Parse request body
     const requestBody = JSON.parse(event.body);
+    console.log('Request body received:', JSON.stringify(requestBody, null, 2));
     
     // Handle both old format (data, tableName) and new format (connectionId, excelData)
     let data, tableName;
@@ -41,13 +42,17 @@ exports.handler = async (event, context) => {
       // New format from frontend
       data = requestBody.excelData.data;
       tableName = requestBody.excelData.tableName || 'beanie_costs';
+    } else if (requestBody.connectionId && requestBody.excelData && requestBody.excelData.data) {
+      // Format from beanie importer
+      data = requestBody.excelData.data;
+      tableName = 'beanie_costs'; // Default table for beanie data
     } else {
       return {
         statusCode: 400,
         headers,
         body: JSON.stringify({ 
           success: false, 
-          error: 'Invalid request format. Expected {data, tableName} or {excelData: {data, tableName}}' 
+          error: 'Invalid request format. Expected {data, tableName} or {excelData: {data, tableName}} or {connectionId, excelData: {data}}' 
         })
       };
     }
@@ -67,13 +72,20 @@ exports.handler = async (event, context) => {
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_ANON_KEY;
     
+    console.log('Supabase URL:', supabaseUrl ? 'Set' : 'Missing');
+    console.log('Supabase Key:', supabaseKey ? 'Set' : 'Missing');
+    
     if (!supabaseUrl || !supabaseKey) {
+      console.error('Supabase configuration missing:', {
+        url: !!supabaseUrl,
+        key: !!supabaseKey
+      });
       return {
         statusCode: 500,
         headers,
         body: JSON.stringify({ 
           success: false, 
-          error: 'Supabase configuration missing' 
+          error: 'Supabase configuration missing. Please check environment variables.' 
         })
       };
     }
@@ -101,6 +113,7 @@ exports.handler = async (event, context) => {
     }
 
     // Prepare data for insertion
+    console.log('Data to insert:', JSON.stringify(data, null, 2));
     const insertData = {
       customer: data.customer,
       season: data.season,
@@ -117,6 +130,7 @@ exports.handler = async (event, context) => {
       overhead: JSON.stringify(data.overhead || []),
       created_at: new Date().toISOString()
     };
+    console.log('Insert data prepared:', JSON.stringify(insertData, null, 2));
 
     // Insert data into Supabase
     const { data: result, error: insertError } = await supabase
@@ -131,7 +145,8 @@ exports.handler = async (event, context) => {
         headers,
         body: JSON.stringify({
           success: false,
-          error: 'Failed to save data to database'
+          error: `Failed to save data to database: ${insertError.message}`,
+          details: insertError
         })
       };
     }
