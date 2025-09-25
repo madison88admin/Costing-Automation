@@ -81,17 +81,17 @@ exports.handler = async (event, context) => {
       console.log('Using frontend format');
       if (requestBody.excelData.data) {
         data = requestBody.excelData.data;
-        tableName = requestBody.excelData.tableName || 'beanie_costs';
+        tableName = requestBody.excelData.tableName || 'databank';
       } else {
         // If excelData itself is the data object
         data = requestBody.excelData;
-        tableName = 'beanie_costs';
+        tableName = 'databank';
       }
     } else if (requestBody.customer || requestBody.season || requestBody.styleNumber) {
       // Direct data format - the data object itself
       console.log('Using direct data format');
       data = requestBody;
-      tableName = 'beanie_costs';
+      tableName = 'databank';
     } else {
       console.log('No matching format found');
       console.log('Available keys:', Object.keys(requestBody));
