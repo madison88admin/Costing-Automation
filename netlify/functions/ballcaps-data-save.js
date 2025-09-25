@@ -40,7 +40,7 @@ exports.handler = async (event, context) => {
     } else if (requestBody.excelData && requestBody.excelData.data) {
       // New format from frontend
       data = requestBody.excelData.data;
-      tableName = requestBody.excelData.tableName || 'beanie_costs';
+      tableName = requestBody.excelData.tableName || 'ballcaps_costs';
     } else {
       return {
         statusCode: 400,
@@ -80,8 +80,8 @@ exports.handler = async (event, context) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Use the provided table name or default to 'beanie_costs'
-    const finalTableName = tableName || 'beanie_costs';
+    // Use the provided table name or default to 'ballcaps_costs'
+    const finalTableName = tableName || 'ballcaps_costs';
 
     // Check if table exists by trying to query it
     const { error: tableError } = await supabase
@@ -100,7 +100,7 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Prepare data for insertion
+    // Prepare data for insertion - adjust fields based on your ballcaps data structure
     const insertData = {
       customer: data.customer,
       season: data.season,
@@ -108,10 +108,9 @@ exports.handler = async (event, context) => {
       style_name: data.styleName,
       costed_quantity: data.costedQuantity,
       leadtime: data.leadtime,
-      yarn: JSON.stringify(data.yarn || []),
       fabric: JSON.stringify(data.fabric || []),
       trim: JSON.stringify(data.trim || []),
-      knitting: JSON.stringify(data.knitting || []),
+      sewing: JSON.stringify(data.sewing || []),
       operations: JSON.stringify(data.operations || []),
       packaging: JSON.stringify(data.packaging || []),
       overhead: JSON.stringify(data.overhead || []),
@@ -141,7 +140,7 @@ exports.handler = async (event, context) => {
       headers,
       body: JSON.stringify({
         success: true,
-        message: 'Beanie data saved successfully',
+        message: 'Ballcaps data saved successfully',
         data: result
       })
     };
