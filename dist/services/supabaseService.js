@@ -12,6 +12,11 @@ class SupabaseService {
     }
     async getTables() {
         try {
+            // For Supabase, we'll use a different approach
+            // First, let's try to get tables by querying a known table or using RPC
+            // Since we can't directly access information_schema, we'll use a workaround
+            // Try to get tables by attempting to query common table names
+            // This is a simplified approach - in production you might want to use RPC functions
             const commonTables = ['databank', 'users', 'products', 'orders', 'customers', 'inventory', 'costs', 'pricing'];
             const existingTables = [];
             for (const tableName of commonTables) {
@@ -25,8 +30,10 @@ class SupabaseService {
                     }
                 }
                 catch (e) {
+                    // Table doesn't exist, continue
                 }
             }
+            // If no common tables found, return a message suggesting to create tables
             if (existingTables.length === 0) {
                 logger_1.default.info('No common tables found. You may need to create tables in your Supabase database.');
                 return ['No tables found - Create tables in Supabase dashboard'];
@@ -40,24 +47,28 @@ class SupabaseService {
     }
     async getTableInfo(tableName) {
         try {
+            // For Supabase, we'll get a sample row to determine columns
+            // This is a simplified approach since we can't access information_schema directly
             const { data: sampleData, error: dataError } = await this.supabase
                 .from(tableName)
                 .select('*')
                 .limit(1);
             if (dataError)
                 throw dataError;
+            // Get row count
             const { count, error: countError } = await this.supabase
                 .from(tableName)
                 .select('*', { count: 'exact', head: true });
             if (countError)
                 throw countError;
+            // Infer column types from sample data
             const columns = sampleData && sampleData.length > 0
                 ? Object.keys(sampleData[0]).map(key => ({
                     name: key,
                     type: this.inferType(sampleData[0][key]),
                     nullable: sampleData[0][key] === null,
-                    primaryKey: key === 'id',
-                    autoIncrement: key === 'id',
+                    primaryKey: key === 'id', // Assume 'id' is primary key
+                    autoIncrement: key === 'id', // Assume 'id' is auto-increment
                     defaultValue: null
                 }))
                 : [];
@@ -80,6 +91,7 @@ class SupabaseService {
         if (typeof value === 'number')
             return 'numeric';
         if (typeof value === 'string') {
+            // Check if it's a date
             if (!isNaN(Date.parse(value)) && value.includes('-'))
                 return 'timestamp';
             return 'text';
@@ -95,14 +107,19 @@ class SupabaseService {
     async getTableData(query) {
         try {
             const { table, page = 1, limit = 10, sortBy, sortOrder = 'ASC', filters = {}, search } = query;
+            // For large datasets, we need to handle this differently
+            // If limit is very high (like 5000+), we'll fetch all data without pagination
             const isLargeDataset = limit > 1000;
             let queryBuilder = this.supabase.from(table).select('*', { count: 'exact' });
+            // Apply filters
             Object.entries(filters).forEach(([key, value]) => {
                 if (value !== undefined && value !== null && value !== '') {
                     queryBuilder = queryBuilder.eq(key, value);
                 }
             });
+            // Apply search
             if (search) {
+                // This is a simplified search - you might want to implement full-text search
                 const tableInfo = await this.getTableInfo(table);
                 const searchableColumns = tableInfo.columns
                     .filter(col => col.type.includes('text') || col.type.includes('character'))
@@ -112,11 +129,14 @@ class SupabaseService {
                     queryBuilder = queryBuilder.or(searchConditions);
                 }
             }
+            // Apply sorting
             if (sortBy) {
                 queryBuilder = queryBuilder.order(sortBy, { ascending: sortOrder === 'ASC' });
             }
             let data, error, count;
             if (isLargeDataset) {
+                // For large datasets, fetch all data without pagination
+                // First, get the total count
                 const countQuery = this.supabase.from(table).select('*', { count: 'exact', head: true });
                 const { count: totalCount, error: countError } = await countQuery;
                 if (countError) {
@@ -125,22 +145,25 @@ class SupabaseService {
                 }
                 else {
                     logger_1.default.info(`Total records in database: ${totalCount}`);
+                    // Now fetch all data in batches
                     const allData = [];
                     let offset = 0;
-                    const batchSize = 1000;
+                    const batchSize = 1000; // Supabase's max per request
                     let hasMoreData = true;
                     while (hasMoreData) {
                         const batchQuery = queryBuilder.range(offset, offset + batchSize - 1);
                         const { data: batchData, error: batchError } = await batchQuery;
                         if (batchError) {
-                            error = batchError;
                             logger_1.default.error('Error fetching batch:', batchError);
-                            break;
+                            // Skip this batch and continue with the next one
+                            offset += batchSize;
+                            continue;
                         }
                         if (batchData && batchData.length > 0) {
                             allData.push(...batchData);
                             offset += batchSize;
                             logger_1.default.info(`Fetched batch: ${batchData.length} records (total so far: ${allData.length})`);
+                            // If we got less than batchSize, we've reached the end
                             if (batchData.length < batchSize) {
                                 hasMoreData = false;
                             }
@@ -150,11 +173,12 @@ class SupabaseService {
                         }
                     }
                     data = allData;
-                    count = totalCount;
+                    count = totalCount; // Use the actual count from database, not data length
                     logger_1.default.info(`Final result: ${allData.length} records loaded, total count: ${totalCount}`);
                 }
             }
             else {
+                // For normal pagination, use the original approach
                 const offset = (page - 1) * limit;
                 queryBuilder = queryBuilder.range(offset, offset + limit - 1);
                 const result = await queryBuilder;
@@ -174,7 +198,14 @@ class SupabaseService {
         }
         catch (error) {
             logger_1.default.error('Error getting table data:', error);
-            throw new Error('Failed to retrieve table data');
+            // Return partial data if available, don't fail completely
+            return {
+                data: allData || [],
+                total: allData?.length || 0,
+                page: 1,
+                limit: allData?.length || 0,
+                totalPages: 1
+            };
         }
     }
     async insertRecord(table, data) {
@@ -258,4 +289,3 @@ class SupabaseService {
     }
 }
 exports.SupabaseService = SupabaseService;
-//# sourceMappingURL=supabaseService.js.map

@@ -1624,6 +1624,15 @@
                 </div>
             </div>
 
+            <!-- Save Button for Imported Data -->
+            <div class="save-section" id="saveSection" style="display: none; background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid rgba(255, 255, 255, 0.2);">
+                <h4 style="color: white; margin-bottom: 15px;">💾 Save Imported Data</h4>
+                <p style="color: rgba(255, 255, 255, 0.9); margin-bottom: 15px;">Your data has been imported and is now editable. Click save to store your changes to the database.</p>
+                <button class="save-imported-button" onclick="saveImportedData()" id="saveImportedBtn" style="background: #28a745; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 16px; cursor: pointer; box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);">
+                    💾 Save to Database
+                </button>
+            </div>
+
             <div class="cost-breakdown-content">
                 <!-- Left Side - Cost Breakdown -->
                 <div class="cost-sections">
@@ -3160,6 +3169,7 @@
                 
                 if (result.success) {
                     connectionId = result.connectionId;
+                    window.connectionId = result.connectionId;
                     showStatus('connectionStatus', '✅ Auto-connected to Supabase successfully!', 'success');
                     document.getElementById('dataTableSection').style.display = 'block';
                     document.getElementById('autoConnectStatus').style.display = 'none';
@@ -3227,6 +3237,7 @@
                 
                 if (result.success) {
                     connectionId = result.connectionId;
+                    window.connectionId = result.connectionId;
                     showStatus('connectionStatus', 'Connected successfully!', 'success');
                     document.getElementById('tablesSection').style.display = 'block';
                     document.getElementById('importSection').style.display = 'block';
@@ -3902,7 +3913,7 @@
                 console.log('✅ Ballcaps template shown');
             }
             
-            // Reinitialize drag & drop after showing the template
+            // Reinitialize drag & drop and make tables editable after showing the template
             setTimeout(() => {
                 console.log('🔄 Reinitializing drag & drop after template change...');
                 try {
@@ -3911,6 +3922,14 @@
                 } catch (error) {
                     console.error('❌ Error reinitializing drag & drop after template change:', error);
                 }
+                
+                // Make all material tables editable for the current template
+                console.log('🎨 Making tables editable for current template...');
+                makeAllMaterialTablesEditable();
+                console.log('✅ Tables made editable for current template');
+                
+                // Tables start blank - data only comes from imported files
+                console.log('📊 Tables initialized blank - ready for file import');
             }, 100);
         }
 
@@ -4327,12 +4346,19 @@
                     // Populate the appropriate template based on detected type
                     if (templateType === 'ballcaps') {
                         populateBallCapsTemplate(parsedData);
+                        // Make the UI editable after populating
+                        ballcapsImporter.makeUIEditable(parsedData);
                     } else {
                         fillTemplateWithData(parsedData);
+                        // Make the UI editable after populating
+                        beanieImporter.makeUIEditable(parsedData);
                     }
                     
                     // Display product images if available
                     displayProductImages(parsedData.images);
+                    
+                    // Show save button for imported data
+                    showSaveButton(templateType);
                     
                     // Store parsed data globally for saving to database
                     window.currentParsedData = parsedData;
@@ -4779,6 +4805,12 @@
             } catch (error) {
                 console.error('❌ Error creating file input:', error);
             }
+            
+            // Make material tables editable on page load
+            setTimeout(() => {
+                makeAllMaterialTablesEditable();
+                console.log('✅ Material tables made editable');
+            }, 2000);
         });
 
         // Also initialize on window load as a fallback
@@ -7631,13 +7663,13 @@
                 };
 
                 // Send to backend
-                const response = await apiCall('/beanie-data-save', '/beanie/save', {
+                const response = await apiCall('/api/beanie/save', '/api/beanie/save', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        connectionId: connectionId,
+                        connectionId: window.connectionId,
                         excelData: excelData
                     })
                 });
@@ -7688,13 +7720,13 @@
                 };
 
                 // Send to backend
-                const response = await apiCall('/ballcaps-data-save', '/ballcaps/save', {
+                const response = await apiCall('/api/ballcaps/save', '/api/ballcaps/save', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        connectionId: connectionId,
+                        connectionId: window.connectionId,
                         excelData: excelData
                     })
                 });
@@ -7712,6 +7744,524 @@
             } catch (error) {
                 console.error('Error saving to database:', error);
                 alert(`❌ Error saving to database: ${error.message}`);
+            } finally {
+                // Re-enable button
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalText;
+            }
+        }
+
+        // Show save button for imported data
+        function showSaveButton(templateType) {
+            const saveSection = document.getElementById('saveSection');
+            if (saveSection) {
+                saveSection.style.display = 'block';
+            }
+            
+            // Make all material tables editable
+            makeAllMaterialTablesEditable();
+            
+            // Tables start blank - data only comes from imported files
+            console.log('📊 Tables initialized blank - ready for file import');
+        }
+
+        // Make all material tables editable
+        function makeAllMaterialTablesEditable() {
+            console.log('🎨 Making all material tables editable...');
+            
+            // Beanie template sections
+            makeMaterialTableEditable('YARN');
+            makeMaterialTableEditable('FABRIC');
+            makeMaterialTableEditable('TRIM');
+            makeMaterialTableEditable('KNITTING');
+            makeMaterialTableEditable('EMBROIDERY');
+            
+            // Ballcaps template sections
+            makeMaterialTableEditable('FABRIC/S');
+            makeMaterialTableEditable('OTHER FABRIC/S - TRIM/S');
+            makeMaterialTableEditable('TRIM/S');
+            
+            // Operations, Packaging, and Overhead sections (both templates)
+            makeMaterialTableEditable('OPERATIONS');
+            makeMaterialTableEditable('PACKAGING');
+            makeMaterialTableEditable('OVERHEAD/ PROFIT');
+            makeMaterialTableEditable('OVERHEAD/PROFIT');
+            
+            // Force make OPERATIONS and PACKAGING editable (more aggressive approach)
+            forceMakeOperationsAndPackagingEditable();
+            
+            // Make subtotal rows editable and add auto-calculation
+            makeSubtotalRowsEditable();
+            
+            console.log('✅ All material tables are now editable');
+        }
+
+        // Force make OPERATIONS and PACKAGING sections editable
+        function forceMakeOperationsAndPackagingEditable() {
+            console.log('🔧 Force making OPERATIONS and PACKAGING editable...');
+            
+            // Find all sections with OPERATIONS or PACKAGING headers
+            const allSections = document.querySelectorAll('.cost-section');
+            
+            allSections.forEach(section => {
+                const header = section.querySelector('.section-header');
+                if (header) {
+                    const headerText = header.textContent.trim();
+                    console.log('🔍 Found section:', headerText);
+                    
+                    if (headerText === 'OPERATIONS' || headerText === 'PACKAGING') {
+                        console.log('✅ Making section editable:', headerText);
+                        makeTableEditable(section);
+                    }
+                }
+            });
+        }
+
+        // Make a table editable (helper function)
+        function makeTableEditable(section) {
+            const table = section.querySelector('.cost-table');
+            if (!table) return;
+            
+            // Get all data rows (skip header row)
+            const dataRows = table.querySelectorAll('.cost-row:not(.header-row)');
+            
+            dataRows.forEach((row, rowIndex) => {
+                const cells = row.querySelectorAll('.cost-cell');
+                
+                cells.forEach((cell, cellIndex) => {
+                    // Skip if already has input
+                    if (cell.querySelector('input')) return;
+                    
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'editable-cell';
+                    input.value = cell.textContent.trim();
+                    input.style.cssText = `
+                        width: 100%;
+                        height: 100%;
+                        border: none;
+                        background: transparent;
+                        padding: 8px;
+                        font-size: 14px;
+                        color: #333;
+                        background-color: rgba(59, 130, 246, 0.1);
+                        border-radius: 4px;
+                    `;
+                    
+                    // Add event listeners for auto-calculation based on section type
+                    const sectionHeader = section.querySelector('.section-header')?.textContent.trim();
+                    
+                    if (sectionHeader === 'OPERATIONS') {
+                        // For OPERATIONS: listen to TIME and COST columns
+                        if (cellIndex === 1 || cellIndex === 2) {
+                            input.addEventListener('input', () => calculateMaterialCost(row));
+                        }
+                    } else if (sectionHeader !== 'PACKAGING' && sectionHeader !== 'OVERHEAD/ PROFIT' && sectionHeader !== 'OVERHEAD/PROFIT') {
+                        // For material sections: listen to Consumption and Price columns
+                        if (cellIndex === 1 || cellIndex === 2) {
+                            input.addEventListener('input', () => calculateMaterialCost(row));
+                        }
+                    }
+                    
+                    // Clear cell content and add input
+                    cell.innerHTML = '';
+                    cell.appendChild(input);
+                });
+            });
+        }
+
+        // Make a specific material table editable
+        function makeMaterialTableEditable(sectionName) {
+            // Find section by looking for the header text
+            const headers = document.querySelectorAll('.section-header');
+            let section = null;
+            
+            for (const header of headers) {
+                if (header.textContent.trim() === sectionName) {
+                    section = header.closest('.cost-section');
+                    break;
+                }
+            }
+            
+            if (!section) return;
+            
+            const table = section.querySelector('.cost-table');
+            if (!table) return;
+            
+            // Get all data rows (skip header row)
+            const dataRows = table.querySelectorAll('.cost-row:not(.header-row)');
+            
+            dataRows.forEach((row, rowIndex) => {
+                const cells = row.querySelectorAll('.cost-cell');
+                
+                cells.forEach((cell, cellIndex) => {
+                    // Skip if already editable
+                    if (cell.querySelector('input, textarea')) return;
+                    
+                    // Create input element
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'editable-cell';
+                    input.value = cell.textContent.trim();
+                    input.style.cssText = `
+                        width: 100%;
+                        height: 100%;
+                        border: none;
+                        background: transparent;
+                        padding: 8px;
+                        font-size: 14px;
+                        color: #333;
+                        background-color: rgba(59, 130, 246, 0.1);
+                        border-radius: 4px;
+                    `;
+                    
+                    // Add event listeners for auto-calculation based on section type
+                    const section = row.closest('.cost-section');
+                    const sectionHeader = section?.querySelector('.section-header')?.textContent.trim();
+                    
+                    if (sectionHeader === 'OPERATIONS') {
+                        // For OPERATIONS: listen to TIME and COST columns
+                        if (cellIndex === 1 || cellIndex === 2) {
+                            input.addEventListener('input', () => calculateMaterialCost(row));
+                        }
+                    } else if (sectionHeader !== 'PACKAGING' && sectionHeader !== 'OVERHEAD/ PROFIT' && sectionHeader !== 'OVERHEAD/PROFIT') {
+                        // For material sections: listen to Consumption and Price columns
+                        if (cellIndex === 1 || cellIndex === 2) {
+                            input.addEventListener('input', () => calculateMaterialCost(row));
+                        }
+                    }
+                    
+                    // Clear cell content and add input
+                    cell.innerHTML = '';
+                    cell.appendChild(input);
+                });
+            });
+        }
+
+        // Calculate material cost for a row
+        function calculateMaterialCost(row) {
+            const cells = row.querySelectorAll('.cost-cell');
+            const section = row.closest('.cost-section');
+            const sectionHeader = section?.querySelector('.section-header')?.textContent.trim();
+            
+            // Handle different column structures
+            if (sectionHeader === 'OPERATIONS') {
+                // OPERATIONS: OPERATION, TIME (MINS), COST (USD/MIN), TOTAL
+                const timeInput = cells[1]?.querySelector('input');
+                const costPerMinInput = cells[2]?.querySelector('input');
+                const totalInput = cells[3]?.querySelector('input');
+                
+                if (timeInput && costPerMinInput && totalInput) {
+                    const time = parseFloat(timeInput.value) || 0;
+                    const costPerMin = parseFloat(costPerMinInput.value) || 0;
+                    const total = time * costPerMin;
+                    totalInput.value = total.toFixed(2);
+                }
+            } else if (sectionHeader === 'PACKAGING' || sectionHeader === 'OVERHEAD/ PROFIT' || sectionHeader === 'OVERHEAD/PROFIT') {
+                // PACKAGING/OVERHEAD: TYPE, NOTES, COST (no calculation needed)
+                // These sections don't need auto-calculation
+                return;
+            } else {
+                // Material sections: MATERIAL, CONSUMPTION, PRICE, COST
+                const consumptionInput = cells[1]?.querySelector('input');
+                const priceInput = cells[2]?.querySelector('input');
+                const costInput = cells[3]?.querySelector('input');
+                
+                if (consumptionInput && priceInput && costInput) {
+                    const consumption = parseFloat(consumptionInput.value) || 0;
+                    const price = parseFloat(priceInput.value) || 0;
+                    
+                    let cost = 0;
+                    if (sectionHeader === 'YARN') {
+                        // For YARN: Convert grams to kg (divide by 1000)
+                        cost = (consumption * price) / 1000;
+                    } else if (sectionHeader === 'FABRIC/S' || sectionHeader === 'OTHER FABRIC/S - TRIM/S') {
+                        // For FABRIC/S: Direct calculation (yards)
+                        cost = consumption * price;
+                    } else if (sectionHeader === 'TRIM/S') {
+                        // For TRIM/S: Direct calculation (pieces)
+                        cost = consumption * price;
+                    } else {
+                        // Default: Direct calculation
+                        cost = consumption * price;
+                    }
+                    
+                    costInput.value = cost.toFixed(2);
+                }
+            }
+            
+            // After calculating individual row, update subtotal
+            updateSubtotal(section);
+        }
+
+        // Make subtotal rows editable
+        function makeSubtotalRowsEditable() {
+            console.log('🎨 Making subtotal rows editable...');
+            
+            // Find all subtotal rows by looking for rows containing "SUB TOTAL"
+            const allRows = document.querySelectorAll('.cost-row');
+            const subtotalRows = Array.from(allRows).filter(row => {
+                const cells = row.querySelectorAll('.cost-cell');
+                return Array.from(cells).some(cell => 
+                    cell.textContent.trim().includes('SUB TOTAL')
+                );
+            });
+            
+            subtotalRows.forEach(row => {
+                const cells = row.querySelectorAll('.cost-cell');
+                const section = row.closest('.cost-section');
+                const sectionHeader = section?.querySelector('.section-header')?.textContent.trim();
+                
+                // Make the last cell (total cell) editable
+                const lastCell = cells[cells.length - 1];
+                if (lastCell && !lastCell.querySelector('input')) {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'editable-cell subtotal-input';
+                    input.value = lastCell.textContent.trim().replace('$', '');
+                    input.style.cssText = `
+                        width: 100%;
+                        height: 100%;
+                        border: none;
+                        background: transparent;
+                        padding: 8px;
+                        font-size: 14px;
+                        color: #333;
+                        background-color: rgba(34, 197, 94, 0.1);
+                        border-radius: 4px;
+                        font-weight: bold;
+                    `;
+                    
+                    // Add event listener for manual subtotal changes
+                    input.addEventListener('input', () => {
+                        // User manually changed subtotal - could trigger recalculation if needed
+                        console.log(`Manual subtotal change in ${sectionHeader}:`, input.value);
+                    });
+                    
+                    // Clear cell content and add input
+                    lastCell.innerHTML = '';
+                    lastCell.appendChild(input);
+                }
+            });
+            
+            console.log('✅ Subtotal rows are now editable');
+        }
+
+        // Update subtotal for a section
+        function updateSubtotal(section) {
+            const sectionHeader = section?.querySelector('.section-header')?.textContent.trim();
+            const table = section?.querySelector('.cost-table');
+            if (!table) return;
+            
+            // Get all data rows (not header, not subtotal)
+            const allRows = table.querySelectorAll('.cost-row:not(.header-row)');
+            const dataRows = Array.from(allRows).filter(row => {
+                const cells = row.querySelectorAll('.cost-cell');
+                return !Array.from(cells).some(cell => 
+                    cell.textContent.trim().includes('SUB TOTAL')
+                );
+            });
+            
+            let total = 0;
+            
+            dataRows.forEach(row => {
+                const cells = row.querySelectorAll('.cost-cell');
+                const lastCell = cells[cells.length - 1];
+                const costInput = lastCell?.querySelector('input');
+                
+                if (costInput) {
+                    const value = parseFloat(costInput.value) || 0;
+                    total += value;
+                }
+            });
+            
+            // Find and update subtotal row
+            const subtotalRows = Array.from(allRows).filter(row => {
+                const cells = row.querySelectorAll('.cost-cell');
+                return Array.from(cells).some(cell => 
+                    cell.textContent.trim().includes('SUB TOTAL')
+                );
+            });
+            
+            if (subtotalRows.length > 0) {
+                const subtotalRow = subtotalRows[0];
+                const subtotalCells = subtotalRow.querySelectorAll('.cost-cell');
+                const subtotalInput = subtotalCells[subtotalCells.length - 1]?.querySelector('input');
+                
+                if (subtotalInput) {
+                    subtotalInput.value = total.toFixed(2);
+                }
+            }
+            
+            console.log(`✅ Updated ${sectionHeader} subtotal: $${total.toFixed(2)}`);
+        }
+
+        // Sample data function removed - tables now start blank
+
+        // Populate a specific material table with data
+        function populateMaterialTable(sectionName, data) {
+            const headers = document.querySelectorAll('.section-header');
+            let section = null;
+            
+            for (const header of headers) {
+                if (header.textContent.trim() === sectionName) {
+                    section = header.closest('.cost-section');
+                    break;
+                }
+            }
+            
+            if (!section) return;
+            
+            const table = section.querySelector('.cost-table');
+            if (!table) return;
+            
+            const dataRows = table.querySelectorAll('.cost-row:not(.header-row)');
+            
+            data.forEach((item, index) => {
+                if (index < dataRows.length) {
+                    const row = dataRows[index];
+                    const cells = row.querySelectorAll('.cost-cell');
+                    
+                    // Handle different column structures based on section type
+                    if (sectionName === 'OPERATIONS') {
+                        // OPERATIONS: operation, time, costPerMin, total
+                        if (cells[0]) {
+                            const input = cells[0].querySelector('input') || cells[0];
+                            if (input.tagName === 'INPUT') {
+                                input.value = item.operation || '';
+                            } else {
+                                input.textContent = item.operation || '';
+                            }
+                        }
+                        if (cells[1]) {
+                            const input = cells[1].querySelector('input') || cells[1];
+                            if (input.tagName === 'INPUT') {
+                                input.value = item.time || '';
+                            } else {
+                                input.textContent = item.time || '';
+                            }
+                        }
+                        if (cells[2]) {
+                            const input = cells[2].querySelector('input') || cells[2];
+                            if (input.tagName === 'INPUT') {
+                                input.value = item.costPerMin || '';
+                            } else {
+                                input.textContent = item.costPerMin || '';
+                            }
+                        }
+                        if (cells[3]) {
+                            const input = cells[3].querySelector('input') || cells[3];
+                            if (input.tagName === 'INPUT') {
+                                input.value = item.total || '';
+                            } else {
+                                input.textContent = item.total || '';
+                            }
+                        }
+                    } else if (sectionName === 'PACKAGING' || sectionName === 'OVERHEAD/ PROFIT' || sectionName === 'OVERHEAD/PROFIT') {
+                        // PACKAGING/OVERHEAD: type, notes, cost
+                        if (cells[0]) {
+                            const input = cells[0].querySelector('input') || cells[0];
+                            if (input.tagName === 'INPUT') {
+                                input.value = item.type || '';
+                            } else {
+                                input.textContent = item.type || '';
+                            }
+                        }
+                        if (cells[1]) {
+                            const input = cells[1].querySelector('input') || cells[1];
+                            if (input.tagName === 'INPUT') {
+                                input.value = item.notes || '';
+                            } else {
+                                input.textContent = item.notes || '';
+                            }
+                        }
+                        if (cells[2]) {
+                            const input = cells[2].querySelector('input') || cells[2];
+                            if (input.tagName === 'INPUT') {
+                                input.value = item.cost || '';
+                            } else {
+                                input.textContent = item.cost || '';
+                            }
+                        }
+                    } else {
+                        // Material sections: material, consumption, price, cost
+                        if (cells[0]) {
+                            const input = cells[0].querySelector('input') || cells[0];
+                            if (input.tagName === 'INPUT') {
+                                input.value = item.material || '';
+                            } else {
+                                input.textContent = item.material || '';
+                            }
+                        }
+                        if (cells[1]) {
+                            const input = cells[1].querySelector('input') || cells[1];
+                            if (input.tagName === 'INPUT') {
+                                input.value = item.consumption || '';
+                            } else {
+                                input.textContent = item.consumption || '';
+                            }
+                        }
+                        if (cells[2]) {
+                            const input = cells[2].querySelector('input') || cells[2];
+                            if (input.tagName === 'INPUT') {
+                                input.value = item.price || '';
+                            } else {
+                                input.textContent = item.price || '';
+                            }
+                        }
+                        if (cells[3]) {
+                            const input = cells[3].querySelector('input') || cells[3];
+                            if (input.tagName === 'INPUT') {
+                                input.value = item.cost || '';
+                            } else {
+                                input.textContent = item.cost || '';
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Save imported data to database
+        async function saveImportedData() {
+            if (!window.currentParsedData) {
+                alert('❌ No data to save. Please import a file first.');
+                return;
+            }
+
+            if (!window.connectionId) {
+                alert('❌ No database connection. Please connect to database first.');
+                return;
+            }
+
+            const saveBtn = document.getElementById('saveImportedBtn');
+            const originalText = saveBtn.innerHTML;
+            
+            try {
+                // Disable button and show loading
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '💾 Saving...';
+                
+                // Prepare data for saving
+                const excelData = {
+                    data: window.currentParsedData,
+                    images: window.currentParsedData.images || []
+                };
+                
+                console.log('💾 Saving edited data:', excelData);
+                
+                // Save to database based on template type
+                if (window.currentTemplateType === 'ballcaps') {
+                    await saveBallCapsToDatabase();
+                } else {
+                    await saveBeanieToDatabase();
+                }
+                
+                alert('✅ Data saved successfully to database!');
+                
+            } catch (error) {
+                console.error('Error saving imported data:', error);
+                alert(`❌ Error saving data: ${error.message}`);
             } finally {
                 // Re-enable button
                 saveBtn.disabled = false;

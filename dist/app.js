@@ -44,6 +44,9 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const database_1 = __importDefault(require("./routes/database"));
 const dataTable_1 = __importDefault(require("./routes/dataTable"));
 const import_1 = __importDefault(require("./routes/import"));
+const beanieImport_1 = __importDefault(require("./routes/beanieImport"));
+const ballcapsImport_1 = __importDefault(require("./routes/ballcapsImport"));
+const beanieData_1 = __importDefault(require("./routes/beanieData"));
 const logger_1 = __importDefault(require("./utils/logger"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
@@ -53,7 +56,7 @@ app.use((0, helmet_1.default)({
         directives: {
             defaultSrc: ["'self'"],
             styleSrc: ["'self'", "'unsafe-inline'"],
-            scriptSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://unpkg.com"],
             scriptSrcAttr: ["'unsafe-inline'"],
             imgSrc: ["'self'", "data:"],
             connectSrc: ["'self'"],
@@ -76,6 +79,9 @@ app.use(express_1.default.static('public'));
 app.use('/api/database', database_1.default);
 app.use('/api/datatable', dataTable_1.default);
 app.use('/api/import', import_1.default);
+app.use('/api/beanie', beanieImport_1.default);
+app.use('/api/ballcaps', ballcapsImport_1.default);
+app.use('/api/beanie-data', beanieData_1.default);
 app.get('/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
