@@ -38,7 +38,7 @@ exports.handler = async (event, context) => {
       try {
         const supabase = createClient(supabaseUrl, supabaseKey);
         const { data, error } = await supabase
-          .from('beanie_costs')
+          .from('databank')
           .select('*')
           .limit(1);
         

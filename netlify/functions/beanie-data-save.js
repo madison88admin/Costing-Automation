@@ -147,8 +147,8 @@ exports.handler = async (event, context) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Use the provided table name or default to 'beanie_costs'
-    const finalTableName = tableName || 'beanie_costs';
+    // Use the provided table name or default to 'databank'
+    const finalTableName = tableName || 'databank';
 
     // Check if table exists by trying to query it
     const { error: tableError } = await supabase
