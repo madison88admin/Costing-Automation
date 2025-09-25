@@ -1,0 +1,733 @@
+From 7417ec7e148a870fde34aff9ddd1d83c5f0c364d Mon Sep 17 00:00:00 2001
+From: wardKawaii <mendz0908@gmail.com>
+Date: Fri, 19 Sep 2025 16:32:52 +0800
+Subject: [PATCH 09/22] import on ballcaps working now
+
+---
+ public/index.html           | 184 +++++++++++++++----------
+ public/js/ballcapsImport.js | 267 ++++++++++++++++++++++++++++++++----
+ public/js/beanieImport.js   |  11 ++
+ public/js/excelUtils.js     |  30 +++-
+ 4 files changed, 381 insertions(+), 111 deletions(-)
+
+diff --git a/public/index.html b/public/index.html
+index 984beba..6a3e238 100644
+--- a/public/index.html
++++ b/public/index.html
+@@ -3081,32 +3081,34 @@
+             productSelection.style.display = 'block';
+         }
+ 
+-        // Drag & Drop functionality for Template 1
++        // Drag & Drop functionality for all templates
+         function initializeDragDrop() {
+-            const dragDropArea = document.querySelector('.drag-drop-area');
+-            
+-            if (dragDropArea) {
+-                // Prevent default drag behaviors
+-                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+-                    dragDropArea.addEventListener(eventName, preventDefaults, false);
+-                    document.body.addEventListener(eventName, preventDefaults, false);
+-                });
++            const dragDropAreas = document.querySelectorAll('.drag-drop-area');
++            
++            dragDropAreas.forEach(dragDropArea => {
++                if (dragDropArea) {
++                    // Prevent default drag behaviors
++                    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
++                        dragDropArea.addEventListener(eventName, preventDefaults, false);
++                        document.body.addEventListener(eventName, preventDefaults, false);
++                    });
+ 
+-                // Highlight drop area when item is dragged over it
+-                ['dragenter', 'dragover'].forEach(eventName => {
+-                    dragDropArea.addEventListener(eventName, highlight, false);
+-                });
++                    // Highlight drop area when item is dragged over it
++                    ['dragenter', 'dragover'].forEach(eventName => {
++                        dragDropArea.addEventListener(eventName, highlight, false);
++                    });
+ 
+-                ['dragleave', 'drop'].forEach(eventName => {
+-                    dragDropArea.addEventListener(eventName, unhighlight, false);
+-                });
++                    ['dragleave', 'drop'].forEach(eventName => {
++                        dragDropArea.addEventListener(eventName, unhighlight, false);
++                    });
+ 
+-                // Handle dropped files
+-                dragDropArea.addEventListener('drop', handleDrop, false);
+-                
+-                // Handle click to reset
+-                dragDropArea.addEventListener('click', resetDragDrop);
+-            }
++                    // Handle dropped files
++                    dragDropArea.addEventListener('drop', handleDrop, false);
++                    
++                    // Handle click to reset
++                    dragDropArea.addEventListener('click', resetDragDrop);
++                }
++            });
+         }
+ 
+         function preventDefaults(e) {
+@@ -3115,11 +3117,11 @@
+         }
+ 
+         function highlight(e) {
+-            document.querySelector('.drag-drop-area').classList.add('drag-over');
++            e.target.closest('.drag-drop-area').classList.add('drag-over');
+         }
+ 
+         function unhighlight(e) {
+-            document.querySelector('.drag-drop-area').classList.remove('drag-over');
++            e.target.closest('.drag-drop-area').classList.remove('drag-over');
+         }
+ 
+         function handleDrop(e) {
+@@ -3133,9 +3135,10 @@
+                 // Store the file globally for processing
+                 uploadedFile = file;
+                 
+-                // Update the drag drop area to show file name
+-                const dragDropText = document.querySelector('.drag-drop-text');
+-                const dragDropIcon = document.querySelector('.drag-drop-icon');
++                // Update the specific drag drop area that received the file
++                const dragDropArea = e.target.closest('.drag-drop-area');
++                const dragDropText = dragDropArea.querySelector('.drag-drop-text');
++                const dragDropIcon = dragDropArea.querySelector('.drag-drop-icon');
+                 
+                 if (dragDropText && dragDropIcon) {
+                     dragDropIcon.textContent = '✅';
+@@ -3144,9 +3147,10 @@
+             }
+         }
+ 
+-        function resetDragDrop() {
+-            const dragDropText = document.querySelector('.drag-drop-text');
+-            const dragDropIcon = document.querySelector('.drag-drop-icon');
++        function resetDragDrop(e) {
++            const dragDropArea = e.target.closest('.drag-drop-area');
++            const dragDropText = dragDropArea.querySelector('.drag-drop-text');
++            const dragDropIcon = dragDropArea.querySelector('.drag-drop-icon');
+             
+             if (dragDropText && dragDropIcon) {
+                 dragDropIcon.textContent = '📁';
+@@ -3155,16 +3159,17 @@
+         }
+ 
+         function handleTemplateImport() {
+-            // Check if a file has been dropped
+-            const dragDropText = document.querySelector('.drag-drop-text');
+-            const dragDropIcon = document.querySelector('.drag-drop-icon');
++            // Check if a file has been dropped in the currently visible template
++            const visibleTemplate = document.querySelector('.cost-breakdown-container:not([style*="display: none"])');
++            const dragDropText = visibleTemplate ? visibleTemplate.querySelector('.drag-drop-text') : null;
++            const dragDropIcon = visibleTemplate ? visibleTemplate.querySelector('.drag-drop-icon') : null;
+             
+             if (dragDropIcon && dragDropIcon.textContent === '✅') {
+                 // File has been selected, proceed with import
+                 console.log('Importing file...');
+                 
+                 // Show loading state
+-                const importButton = document.querySelector('.import-template-button');
++                const importButton = visibleTemplate ? visibleTemplate.querySelector('.import-template-button') : null;
+                 if (importButton) {
+                     importButton.textContent = 'Importing...';
+                     importButton.disabled = true;
+@@ -3212,19 +3217,26 @@
+                 window.lastExcelData = rawData;
+                 console.log('Raw Excel data stored in window.lastExcelData for debugging');
+                 
+-                // Determine which importer to use based on file content or name
+-                    let parsedData = null;
+-                    
+-                // For now, default to beanie importer (you can add logic to detect product type)
+-                if (beanieImporter.isSupportedFile(uploadedFile.name)) {
+-                    console.log('Using TNF Beanie Importer');
+-                    parsedData = beanieImporter.parseExcelData(rawData);
+-                } else if (ballcapsImporter.isSupportedFile(uploadedFile.name)) {
++                // Determine which importer to use based on file content
++                let parsedData = null;
++                
++                // First check if file format is supported
++                if (!beanieImporter.isSupportedFile(uploadedFile.name)) {
++                    throw new Error('Unsupported file type. Please use .xlsx, .xls, or .xlsm files.');
++                }
++                
++                // Detect template type based on content
++                console.log('Raw data sample for detection:', rawData.slice(0, 10));
++                const templateType = detectTemplateType(rawData);
++                console.log('Detected template type:', templateType);
++                
++                if (templateType === 'cap' || templateType === 'ballcaps') {
+                     console.log('Using TNF Ball Caps Importer');
+                     parsedData = ballcapsImporter.parseExcelData(rawData);
+-                    } else {
+-                    throw new Error('Unsupported file type or format');
+-                    }
++                } else {
++                    console.log('Using TNF Beanie Importer');
++                    parsedData = beanieImporter.parseExcelData(rawData);
++                }
+                     
+                     if (parsedData) {
+                         fillTemplateWithData(parsedData);
+@@ -3255,39 +3267,60 @@
+ 
+ 
+         function fillTemplateWithData(data) {
+-            // Fill Product Information
+-            const productInfo = document.querySelector('.product-info');
++            // Fill Product Information - find the one in the currently visible template
++            const visibleTemplate = document.querySelector('.cost-breakdown-container:not([style*="display: none"])');
++            const productInfo = visibleTemplate ? visibleTemplate.querySelector('.product-info') : document.querySelector('.product-info');
++            console.log('Visible template:', visibleTemplate);
++            console.log('Product info element found:', productInfo);
++            
+             if (productInfo) {
+                 const infoRows = productInfo.querySelectorAll('.info-row');
+-                const values = [data.customer, data.season, data.styleNumber, data.styleName, data.costedQuantity, data.leadtime];
++                console.log('Info rows found:', infoRows.length);
++                
++                // Map the data fields correctly - MOQ might be in costedQuantity or a separate field
++                const values = [
++                    data.customer || '', 
++                    data.season || '', 
++                    data.styleNumber || '', 
++                    data.styleName || '', 
++                    data.costedQuantity || data.moq || '', // Try both costedQuantity and moq
++                    data.leadtime || ''
++                ];
++                
++                console.log('Filling product info with values:', values);
+                 
+                 infoRows.forEach((row, index) => {
+                     const valueSpan = row.querySelector('.info-value');
++                    console.log(`Row ${index}:`, row, 'Value span:', valueSpan, 'Value:', values[index]);
+                     if (valueSpan && values[index]) {
+                         valueSpan.textContent = values[index];
++                        console.log(`Filled ${index}: ${values[index]}`);
+                     }
+                 });
++            } else {
++                console.error('Product info element not found!');
+             }
+             
+-            // Fill YARN section
+-            fillCostSection('YARN', data.yarn, ['material', 'consumption', 'price', 'cost']);
+-            
+-            // Fill FABRIC section
+-            fillCostSection('FABRIC', data.fabric, ['material', 'consumption', 'price', 'cost']);
++            // Check if this is ballcaps data (has otherFabric array)
++            const isBallcaps = data.otherFabric && Array.isArray(data.otherFabric);
+             
+-            // Fill TRIM section
+-            fillCostSection('TRIM', data.trim, ['material', 'consumption', 'price', 'cost']);
+-            
+-            // Fill KNITTING section
+-            fillCostSection('KNITTING', data.knitting, ['machine', 'time', 'sah', 'cost']);
++            if (isBallcaps) {
++                // Fill ballcaps-specific sections
++                fillCostSection('FABRIC/S', data.fabric, ['material', 'consumption', 'price', 'cost']);
++                fillCostSection('OTHER FABRIC/S - TRIM/S', data.otherFabric, ['material', 'consumption', 'price', 'cost']);
++                fillCostSection('TRIM/S', data.trim, ['material', 'consumption', 'price', 'cost']);
++                fillCostSection('EMBROIDERY', data.embroidery, ['design', 'stitches', 'price', 'cost']);
++            } else {
++                // Fill beanie sections
++                fillCostSection('YARN', data.yarn, ['material', 'consumption', 'price', 'cost']);
++                fillCostSection('FABRIC', data.fabric, ['material', 'consumption', 'price', 'cost']);
++                fillCostSection('TRIM', data.trim, ['material', 'consumption', 'price', 'cost']);
++                fillCostSection('KNITTING', data.knitting, ['machine', 'time', 'sah', 'cost']);
++            }
+             
+-            // Fill OPERATIONS section
++            // Fill common sections
+             fillCostSection('OPERATIONS', data.operations, ['operation', 'time', 'cost', 'total']);
+-            
+-            // Fill PACKAGING section
+             fillCostSection('PACKAGING', data.packaging, ['type', 'notes', 'cost']);
+-            
+-            // Fill OVERHEAD/PROFIT section
+             fillCostSection('OVERHEAD/ PROFIT', data.overhead, ['type', 'notes', 'cost']);
+             
+             // Update totals
+@@ -3933,28 +3966,29 @@
+             
+             const dataString = JSON.stringify(data).toLowerCase();
+             console.log('Analyzing data for template detection...');
++            console.log('Data sample:', dataString.substring(0, 500));
+             
+-            // Check for Beanie template indicators
+-            if (dataString.includes('yarn') || (dataString.includes('fabric') && dataString.includes('trim') && !dataString.includes('fabric/s'))) {
+-                console.log('Beanie template detected based on YARN/FABRIC/TRIM sections');
+-                return 'beanie';
+-            }
+-            
+-            // Check for Cap template indicators
++            // Check for Cap template indicators first (more specific)
+             if (dataString.includes('fabric/s') || dataString.includes('other fabric/s') || dataString.includes('trim/s')) {
+                 console.log('Cap template detected based on FABRIC/S sections');
+                 return 'cap';
+             }
+             
+             // Check for style name patterns
+-            if (dataString.includes('beanie') || dataString.includes('hat')) {
+-                console.log('Beanie template detected based on style name');
++            if (dataString.includes('cap') || dataString.includes('baseball') || dataString.includes('corporate cap') || dataString.includes('bandit cap')) {
++                console.log('Cap template detected based on style name');
++                return 'cap';
++            }
++            
++            // Check for Beanie template indicators
++            if (dataString.includes('yarn') || (dataString.includes('fabric') && dataString.includes('trim') && !dataString.includes('fabric/s'))) {
++                console.log('Beanie template detected based on YARN/FABRIC/TRIM sections');
+                 return 'beanie';
+             }
+             
+-            if (dataString.includes('cap') || dataString.includes('baseball')) {
+-                console.log('Cap template detected based on style name');
+-                return 'cap';
++            if (dataString.includes('beanie') || dataString.includes('hat')) {
++                console.log('Beanie template detected based on style name');
++                return 'beanie';
+             }
+             
+             console.log('No specific template indicators found, defaulting to beanie');
+diff --git a/public/js/ballcapsImport.js b/public/js/ballcapsImport.js
+index 809f90a..c1a01e3 100644
+--- a/public/js/ballcapsImport.js
++++ b/public/js/ballcapsImport.js
+@@ -19,6 +19,9 @@ class TNFBallCapsImporter {
+         }
+ 
+         console.log('Processing TNF Ball Caps Excel data with', excelData.length, 'rows');
++        console.log('=== USING BALL CAPS IMPORTER ===');
++        console.log('First 10 rows of raw data:', excelData.slice(0, 10));
++        console.log('All rows of raw data:', excelData);
+ 
+         const result = {
+             customer: "TNF",
+@@ -30,6 +33,7 @@ class TNFBallCapsImporter {
+             
+             // Ball caps specific sections
+             fabric: [],
++            otherFabric: [],
+             trim: [],
+             embroidery: [],
+             operations: [],
+@@ -40,35 +44,198 @@ class TNFBallCapsImporter {
+             totalFactoryCost: "0.00"
+         };
+ 
+-        // Parse the Excel data based on the TNF ball caps format
+-        let currentSection = '';
+-        let materialCostTotal = 0;
+-        let factoryCostTotal = 0;
+-
+-        for (let i = 0; i < excelData.length; i++) {
+-            const row = excelData[i];
+-            if (!row || row.length === 0) continue;
+-
+-            const firstCell = String(row[0] || '').trim();
+-
+-            // Extract basic info from specific rows
+-            this.extractBasicInfo(result, row, i);
+-
+-            // Parse sections
+-            currentSection = this.parseSectionHeader(firstCell, currentSection);
+-
+-            // Skip empty rows and headers
+-            if (!firstCell || firstCell === ' ' || firstCell.includes('TOTAL') || firstCell.includes('SUB TOTAL')) {
+-                continue;
++        // FLEXIBLE PARSING - Search through all rows for data patterns
++        try {
++            // Search for basic info in any row
++            for (let i = 0; i < excelData.length; i++) {
++                const row = excelData[i];
++                if (!row) continue;
++                
++                // Look for Customer info
++                for (let j = 0; j < row.length; j++) {
++                    const cell = String(row[j] || '').trim();
++                    if (cell.includes('Customer') && j + 1 < row.length && row[j + 1]) {
++                        result.customer = String(row[j + 1]).trim();
++                        console.log('✅ Customer:', result.customer);
++                    }
++                    if (cell.includes('Season') && j + 1 < row.length && row[j + 1]) {
++                        result.season = String(row[j + 1]).trim();
++                        console.log('✅ Season:', result.season);
++                    }
++                    if ((cell.includes('Style#') || cell.includes('Style:')) && j + 1 < row.length && row[j + 1]) {
++                        result.styleNumber = String(row[j + 1]).trim();
++                        console.log('✅ Style#:', result.styleNumber);
++                    }
++                    if (cell.includes('Style Name') && j + 1 < row.length && row[j + 1]) {
++                        result.styleName = String(row[j + 1]).trim();
++                        console.log('✅ Style Name:', result.styleName);
++                    }
++                    if (cell.includes('Costed Quantity') && j + 1 < row.length && row[j + 1]) {
++                        result.costedQuantity = String(row[j + 1]).trim();
++                        console.log('✅ Quantity:', result.costedQuantity);
++                    }
++                    if (cell.includes('Leadtime') && j + 1 < row.length && row[j + 1]) {
++                        result.leadtime = String(row[j + 1]).trim();
++                        console.log('✅ Leadtime:', result.leadtime);
++                    }
++                    if (cell.includes('MOQ') && j + 1 < row.length && row[j + 1]) {
++                        result.costedQuantity = String(row[j + 1]).trim();
++                        console.log('✅ MOQ:', result.costedQuantity);
++                    }
++                }
+             }
+ 
+-            // Parse data based on current section
+-            const costs = this.parseSectionData(result, currentSection, row, firstCell);
+-            materialCostTotal += costs.material;
+-            factoryCostTotal += costs.factory;
++            // FLEXIBLE COST DATA PARSING - Search through all rows (using beanie approach)
++            let currentSection = '';
++            
++            for (let i = 0; i < excelData.length; i++) {
++                const row = excelData[i];
++                if (!row || row.length === 0) continue;
++                
++                const firstCell = String(row[0] || '').trim();
++                
++                // Debug: Log all section headers we encounter
++                if (firstCell && (firstCell.includes('FABRIC') || firstCell.includes('TRIM') || firstCell.includes('OPERATIONS') || firstCell.includes('PACKAGING') || firstCell.includes('OVERHEAD') || firstCell.includes('TOTAL'))) {
++                    console.log('🔍 Section header found:', firstCell);
++                }
++                
++                // Detect sections - using flexible matching for ballcaps headers
++                if (firstCell === 'FABRIC' || firstCell === 'FABRIC/S' || firstCell.startsWith('FABRIC/S')) {
++                    currentSection = 'fabric';
++                    console.log('🔍 Found FABRIC section');
++                } else if (firstCell === 'OTHER FABRIC/S - TRIM/S') {
++                    currentSection = 'otherFabric';
++                    console.log('🔍 Found OTHER FABRIC/S - TRIM/S section');
++                } else if (firstCell === 'TRIM' || firstCell === 'TRIM/S' || firstCell.startsWith('TRIM/S')) {
++                    currentSection = 'trim';
++                    console.log('🔍 Found TRIM section');
++                } else if (firstCell === 'EMBROIDERY') {
++                    currentSection = 'embroidery';
++                    console.log('🔍 Found EMBROIDERY section');
++                } else if (firstCell === 'OPERATIONS') {
++                    currentSection = 'operations';
++                    console.log('🔍 Found OPERATIONS section');
++                } else if (firstCell === 'PACKAGING') {
++                    currentSection = 'packaging';
++                    console.log('🔍 Found PACKAGING section');
++                } else if (firstCell === 'OVERHEAD/ PROFIT' || firstCell === 'OVERHEAD/PROFIT' || firstCell === 'OVERHEAD') {
++                    currentSection = 'overhead';
++                    console.log('🔍 Found OVERHEAD section');
++                } else if (firstCell === 'TOTAL FACTORY COST') {
++                    // Don't stop parsing here - continue to get the total
++                    console.log('🔍 Found TOTAL FACTORY COST');
++                }
++                
++                // Debug: Log what we're processing in each section
++                if (currentSection && firstCell && !firstCell.includes('FABRIC') && !firstCell.includes('TRIM') && !firstCell.includes('EMBROIDERY') && !firstCell.includes('OPERATIONS') && !firstCell.includes('PACKAGING') && !firstCell.includes('OVERHEAD') && !firstCell.includes('TOTAL')) {
++                    console.log(`🔍 Processing in ${currentSection}: "${firstCell}" - Row data:`, row);
++                }
++                
++                // Parse data based on section - using same logic as beanie import
++                if (currentSection === 'fabric' && firstCell && !firstCell.includes('FABRIC') && !firstCell.includes('CONSUMPTION') && !firstCell.includes('MATERIAL') && !firstCell.includes('TOTAL') && row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) > 0) {
++                    result.fabric.push({
++                        material: firstCell,
++                        consumption: String(row[1] || ''),
++                        price: parseFloat(row[2] || 0).toFixed(2),
++                        cost: parseFloat(row[3]).toFixed(2)
++                    });
++                    console.log('✅ FABRIC:', firstCell, 'Consumption:', row[1], 'Price:', row[2], 'Cost:', row[3]);
++                }
++                
++                if (currentSection === 'otherFabric' && firstCell && !firstCell.includes('FABRIC') && !firstCell.includes('CONSUMPTION') && !firstCell.includes('MATERIAL') && !firstCell.includes('TOTAL') && row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) > 0) {
++                    result.otherFabric.push({
++                        material: firstCell,
++                        consumption: String(row[1] || ''),
++                        price: parseFloat(row[2] || 0).toFixed(2),
++                        cost: parseFloat(row[3]).toFixed(2)
++                    });
++                    console.log('✅ OTHER FABRIC:', firstCell, 'Consumption:', row[1], 'Price:', row[2], 'Cost:', row[3]);
++                }
++                
++                if (currentSection === 'trim' && firstCell && !firstCell.includes('TRIM') && !firstCell.includes('CONSUMPTION') && !firstCell.includes('MATERIAL') && !firstCell.includes('TOTAL') && row[3] && !isNaN(parseFloat(row[3]))) {
++                    result.trim.push({
++                        material: firstCell,
++                        consumption: String(row[1] || ''),
++                        price: parseFloat(row[2] || 0).toFixed(2),
++                        cost: parseFloat(row[3]).toFixed(2)
++                    });
++                    console.log('✅ TRIM:', firstCell, 'Consumption:', row[1], 'Price:', row[2], 'Cost:', row[3]);
++                }
++                
++                if (currentSection === 'operations' && firstCell && !firstCell.includes('OPERATIONS') && !firstCell.includes('TIME') && !firstCell.includes('COST') && !firstCell.includes('SUB TOTAL') && !firstCell.includes('TOTAL')) {
++                    console.log(`🔍 Checking OPERATIONS: "${firstCell}" - Row:`, row, 'Cost in col 3:', row[3], 'Is number:', !isNaN(parseFloat(row[3])));
++                    // For ballcaps, operations data might be in different columns
++                    // Check if there's a valid cost in any column
++                    let operationCost = null;
++                    let operationTime = null;
++                    
++                    // Look for cost in column 3 (SMV) or column 4 (COST)
++                    if (row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) > 0) {
++                        operationCost = parseFloat(row[3]);
++                        operationTime = row[1] || '';
++                    } else if (row[4] && !isNaN(parseFloat(row[4])) && parseFloat(row[4]) > 0) {
++                        operationCost = parseFloat(row[4]);
++                        operationTime = row[2] || '';
++                    }
++                    
++                    if (operationCost !== null) {
++                        result.operations.push({
++                            operation: firstCell,
++                            time: String(operationTime),
++                            cost: operationCost.toFixed(2),
++                            total: operationCost.toFixed(2)
++                        });
++                        console.log('✅ OPERATION:', firstCell, 'Time:', operationTime, 'Cost:', operationCost);
++                    }
++                }
++                
++                if (currentSection === 'packaging' && firstCell && !firstCell.includes('PACKAGING') && !firstCell.includes('Factory Notes') && !firstCell.includes('SUB TOTAL') && !firstCell.includes('TOTAL')) {
++                    console.log(`🔍 Checking PACKAGING: "${firstCell}" - Row:`, row, 'Cost in col 3:', row[3], 'Is number:', !isNaN(parseFloat(row[3])));
++                    if (row[3] !== undefined && !isNaN(parseFloat(row[3]))) {
++                        result.packaging.push({
++                            type: firstCell,
++                            notes: String(row[1] || ''),
++                            cost: parseFloat(row[3]).toFixed(2)
++                        });
++                        console.log('✅ PACKAGING:', firstCell, 'Notes:', row[1], 'Cost:', row[3]);
++                    }
++                }
++                
++                if (currentSection === 'overhead' && firstCell && !firstCell.includes('OVERHEAD') && !firstCell.includes('PROFIT') && !firstCell.includes('Factory Notes') && !firstCell.includes('SUB TOTAL') && !firstCell.includes('TOTAL')) {
++                    console.log(`🔍 Checking OVERHEAD: "${firstCell}" - Row:`, row, 'Cost in col 3:', row[3], 'Is number:', !isNaN(parseFloat(row[3])));
++                    if (row[3] !== undefined && !isNaN(parseFloat(row[3]))) {
++                        result.overhead.push({
++                            type: firstCell,
++                            notes: String(row[1] || ''),
++                            cost: parseFloat(row[3]).toFixed(2)
++                        });
++                        console.log('✅ OVERHEAD:', firstCell, 'Notes:', row[1], 'Cost:', row[3]);
++                    }
++                } else if (currentSection === 'overhead' && firstCell && (firstCell.includes('OVERHEAD') || firstCell.includes('PROFIT')) && !firstCell.includes('Factory Notes') && !firstCell.includes('SUB TOTAL') && !firstCell.includes('TOTAL')) {
++                    console.log(`🔍 Checking OVERHEAD (direct): "${firstCell}" - Row:`, row, 'Cost in col 3:', row[3], 'Is number:', !isNaN(parseFloat(row[3])));
++                    if (row[3] !== undefined && !isNaN(parseFloat(row[3]))) {
++                        result.overhead.push({
++                            type: firstCell,
++                            notes: String(row[1] || ''),
++                            cost: parseFloat(row[3]).toFixed(2)
++                        });
++                        console.log('✅ OVERHEAD (direct):', firstCell, 'Notes:', row[1], 'Cost:', row[3]);
++                    }
++                }
++                
++                // Extract totals
++                if (firstCell.includes('TOTAL MATERIAL') && row[3]) {
++                    result.totalMaterialCost = parseFloat(row[3]).toFixed(2);
++                    console.log('✅ Material Total:', result.totalMaterialCost);
++                }
++                if (firstCell.includes('TOTAL FACTORY') && row[3]) {
++                    result.totalFactoryCost = parseFloat(row[3]).toFixed(2);
++                    console.log('✅ Factory Total:', result.totalFactoryCost);
++                }
++            }
+ 
+-            // Extract totals
+-            this.extractTotals(result, firstCell, row);
++        } catch (error) {
++            console.error('Error in flexible parsing:', error);
+         }
+ 
+         // Use calculated totals if extraction didn't work
+@@ -79,7 +246,22 @@ class TNFBallCapsImporter {
+             result.totalFactoryCost = factoryCostTotal.toFixed(2);
+         }
+ 
+-        console.log('Parsed TNF Ball Caps data:', result);
++        console.log('=== FINAL RESULT ===');
++        console.log('Customer:', result.customer);
++        console.log('Season:', result.season);
++        console.log('Style#:', result.styleNumber);
++        console.log('Style Name:', result.styleName);
++        console.log('FABRIC items:', result.fabric.length, result.fabric);
++        console.log('OTHER FABRIC items:', result.otherFabric.length, result.otherFabric);
++        console.log('TRIM items:', result.trim.length, result.trim);
++        console.log('EMBROIDERY items:', result.embroidery.length, result.embroidery);
++        console.log('OPERATIONS items:', result.operations.length, result.operations);
++        console.log('PACKAGING items:', result.packaging.length, result.packaging);
++        console.log('OVERHEAD items:', result.overhead.length, result.overhead);
++        console.log('Material Total:', result.totalMaterialCost);
++        console.log('Factory Total:', result.totalFactoryCost);
++        console.log('=== END RESULT ===');
++        
+         return result;
+     }
+ 
+@@ -124,11 +306,15 @@ class TNFBallCapsImporter {
+     parseSectionHeader(firstCell, currentSection) {
+         const sectionMap = {
+             'FABRIC': 'fabric',
++            'FABRIC/S': 'fabric',
++            'OTHER FABRIC/S - TRIM/S': 'otherFabric',
+             'TRIM': 'trim',
++            'TRIM/S': 'trim',
+             'EMBROIDERY': 'embroidery',
+             'OPERATIONS': 'operations',
+             'PACKAGING': 'packaging',
+-            'OVERHEAD/ PROFIT': 'overhead'
++            'OVERHEAD/ PROFIT': 'overhead',
++            'OVERHEAD/PROFIT': 'overhead'
+         };
+ 
+         return sectionMap[firstCell] || currentSection;
+@@ -151,6 +337,20 @@ class TNFBallCapsImporter {
+                         cost: String(row[3] || '')
+                     });
+                     materialCost = parseFloat(row[3]) || 0;
++                    console.log('✅ FABRIC:', firstCell, 'Consumption:', row[1], 'Price:', row[2], 'Cost:', row[3]);
++                }
++                break;
++
++            case 'otherFabric':
++                if (this.hasFabricData(row)) {
++                    result.otherFabric.push({
++                        material: firstCell,
++                        consumption: String(row[1] || ''),
++                        price: String(row[2] || ''),
++                        cost: String(row[3] || '')
++                    });
++                    materialCost = parseFloat(row[3]) || 0;
++                    console.log('✅ OTHER FABRIC:', firstCell, 'Consumption:', row[1], 'Price:', row[2], 'Cost:', row[3]);
+                 }
+                 break;
+ 
+@@ -163,6 +363,7 @@ class TNFBallCapsImporter {
+                         cost: String(row[3] || '')
+                     });
+                     materialCost = parseFloat(row[3]) || 0;
++                    console.log('✅ TRIM:', firstCell, 'Consumption:', row[1], 'Price:', row[2], 'Cost:', row[3]);
+                 }
+                 break;
+ 
+@@ -220,11 +421,17 @@ class TNFBallCapsImporter {
+      * Validation methods for each section
+      */
+     hasFabricData(row) {
+-        return row[1] && row[2] && row[3] && !isNaN(parseFloat(row[3]));
++        // FABRIC needs: material name, consumption, price, and cost
++        const hasMaterial = row[0] && String(row[0]).trim() && !String(row[0]).includes('FABRIC') && !String(row[0]).includes('CONSUMPTION') && !String(row[0]).includes('MATERIAL');
++        const hasCost = row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) > 0;
++        return hasMaterial && hasCost;
+     }
+ 
+     hasTrimData(row) {
+-        return row[3] && !isNaN(parseFloat(row[3]));
++        // TRIM needs: material name and cost
++        const hasMaterial = row[0] && String(row[0]).trim() && !String(row[0]).includes('TRIM') && !String(row[0]).includes('CONSUMPTION') && !String(row[0]).includes('MATERIAL');
++        const hasCost = row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) >= 0;
++        return hasMaterial && hasCost;
+     }
+ 
+     hasEmbroideryData(row) {
+diff --git a/public/js/beanieImport.js b/public/js/beanieImport.js
+index 92b5141..5090802 100644
+--- a/public/js/beanieImport.js
++++ b/public/js/beanieImport.js
+@@ -158,6 +158,16 @@ class TNFBeanieImporter {
+                     console.log('✅ YARN:', firstCell, 'Consumption:', row[1], 'Price:', row[2], 'Cost:', row[3]);
+                 }
+                 
++                if (currentSection === 'fabric' && firstCell && !firstCell.includes('FABRIC') && !firstCell.includes('CONSUMPTION') && !firstCell.includes('MATERIAL') && row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) > 0) {
++                    result.fabric.push({
++                        material: firstCell,
++                        consumption: String(row[1] || ''),
++                        price: parseFloat(row[2] || 0).toFixed(2),
++                        cost: parseFloat(row[3]).toFixed(2)
++                    });
++                    console.log('✅ FABRIC:', firstCell, 'Consumption:', row[1], 'Price:', row[2], 'Cost:', row[3]);
++                }
++                
+                 if (currentSection === 'trim' && firstCell && !firstCell.includes('TRIM') && !firstCell.includes('CONSUMPTION') && !firstCell.includes('MATERIAL') && row[3] && !isNaN(parseFloat(row[3]))) {
+                     result.trim.push({
+                         material: firstCell,
+@@ -246,6 +256,7 @@ class TNFBeanieImporter {
+         console.log('Style#:', result.styleNumber);
+         console.log('Style Name:', result.styleName);
+         console.log('YARN items:', result.yarn.length, result.yarn);
++        console.log('FABRIC items:', result.fabric.length, result.fabric);
+         console.log('TRIM items:', result.trim.length, result.trim);
+         console.log('TRIM data details:', JSON.stringify(result.trim, null, 2));
+         console.log('KNITTING items:', result.knitting.length, result.knitting);
+diff --git a/public/js/excelUtils.js b/public/js/excelUtils.js
+index a044285..5ac20ab 100644
+--- a/public/js/excelUtils.js
++++ b/public/js/excelUtils.js
+@@ -146,7 +146,7 @@ class ExcelUtils {
+                         
+                         console.log('Available sheets:', workbook.SheetNames);
+                         
+-                        // Look for VANS data in any sheet
++                        // Look for VANS or ROSSIGNOL data in any sheet
+                         let targetSheet = null;
+                         let targetSheetName = null;
+                         
+@@ -155,8 +155,11 @@ class ExcelUtils {
+                             const worksheet = workbook.Sheets[sheetName];
+                             const sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: true });
+                             
+-                            // Check if this sheet contains VANS data
++                            // Check if this sheet contains VANS or ROSSIGNOL data
+                             let hasVANS = false;
++                            let hasROSSIGNOL = false;
++                            let hasBANDIT = false;
++                            
+                             for (let j = 0; j < Math.min(20, sheetData.length); j++) {
+                                 const row = sheetData[j];
+                                 if (row) {
+@@ -166,22 +169,37 @@ class ExcelUtils {
+                                             hasVANS = true;
+                                             break;
+                                         }
++                                        if (cell.includes('ROSSIGNOL')) {
++                                            hasROSSIGNOL = true;
++                                        }
++                                        if (cell.includes('BANDIT CAP')) {
++                                            hasBANDIT = true;
++                                        }
+                                     }
+                                 }
+-                                if (hasVANS) break;
++                                if (hasVANS || hasBANDIT) break;
+                             }
+                             
+-                            if (hasVANS) {
++                            if (hasBANDIT) {
++                                targetSheet = worksheet;
++                                targetSheetName = sheetName;
++                                console.log('Found BANDIT CAP data in sheet:', sheetName);
++                                break;
++                            } else if (hasVANS) {
+                                 targetSheet = worksheet;
+                                 targetSheetName = sheetName;
+                                 console.log('Found VANS data in sheet:', sheetName);
+                                 break;
++                            } else if (hasROSSIGNOL && !targetSheet) {
++                                targetSheet = worksheet;
++                                targetSheetName = sheetName;
++                                console.log('Found ROSSIGNOL data in sheet:', sheetName);
+                             }
+                         }
+                         
+-                        // If no VANS data found, use the first sheet
++                        // If no specific data found, use the first sheet
+                         if (!targetSheet) {
+-                            console.log('No VANS data found, using first sheet:', workbook.SheetNames[0]);
++                            console.log('No specific data found, using first sheet:', workbook.SheetNames[0]);
+                             targetSheet = workbook.Sheets[workbook.SheetNames[0]];
+                             targetSheetName = workbook.SheetNames[0];
+                         }
+-- 
+2.51.0.windows.1
+

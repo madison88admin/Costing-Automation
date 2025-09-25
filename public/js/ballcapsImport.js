@@ -128,7 +128,7 @@ class TNFBallCapsImporter {
                 }
                 
                 // Detect header rows and set current section based on context
-                if (firstCell.includes('(Name/Code/Description)Description') && row[1] && row[1].includes('CONSUMPTION')) {
+                if (firstCell.includes('(Name/Code/Description)') && row[1] && row[1].includes('CONSUMPTION')) {
                     // This is a header row, determine section based on context
                     if (row[1].includes('YARD') && row[2] && row[2].includes('USD/YD')) {
                         currentSection = 'fabric';
@@ -198,42 +198,47 @@ class TNFBallCapsImporter {
                 if (currentSection === 'operations' && !firstCell.includes('OPERATIONS') && !firstCell.includes('TIME') && !firstCell.includes('COST') && !firstCell.includes('SUB TOTAL') && !firstCell.includes('TOTAL')) {
                     console.log(`🔍 Checking OPERATIONS: "${firstCell}" - Row:`, row, 'Cost in col 3:', row[3], 'Is number:', !isNaN(parseFloat(row[3])));
                     // Check if this row has operations data (SMV in col 1, cost in col 3)
-                    if (row[1] && row[1].toString().trim() && row[3] && !isNaN(parseFloat(row[3]))) {
+                    if (row[1] && !isNaN(parseFloat(row[1])) && row[3] && !isNaN(parseFloat(row[3]))) {
                         result.operations.push({
-                            operation: row[1].toString().trim() || 'Operation',
-                            time: String(row[1] || ''),
-                            cost: parseFloat(row[2] || 0).toFixed(2),
-                            total: parseFloat(row[3]).toFixed(2)
+                            operation: firstCell,
+                            smv: parseFloat(row[1]).toFixed(2),
+                            cost: parseFloat(row[3]).toFixed(2),
+                            total: (parseFloat(row[1]) * parseFloat(row[3])).toFixed(2)
                         });
-                        console.log('✅ OPERATION:', row[1], 'Time:', row[1], 'Cost:', row[3]);
+                        console.log('✅ OPERATION:', firstCell, 'SMV:', row[1], 'Cost:', row[3]);
                     }
                 }
                 
-                if (currentSection === 'packaging' && firstCell && !firstCell.includes('PACKAGING') && !firstCell.includes('Factory Notes') && !firstCell.includes('TOTAL')) {
-                    if (row[3] !== undefined && !isNaN(parseFloat(row[3]))) {
-                        result.packaging.push({
-                            type: firstCell,
-                            notes: String(row[1] || ''),
-                            cost: parseFloat(row[3]).toFixed(2)
-                        });
-                        console.log('✅ PACKAGING:', firstCell, 'Cost:', row[3]);
-                    }
+                if (currentSection === 'packaging' && firstCell && 
+                    !firstCell.includes('PACKAGING') && 
+                    !firstCell.includes('Factory Notes') && 
+                    !firstCell.includes('COST') && 
+                    !firstCell.includes('TOTAL') && 
+                    row[2] && !isNaN(parseFloat(row[2]))) {
+                    result.packaging.push({
+                        type: firstCell,
+                        notes: String(row[1] || ''),
+                        cost: parseFloat(row[2]).toFixed(2)
+                    });
+                    console.log('✅ PACKAGING:', firstCell, 'Cost:', row[2]);
                 }
                 
-                if (currentSection === 'overhead' && firstCell && !firstCell.includes('OVERHEAD/ PROFIT') && !firstCell.includes('Factory Notes') && !firstCell.includes('TOTAL')) {
-                    console.log(`🔍 Checking OVERHEAD: "${firstCell}" - Row:`, row, 'Cost in col 3:', row[3], 'Is number:', !isNaN(parseFloat(row[3])));
-                    if (row[3] !== undefined && !isNaN(parseFloat(row[3]))) {
-                        result.overhead.push({
-                            type: firstCell,
-                            notes: String(row[1] || ''),
-                            cost: parseFloat(row[3]).toFixed(2)
-                        });
-                        console.log('✅ OVERHEAD:', firstCell, 'Notes:', row[1], 'Cost:', row[3]);
-                    }
+                if (currentSection === 'overhead' && firstCell && 
+                    !firstCell.includes('OVERHEAD') && 
+                    !firstCell.includes('Factory Notes') && 
+                    !firstCell.includes('COST') && 
+                    !firstCell.includes('TOTAL') && 
+                    row[2] && !isNaN(parseFloat(row[2]))) {
+                    result.overhead.push({
+                        type: firstCell,
+                        notes: String(row[1] || ''),
+                        cost: parseFloat(row[2]).toFixed(2)
+                    });
+                    console.log('✅ OVERHEAD:', firstCell, 'Notes:', row[1], 'Cost:', row[2]);
                 }
                 
-                // Extract totals
-                if (firstCell.includes('TOTAL MATERIAL') && row[3]) {
+                // Extract totals - enhanced pattern matching
+                if ((firstCell.includes('TOTAL MATERIAL') || firstCell.includes('TOTAL MATERIAL AND SUBMATERIALS COST')) && row[3]) {
                     result.totalMaterialCost = parseFloat(row[3]).toFixed(2);
                     console.log('✅ Material Total:', result.totalMaterialCost);
                 }
@@ -245,6 +250,8 @@ class TNFBallCapsImporter {
 
         } catch (error) {
             console.error('Error in flexible parsing:', error);
+            // Re-throw the error so it can be caught by the calling code
+            throw error;
         }
 
         console.log('=== FINAL RESULT ===');
@@ -252,8 +259,10 @@ class TNFBallCapsImporter {
         console.log('Season:', result.season);
         console.log('Style#:', result.styleNumber);
         console.log('Style Name:', result.styleName);
+        console.log('Costed Quantity:', result.costedQuantity);
+        console.log('Leadtime:', result.leadtime);
         console.log('FABRIC items:', result.fabric.length, result.fabric);
-        console.log('EMBROIDERY items:', result.embroidery.length, result.embroidery);
+        console.log('OTHER FABRIC/S - TRIM/S items:', result.embroidery.length, result.embroidery);
         console.log('TRIM items:', result.trim.length, result.trim);
         console.log('OPERATIONS items:', result.operations.length, result.operations);
         console.log('PACKAGING items:', result.packaging.length, result.packaging);
@@ -265,202 +274,9 @@ class TNFBallCapsImporter {
         console.log('Parsed TNF Ball Caps data:', result);
         return result;
     }
-
-    /**
-     * Extract basic product information from specific rows
-     */
-    extractBasicInfo(result, row, rowIndex) {
-        // Extract from row 1
-        if (rowIndex === 1) {
-            result.customer = this.extractValue(row[4], 'Customer：') || result.customer;
-            result.season = this.extractValue(row[5], 'Season：') || result.season;
-        }
-
-        // Extract from row 2
-        if (rowIndex === 2) {
-            result.styleNumber = this.extractValue(row[4], 'Style#:') || result.styleNumber;
-            result.styleName = this.extractValue(row[7], 'Style Name:') || result.styleName;
-        }
-
-        // Extract from row 4
-        if (rowIndex === 4) {
-            result.costedQuantity = this.extractValue(row[4], 'Costed Quantity:') || result.costedQuantity;
-        }
-
-        // Extract from row 5
-        if (rowIndex === 5) {
-            result.leadtime = this.extractValue(row[4], 'Leadtime:') || result.leadtime;
-        }
-    }
-
-    /**
-     * Extract value from cell, removing prefix if present
-     */
-    extractValue(cell, prefix) {
-        if (!cell) return '';
-        return String(cell).replace(prefix, '').trim();
-    }
-
-    /**
-     * Parse section headers and return current section
-     */
-    parseSectionHeader(firstCell, currentSection) {
-        const sectionMap = {
-            'FABRIC': 'fabric',
-            'FABRIC/S': 'fabric',
-            'TRIM': 'trim',
-            'TRIM/S': 'trim',
-            'EMBROIDERY': 'embroidery',
-            'OPERATIONS': 'operations',
-            'PACKAGING': 'packaging',
-            'OVERHEAD/ PROFIT': 'overhead',
-            'OVERHEAD/PROFIT': 'overhead'
-        };
-
-        return sectionMap[firstCell] || currentSection;
-    }
-
-    /**
-     * Parse data for specific sections
-     */
-    parseSectionData(result, section, row, firstCell) {
-        let materialCost = 0;
-        let factoryCost = 0;
-
-        switch (section) {
-            case 'fabric':
-                if (this.hasFabricData(row)) {
-                    result.fabric.push({
-                        material: firstCell,
-                        consumption: String(row[1] || ''),
-                        price: String(row[2] || ''),
-                        cost: String(row[3] || '')
-                    });
-                    materialCost = parseFloat(row[3]) || 0;
-                }
-                break;
-
-            case 'trim':
-                if (this.hasTrimData(row)) {
-                    result.trim.push({
-                        material: firstCell,
-                        consumption: String(row[1] || ''),
-                        price: String(row[2] || ''),
-                        cost: String(row[3] || '')
-                    });
-                    materialCost = parseFloat(row[3]) || 0;
-                }
-                break;
-
-            case 'embroidery':
-                if (this.hasEmbroideryData(row)) {
-                    result.embroidery.push({
-                        design: firstCell,
-                        stitches: String(row[1] || ''),
-                        price: String(row[2] || ''),
-                        cost: String(row[3] || '')
-                    });
-                    factoryCost = parseFloat(row[3]) || 0;
-                }
-                break;
-
-            case 'operations':
-                if (this.hasOperationsData(row)) {
-                    result.operations.push({
-                        operation: firstCell,
-                        time: String(row[1] || ''),
-                        cost: String(row[2] || ''),
-                        total: String(row[3] || '')
-                    });
-                    factoryCost = parseFloat(row[3]) || 0;
-                }
-                break;
-
-            case 'packaging':
-                if (this.hasPackagingData(row)) {
-                    result.packaging.push({
-                        type: firstCell,
-                        notes: String(row[1] || ''),
-                        cost: String(row[3] || '')
-                    });
-                    factoryCost = parseFloat(row[3]) || 0;
-                }
-                break;
-
-            case 'overhead':
-                if (this.hasOverheadData(row)) {
-                    result.overhead.push({
-                        type: firstCell,
-                        notes: String(row[1] || ''),
-                        cost: String(row[3] || '')
-                    });
-                    factoryCost = parseFloat(row[3]) || 0;
-                }
-                break;
-        }
-
-        return { material: materialCost, factory: factoryCost };
-    }
-
-    /**
-     * Validation methods for each section
-     */
-    hasFabricData(row) {
-        return row[1] && row[2] && row[3] && !isNaN(parseFloat(row[3]));
-    }
-
-    hasTrimData(row) {
-        return row[3] && !isNaN(parseFloat(row[3]));
-    }
-
-    hasEmbroideryData(row) {
-        return row[1] && row[2] && row[3] && !isNaN(parseFloat(row[3]));
-    }
-
-    hasOperationsData(row) {
-        return row[3] && !isNaN(parseFloat(row[3]));
-    }
-
-    hasPackagingData(row) {
-        return row[3] && !isNaN(parseFloat(row[3]));
-    }
-
-    hasOverheadData(row) {
-        return row[3] && !isNaN(parseFloat(row[3]));
-    }
-
-    /**
-     * Extract total costs from specific rows
-     */
-    extractTotals(result, firstCell, row) {
-        if (firstCell === 'TOTAL MATERIAL AND SUBMATERIALS COST' && row[3]) {
-            result.totalMaterialCost = String(row[3] || '');
-        }
-        if (firstCell === 'TOTAL FACTORY COST' && row[3]) {
-            result.totalFactoryCost = String(row[3] || '');
-        }
-    }
-
-    /**
-     * Validate if file is supported format
-     */
-    isSupportedFile(fileName) {
-        const extension = fileName.toLowerCase().split('.').pop();
-        return this.supportedFormats.some(format => fileName.toLowerCase().endsWith(format));
-    }
-
-    /**
-     * Get file type for processing
-     */
-    getFileType(fileName) {
-        const extension = fileName.toLowerCase().split('.').pop();
-        return extension === 'csv' ? 'csv' : 'excel';
-    }
 }
 
-// Export for use in other files
+// Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = TNFBallCapsImporter;
-} else {
-    window.TNFBallCapsImporter = TNFBallCapsImporter;
 }

@@ -7,6 +7,7 @@
     "start": "node dist/app.js",
     "dev": "tsx watch src/app.ts",
     "build": "tsc",
+    "build:netlify": "echo 'Static site - no build required'",
     "test": "jest"
   },
   "keywords": [

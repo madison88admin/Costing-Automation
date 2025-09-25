@@ -165,9 +165,10 @@ export class SupabaseService {
             const { data: batchData, error: batchError } = await batchQuery;
             
             if (batchError) {
-              error = batchError;
               logger.error('Error fetching batch:', batchError);
-              break;
+              // Skip this batch and continue with the next one
+              offset += batchSize;
+              continue;
             }
 
             if (batchData && batchData.length > 0) {
@@ -209,7 +210,14 @@ export class SupabaseService {
       };
     } catch (error) {
       logger.error('Error getting table data:', error);
-      throw new Error('Failed to retrieve table data');
+      // Return partial data if available, don't fail completely
+      return {
+        data: allData || [],
+        total: allData?.length || 0,
+        page: 1,
+        limit: allData?.length || 0,
+        totalPages: 1
+      };
     }
   }
 

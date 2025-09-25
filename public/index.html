@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Databank Data Management System</title>
+    <title>Databank Data Management System - Updated</title>
     <!-- Primary XLSX CDN with fallback -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- Local XLSX fallback -->
@@ -473,6 +473,42 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 30px;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .save-button {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+        }
+
+        .save-button:hover {
+            background: linear-gradient(135deg, #45a049, #3d8b40);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+        }
+
+        .save-button:active {
+            transform: translateY(0);
+        }
+
+        .save-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
 
         .header-content {
@@ -1534,9 +1570,14 @@
                     <h2>Factory Cost Breakdown</h2>
                     <p class="template-description">Template for Beanie</p>
                 </div>
+                <div class="header-buttons">
+                    <button class="save-button" onclick="saveBeanieToDatabase()" id="saveBeanieBtn">
+                        💾 Save to Database
+                    </button>
                 <button class="back-button" onclick="goBackToSelection()">
                     ← Back to Selection
                 </button>
+                </div>
             </div>
             
             <div class="file-upload" onclick="document.getElementById('fileInput').click()">
@@ -1931,9 +1972,14 @@
                     <h2>Factory Cost Breakdown</h2>
                     <p class="template-description">Template for BallCaps</p>
                 </div>
+                <div class="header-buttons">
+                    <button class="save-button" onclick="saveBallCapsToDatabase()" id="saveBallCapsBtn">
+                        💾 Save to Database
+                    </button>
                 <button class="back-button" onclick="goBackToSelection()">
                     ← Back to Selection
                 </button>
+                </div>
             </div>
             
             <div class="cost-breakdown-content">
@@ -2878,6 +2924,27 @@
         let allTableData = [];
         let filteredData = null;
 
+        // Helper function to make API calls with fallback
+        async function apiCall(netlifyEndpoint, localEndpoint, options = {}) {
+            const netlifyUrl = `/.netlify/functions${netlifyEndpoint}`;
+            const localUrl = `/api${localEndpoint}`;
+            
+            try {
+                // Try Netlify function first
+                console.log('🔄 Trying Netlify function:', netlifyUrl);
+                const response = await fetch(netlifyUrl, options);
+                
+                if (!response.ok) {
+                    throw new Error(`Netlify function failed: ${response.status}`);
+                }
+                return response;
+            } catch (netlifyError) {
+                console.log('⚠️ Netlify function failed, trying local API:', netlifyError.message);
+                // Fallback to local API
+                return await fetch(localUrl, options);
+            }
+        }
+
         // Intro loading animation
         let introHidden = false;
         function hideIntroOverlay() {
@@ -3029,6 +3096,15 @@
             console.log('Auto-connecting to Supabase...');
                 autoConnectToSupabase();
         });
+        
+        // Prevent database data from being displayed when Excel file is uploaded
+        window.addEventListener('beforeunload', function() {
+            // Clear any database data when leaving the page
+            if (window.currentParsedData) {
+                console.log('🧹 Clearing parsed data before page unload');
+                window.currentParsedData = null;
+            }
+        });
 
         // Show/hide database config based on type
         document.getElementById('dbType').addEventListener('change', function() {
@@ -3052,7 +3128,23 @@
                 };
 
                 console.log('Sending connection request...', config);
-                const response = await fetch('/api/database/connect', {
+                // Try Netlify functions first, then fallback to local API
+                const netlifyUrl = '/.netlify/functions/database-connect';
+                const localUrl = '/api/database/connect';
+                
+                console.log('🔍 Debug Info:', {
+                    hostname: window.location.hostname,
+                    isLocalhost: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1',
+                    netlifyUrl: netlifyUrl,
+                    localUrl: localUrl,
+                    fullUrl: window.location.href,
+                    timestamp: new Date().toISOString()
+                });
+                console.log('🚀 FORCE DEBUG - This should appear if deployment updated!');
+                console.log('🔥 NEW DEPLOYMENT TEST - If you see this, the deployment updated!');
+                console.log('📅 Deployment timestamp:', new Date().toISOString());
+                
+                const response = await apiCall('/database-connect', '/database/connect', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(config)
@@ -3118,7 +3210,10 @@
             }
 
             try {
-                const response = await fetch('/api/database/connect', {
+                // Detect if running on localhost or Netlify
+                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const apiUrl = isLocalhost ? '/api/database/connect' : '/.netlify/functions/database-connect';
+                const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(config)
@@ -3144,7 +3239,7 @@
             if (!connectionId) return;
 
             try {
-                const response = await fetch(`/api/database/tables/${connectionId}`);
+                const response = await apiCall(`/database-tables?connectionId=${connectionId}`, `/database/tables/${connectionId}`);
                 const result = await response.json();
                 
                 if (result.tables) {
@@ -3161,6 +3256,12 @@
         async function loadDatabankData() {
             console.log('🔄 Loading ALL data from Supabase database...');
             
+            // Don't load database data if we're processing Excel
+            if (window.isProcessingExcel) {
+                console.log('🚫 Skipping database load - processing Excel file');
+                return;
+            }
+            
             if (!connectionId) {
                 console.log('No connection ID available');
                 return;
@@ -3170,7 +3271,10 @@
                 console.log('Loading ALL data from Supabase with connection ID:', connectionId);
                 // Load ALL data from Supabase - no limit
                 const timestamp = new Date().getTime();
-                const response = await fetch(`/api/datatable/data/${connectionId}?table=databank&limit=999999&_t=${timestamp}`);
+                // Detect if running on localhost or Netlify
+                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const apiUrl = isLocalhost ? `/api/datatable/data/${connectionId}?table=databank&limit=999999&_t=${timestamp}` : `/.netlify/functions/datatable-data?table=databank&limit=999999&_t=${timestamp}`;
+                const response = await fetch(apiUrl);
                 const result = await response.json();
                 
                 console.log('Fresh data loading result:', result);
@@ -3255,7 +3359,7 @@
             if (!connectionId) return;
 
             try {
-                const response = await fetch(`/api/database/table-info/${connectionId}/${tableName}`);
+                const response = await apiCall(`/database-table-info?connectionId=${connectionId}&tableName=${tableName}`, `/database/table-info/${connectionId}/${tableName}`);
                 const result = await response.json();
                 
                 let html = `<h3>Table: ${tableName}</h3>`;
@@ -3283,7 +3387,10 @@
             if (!tableName || !connectionId) return;
 
             try {
-                const response = await fetch(`/api/datatable/data/${connectionId}?table=${tableName}&limit=10`);
+                // Detect if running on localhost or Netlify
+                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const apiUrl = isLocalhost ? `/api/datatable/data/${connectionId}?table=${tableName}&limit=10` : `/.netlify/functions/datatable-data?table=${tableName}&limit=10`;
+                const response = await fetch(apiUrl);
                 const result = await response.json();
                 
                 if (result.data) {
@@ -3730,7 +3837,10 @@
 
             try {
                 // Get just the count without loading data
-                const response = await fetch(`/api/datatable/data/${connectionId}?table=databank&limit=1`);
+                // Detect if running on localhost or Netlify
+                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const apiUrl = isLocalhost ? `/api/datatable/data/${connectionId}?table=databank&limit=1` : `/.netlify/functions/datatable-data?table=databank&limit=1`;
+                const response = await fetch(apiUrl);
                 const result = await response.json();
                 
                 if (result.total) {
@@ -4083,7 +4193,7 @@
 
         // Store the uploaded file globally
         let uploadedFile = null;
-
+        
         // Global variable to store raw Excel data for debugging
         window.lastExcelData = null;
 
@@ -4147,17 +4257,28 @@
                 }
 
                 // Read file content using utility
+                console.log('🔍 DEBUGGING FILE READING:');
+                console.log('File name:', uploadedFile.name);
+                console.log('File size:', uploadedFile.size);
+                console.log('File type:', uploadedFile.type);
+                
                 const rawData = await excelUtils.readFileContent(uploadedFile);
                 
                 // Store raw data globally for debugging
                 window.lastExcelData = rawData;
                 console.log('Raw Excel data stored in window.lastExcelData for debugging');
+                console.log('Raw data type:', typeof rawData);
+                console.log('Raw data keys:', rawData ? Object.keys(rawData) : 'null');
+                console.log('Raw data length:', rawData && rawData.data ? rawData.data.length : 'no data');
                 
                 // Handle both old array format and new object format
                 let dataToProcess = rawData;
                 if (rawData && typeof rawData === 'object' && !Array.isArray(rawData)) {
                     dataToProcess = rawData.data || rawData;
                     console.log('Found', rawData.images ? rawData.images.length : 0, 'embedded images');
+                    console.log('Data to process type:', typeof dataToProcess);
+                    console.log('Data to process length:', dataToProcess ? dataToProcess.length : 'no data');
+                    console.log('First few rows of data:', dataToProcess ? dataToProcess.slice(0, 3) : 'no data');
                 }
                 
                 // Determine which importer to use based on file content
@@ -4170,18 +4291,58 @@
                     parsedData = ballcapsImporter.parseExcelData(rawData);
                 } else {
                     console.log('Using TNF Beanie Importer (default)');
-                    parsedData = beanieImporter.parseExcelData(rawData);
+                    console.log('🔍 DEBUGGING BEANIE PARSER:');
+                    console.log('Raw data being passed to parser:', rawData);
+                    console.log('Data to process:', dataToProcess);
+                    console.log('Data to process length:', dataToProcess ? dataToProcess.length : 'no data');
+                    
+                    try {
+                        parsedData = beanieImporter.parseExcelData(rawData);
+                        
+                        console.log('🔍 PARSER RESULT:');
+                        console.log('Parsed data type:', typeof parsedData);
+                        console.log('Parsed data keys:', parsedData ? Object.keys(parsedData) : 'null');
+                        console.log('Parsed data customer:', parsedData ? parsedData.customer : 'null');
+                        console.log('Parsed data season:', parsedData ? parsedData.season : 'null');
+                        console.log('Parsed data styleNumber:', parsedData ? parsedData.styleNumber : 'null');
+                        console.log('Parsed data styleName:', parsedData ? parsedData.styleName : 'null');
+                    } catch (parserError) {
+                        console.error('❌ PARSER ERROR:', parserError);
+                        alert('❌ Parser error: ' + parserError.message);
+                        return;
+                    }
                 }
                     
                 if (parsedData) {
+                    console.log('🔍 DEBUGGING PARSED DATA:');
                     console.log('Parsed data:', parsedData);
                     console.log('Data sections found:');
+                    console.log('- Customer:', parsedData.customer);
+                    console.log('- Season:', parsedData.season);
+                    console.log('- Style#:', parsedData.styleNumber);
+                    console.log('- Style Name:', parsedData.styleName);
+                    console.log('- YARN items:', parsedData.yarn?.length || 0);
                     console.log('- Fabric items:', parsedData.fabric?.length || 0);
                     console.log('- Embroidery items:', parsedData.embroidery?.length || 0);
                     console.log('- Trim items:', parsedData.trim?.length || 0);
                     console.log('- Operations items:', parsedData.operations?.length || 0);
                     console.log('- Packaging items:', parsedData.packaging?.length || 0);
                     console.log('- Overhead items:', parsedData.overhead?.length || 0);
+                    console.log('- Material Total:', parsedData.totalMaterialCost);
+                    console.log('- Factory Total:', parsedData.totalFactoryCost);
+                    
+                    // Check if parsed data is empty
+                    if (!parsedData.customer && !parsedData.season && !parsedData.styleNumber && !parsedData.styleName) {
+                        console.error('❌ PARSED DATA IS EMPTY! Excel file was not read correctly.');
+                        alert('❌ Excel file was not read correctly. Please check the file format and try again.');
+                        return;
+                    }
+                    
+                    // Clear any existing database data from the interface
+                    clearDatabaseData();
+                    
+                    // Prevent auto-loading of database data while processing Excel
+                    window.isProcessingExcel = true;
                     
                     // Populate the appropriate template based on detected type
                     if (templateType === 'ballcaps') {
@@ -4192,6 +4353,16 @@
                     
                     // Display product images if available
                     displayProductImages(parsedData.images);
+                    
+                    // Store parsed data globally for saving to database
+                    window.currentParsedData = parsedData;
+                    window.currentTemplateType = templateType;
+                    
+                    // Reset Excel processing flag
+                    window.isProcessingExcel = false;
+                } else {
+                    console.error('❌ NO PARSED DATA! Excel file parsing failed.');
+                    alert('❌ Excel file parsing failed. Please check the file format and try again.');
                 }
                     
                 } catch (error) {
@@ -4245,6 +4416,43 @@
 
 
 
+
+        // Clear any existing database data from the interface
+        function clearDatabaseData() {
+            console.log('🧹 Clearing database data from interface...');
+            
+            // Clear product information
+            const productInfo = document.querySelector('.product-info');
+            if (productInfo) {
+                const infoValues = productInfo.querySelectorAll('.info-value');
+                infoValues.forEach(value => {
+                    value.textContent = '';
+                });
+            }
+            
+            // Clear all cost sections
+            const sections = ['YARN', 'FABRIC', 'EMBROIDERY', 'TRIM', 'KNITTING', 'OPERATIONS', 'PACKAGING', 'OVERHEAD/ PROFIT'];
+            sections.forEach(sectionName => {
+                const section = document.querySelector(`[data-section="${sectionName}"]`);
+                if (section) {
+                    const rows = section.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                    rows.forEach(row => {
+                        const cells = row.querySelectorAll('.cost-cell');
+                        cells.forEach(cell => {
+                            cell.textContent = '';
+                        });
+                    });
+                }
+            });
+            
+            // Clear totals
+            const materialTotal = document.querySelector('.material-total');
+            const factoryTotal = document.querySelector('.factory-total');
+            if (materialTotal) materialTotal.textContent = '';
+            if (factoryTotal) factoryTotal.textContent = '';
+            
+            console.log('✅ Database data cleared from interface');
+        }
 
         function fillTemplateWithData(data) {
             console.log('🔍 Debugging Beanie template population:');
@@ -4308,30 +4516,105 @@
             
             // Update totals
             updateTotals(data.totalMaterialCost, data.totalFactoryCost);
+            
+            // Save data to database
+            saveDataToDatabase(data);
+        }
+        
+        // Function to save data to database
+        async function saveDataToDatabase(data) {
+            try {
+                console.log('💾 Attempting to save data to database...');
+                
+                // Create beanie importer instance
+                const beanieImporter = new TNFBeanieImporter();
+                
+                // Save to database
+                const savedRecord = await beanieImporter.saveToDatabase(data, 'beanie_costs');
+                
+                // Show success message
+                showNotification('✅ Data saved to database successfully!', 'success');
+                
+            } catch (error) {
+                console.error('❌ Error saving to database:', error);
+                showNotification('❌ Failed to save to database: ' + error.message, 'error');
+            }
+        }
+        
+        // Function to show notifications
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 5px;
+                color: white;
+                font-weight: bold;
+                z-index: 10000;
+                max-width: 400px;
+                word-wrap: break-word;
+                ${type === 'success' ? 'background-color: #4CAF50;' : ''}
+                ${type === 'error' ? 'background-color: #f44336;' : ''}
+                ${type === 'info' ? 'background-color: #2196F3;' : ''}
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Remove notification after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 5000);
         }
 
         function fillCostSection(sectionName, data, columns) {
+            console.log('🔍 fillCostSection called for:', sectionName, 'with data:', data);
+            
             // Only search within the currently visible template
             const visibleTemplate = document.querySelector('.cost-breakdown-container:not([style*="display: none"])');
             if (!visibleTemplate) {
+                console.log('❌ No visible template found');
                 return;
             }
             
             const sections = visibleTemplate.querySelectorAll('.cost-section');
+            console.log('🔍 Found', sections.length, 'sections');
             let targetSection = null;
             
-            sections.forEach(section => {
+            sections.forEach((section, index) => {
                 const header = section.querySelector('.section-header');
-                if (header && header.textContent.trim() === sectionName) {
+                if (header) {
+                    const headerText = header.textContent.trim();
+                    console.log(`🔍 Section ${index}:`, headerText);
+                    if (headerText === sectionName) {
                     targetSection = section;
+                        console.log('✅ Found target section:', sectionName, 'at index', index);
+                        console.log('✅ Section element:', section);
+                    }
                 }
             });
+            
+            if (!targetSection) {
+                console.log('❌ No target section found for:', sectionName);
+                console.log('Available sections:', Array.from(sections).map(s => s.querySelector('.section-header')?.textContent.trim()));
+            }
             
             if (targetSection) {
                 const rows = targetSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
                 
                 if (data && Array.isArray(data)) {
                     data.forEach((item, index) => {
+                        // Skip SUB TOTAL items - they will be handled separately
+                        if (item.isSubtotal) {
+                            return;
+                        }
+                        
                         if (rows[index] && item) {
                             const cells = rows[index].querySelectorAll('.cost-cell');
                             // Fill only the cells that exist, up to the minimum of columns.length and cells.length
@@ -4344,6 +4627,31 @@
                             }
                         }
                     });
+                }
+                
+                // Handle SUB TOTAL rows
+                const subtotalRow = targetSection.querySelector('.subtotal-row');
+                console.log('🔍 SUB TOTAL row found:', !!subtotalRow);
+                if (subtotalRow && data && Array.isArray(data)) {
+                    const subtotalItem = data.find(item => item.isSubtotal);
+                    console.log('🔍 SUB TOTAL item found:', subtotalItem);
+                    if (subtotalItem) {
+                        const cells = subtotalRow.querySelectorAll('.cost-cell');
+                        console.log('🔍 SUB TOTAL cells found:', cells.length);
+                        const maxColumns = Math.min(columns.length, cells.length);
+                        for (let cellIndex = 0; cellIndex < maxColumns; cellIndex++) {
+                            const column = columns[cellIndex];
+                            if (cells[cellIndex] && subtotalItem[column] !== undefined && subtotalItem[column] !== null) {
+                                cells[cellIndex].textContent = String(subtotalItem[column] || '');
+                                console.log(`✅ Updated SUB TOTAL cell ${cellIndex} (${column}):`, subtotalItem[column]);
+                            }
+                        }
+                        console.log('✅ Updated SUB TOTAL row for', sectionName, ':', subtotalItem);
+                    } else {
+                        console.log('❌ No SUB TOTAL item found in data');
+                    }
+                } else {
+                    console.log('❌ No SUB TOTAL row or data found');
                 }
             }
             
@@ -4365,6 +4673,11 @@
             let total = 0;
             if (data && Array.isArray(data)) {
                 data.forEach(item => {
+                    // Skip SUB TOTAL items when calculating
+                    if (item.isSubtotal) {
+                        return;
+                    }
+                    
                     if (item && item[costColumn] && item[costColumn] !== null && item[costColumn] !== undefined && !isNaN(parseFloat(item[costColumn]))) {
                         total += parseFloat(item[costColumn]);
                     }
@@ -4474,7 +4787,7 @@
             setTimeout(() => {
                 console.log('🔧 Attempting drag & drop initialization...');
                 try {
-                    initializeDragDrop();
+            initializeDragDrop();
                     console.log('✅ Drag & drop initialized successfully');
                 } catch (error) {
                     console.error('❌ Error initializing drag & drop:', error);
@@ -4495,13 +4808,13 @@
             
             // Add file input for click functionality
             try {
-                const fileInput = document.createElement('input');
-                fileInput.type = 'file';
-                fileInput.accept = '.xlsx,.xls,.xlsm,.csv';
-                fileInput.style.display = 'none';
-                fileInput.onchange = handleFileSelect;
-                fileInput.id = 'hiddenFileInput';
-                document.body.appendChild(fileInput);
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = '.xlsx,.xls,.xlsm,.csv';
+            fileInput.style.display = 'none';
+            fileInput.onchange = handleFileSelect;
+            fileInput.id = 'hiddenFileInput';
+            document.body.appendChild(fileInput);
                 console.log('✅ File input created successfully');
             } catch (error) {
                 console.error('❌ Error creating file input:', error);
@@ -4865,7 +5178,10 @@
                 showLoadingAnimation(`Loading FRESH data from Supabase and searching for ${filterType}: "${searchValue}"...`);
                 
                 // Load ALL data from Supabase
-                const response = await fetch(`/api/datatable/data/${connectionId}?table=databank&limit=999999`);
+                // Detect if running on localhost or Netlify
+                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const apiUrl = isLocalhost ? `/api/datatable/data/${connectionId}?table=databank&limit=999999` : `/.netlify/functions/datatable-data?table=databank&limit=999999`;
+                const response = await fetch(apiUrl);
                 const result = await response.json();
                 
                 if (result.data && result.data.length > 0) {
@@ -6277,8 +6593,8 @@
             console.log('Analyzing data for template detection...');
             
             // Check for Beanie template indicators
-            if (dataString.includes('yarn') || (dataString.includes('fabric') && dataString.includes('trim') && !dataString.includes('fabric/s'))) {
-                console.log('Beanie template detected based on YARN/FABRIC/TRIM sections');
+            if (dataString.includes('yarn') || dataString.includes('knitting') || (dataString.includes('fabric') && dataString.includes('trim') && !dataString.includes('fabric/s'))) {
+                console.log('Beanie template detected based on YARN/KNITTING/FABRIC/TRIM sections');
                 return 'beanie';
             }
             
@@ -6760,7 +7076,7 @@
                     existingData = [];
                 }
                 
-                const response = await fetch(`/api/datatable/query/${connectionId}`, {
+                const response = await apiCall(`/datatable-data?table=databank&limit=999999`, `/datatable/query/${connectionId}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -6941,10 +7257,10 @@
                         // Regular item
                         if (trimRows[regularItemCount]) {
                             const cells = trimRows[regularItemCount].querySelectorAll('.cost-cell');
-                            if (cells[0]) cells[0].textContent = item.material || '';
-                            if (cells[1]) cells[1].textContent = item.consumption || '';
-                            if (cells[2]) cells[2].textContent = item.price || '';
-                            if (cells[3]) cells[3].textContent = item.cost || '';
+                        if (cells[0]) cells[0].textContent = item.material || '';
+                        if (cells[1]) cells[1].textContent = item.consumption || '';
+                        if (cells[2]) cells[2].textContent = item.price || '';
+                        if (cells[3]) cells[3].textContent = item.cost || '';
                             
                             // Add to total for calculation
                             const cost = parseFloat(item.cost) || 0;
@@ -6987,10 +7303,10 @@
                         // Regular item
                         if (operationsRows[regularItemCount]) {
                             const cells = operationsRows[regularItemCount].querySelectorAll('.cost-cell');
-                            if (cells[0]) cells[0].textContent = item.operation || '';
-                            if (cells[1]) cells[1].textContent = item.time || '';
-                            if (cells[2]) cells[2].textContent = item.cost || '';
-                            if (cells[3]) cells[3].textContent = item.total || '';
+                        if (cells[0]) cells[0].textContent = item.operation || '';
+                        if (cells[1]) cells[1].textContent = item.time || '';
+                        if (cells[2]) cells[2].textContent = item.cost || '';
+                        if (cells[3]) cells[3].textContent = item.total || '';
                             
                             // Add to total for calculation
                             const cost = parseFloat(item.total) || 0;
@@ -7033,9 +7349,9 @@
                         // Regular item
                         if (packagingRows[regularItemCount]) {
                             const cells = packagingRows[regularItemCount].querySelectorAll('.cost-cell');
-                            if (cells[0]) cells[0].textContent = item.type || '';
-                            if (cells[1]) cells[1].textContent = item.notes || '';
-                            if (cells[2]) cells[2].textContent = item.cost || '';
+                        if (cells[0]) cells[0].textContent = item.type || '';
+                        if (cells[1]) cells[1].textContent = item.notes || '';
+                        if (cells[2]) cells[2].textContent = item.cost || '';
                             
                             // Add to total for calculation
                             const cost = parseFloat(item.cost) || 0;
@@ -7078,9 +7394,9 @@
                         // Regular item
                         if (overheadRows[regularItemCount]) {
                             const cells = overheadRows[regularItemCount].querySelectorAll('.cost-cell');
-                            if (cells[0]) cells[0].textContent = item.type || '';
-                            if (cells[1]) cells[1].textContent = item.notes || '';
-                            if (cells[2]) cells[2].textContent = item.cost || '';
+                        if (cells[0]) cells[0].textContent = item.type || '';
+                        if (cells[1]) cells[1].textContent = item.notes || '';
+                        if (cells[2]) cells[2].textContent = item.cost || '';
                             
                             // Add to total for calculation
                             const cost = parseFloat(item.cost) || 0;
@@ -7317,6 +7633,128 @@
         function showStatus(elementId, message, type) {
             const element = document.getElementById(elementId);
             element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        // Save beanie data to database
+        async function saveBeanieToDatabase() {
+            const saveBtn = document.getElementById('saveBeanieBtn');
+            const originalText = saveBtn.innerHTML;
+            
+            try {
+                // Check if we have parsed data
+                if (!window.currentParsedData) {
+                    alert('No data to save. Please upload and parse an Excel file first.');
+                    return;
+                }
+
+                // Check if we have a database connection
+                const connectionId = localStorage.getItem('currentConnectionId');
+                if (!connectionId) {
+                    alert('No database connection found. Please connect to database first.');
+                    return;
+                }
+
+                // Disable button and show loading
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '💾 Saving...';
+
+                // Prepare data for saving
+                const excelData = {
+                    data: window.currentParsedData,
+                    images: window.currentParsedData.images || []
+                };
+
+                // Send to backend
+                const response = await apiCall('/beanie-data-save', '/beanie/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        connectionId: connectionId,
+                        excelData: excelData
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('✅ Beanie cost data saved successfully to database!');
+                    console.log('Saved data:', result.data);
+                } else {
+                    alert(`❌ Failed to save data: ${result.error || result.message}`);
+                    console.error('Save error:', result);
+                }
+
+            } catch (error) {
+                console.error('Error saving to database:', error);
+                alert(`❌ Error saving to database: ${error.message}`);
+            } finally {
+                // Re-enable button
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalText;
+            }
+        }
+
+        // Save ballcaps data to database
+        async function saveBallCapsToDatabase() {
+            const saveBtn = document.getElementById('saveBallCapsBtn');
+            const originalText = saveBtn.innerHTML;
+            
+            try {
+                // Check if we have parsed data
+                if (!window.currentParsedData) {
+                    alert('No data to save. Please upload and parse an Excel file first.');
+                    return;
+                }
+
+                // Check if we have a database connection
+                const connectionId = localStorage.getItem('currentConnectionId');
+                if (!connectionId) {
+                    alert('No database connection found. Please connect to database first.');
+                    return;
+                }
+
+                // Disable button and show loading
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '💾 Saving...';
+
+                // Prepare data for saving
+                const excelData = {
+                    data: window.currentParsedData,
+                    images: window.currentParsedData.images || []
+                };
+
+                // Send to backend
+                const response = await apiCall('/ballcaps-data-save', '/ballcaps/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        connectionId: connectionId,
+                        excelData: excelData
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('✅ Ballcaps cost data saved successfully to database!');
+                    console.log('Saved data:', result.data);
+                } else {
+                    alert(`❌ Failed to save data: ${result.error || result.message}`);
+                    console.error('Save error:', result);
+                }
+
+            } catch (error) {
+                console.error('Error saving to database:', error);
+                alert(`❌ Error saving to database: ${error.message}`);
+            } finally {
+                // Re-enable button
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalText;
+            }
         }
 
     </script>
