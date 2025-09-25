@@ -148,9 +148,9 @@ exports.handler = async (event, context) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Use the provided table name or default to 'databank'
+    // Use the provided table name or default to 'databank' - FORCE REDEPLOY
     const finalTableName = tableName || 'databank';
-    console.log('Using table name:', finalTableName);
+    console.log('=== FORCE REDEPLOY - Using table name:', finalTableName, '===');
 
     // Check if table exists by trying to query it
     const { error: tableError } = await supabase
