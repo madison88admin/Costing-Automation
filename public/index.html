@@ -1412,6 +1412,7 @@
                 transform: scale(0.8);
             }
         }
+
     </style>
 </head>
 <body>
@@ -1958,9 +1959,6 @@
                         </div>
                     </div>
                     
-                    <button class="import-template-button" onclick="handleTemplateImport()">
-                        Import
-                    </button>
                 </div>
             </div>
         </div>
@@ -2302,9 +2300,6 @@
                         </div>
                     </div>
                     
-                    <button class="import-template-button" onclick="handleTemplateImport()">
-                        Import
-                    </button>
                 </div>
             </div>
         </div>
@@ -2926,22 +2921,31 @@
 
         // Helper function to make API calls with fallback
         async function apiCall(netlifyEndpoint, localEndpoint, options = {}) {
-            const netlifyUrl = `/.netlify/functions${netlifyEndpoint}`;
-            const localUrl = `/api${localEndpoint}`;
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
             
-            try {
-                // Try Netlify function first
-                console.log('🔄 Trying Netlify function:', netlifyUrl);
-                const response = await fetch(netlifyUrl, options);
-                
-                if (!response.ok) {
-                    throw new Error(`Netlify function failed: ${response.status}`);
-                }
-                return response;
-            } catch (netlifyError) {
-                console.log('⚠️ Netlify function failed, trying local API:', netlifyError.message);
-                // Fallback to local API
+            if (isLocalhost) {
+                // Use local API directly when running on localhost
+                const localUrl = `/api${localEndpoint}`;
+                console.log('🔄 Using local API:', localUrl);
                 return await fetch(localUrl, options);
+            } else {
+                // Try Netlify function first for production
+                const netlifyUrl = `/.netlify/functions${netlifyEndpoint}`;
+                const localUrl = `/api${localEndpoint}`;
+                
+                try {
+                    console.log('🔄 Trying Netlify function:', netlifyUrl);
+                    const response = await fetch(netlifyUrl, options);
+                    
+                    if (!response.ok) {
+                        throw new Error(`Netlify function failed: ${response.status}`);
+                    }
+                    return response;
+                } catch (netlifyError) {
+                    console.log('⚠️ Netlify function failed, trying local API:', netlifyError.message);
+                    // Fallback to local API
+                    return await fetch(localUrl, options);
+                }
             }
         }
 
@@ -4166,30 +4170,6 @@
             }
         }
 
-        function handleTemplateImport() {
-            // Check if a file has been uploaded (more reliable than checking UI elements)
-            console.log('Checking for uploaded file:', uploadedFile);
-            
-            if (uploadedFile) {
-                // File has been selected, proceed with import
-                console.log('Importing file:', uploadedFile.name, uploadedFile.type);
-                
-                // Show loading state
-                const importButton = document.querySelector('.import-template-button');
-                if (importButton) {
-                    importButton.textContent = 'Importing...';
-                    importButton.disabled = true;
-                }
-                
-                // Process the file and fill the form
-                processImportedFile();
-                
-            } else {
-                // No file selected, show message
-                console.log('No file found in uploadedFile variable');
-                alert('Please drop a file in the drag & drop area first!');
-            }
-        }
 
         // Store the uploaded file globally
         let uploadedFile = null;
@@ -7285,6 +7265,10 @@
             // Populate operations section
             if (parsedData.operations && parsedData.operations.length > 0) {
                 const operationsRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(5) .cost-row:not(.header-row):not(.subtotal-row)');
+                console.log('🔍 OPERATIONS DEBUG:');
+                console.log('- Found operations data:', parsedData.operations.length, 'items');
+                console.log('- Found DOM rows:', operationsRows.length);
+                console.log('- Operations data:', parsedData.operations);
                 let regularItemCount = 0;
                 let operationsTotal = 0;
                 
@@ -7331,6 +7315,10 @@
             // Populate packaging section
             if (parsedData.packaging && parsedData.packaging.length > 0) {
                 const packagingRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(6) .cost-row:not(.header-row):not(.subtotal-row)');
+                console.log('🔍 PACKAGING DEBUG:');
+                console.log('- Found packaging data:', parsedData.packaging.length, 'items');
+                console.log('- Found DOM rows:', packagingRows.length);
+                console.log('- Packaging data:', parsedData.packaging);
                 let regularItemCount = 0;
                 let packagingTotal = 0;
                 
@@ -7376,6 +7364,10 @@
             // Populate overhead section
             if (parsedData.overhead && parsedData.overhead.length > 0) {
                 const overheadRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(7) .cost-row:not(.header-row):not(.subtotal-row)');
+                console.log('🔍 OVERHEAD DEBUG:');
+                console.log('- Found overhead data:', parsedData.overhead.length, 'items');
+                console.log('- Found DOM rows:', overheadRows.length);
+                console.log('- Overhead data:', parsedData.overhead);
                 let regularItemCount = 0;
                 let overheadTotal = 0;
                 
@@ -7508,13 +7500,12 @@
         function calculateBallCapsGrandTotals(parsedData) {
             console.log('Calculating BallCaps grand totals...');
             
-            // Calculate material total (fabric + trim)
-            const materialTotal = calculateMaterialTotal(parsedData);
-            console.log('Calculated Material Total:', materialTotal);
+            // Use the parsed totals from Excel if available, otherwise calculate
+            const materialTotal = parsedData.totalMaterialCost || calculateMaterialTotal(parsedData);
+            console.log('Material Total (from Excel):', parsedData.totalMaterialCost, 'Calculated:', calculateMaterialTotal(parsedData));
             
-            // Calculate factory total (embroidery + operations + packaging + overhead)
-            const factoryTotal = calculateFactoryTotal(parsedData);
-            console.log('Calculated Factory Total:', factoryTotal);
+            const factoryTotal = parsedData.totalFactoryCost || calculateFactoryTotal(parsedData);
+            console.log('Factory Total (from Excel):', parsedData.totalFactoryCost, 'Calculated:', calculateFactoryTotal(parsedData));
             
             return { materialTotal, factoryTotal };
         }
@@ -7527,6 +7518,11 @@
                 total += parsedData.fabric.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
             }
             
+            // Add other fabric/s - trim/s costs (stored as embroidery data)
+            if (parsedData.embroidery && parsedData.embroidery.length > 0) {
+                total += parsedData.embroidery.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
+            }
+            
             // Add trim costs
             if (parsedData.trim && parsedData.trim.length > 0) {
                 total += parsedData.trim.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
@@ -7537,11 +7533,6 @@
 
         function calculateFactoryTotal(parsedData) {
             let total = 0;
-            
-            // Add other fabric/s - trim/s costs (formerly embroidery)
-            if (parsedData.embroidery && parsedData.embroidery.length > 0) {
-                total += parsedData.embroidery.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
-            }
             
             // Add operations costs
             if (parsedData.operations && parsedData.operations.length > 0) {
@@ -7647,12 +7638,7 @@
                     return;
                 }
 
-                // Check if we have a database connection
-                const connectionId = localStorage.getItem('currentConnectionId');
-                if (!connectionId) {
-                    alert('No database connection found. Please connect to database first.');
-                    return;
-                }
+                // Database connection is handled by the server
 
                 // Disable button and show loading
                 saveBtn.disabled = true;
@@ -7696,6 +7682,7 @@
             }
         }
 
+
         // Save ballcaps data to database
         async function saveBallCapsToDatabase() {
             const saveBtn = document.getElementById('saveBallCapsBtn');
@@ -7708,12 +7695,7 @@
                     return;
                 }
 
-                // Check if we have a database connection
-                const connectionId = localStorage.getItem('currentConnectionId');
-                if (!connectionId) {
-                    alert('No database connection found. Please connect to database first.');
-                    return;
-                }
+                // Database connection is handled by the server
 
                 // Disable button and show loading
                 saveBtn.disabled = true;
