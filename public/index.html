@@ -3277,7 +3277,7 @@
                 const timestamp = new Date().getTime();
                 // Detect if running on localhost or Netlify
                 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                const apiUrl = isLocalhost ? `/api/datatable/data/${connectionId}?table=databank&limit=999999&_t=${timestamp}` : `/.netlify/functions/datatable-data?table=databank&limit=999999&_t=${timestamp}`;
+                const apiUrl = isLocalhost ? `/api/datatable/data/${connectionId}?table=costs&limit=999999&_t=${timestamp}` : `/.netlify/functions/datatable-data?table=costs&limit=999999&_t=${timestamp}`;
                 const response = await fetch(apiUrl);
                 const result = await response.json();
                 
@@ -3324,7 +3324,7 @@
                     showStatus('tableData', `📊 Scanned entire database: ${result.data.length} records loaded (Total: ${totalRecords} records)`, 'success');
                 } else {
                     console.log('No data in result');
-                    showStatus('tableData', 'No data found in databank table', 'error');
+                    showStatus('tableData', 'No data found in costs table', 'error');
                 }
             } catch (error) {
                 console.error('Error loading databank data:', error);
@@ -3352,10 +3352,10 @@
                 importTable.innerHTML += `<option value="${table}">${table}</option>`;
             });
             
-            // Auto-select databank table if it exists
-            if (tables.includes('databank')) {
-                selectedTable.value = 'databank';
-                importTable.value = 'databank';
+            // Auto-select costs table if it exists
+            if (tables.includes('costs')) {
+                selectedTable.value = 'costs';
+                importTable.value = 'costs';
             }
         }
 
@@ -3431,7 +3431,7 @@
                 tableElement.innerHTML = `
                     <div style="text-align: center; padding: 40px; color: #6c757d;">
                         <h3>📭 No Data Available</h3>
-                        <p>No records found in the databank table. Try importing some data!</p>
+                        <p>No records found in the costs table. Try importing some data!</p>
                         <button onclick="loadDatabankData()" style="margin-top: 20px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
                             🔄 Try Loading Data Again
                         </button>
@@ -3843,7 +3843,7 @@
                 // Get just the count without loading data
                 // Detect if running on localhost or Netlify
                 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                const apiUrl = isLocalhost ? `/api/datatable/data/${connectionId}?table=databank&limit=1` : `/.netlify/functions/datatable-data?table=databank&limit=1`;
+                const apiUrl = isLocalhost ? `/api/datatable/data/${connectionId}?table=costs&limit=1` : `/.netlify/functions/datatable-data?table=costs&limit=1`;
                 const response = await fetch(apiUrl);
                 const result = await response.json();
                 
@@ -5140,7 +5140,7 @@
                 // Load ALL data from Supabase
                 // Detect if running on localhost or Netlify
                 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                const apiUrl = isLocalhost ? `/api/datatable/data/${connectionId}?table=databank&limit=999999` : `/.netlify/functions/datatable-data?table=databank&limit=999999`;
+                const apiUrl = isLocalhost ? `/api/datatable/data/${connectionId}?table=costs&limit=999999` : `/.netlify/functions/datatable-data?table=costs&limit=999999`;
                 const response = await fetch(apiUrl);
                 const result = await response.json();
                 
@@ -7037,11 +7037,11 @@
                     existingData = [];
                 }
                 
-                const response = await apiCall(`/datatable-data?table=databank&limit=999999`, `/datatable/query/${connectionId}`, {
+                const response = await apiCall(`/datatable-data?table=costs&limit=999999`, `/datatable/query/${connectionId}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        table: 'databank',
+                        table: 'costs',
                         select: 'season, customer, style_number, style_name',
                         limit: 999999
                     })

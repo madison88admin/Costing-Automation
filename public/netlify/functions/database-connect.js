@@ -47,7 +47,7 @@ exports.handler = async (event, context) => {
 
     // Test the connection by querying a simple table
     const { data, error } = await supabase
-      .from('costs')
+      .from('databank')
       .select('*')
       .limit(1);
 
@@ -73,7 +73,7 @@ exports.handler = async (event, context) => {
         message: 'Connected to Supabase successfully',
         connectionId: 'supabase-connection',
         database: 'Supabase',
-        tables: ['costs', 'cost_items']
+        tables: ['databank', 'beanie_costs']
       })
     };
 

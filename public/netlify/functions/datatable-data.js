@@ -5,7 +5,7 @@ exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
     'Content-Type': 'application/json'
   };
 
@@ -18,8 +18,8 @@ exports.handler = async (event, context) => {
     };
   }
 
-  // Only allow POST requests
-  if (event.httpMethod !== 'POST') {
+  // Only allow GET requests
+  if (event.httpMethod !== 'GET') {
     return {
       statusCode: 405,
       headers,
@@ -28,6 +28,20 @@ exports.handler = async (event, context) => {
   }
 
   try {
+    // Parse query parameters
+    const { table, limit = 1000, offset = 0 } = event.queryStringParameters || {};
+
+    if (!table) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({
+          success: false,
+          error: 'Table name is required'
+        })
+      };
+    }
+
     // Initialize Supabase client
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_ANON_KEY;
@@ -45,35 +59,39 @@ exports.handler = async (event, context) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Test the connection by querying a simple table
-    const { data, error } = await supabase
-      .from('costs')
+    // Get data from the specified table
+    const { data: records, error } = await supabase
+      .from(table)
       .select('*')
-      .limit(1);
+      .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
 
     if (error) {
-      console.error('Supabase connection error:', error);
+      console.error('Supabase query error:', error);
       return {
         statusCode: 500,
         headers,
         body: JSON.stringify({
           success: false,
-          error: 'Failed to connect to database',
+          error: 'Failed to fetch data from database',
           details: error.message
         })
       };
     }
 
-    // Return connection success
+    // Get total count
+    const { count } = await supabase
+      .from(table)
+      .select('*', { count: 'exact', head: true });
+
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
         success: true,
-        message: 'Connected to Supabase successfully',
-        connectionId: 'supabase-connection',
-        database: 'Supabase',
-        tables: ['costs', 'cost_items']
+        data: records,
+        total: count,
+        limit: parseInt(limit),
+        offset: parseInt(offset)
       })
     };
 
