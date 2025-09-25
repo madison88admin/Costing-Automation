@@ -61,6 +61,7 @@ exports.handler = async (event, context) => {
     
     console.log('Request body received:', JSON.stringify(requestBody, null, 2));
     console.log('Request body keys:', Object.keys(requestBody));
+    console.log('=== FUNCTION DEPLOYED VERSION TEST ===');
     
     // Handle multiple formats: old format (data, tableName), new format (connectionId, excelData), and direct data
     let data, tableName;
@@ -149,6 +150,7 @@ exports.handler = async (event, context) => {
 
     // Use the provided table name or default to 'databank'
     const finalTableName = tableName || 'databank';
+    console.log('Using table name:', finalTableName);
 
     // Check if table exists by trying to query it
     const { error: tableError } = await supabase
