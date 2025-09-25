@@ -196,22 +196,71 @@ exports.handler = async (event, context) => {
       };
     }
     
+    // Map beanie data to databank table columns
     const insertData = {
-      customer: data.customer || '',
       season: data.season || '',
+      customer: data.customer || '',
       style_number: data.styleNumber || data.style_number || '',
       style_name: data.styleName || data.style_name || '',
-      costed_quantity: data.costedQuantity || data.costed_quantity || 0,
-      leadtime: data.leadtime || '',
-      yarn: JSON.stringify(data.yarn || []),
-      fabric: JSON.stringify(data.fabric || []),
-      trim: JSON.stringify(data.trim || []),
-      knitting: JSON.stringify(data.knitting || []),
-      operations: JSON.stringify(data.operations || []),
-      packaging: JSON.stringify(data.packaging || []),
-      overhead: JSON.stringify(data.overhead || []),
-      created_at: new Date().toISOString()
+      main_material: data.yarn && data.yarn[0] ? data.yarn[0].material : '',
+      material_consumption: data.yarn && data.yarn[0] ? data.yarn[0].consumption : '',
+      material_price: data.yarn && data.yarn[0] ? data.yarn[0].price : '',
+      trim_cost: data.trim && data.trim.length > 0 ? data.trim.reduce((sum, item) => sum + parseFloat(item.cost || 0), 0) : 0,
+      total_material_cost: parseFloat(data.totalMaterialCost || 0),
+      knitting_machine: data.knitting && data.knitting[0] ? data.knitting[0].machine : '',
+      knitting_time: data.knitting && data.knitting[0] ? data.knitting[0].time : '',
+      knitting_cpm: data.knitting && data.knitting[0] ? data.knitting[0].sah : '',
+      knitting_cost: data.knitting && data.knitting[0] ? parseFloat(data.knitting[0].cost || 0) : 0,
+      ops_cost: data.operations && data.operations.length > 0 ? data.operations.reduce((sum, item) => sum + parseFloat(item.cost || 0), 0) : 0,
+      knitting_ops_cost: 0, // Will calculate below
+      packaging: data.packaging && data.packaging[0] ? parseFloat(data.packaging[0].cost || 0) : 0,
+      oh: 0, // Will calculate from overhead
+      profit: 0, // Will calculate from overhead
+      fty_adjustment: 0,
+      ttl_fty_cost: parseFloat(data.totalFactoryCost || 0),
+      main_material_cost: parseFloat(data.totalMaterialCost || 0),
+      label: '',
+      trims: JSON.stringify(data.trim || []),
+      packaging2: JSON.stringify(data.packaging || []),
+      total_material: parseFloat(data.totalMaterialCost || 0),
+      material_code: data.yarn && data.yarn[0] ? data.yarn[0].material : '',
+      material_consumption3: data.yarn && data.yarn[0] ? data.yarn[0].consumption : '',
+      material_price4: data.yarn && data.yarn[0] ? data.yarn[0].price : '',
+      finance_percent: 0,
+      finance_usd: 0,
+      smv: 0,
+      average_efficiency: 0,
+      oh2: 0,
+      oh_ratio: 0,
+      bom_cost_tot_mat_finance: parseFloat(data.totalMaterialCost || 0),
+      direct_labor_costs: 0,
+      labor_oh_usd: 0,
+      bom_lo: 0,
+      others: 0,
+      profit_percent: 0,
+      profit_usd: 0,
+      fob_adj_usd: 0,
+      total_lop: parseFloat(data.totalFactoryCost || 0),
+      product_testing_cost: 0,
+      freight_to_port: 0,
+      total_fob: parseFloat(data.totalFactoryCost || 0),
+      sample_wt_with_tag_qc_sample_check_form_grams: 0,
+      remarks: `Beanie data imported on ${new Date().toISOString()}`
     };
+
+    // Calculate derived fields
+    insertData.knitting_ops_cost = insertData.knitting_cost + insertData.ops_cost;
+    
+    // Calculate overhead and profit from overhead array
+    if (data.overhead && data.overhead.length > 0) {
+      data.overhead.forEach(item => {
+        if (item.type === 'PROFIT') {
+          insertData.profit = parseFloat(item.cost || 0);
+        } else if (item.type.includes('OVERHEAD') || item.type.includes('OH')) {
+          insertData.oh = parseFloat(item.cost || 0);
+        }
+      });
+    }
     console.log('Insert data prepared:', JSON.stringify(insertData, null, 2));
 
     // Insert data into Supabase
