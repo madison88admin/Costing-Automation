@@ -1,11 +1,11 @@
 [build]
-  # Build command - copy functions to deployment
+  # Build command - simple command for static site
   command = "npm run build:netlify"
   
   # Directory to publish - Netlify will serve from the public folder
   publish = "public"
   
-  # Functions directory for serverless functions (relative to publish directory)
+  # Functions directory for serverless functions
   functions = "netlify/functions"
 
 [build.environment]

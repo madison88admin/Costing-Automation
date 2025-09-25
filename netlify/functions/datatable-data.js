@@ -43,7 +43,7 @@ exports.handler = async (event, context) => {
     }
 
     // Initialize Supabase client
-    const supabaseUrl = process.env.SUPABASE_DATABASE_URL || process.env.SUPABASE_URL;
+    const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_ANON_KEY;
     
     if (!supabaseUrl || !supabaseKey) {

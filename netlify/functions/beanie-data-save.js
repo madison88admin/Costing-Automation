@@ -77,7 +77,7 @@ exports.handler = async (event, context) => {
       // Format from frontend (connectionId may be null)
       console.log('Using frontend format');
       data = requestBody.excelData.data;
-      tableName = requestBody.excelData.tableName || 'costs';
+      tableName = requestBody.excelData.tableName || 'beanie_costs';
     } else {
       console.log('No matching format found');
       return {
@@ -102,7 +102,7 @@ exports.handler = async (event, context) => {
     }
 
     // Initialize Supabase client
-    const supabaseUrl = process.env.SUPABASE_DATABASE_URL || process.env.SUPABASE_URL;
+    const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_ANON_KEY;
     
     console.log('Supabase URL:', supabaseUrl ? 'Set' : 'Missing');
@@ -126,7 +126,7 @@ exports.handler = async (event, context) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Use the provided table name or default to 'beanie_costs'
-    const finalTableName = tableName || 'costs';
+    const finalTableName = tableName || 'beanie_costs';
 
     // Check if table exists by trying to query it
     const { error: tableError } = await supabase
@@ -154,9 +154,13 @@ exports.handler = async (event, context) => {
       style_name: data.styleName,
       costed_quantity: data.costedQuantity,
       leadtime: data.leadtime,
-      total_material_cost: parseFloat(data.materialTotal) || 0,
-      total_factory_cost: parseFloat(data.factoryTotal) || 0,
-      product_type: 'beanie',
+      yarn: JSON.stringify(data.yarn || []),
+      fabric: JSON.stringify(data.fabric || []),
+      trim: JSON.stringify(data.trim || []),
+      knitting: JSON.stringify(data.knitting || []),
+      operations: JSON.stringify(data.operations || []),
+      packaging: JSON.stringify(data.packaging || []),
+      overhead: JSON.stringify(data.overhead || []),
       created_at: new Date().toISOString()
     };
     console.log('Insert data prepared:', JSON.stringify(insertData, null, 2));
@@ -178,118 +182,6 @@ exports.handler = async (event, context) => {
           details: insertError
         })
       };
-    }
-
-    // Save detailed cost items to cost_items table
-    if (result && result.length > 0) {
-      const costId = result[0].id;
-      const costItems = [];
-      
-      // Add yarn items
-      if (data.yarn && data.yarn.length > 0) {
-        data.yarn.forEach(item => {
-          costItems.push({
-            cost_id: costId,
-            section: 'yarn',
-            material: item.material || '',
-            consumption: item.consumption || '',
-            price: parseFloat(item.price) || 0,
-            cost: parseFloat(item.cost) || 0
-          });
-        });
-      }
-      
-      // Add fabric items
-      if (data.fabric && data.fabric.length > 0) {
-        data.fabric.forEach(item => {
-          costItems.push({
-            cost_id: costId,
-            section: 'fabric',
-            material: item.material || '',
-            consumption: item.consumption || '',
-            price: parseFloat(item.price) || 0,
-            cost: parseFloat(item.cost) || 0
-          });
-        });
-      }
-      
-      // Add trim items
-      if (data.trim && data.trim.length > 0) {
-        data.trim.forEach(item => {
-          costItems.push({
-            cost_id: costId,
-            section: 'trim',
-            material: item.material || '',
-            consumption: item.consumption || '',
-            price: parseFloat(item.price) || 0,
-            cost: parseFloat(item.cost) || 0
-          });
-        });
-      }
-      
-      // Add knitting items
-      if (data.knitting && data.knitting.length > 0) {
-        data.knitting.forEach(item => {
-          costItems.push({
-            cost_id: costId,
-            section: 'knitting',
-            operation: item.operation || '',
-            price: parseFloat(item.price) || 0,
-            cost: parseFloat(item.cost) || 0
-          });
-        });
-      }
-      
-      // Add operations items
-      if (data.operations && data.operations.length > 0) {
-        data.operations.forEach(item => {
-          costItems.push({
-            cost_id: costId,
-            section: 'operations',
-            operation: item.operation || '',
-            price: parseFloat(item.price) || 0,
-            cost: parseFloat(item.cost) || 0
-          });
-        });
-      }
-      
-      // Add packaging items
-      if (data.packaging && data.packaging.length > 0) {
-        data.packaging.forEach(item => {
-          costItems.push({
-            cost_id: costId,
-            section: 'packaging',
-            operation: item.operation || '',
-            price: parseFloat(item.price) || 0,
-            cost: parseFloat(item.cost) || 0
-          });
-        });
-      }
-      
-      // Add overhead items
-      if (data.overhead && data.overhead.length > 0) {
-        data.overhead.forEach(item => {
-          costItems.push({
-            cost_id: costId,
-            section: 'overhead',
-            operation: item.operation || '',
-            price: parseFloat(item.price) || 0,
-            cost: parseFloat(item.cost) || 0
-          });
-        });
-      }
-      
-      // Insert cost items if any exist
-      if (costItems.length > 0) {
-        const { error: itemsError } = await supabase
-          .from('cost_items')
-          .insert(costItems);
-          
-        if (itemsError) {
-          console.error('Error inserting cost items:', itemsError);
-          // Don't fail the whole operation, just log the error
-        }
-      }
     }
 
     return {
