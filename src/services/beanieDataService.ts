@@ -76,7 +76,7 @@ export class BeanieDataService {
 
       logger.info('Beanie cost data saved successfully to databank table');
 
-      return {
+    return {
         success: true,
         message: 'Beanie cost data saved successfully to database',
         data: costRecord

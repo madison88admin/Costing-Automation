@@ -61,7 +61,7 @@ exports.handler = async (event, context) => {
     
     console.log('Request body received:', JSON.stringify(requestBody, null, 2));
     console.log('Request body keys:', Object.keys(requestBody));
-    console.log('=== FUNCTION DEPLOYED VERSION TEST ===');
+    console.log('=== BALLCAPS FUNCTION DEPLOYED VERSION TEST ===');
     
     // Handle multiple formats: old format (data, tableName), new format (connectionId, excelData), and direct data
     let data, tableName;
@@ -150,7 +150,7 @@ exports.handler = async (event, context) => {
 
     // Use the provided table name or default to 'databank' - FORCE REDEPLOY
     const finalTableName = tableName || 'databank';
-    console.log('=== FORCE REDEPLOY - Using table name:', finalTableName, '===');
+    console.log('=== BALLCAPS FORCE REDEPLOY - Using table name:', finalTableName, '===');
 
     // Check if table exists by trying to query it
     const { error: tableError } = await supabase
@@ -196,21 +196,21 @@ exports.handler = async (event, context) => {
       };
     }
     
-    // Map beanie data to databank table columns
+    // Map ballcaps data to databank table columns
     const insertData = {
       season: data.season || '',
       customer: data.customer || '',
       style_number: data.styleNumber || data.style_number || '',
       style_name: data.styleName || data.style_name || '',
-      main_material: data.yarn && data.yarn[0] ? data.yarn[0].material : '',
-      material_consumption: data.yarn && data.yarn[0] ? data.yarn[0].consumption : '',
-      material_price: data.yarn && data.yarn[0] ? data.yarn[0].price : '',
+      main_material: data.fabric && data.fabric[0] ? data.fabric[0].material : '',
+      material_consumption: data.fabric && data.fabric[0] ? data.fabric[0].consumption : '',
+      material_price: data.fabric && data.fabric[0] ? data.fabric[0].price : '',
       trim_cost: data.trim && data.trim.length > 0 ? data.trim.reduce((sum, item) => sum + parseFloat(item.cost || 0), 0) : 0,
       total_material_cost: parseFloat(data.totalMaterialCost || 0),
-      knitting_machine: data.knitting && data.knitting[0] ? data.knitting[0].machine : '',
-      knitting_time: data.knitting && data.knitting[0] ? data.knitting[0].time : '',
-      knitting_cpm: data.knitting && data.knitting[0] ? data.knitting[0].sah : '',
-      knitting_cost: data.knitting && data.knitting[0] ? parseFloat(data.knitting[0].cost || 0) : 0,
+      knitting_machine: '', // Ballcaps don't have knitting
+      knitting_time: '',
+      knitting_cpm: '',
+      knitting_cost: 0,
       ops_cost: data.operations && data.operations.length > 0 ? data.operations.reduce((sum, item) => sum + parseFloat(item.cost || 0), 0) : 0,
       knitting_ops_cost: 0, // Will calculate below
       packaging: data.packaging && data.packaging[0] ? parseFloat(data.packaging[0].cost || 0) : 0,
@@ -223,9 +223,9 @@ exports.handler = async (event, context) => {
       trims: JSON.stringify(data.trim || []),
       packaging2: JSON.stringify(data.packaging || []),
       total_material: parseFloat(data.totalMaterialCost || 0),
-      material_code: data.yarn && data.yarn[0] ? data.yarn[0].material : '',
-      material_consumption3: data.yarn && data.yarn[0] ? data.yarn[0].consumption : '',
-      material_price4: data.yarn && data.yarn[0] ? data.yarn[0].price : '',
+      material_code: data.fabric && data.fabric[0] ? data.fabric[0].material : '',
+      material_consumption3: data.fabric && data.fabric[0] ? data.fabric[0].consumption : '',
+      material_price4: data.fabric && data.fabric[0] ? data.fabric[0].price : '',
       finance_percent: 0,
       finance_usd: 0,
       smv: 0,
@@ -245,7 +245,7 @@ exports.handler = async (event, context) => {
       freight_to_port: 0,
       total_fob: parseFloat(data.totalFactoryCost || 0),
       sample_wt_with_tag_qc_sample_check_form_grams: 0,
-      remarks: `Beanie data imported on ${new Date().toISOString()}`
+      remarks: `Ballcaps data imported on ${new Date().toISOString()}`
     };
 
     // Calculate derived fields
@@ -276,8 +276,7 @@ exports.handler = async (event, context) => {
         headers,
         body: JSON.stringify({
           success: false,
-          error: `Failed to save data to database: ${insertError.message}`,
-          details: insertError
+          error: 'Failed to save data to database'
         })
       };
     }
@@ -287,7 +286,7 @@ exports.handler = async (event, context) => {
       headers,
       body: JSON.stringify({
         success: true,
-        message: 'Beanie data saved successfully',
+        message: 'Ballcaps data saved successfully to databank',
         data: result
       })
     };

@@ -17,18 +17,18 @@
         // Fallback XLSX loading if CDN fails
         window.addEventListener('load', function() {
             if (typeof XLSX === 'undefined') {
-                console.warn('⚠️ Primary XLSX CDN failed, trying fallback...');
+                console.warn('Primary XLSX CDN failed, trying fallback...');
                 const fallbackScript = document.createElement('script');
                 fallbackScript.src = 'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js';
                 fallbackScript.onload = function() {
-                    console.log('✅ Fallback XLSX library loaded successfully');
+                    console.log('Fallback XLSX library loaded successfully');
                 };
                 fallbackScript.onerror = function() {
                     console.error('❌ Both XLSX CDN sources failed to load');
                 };
                 document.head.appendChild(fallbackScript);
             } else {
-                console.log('✅ Primary XLSX CDN loaded successfully');
+                console.log('Primary XLSX CDN loaded successfully');
             }
         });
     </script>
@@ -1477,7 +1477,7 @@
             <button onclick="connectDatabase()" id="connectButton">Connect to Database</button>
             <div id="connectionStatus"></div>
             <div id="autoConnectStatus" style="display: block;">
-                <div class="loading">🔄 Auto-connecting to Supabase...</div>
+                <div class="loading">Auto-connecting to Supabase...</div>
             </div>
         </div>
 
@@ -1518,7 +1518,7 @@
                         Clear
                     </button>
                     <button class="import-button" onclick="exportToExcel()">
-                        📊 Export
+                        Export
                     </button>
                 </div>
             </div>
@@ -1573,7 +1573,7 @@
                 </div>
                 <div class="header-buttons">
                     <button class="save-button" onclick="saveBeanieToDatabase()" id="saveBeanieBtn">
-                        💾 Save to Database
+                        Save to Database
                     </button>
                 <button class="back-button" onclick="goBackToSelection()">
                     ← Back to Selection
@@ -1583,7 +1583,7 @@
             
             <div class="file-upload" onclick="document.getElementById('fileInput').click()">
                     <div class="file-upload-content">
-                        <div class="file-upload-icon">📁</div>
+                        <div class="file-upload-icon">📄</div>
                         <div class="file-upload-text">Click to select your file</div>
                         <div class="file-upload-subtext">Drag and drop or click to browse</div>
                         <div class="supported-formats">
@@ -1601,28 +1601,6 @@
                 <input type="file" id="fileInput" accept="*/*" style="display: none;" onchange="handleFileSelect(event)">
             </div>
             
-            <!-- Template Detection Info -->
-            <div class="template-info" style="background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid rgba(255, 255, 255, 0.2);">
-                <h4 style="color: white; margin-bottom: 15px;">🎯 Supported Templates</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px;">
-                        <h5 style="color: #4CAF50; margin-bottom: 10px;">✅ Beanie Template</h5>
-                        <ul style="color: rgba(255, 255, 255, 0.9); font-size: 14px; margin: 0; padding-left: 20px;">
-                            <li>YARN section</li>
-                            <li>FABRIC section</li>
-                            <li>TRIM section</li>
-                        </ul>
-                    </div>
-                    <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px;">
-                        <h5 style="color: #4CAF50; margin-bottom: 10px;">✅ BallCaps Template</h5>
-                        <ul style="color: rgba(255, 255, 255, 0.9); font-size: 14px; margin: 0; padding-left: 20px;">
-                            <li>FABRIC section</li>
-                            <li>OTHER FABRIC/S - TRIM/S section</li>
-                            <li>TRIM section</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
 
             <div class="cost-breakdown-content">
                 <!-- Left Side - Cost Breakdown -->
@@ -1953,7 +1931,7 @@
 
                     <div class="drag-drop-area">
                         <div class="drag-drop-content">
-                            <div class="drag-drop-icon">📁</div>
+                            <div class="drag-drop-icon">📄</div>
                             <div class="drag-drop-text">drag & drop<br>or click to select</div>
                             <div class="file-formats">CSV • XLSX • XLSM</div>
                         </div>
@@ -1972,7 +1950,7 @@
                 </div>
                 <div class="header-buttons">
                     <button class="save-button" onclick="saveBallCapsToDatabase()" id="saveBallCapsBtn">
-                        💾 Save to Database
+                        Save to Database
                     </button>
                 <button class="back-button" onclick="goBackToSelection()">
                     ← Back to Selection
@@ -2294,7 +2272,7 @@
 
                     <div class="drag-drop-area">
                         <div class="drag-drop-content">
-                            <div class="drag-drop-icon">📁</div>
+                            <div class="drag-drop-icon">📄</div>
                             <div class="drag-drop-text">drag & drop<br>or click to select</div>
                             <div class="file-formats">CSV • XLSX • XLSM</div>
                         </div>
@@ -2313,7 +2291,7 @@
                 console.log('🔍 Checking XLSX library availability...');
                 
                 if (typeof XLSX !== 'undefined') {
-                    console.log('✅ XLSX library is already available');
+                    console.log('XLSX library is already available');
                     resolve();
                     return;
                 }
@@ -2379,7 +2357,7 @@
             } else {
                 console.log('XLSX library not available, attempting to load...');
                 ensureXLSXLoaded().then(() => {
-                    console.log('✅ XLSX library loaded successfully');
+                    console.log('XLSX library loaded successfully');
                     console.log('XLSX version:', XLSX.version);
                 }).catch(error => {
                     console.error('❌ Failed to load XLSX library:', error);
@@ -2391,12 +2369,12 @@
         window.testXLSXLoading = function() {
             console.log('🧪 Testing XLSX library loading...');
             if (typeof XLSX !== 'undefined') {
-                console.log('✅ XLSX is already loaded');
+                console.log('XLSX is already loaded');
                 return true;
             } else {
                 console.log('⏳ XLSX not loaded, loading now...');
                 ensureXLSXLoaded().then(() => {
-                    console.log('✅ XLSX loaded successfully');
+                    console.log('XLSX loaded successfully');
                 }).catch(error => {
                     console.error('❌ XLSX loading failed:', error);
                 });
@@ -5265,6 +5243,7 @@
             showStatus('tableData', '🔍 Search cleared - showing all data', 'info');
         }
 
+
         function filterTable() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const table = document.getElementById('dataTable');
@@ -7622,7 +7601,7 @@
 
                 // Disable button and show loading
                 saveBtn.disabled = true;
-                saveBtn.innerHTML = '💾 Saving...';
+                saveBtn.innerHTML = 'Saving...';
 
                 // Prepare data for saving
                 const excelData = {
@@ -7645,16 +7624,22 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    alert('✅ Beanie cost data saved successfully to database!');
+                    alert('Beanie cost data saved successfully to database!');
                     console.log('Saved data:', result.data);
+                    
+                    // Auto-refresh the datatable
+                    if (typeof loadDatabankData === 'function') {
+                        console.log('Auto-refreshing datatable...');
+                        loadDatabankData();
+                    }
                 } else {
-                    alert(`❌ Failed to save data: ${result.error || result.message}`);
+                    alert(`Failed to save data: ${result.error || result.message}`);
                     console.error('Save error:', result);
                 }
 
             } catch (error) {
                 console.error('Error saving to database:', error);
-                alert(`❌ Error saving to database: ${error.message}`);
+                alert(`Error saving to database: ${error.message}`);
             } finally {
                 // Re-enable button
                 saveBtn.disabled = false;
@@ -7679,7 +7664,7 @@
 
                 // Disable button and show loading
                 saveBtn.disabled = true;
-                saveBtn.innerHTML = '💾 Saving...';
+                saveBtn.innerHTML = 'Saving...';
 
                 // Prepare data for saving
                 const excelData = {
@@ -7702,16 +7687,22 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    alert('✅ Ballcaps cost data saved successfully to database!');
+                    alert('Ballcaps cost data saved successfully to database!');
                     console.log('Saved data:', result.data);
+                    
+                    // Auto-refresh the datatable
+                    if (typeof loadDatabankData === 'function') {
+                        console.log('Auto-refreshing datatable...');
+                        loadDatabankData();
+                    }
                 } else {
-                    alert(`❌ Failed to save data: ${result.error || result.message}`);
+                    alert(`Failed to save data: ${result.error || result.message}`);
                     console.error('Save error:', result);
                 }
 
             } catch (error) {
                 console.error('Error saving to database:', error);
-                alert(`❌ Error saving to database: ${error.message}`);
+                alert(`Error saving to database: ${error.message}`);
             } finally {
                 // Re-enable button
                 saveBtn.disabled = false;

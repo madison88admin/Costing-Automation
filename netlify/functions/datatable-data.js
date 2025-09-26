@@ -28,8 +28,8 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    // Parse query parameters
-    const { table, limit = 1000, offset = 0 } = event.queryStringParameters || {};
+    // Parse query parameters - allow unlimited records
+    const { table, limit = 999999, offset = 0 } = event.queryStringParameters || {};
 
     if (!table) {
       return {
@@ -60,10 +60,49 @@ exports.handler = async (event, context) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Get data from the specified table
-    const { data: records, error } = await supabase
-      .from(table)
-      .select('*')
-      .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
+    let records, error;
+    
+    if (parseInt(limit) > 10000) {
+      // For very large datasets, fetch all data in batches
+      console.log('Large dataset requested, fetching all data...');
+      records = [];
+      let currentOffset = parseInt(offset);
+      const batchSize = 1000;
+      let hasMore = true;
+      
+      while (hasMore && records.length < parseInt(limit)) {
+        const endOffset = Math.min(currentOffset + batchSize - 1, parseInt(offset) + parseInt(limit) - 1);
+        const { data: batch, error: batchError } = await supabase
+          .from(table)
+          .select('*')
+          .range(currentOffset, endOffset);
+          
+        if (batchError) {
+          error = batchError;
+          break;
+        }
+        
+        if (batch && batch.length > 0) {
+          records.push(...batch);
+          currentOffset += batchSize;
+          console.log(`Fetched batch: ${batch.length} records (total: ${records.length})`);
+          
+          if (batch.length < batchSize) {
+            hasMore = false;
+          }
+        } else {
+          hasMore = false;
+        }
+      }
+    } else {
+      // For smaller datasets, use regular query
+      const { data, error: queryError } = await supabase
+        .from(table)
+        .select('*')
+        .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
+      records = data;
+      error = queryError;
+    }
 
     if (error) {
       console.error('Supabase query error:', error);
