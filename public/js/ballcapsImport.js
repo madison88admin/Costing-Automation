@@ -55,6 +55,7 @@ class TNFBallCapsImporter {
 
         // FLEXIBLE PARSING - Search through all rows for data patterns
         try {
+            
             // Search for basic info in any row
             for (let i = 0; i < data.length; i++) {
                 const row = data[i];
@@ -100,32 +101,28 @@ class TNFBallCapsImporter {
                 const firstCell = String(row[0] || '').trim();
                 
                 // Detect sections
-                if (firstCell === 'FABRIC' || firstCell === 'FABRIC/S') {
+                if (firstCell === 'FABRIC' || firstCell === 'FABRIC/S' || firstCell.includes('FABRIC')) {
                     currentSection = 'fabric';
-                    console.log('🔍 Found FABRIC section');
-                } else if (firstCell === 'EMBROIDERY' || firstCell === 'OTHER FABRIC/S - TRIM/S') {
+                    console.log('🔍 Found FABRIC section at row', i);
+                } else if (firstCell === 'EMBROIDERY' || firstCell === 'OTHER FABRIC/S - TRIM/S' || firstCell.includes('OTHER FABRIC')) {
                     currentSection = 'embroidery';
-                    console.log('🔍 Found OTHER FABRIC/S - TRIM/S section');
-                } else if (firstCell === 'TRIM' || firstCell === 'TRIM/S') {
+                    console.log('🔍 Found OTHER FABRIC/S - TRIM/S section at row', i);
+                } else if (firstCell === 'TRIM' || firstCell === 'TRIM/S' || firstCell.includes('TRIM')) {
                     currentSection = 'trim';
-                    console.log('🔍 Found TRIM section');
-                } else if (firstCell === 'OPERATIONS') {
+                    console.log('🔍 Found TRIM section at row', i);
+                } else if (firstCell === 'OPERATIONS' || firstCell.includes('OPERATIONS')) {
                     currentSection = 'operations';
-                    console.log('🔍 Found OPERATIONS section');
-                } else if (firstCell === 'PACKAGING') {
+                    console.log('🔍 Found OPERATIONS section at row', i);
+                } else if (firstCell === 'PACKAGING' || firstCell.includes('PACKAGING')) {
                     currentSection = 'packaging';
-                    console.log('🔍 Found PACKAGING section');
-                } else if (firstCell === 'OVERHEAD/ PROFIT' || firstCell === 'OVERHEAD/PROFIT' || firstCell === 'OVERHEAD') {
+                    console.log('🔍 Found PACKAGING section at row', i);
+                } else if (firstCell === 'OVERHEAD/ PROFIT' || firstCell === 'OVERHEAD/PROFIT' || firstCell === 'OVERHEAD' || firstCell.includes('OVERHEAD')) {
                     currentSection = 'overhead';
-                    console.log('🔍 Found OVERHEAD section');
-                } else if (firstCell === 'TOTAL FACTORY COST') {
-                    console.log('🔍 Found TOTAL FACTORY COST');
+                    console.log('🔍 Found OVERHEAD section at row', i);
+                } else if (firstCell === 'TOTAL FACTORY COST' || firstCell.includes('TOTAL FACTORY')) {
+                    console.log('🔍 Found TOTAL FACTORY COST at row', i);
                 }
                 
-                // Debug: Log current section and row data for operations/overhead
-                if (currentSection === 'operations' || currentSection === 'overhead') {
-                    console.log(`🔍 Current section: ${currentSection}, Row ${i}:`, firstCell, '|', row[1], '|', row[2], '|', row[3]);
-                }
                 
                 // Detect header rows and set current section based on context
                 if (firstCell.includes('(Name/Code/Description)') && row[1] && row[1].includes('CONSUMPTION')) {
@@ -195,17 +192,59 @@ class TNFBallCapsImporter {
                     console.log('✅ TRIM:', firstCell, 'Cost:', row[3]);
                 }
                 
-                if (currentSection === 'operations' && !firstCell.includes('OPERATIONS') && !firstCell.includes('TIME') && !firstCell.includes('COST') && !firstCell.includes('SUB TOTAL') && !firstCell.includes('TOTAL')) {
-                    console.log(`🔍 Checking OPERATIONS: "${firstCell}" - Row:`, row, 'Cost in col 3:', row[3], 'Is number:', !isNaN(parseFloat(row[3])));
-                    // Check if this row has operations data (SMV in col 1, cost in col 3)
-                    if (row[1] && !isNaN(parseFloat(row[1])) && row[3] && !isNaN(parseFloat(row[3]))) {
+                if (currentSection === 'operations' && 
+                    !firstCell.includes('OPERATIONS') && 
+                    !firstCell.includes('SMV') && 
+                    !firstCell.includes('COST') && 
+                    !firstCell.includes('SUB TOTAL') && 
+                    !firstCell.includes('TOTAL')) {
+                    
+                    // More flexible operations parsing - look for any row with operation data
+                    let smv = '';
+                    let cost = '';
+                    let total = '';
+                    let operationName = firstCell || 'Operation'; // Use first cell if it's not empty
+                    
+                    // If first cell is empty but we have operation name in column 2, use that
+                    if (!firstCell && row[2] && typeof row[2] === 'string' && !row[2].includes('undefined')) {
+                        operationName = row[2];
+                    }
+                    
+                    // Try to find SMV in col 1
+                    if (row[1] && !isNaN(parseFloat(row[1]))) {
+                        smv = parseFloat(row[1]).toFixed(2);
+                    }
+                    
+                    // Try to find cost in col 2 or col 3
+                    if (row[2] && !isNaN(parseFloat(row[2]))) {
+                        cost = parseFloat(row[2]).toFixed(2);
+                    } else if (row[3] && !isNaN(parseFloat(row[3]))) {
+                        cost = parseFloat(row[3]).toFixed(2);
+                    }
+                    
+                    // Try to find total in col 3 or col 4
+                    if (row[3] && !isNaN(parseFloat(row[3])) && !cost) {
+                        total = parseFloat(row[3]).toFixed(2);
+                    } else if (row[4] && !isNaN(parseFloat(row[4]))) {
+                        total = parseFloat(row[4]).toFixed(2);
+                    }
+                    
+                    // If we have operation name or any meaningful data, add the operation
+                    if (operationName !== 'Operation' || smv || cost || total) {
+                        // Ensure operation name is meaningful - if it's a number, use a default name
+                        let finalOperationName = operationName;
+                        if (operationName === 'Operation' && (smv || cost || total)) {
+                            finalOperationName = `Operation ${result.operations.length + 1}`;
+                        }
+                        
                         result.operations.push({
-                            operation: firstCell,
-                            smv: parseFloat(row[1]).toFixed(2),
-                            cost: parseFloat(row[3]).toFixed(2),
-                            total: (parseFloat(row[1]) * parseFloat(row[3])).toFixed(2)
+                            operation: String(finalOperationName), // Ensure operation is always a string
+                            time: smv, // Map smv to time for HTML template compatibility
+                            smv: smv, // Keep smv for backwards compatibility
+                            cost: cost,
+                            total: total || (smv && cost ? (parseFloat(smv) * parseFloat(cost)).toFixed(2) : '')
                         });
-                        console.log('✅ OPERATION:', firstCell, 'SMV:', row[1], 'Cost:', row[3]);
+                        console.log('✅ OPERATION:', finalOperationName, 'SMV:', smv, 'Cost:', cost, 'Total:', total);
                     }
                 }
                 
@@ -214,37 +253,73 @@ class TNFBallCapsImporter {
                     !firstCell.includes('Factory Notes') && 
                     !firstCell.includes('COST') && 
                     !firstCell.includes('TOTAL') && 
-                    row[2] && !isNaN(parseFloat(row[2]))) {
-                    result.packaging.push({
-                        type: firstCell,
-                        notes: String(row[1] || ''),
-                        cost: parseFloat(row[2]).toFixed(2)
-                    });
-                    console.log('✅ PACKAGING:', firstCell, 'Cost:', row[2]);
+                    !firstCell.includes('SUB TOTAL') &&
+                    firstCell.trim() !== '') {
+                    
+                    // Look for cost in different columns
+                    let cost = '';
+                    let notes = String(row[1] || '');
+                    
+                    // Try to find cost in col 2 or col 3
+                    if (row[2] !== undefined && row[2] !== null && !isNaN(parseFloat(row[2]))) {
+                        cost = parseFloat(row[2]).toFixed(2);
+                    } else if (row[3] !== undefined && row[3] !== null && !isNaN(parseFloat(row[3]))) {
+                        cost = parseFloat(row[3]).toFixed(2);
+                    }
+                    
+                    // Add the packaging item if we found a cost (including 0)
+                    if (cost !== '') {
+                        result.packaging.push({
+                            type: firstCell,
+                            notes: notes,
+                            cost: cost
+                        });
+                        console.log('✅ PACKAGING:', firstCell, 'Notes:', notes, 'Cost:', cost);
+                    }
                 }
                 
                 if (currentSection === 'overhead' && firstCell && 
-                    !firstCell.includes('OVERHEAD') && 
                     !firstCell.includes('Factory Notes') && 
                     !firstCell.includes('COST') && 
                     !firstCell.includes('TOTAL') && 
-                    row[2] && !isNaN(parseFloat(row[2]))) {
-                    result.overhead.push({
-                        type: firstCell,
-                        notes: String(row[1] || ''),
-                        cost: parseFloat(row[2]).toFixed(2)
-                    });
-                    console.log('✅ OVERHEAD:', firstCell, 'Notes:', row[1], 'Cost:', row[2]);
+                    !firstCell.includes('SUB TOTAL') &&
+                    firstCell.trim() !== '') {
+                    
+                    // Look for cost in different columns
+                    let cost = '';
+                    let notes = String(row[1] || '');
+                    
+                    // Try to find cost in col 2 or col 3
+                    if (row[2] !== undefined && row[2] !== null && !isNaN(parseFloat(row[2]))) {
+                        cost = parseFloat(row[2]).toFixed(2);
+                    } else if (row[3] !== undefined && row[3] !== null && !isNaN(parseFloat(row[3]))) {
+                        cost = parseFloat(row[3]).toFixed(2);
+                    }
+                    
+                    // If we found a cost, add the overhead item
+                    if (cost !== '') {
+                        result.overhead.push({
+                            type: firstCell,
+                            notes: notes,
+                            cost: cost
+                        });
+                        console.log('✅ OVERHEAD:', firstCell, 'Notes:', notes, 'Cost:', cost);
+                    }
+                }
+                
+                // Debug: Show all rows with "TOTAL" to find the correct ones
+                if (firstCell && firstCell.includes('TOTAL')) {
+                    console.log('🔍 Found TOTAL row', i, ':', firstCell, 'value in col 3:', row[3]);
                 }
                 
                 // Extract totals - enhanced pattern matching
                 if ((firstCell.includes('TOTAL MATERIAL') || firstCell.includes('TOTAL MATERIAL AND SUBMATERIALS COST')) && row[3]) {
                     result.totalMaterialCost = parseFloat(row[3]).toFixed(2);
-                    console.log('✅ Material Total:', result.totalMaterialCost);
+                    console.log('✅ Material Total:', result.totalMaterialCost, 'from row', i, 'cell:', firstCell);
                 }
                 if (firstCell.includes('TOTAL FACTORY') && row[3]) {
                     result.totalFactoryCost = parseFloat(row[3]).toFixed(2);
-                    console.log('✅ Factory Total:', result.totalFactoryCost);
+                    console.log('✅ Factory Total:', result.totalFactoryCost, 'from row', i, 'cell:', firstCell);
                 }
             }
 

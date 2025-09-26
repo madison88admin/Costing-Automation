@@ -1,5 +1,5 @@
 import { SupabaseService } from './supabaseService';
-import { TNFBallCapsImporter } from '../../public/js/ballcapsImport';
+const TNFBallCapsImporter = require('../../public/js/ballcapsImport');
 import logger from '../utils/logger';
 
 export interface BallCapsCostData {
@@ -28,25 +28,22 @@ export class BallCapsDataService {
   }
 
   /**
-   * Parse Excel file and save ballcaps cost data to database
+   * Save already parsed ballcaps cost data to database
    */
-  async saveBallCapsCostData(excelData: any): Promise<{ success: boolean; message: string; data?: any }> {
+  async saveBallCapsCostData(parsedData: any): Promise<{ success: boolean; message: string; data?: any }> {
     try {
-      // Parse the Excel data using the TNFBallCapsImporter
-      const importer = new TNFBallCapsImporter();
-      const parsedData = importer.parseExcelData(excelData);
+      // Data is already parsed by the frontend, extract the actual data
+      const actualData = parsedData.data || parsedData;
+      logger.info('Saving already parsed ballcaps cost data:', actualData);
 
-      logger.info('Parsed ballcaps cost data:', parsedData);
+      // Save the main cost record to databank table
+      const costRecord = await this.saveMainCostRecord(actualData);
 
-      // Save the main cost record
-      const costRecord = await this.saveMainCostRecord(parsedData);
-
-      // Save section data
-      await this.saveSectionData(costRecord.id, parsedData);
+      logger.info('Ballcaps cost data saved successfully to databank table');
 
       return {
         success: true,
-        message: 'Ballcaps cost data saved successfully',
+        message: 'Ballcaps cost data saved successfully to database',
         data: costRecord
       };
     } catch (error) {
@@ -62,27 +59,84 @@ export class BallCapsDataService {
    * Save the main cost record
    */
   private async saveMainCostRecord(data: BallCapsCostData): Promise<any> {
+    // Calculate totals from parsed data
+    const materialTotal = parseFloat(data.totalMaterialCost) || 0;
+    const factoryTotal = parseFloat(data.totalFactoryCost) || 0;
+    
+    // Get main material (first fabric item)
+    const mainMaterial = data.fabric && data.fabric.length > 0 ? data.fabric[0].material : '';
+    const materialConsumption = data.fabric && data.fabric.length > 0 ? data.fabric[0].consumption : '';
+    const materialPrice = data.fabric && data.fabric.length > 0 ? data.fabric[0].price : '';
+    
+    // Calculate trim cost (sum of all trim items)
+    const trimCost = data.trim ? data.trim.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0) : 0;
+    
+    // Get operations cost
+    const opsCost = data.operations && data.operations.length > 0 ? parseFloat(data.operations[0].cost) || 0 : 0;
+    
+    // Get packaging cost
+    const packagingCost = data.packaging ? data.packaging.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0) : 0;
+    
+    // Get overhead and profit
+    const overhead = data.overhead ? data.overhead.find(item => item.type === 'OVERHEAD') : null;
+    const profit = data.overhead ? data.overhead.find(item => item.type === 'PROFIT') : null;
+    const ohCost = overhead ? parseFloat(overhead.cost) || 0 : 0;
+    const profitCost = profit ? parseFloat(profit.cost) || 0 : 0;
+    
     const costRecord = {
       customer: data.customer,
       season: data.season,
       style_number: data.styleNumber,
       style_name: data.styleName,
-      costed_quantity: data.costedQuantity,
-      leadtime: data.leadtime,
-      total_material_cost: parseFloat(data.totalMaterialCost) || 0,
-      total_factory_cost: parseFloat(data.totalFactoryCost) || 0,
-      product_type: 'ballcaps',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      main_material: mainMaterial,
+      material_consumption: materialConsumption,
+      material_price: materialPrice,
+      trim_cost: trimCost,
+      total_material_cost: materialTotal,
+      ops_cost: opsCost,
+      packaging: packagingCost,
+      oh: ohCost,
+      profit: profitCost,
+      ttl_fty_cost: factoryTotal
     };
 
-    return await this.supabase.insertRecord('costs', costRecord);
+    logger.info('Saving ballcaps data to databank:', costRecord);
+    logger.info('Data being saved:', {
+      customer: data.customer,
+      season: data.season,
+      styleNumber: data.styleNumber,
+      styleName: data.styleName,
+      costedQuantity: data.costedQuantity,
+      leadtime: data.leadtime,
+      totalMaterialCost: data.totalMaterialCost,
+      totalFactoryCost: data.totalFactoryCost,
+      sections: {
+        fabric: data.fabric?.length || 0,
+        embroidery: data.embroidery?.length || 0,
+        trim: data.trim?.length || 0,
+        operations: data.operations?.length || 0,
+        packaging: data.packaging?.length || 0,
+        overhead: data.overhead?.length || 0
+      }
+    });
+
+    return await this.supabase.insertRecord('databank', costRecord);
   }
 
   /**
    * Save section data (fabric, embroidery, trim, etc.)
    */
   private async saveSectionData(costId: number, data: BallCapsCostData): Promise<void> {
+    logger.info(`Saving section data for cost ID: ${costId}`);
+    logger.info('Available sections:', {
+      fabric: data.fabric?.length || 0,
+      embroidery: data.embroidery?.length || 0,
+      trim: data.trim?.length || 0,
+      operations: data.operations?.length || 0,
+      packaging: data.packaging?.length || 0,
+      overhead: data.overhead?.length || 0
+    });
+
     // Save FABRIC data
     if (data.fabric && data.fabric.length > 0) {
       const fabricRecords = data.fabric.map(item => ({
@@ -94,10 +148,11 @@ export class BallCapsDataService {
         cost: parseFloat(item.cost) || 0,
         is_subtotal: item.isSubtotal || false
       }));
+      logger.info(`Saving ${fabricRecords.length} fabric records:`, fabricRecords);
       await this.supabase.bulkInsert('cost_items', fabricRecords);
     }
 
-    // Save EMBROIDERY data
+    // Save EMBROIDERY data (OTHER FABRIC/S - TRIM/S)
     if (data.embroidery && data.embroidery.length > 0) {
       const embroideryRecords = data.embroidery.map(item => ({
         cost_id: costId,
@@ -108,6 +163,7 @@ export class BallCapsDataService {
         cost: parseFloat(item.cost) || 0,
         is_subtotal: item.isSubtotal || false
       }));
+      logger.info(`Saving ${embroideryRecords.length} embroidery (OTHER FABRIC/S - TRIM/S) records:`, embroideryRecords);
       await this.supabase.bulkInsert('cost_items', embroideryRecords);
     }
 
@@ -122,6 +178,7 @@ export class BallCapsDataService {
         cost: parseFloat(item.cost) || 0,
         is_subtotal: item.isSubtotal || false
       }));
+      logger.info(`Saving ${trimRecords.length} trim records:`, trimRecords);
       await this.supabase.bulkInsert('cost_items', trimRecords);
     }
 
@@ -131,11 +188,12 @@ export class BallCapsDataService {
         cost_id: costId,
         section: 'operations',
         operation: item.operation,
-        time: item.time,
+        time: item.time || item.smv, // Support both time and smv fields
         cost: parseFloat(item.cost) || 0,
         total: parseFloat(item.total) || 0,
         is_subtotal: item.isSubtotal || false
       }));
+      logger.info(`Saving ${operationsRecords.length} operations records:`, operationsRecords);
       await this.supabase.bulkInsert('cost_items', operationsRecords);
     }
 
@@ -149,6 +207,7 @@ export class BallCapsDataService {
         cost: parseFloat(item.cost) || 0,
         is_subtotal: item.isSubtotal || false
       }));
+      logger.info(`Saving ${packagingRecords.length} packaging records:`, packagingRecords);
       await this.supabase.bulkInsert('cost_items', packagingRecords);
     }
 
@@ -162,6 +221,7 @@ export class BallCapsDataService {
         cost: parseFloat(item.cost) || 0,
         is_subtotal: item.isSubtotal || false
       }));
+      logger.info(`Saving ${overheadRecords.length} overhead records:`, overheadRecords);
       await this.supabase.bulkInsert('cost_items', overheadRecords);
     }
   }

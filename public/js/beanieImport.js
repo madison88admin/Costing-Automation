@@ -1,12 +1,38 @@
 /**
+ * beanieImport.js
  * TNF Beanie Cost Breakdown Excel Import Parser
  * Handles parsing of TNF Excel files for beanie products
  * Based on the actual Excel structure from the Factory Cost Breakdown image
  */
 
-class TNFBeanieImporter {
+var TNFBeanieImporter = class TNFBeanieImporter {
     constructor() {
-        this.supportedFormats = ['.xlsx', '.xls', '.xlsm'];
+        this.supportedFormats = ['.xlsx', '.xls', '.xlsm', '.csv'];
+        this.debugMode = true; // Set to false to reduce console output
+        
+        // Flexible column mappings
+        this.columnMappings = {
+            // For material sections (yarn, fabric, trim)
+            material: {
+                name: 0,       // Column A: Material name
+                consumption: 1, // Column B: Consumption
+                price: 2,      // Column C: Price per unit
+                cost: 3        // Column D: Total cost
+            },
+            // For manufacturing sections (knitting, operations)
+            manufacturing: {
+                name: 0,      // Column A: Operation name
+                time: 1,      // Column B: Time/SAH
+                rate: 2,      // Column C: Rate per unit
+                cost: 3       // Column D: Total cost
+            },
+            // For overhead and packaging
+            other: {
+                name: 0,      // Column A: Item name
+                notes: 1,     // Column B: Notes/description
+                cost: 3       // Column D: Cost
+            }
+        };
     }
 
     /**
@@ -38,6 +64,7 @@ class TNFBeanieImporter {
             season: "F25", 
             styleNumber: "",
             styleName: "",
+            description: "",
             costedQuantity: "",
             leadtime: "",
             
@@ -45,11 +72,15 @@ class TNFBeanieImporter {
             yarn: [],
             fabric: [],
             trim: [],
+            accessories: [],
             knitting: [],
             operations: [],
+            manufacturing: [],
             packaging: [],
             overhead: [],
+            profit: [],
             
+            // Totals
             totalMaterialCost: "0.00",
             totalFactoryCost: "0.00",
             
@@ -165,28 +196,28 @@ class TNFBeanieImporter {
                 const firstCell = String(row[0] || '').trim();
                 
                 // Detect sections with flexible matching (like ballcaps)
-                if (firstCell === 'YARN' || firstCell === 'MATERIAL') {
+                if (firstCell === 'YARN' || firstCell === 'MATERIAL' || firstCell.includes('YARN')) {
                     currentSection = 'yarn';
                     console.log('🔍 Found YARN section');
-                } else if (firstCell === 'FABRIC' || firstCell === 'FABRIC/S') {
+                } else if (firstCell === 'FABRIC' || firstCell === 'FABRIC/S' || firstCell.includes('FABRIC')) {
                     currentSection = 'fabric';
                     console.log('🔍 Found FABRIC section');
-                } else if (firstCell === 'TRIM' || firstCell === 'TRIM/S') {
+                } else if (firstCell === 'TRIM' || firstCell === 'TRIM/S' || firstCell.includes('TRIM')) {
                     currentSection = 'trim';
                     console.log('🔍 Found TRIM section');
-                } else if (firstCell === 'KNITTING') {
+                } else if (firstCell === 'KNITTING' || firstCell.includes('KNITTING')) {
                     currentSection = 'knitting';
                     console.log('🔍 Found KNITTING section');
-                } else if (firstCell === 'OPERATIONS') {
+                } else if (firstCell === 'OPERATIONS' || firstCell.includes('OPERATIONS')) {
                     currentSection = 'operations';
                     console.log('🔍 Found OPERATIONS section');
-                } else if (firstCell === 'PACKAGING') {
+                } else if (firstCell === 'PACKAGING' || firstCell.includes('PACKAGING')) {
                     currentSection = 'packaging';
                     console.log('🔍 Found PACKAGING section');
-                } else if (firstCell === 'OVERHEAD/ PROFIT' || firstCell === 'OVERHEAD/PROFIT' || firstCell === 'OVERHEAD') {
+                } else if (firstCell === 'OVERHEAD/ PROFIT' || firstCell === 'OVERHEAD/PROFIT' || firstCell === 'OVERHEAD' || firstCell.includes('OVERHEAD')) {
                     currentSection = 'overhead';
                     console.log('🔍 Found OVERHEAD section');
-                } else if (firstCell === 'TOTAL FACTORY COST') {
+                } else if (firstCell === 'TOTAL FACTORY COST' || firstCell.includes('TOTAL FACTORY')) {
                     console.log('🔍 Found TOTAL FACTORY COST');
                 }
                 
@@ -288,17 +319,49 @@ class TNFBeanieImporter {
                     console.log('✅ KNITTING:', firstCell, 'Cost:', row[3]);
                 }
                 
-                if (currentSection === 'operations' && !firstCell.includes('OPERATIONS') && !firstCell.includes('TIME') && !firstCell.includes('COST') && !firstCell.includes('SUB TOTAL') && !firstCell.includes('TOTAL')) {
-                    console.log(`🔍 Checking OPERATIONS: "${firstCell}" - Row:`, row, 'Cost in col 3:', row[3], 'Is number:', !isNaN(parseFloat(row[3])));
-                    // Check if this row has operations data - for beanie, operations are in col 3
-                    if (row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) > 0) {
+                if (currentSection === 'operations' && firstCell && 
+                    !firstCell.includes('OPERATIONS') && 
+                    !firstCell.includes('TIME') && 
+                    !firstCell.includes('COST') && 
+                    !firstCell.includes('SUB TOTAL') && 
+                    !firstCell.includes('TOTAL') &&
+                    firstCell.trim() !== '') {
+                    console.log(`🔍 Checking OPERATIONS: "${firstCell}" - Row:`, row);
+                    
+                    // More flexible operations parsing - look for any row with operation name and some cost data
+                    let time = '';
+                    let cost = '';
+                    let total = '';
+                    
+                    // Try to find time in col 1
+                    if (row[1] && !isNaN(parseFloat(row[1]))) {
+                        time = parseFloat(row[1]).toFixed(2);
+                    }
+                    
+                    // Try to find cost in col 2 or col 3
+                    if (row[2] && !isNaN(parseFloat(row[2]))) {
+                        cost = parseFloat(row[2]).toFixed(2);
+                    } else if (row[3] && !isNaN(parseFloat(row[3]))) {
+                        cost = parseFloat(row[3]).toFixed(2);
+                    }
+                    
+                    // Try to find total in col 3 or col 4
+                    if (row[3] && !isNaN(parseFloat(row[3])) && !cost) {
+                        total = parseFloat(row[3]).toFixed(2);
+                    } else if (row[4] && !isNaN(parseFloat(row[4]))) {
+                        total = parseFloat(row[4]).toFixed(2);
+                    }
+                    
+                    // If we have any meaningful data, add the operation
+                    if (time || cost || total) {
+                        let operationName = firstCell || `Operation ${result.operations.length + 1}`;
                         result.operations.push({
-                            operation: firstCell,
-                            time: String(row[1] || ''),
-                            cost: parseFloat(row[2] || 0).toFixed(2),
-                            total: parseFloat(row[3]).toFixed(2)
+                            operation: String(operationName), // Ensure operation is always a string
+                            time: time,
+                            cost: cost,
+                            total: total || (time && cost ? (parseFloat(time) * parseFloat(cost)).toFixed(2) : '')
                         });
-                        console.log('✅ OPERATION:', firstCell, 'Cost:', row[3]);
+                        console.log('✅ OPERATION:', operationName, 'Time:', time, 'Cost:', cost, 'Total:', total);
                     }
                 }
                 
@@ -307,33 +370,26 @@ class TNFBeanieImporter {
                     !firstCell.includes('Factory Notes') && 
                     !firstCell.includes('COST') && 
                     !firstCell.includes('TOTAL') && 
-                    !firstCell.includes('SUB TOTAL')) {
+                    !firstCell.includes('SUB TOTAL') &&
+                    firstCell.trim() !== '') {
                     
-                    // Try different column positions for cost
-                    let cost = null;
-                    let notes = '';
+                    // Look for cost in different columns
+                    let cost = '';
+                    let notes = String(row[1] || '');
                     
-                    // Check different columns for cost value
-                    for (let col = 1; col < row.length; col++) {
-                        if (row[col] && !isNaN(parseFloat(row[col]))) {
-                            cost = parseFloat(row[col]);
-                            break;
-                        }
+                    // Try to find cost in col 2 or col 3
+                    if (row[2] && !isNaN(parseFloat(row[2]))) {
+                        cost = parseFloat(row[2]).toFixed(2);
+                    } else if (row[3] && !isNaN(parseFloat(row[3]))) {
+                        cost = parseFloat(row[3]).toFixed(2);
                     }
                     
-                    // Check different columns for notes
-                    for (let col = 1; col < row.length; col++) {
-                        if (row[col] && isNaN(parseFloat(row[col])) && row[col] !== firstCell) {
-                            notes = String(row[col]);
-                            break;
-                        }
-                    }
-                    
-                    if (cost !== null) {
+                    // If we found a cost, add the packaging item
+                    if (cost) {
                         result.packaging.push({
                             type: firstCell,
                             notes: notes,
-                            cost: cost.toFixed(2)
+                            cost: cost
                         });
                         console.log('✅ PACKAGING:', firstCell, 'Notes:', notes, 'Cost:', cost);
                     }
@@ -345,46 +401,38 @@ class TNFBeanieImporter {
                     !firstCell.includes('COST') && 
                     !firstCell.includes('TOTAL') && 
                     !firstCell.includes('SUB TOTAL') &&
-                    row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) !== 0) {
-                    result.overhead.push({
-                        type: firstCell,
-                        notes: String(row[1] || ''),
-                        cost: parseFloat(row[3]).toFixed(2)
-                    });
-                    console.log('✅ OVERHEAD:', firstCell, 'Notes:', row[1], 'Cost:', row[3]);
-                }
-                
-                // Extract totals - look for specific patterns
-                if (firstCell.includes('TOTAL MATERIAL') && row.length > 3) {
-                    const totalValue = row[3] || row[2] || row[1];
-                    if (totalValue && !isNaN(parseFloat(totalValue))) {
-                        result.totalMaterialCost = parseFloat(totalValue).toFixed(2);
-                        console.log('✅ Material Total:', result.totalMaterialCost);
+                    firstCell.trim() !== '') {
+                    
+                    // Look for cost in different columns
+                    let cost = '';
+                    let notes = String(row[1] || '');
+                    
+                    // Try to find cost in col 2 or col 3
+                    if (row[2] && !isNaN(parseFloat(row[2]))) {
+                        cost = parseFloat(row[2]).toFixed(2);
+                    } else if (row[3] && !isNaN(parseFloat(row[3]))) {
+                        cost = parseFloat(row[3]).toFixed(2);
                     }
-                }
-                if (firstCell.includes('TOTAL FACTORY') && row.length > 3) {
-                    const totalValue = row[3] || row[2] || row[1];
-                    if (totalValue && !isNaN(parseFloat(totalValue))) {
-                        result.totalFactoryCost = parseFloat(totalValue).toFixed(2);
-                        console.log('✅ Factory Total:', result.totalFactoryCost);
-                    }
-                }
-                
-                // Also look for totals in the last column (index 3)
-                if (firstCell.includes('TOTAL MATERIAL') && row.length > 3) {
-                    const totalValue = row[3] || row[2] || row[1];
-                    if (totalValue && !isNaN(parseFloat(totalValue))) {
-                        result.totalMaterialCost = parseFloat(totalValue).toFixed(2);
-                        console.log('✅ Material Total (alternative):', result.totalMaterialCost);
+                    
+                    // If we found a cost, add the overhead item
+                    if (cost) {
+                        result.overhead.push({
+                            type: firstCell,
+                            notes: notes,
+                            cost: cost
+                        });
+                        console.log('✅ OVERHEAD:', firstCell, 'Notes:', notes, 'Cost:', cost);
                     }
                 }
                 
-                if (firstCell.includes('TOTAL FACTORY') && row.length > 3) {
-                    const totalValue = row[3] || row[2] || row[1];
-                    if (totalValue && !isNaN(parseFloat(totalValue))) {
-                        result.totalFactoryCost = parseFloat(totalValue).toFixed(2);
-                        console.log('✅ Factory Total (alternative):', result.totalFactoryCost);
-                    }
+                // Extract totals - enhanced pattern matching (matching ballcaps approach)
+                if ((firstCell.includes('TOTAL MATERIAL') || firstCell.includes('TOTAL MATERIAL AND SUBMATERIALS COST')) && row[3]) {
+                    result.totalMaterialCost = parseFloat(row[3]).toFixed(2);
+                    console.log('✅ Material Total:', result.totalMaterialCost);
+                }
+                if (firstCell.includes('TOTAL FACTORY') && row[3]) {
+                    result.totalFactoryCost = parseFloat(row[3]).toFixed(2);
+                    console.log('✅ Factory Total:', result.totalFactoryCost);
                 }
             }
 
@@ -416,47 +464,6 @@ class TNFBeanieImporter {
         return result;
     }
 
-    /**
-     * Save parsed data to database
-     */
-    async saveToDatabase(data, tableName = 'beanie_costs') {
-        try {
-            console.log('💾 Saving beanie data to database...');
-            console.log('📊 Data to save:', {
-                customer: data.customer,
-                season: data.season,
-                styleNumber: data.styleNumber,
-                styleName: data.styleName,
-                totalMaterialCost: data.totalMaterialCost,
-                totalFactoryCost: data.totalFactoryCost
-            });
-
-            const response = await fetch('/.netlify/functions/beanie-data-save', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    data: data,
-                    tableName: tableName
-                })
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                console.log('✅ Beanie data saved successfully to database!');
-                console.log('📋 Saved record:', result.data);
-                return result.data;
-            } else {
-                console.error('❌ Failed to save beanie data:', result.error);
-                throw new Error(result.error || 'Failed to save data');
-            }
-        } catch (error) {
-            console.error('❌ Error saving beanie data to database:', error);
-            throw error;
-        }
-    }
 }
 
 // Export for use in other modules
