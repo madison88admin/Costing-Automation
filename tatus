@@ -1,0 +1,27 @@
+[33m8a87c46[m Fix Netlify functions to handle frontend data format correctly
+[33m35cde94[m logs
+[33m61d7d60[m[33m ([m[1;31morigin/mackyBranchV2[m[33m, [m[1;32mmackyBranchV2[m[33m)[m working saving to database and accurate import of data
+[33m6d996cd[m Merge mackyBranchV2 into main - Excel import fixes and database mapping improvements
+[33md22cf45[m commit logs
+[33m08522ac[m working import function and save data to the database
+[33ma0ee04b[m Merge branch 'mackyBranchV2' of https://github.com/madison88admin/Costing-Automation
+[33m8c479ec[m update logs commit
+[33m8a010ff[m update logs
+[33m9a32d53[m Merge branch 'mackyBranchV2' of https://github.com/madison88admin/Costing-Automation into mackyBranchV2
+[33m4caeec8[m commit logs update
+[33m613b7da[m Disable Netlify secrets scanning to allow frontend keys
+[33m91b5af0[m Fix API routes - use correct local endpoints
+[33m75655f1[m Restore hardcoded Supabase key to fix database connection
+[33m56caf8c[m Add visible connection form with pre-filled Supabase key
+[33m60419aa[m Remove hardcoded secrets - use form inputs instead
+[33m6d8bcf3[m Force deployment update - change title to trigger rebuild
+[33m3eb2adc[m Add deployment test messages to verify Netlify updates
+[33mec368c7[m Add API fallback system - try Netlify functions first, fallback to local API
+[33m7501853[m Add force debug to verify deployment
+[33m8c00ff7[m Add debugging to API call detection
+[33mb979517[m Restore all files and ensure Netlify deployment works
+[33mef4d654[m Fix data loading issues and add fallback interface
+[33md6c347c[m Add database connection and data table Netlify functions
+[33m9ef6a49[m Add Netlify Functions for API endpoints
+[33ma47c8cf[m Add Netlify Functions for API endpoints
+[33ma46fc2f[m Fix build:netlify script for static deployment
