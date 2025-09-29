@@ -4,15 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Databank Data Management System - Updated</title>
-    <!-- Primary XLSX CDN with fallback -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- XLSX Library -->
+    <script src="js/xlsx.min.js"></script>
     <!-- No external Supabase CDN - using pure API approach -->
     <script>
         // Skip Supabase CDN loading entirely
-        console.log('🔄 Using API-only approach for database sync (no external CDN dependencies)');
+        // Using API-only approach for database sync (no external CDN dependencies)
     </script>
-    <!-- Local XLSX fallback -->
-    <script src="xlsx.min.js"></script>
     <!-- Application scripts -->
     <script src="js/excelUtils.js"></script>
     <script src="js/beanieImport.js"></script>
@@ -361,6 +359,7 @@
         }
 
         .table-header {
+            position: relative;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -2282,6 +2281,34 @@
             <div id="autoConnectStatus" style="display: block;">
                 <div class="loading">Auto-connecting to Supabase...</div>
             </div>
+            
+            <!-- Welcome Message - Always Visible -->
+            <div id="welcomeMessage" class="welcome-section" style="
+                text-align: center; 
+                padding: 40px 20px; 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border-radius: 15px;
+                margin: 20px 0;
+                box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+            ">
+                <h2 style="margin: 0 0 15px 0; font-size: 28px; font-weight: 600;">Welcome to Databank Management</h2>
+                <p style="margin: 0 0 20px 0; font-size: 16px; opacity: 0.9;">Your comprehensive data management solution</p>
+                <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                    <div style="background: rgba(255,255,255,0.2); padding: 15px 20px; border-radius: 10px; backdrop-filter: blur(10px);">
+                        <div style="font-size: 24px; margin-bottom: 5px;">📊</div>
+                        <div style="font-weight: 600;">Data Management</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.2); padding: 15px 20px; border-radius: 10px; backdrop-filter: blur(10px);">
+                        <div style="font-size: 24px; margin-bottom: 5px;">✏️</div>
+                        <div style="font-weight: 600;">Edit Tables</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.2); padding: 15px 20px; border-radius: 10px; backdrop-filter: blur(10px);">
+                        <div style="font-size: 24px; margin-bottom: 5px;">📈</div>
+                        <div style="font-weight: 600;">Analytics</div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Tables Section - Hidden -->
@@ -2292,34 +2319,72 @@
         </div>
 
         <!-- Data Table Section -->
-        <div class="data-table-container scroll-animate" id="dataTableSection" style="display: none;">
+        <div class="data-table-container" id="dataTableSection" style="display: none;">
             <div class="table-header scroll-fade-in">
                 <h2 class="table-title scroll-slide-left scroll-stagger-1">Databank Management</h2>
-                <div class="table-actions">
-                    <button id="editTableBtn" class="edit-table-button" onclick="toggleEditMode()">
+                
+                <!-- Edit Table Button - Top Right -->
+                <div style="
+                    position: absolute; 
+                    top: 20px; 
+                    right: 20px; 
+                    z-index: 10;
+                    display: flex;
+                    gap: 10px;
+                    flex-wrap: wrap;
+                    justify-content: flex-end;
+                ">
+                    <button id="editTableBtn" class="edit-table-button" onclick="toggleEditMode()" style="
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        border: none;
+                        padding: 12px 20px;
+                        border-radius: 25px;
+                        cursor: pointer;
+                        font-size: 14px;
+                        font-weight: 600;
+                        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+                        transition: all 0.3s ease;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(102, 126, 234, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(102, 126, 234, 0.3)'">
                         ✏️ Edit Table
                     </button>
-                    <button id="doneEditBtn" class="done-edit-button" onclick="saveTableChanges()" style="display: none;">
+                    <button id="doneEditBtn" class="done-edit-button" onclick="saveTableChanges()" style="
+                        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+                        color: white;
+                        border: none;
+                        padding: 12px 20px;
+                        border-radius: 25px;
+                        cursor: pointer;
+                        font-size: 14px;
+                        font-weight: 600;
+                        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+                        transition: all 0.3s ease;
+                        display: none;
+                        align-items: center;
+                        gap: 8px;
+                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(40, 167, 69, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(40, 167, 69, 0.3)'">
                         ✅ Done
                     </button>
-                    <button id="cancelEditBtn" class="cancel-edit-button" onclick="cancelEditMode()" style="display: none;">
+                    <button id="cancelEditBtn" class="cancel-edit-button" onclick="cancelEditMode()" style="
+                        background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%);
+                        color: white;
+                        border: none;
+                        padding: 12px 20px;
+                        border-radius: 25px;
+                        cursor: pointer;
+                        font-size: 14px;
+                        font-weight: 600;
+                        box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+                        transition: all 0.3s ease;
+                        display: none;
+                        align-items: center;
+                        gap: 8px;
+                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(220, 53, 69, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(220, 53, 69, 0.3)'">
                         ❌ Cancel
                     </button>
-                </div>
-                
-                <!-- Emergency Data Recovery Section -->
-                <div class="emergency-recovery-section" style="margin-top: 15px; padding: 15px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; border-left: 4px solid #f39c12;">
-                    <h4 style="color: #856404; margin-bottom: 10px; font-size: 16px;">🚨 Emergency Data Recovery</h4>
-                    <p style="color: #856404; font-size: 12px; margin-bottom: 10px;">If your data appears corrupted (showing column names instead of actual data), use these buttons to fix it:</p>
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button id="checkCorruptionBtn" class="btn btn-warning btn-sm" onclick="runCheckCorruption()" style="font-size: 12px; padding: 6px 12px;">
-                            🔍 Check Data Corruption
-                        </button>
-                        <button id="emergencyRecoveryBtn" class="btn btn-danger btn-sm" onclick="runEmergencyRecovery()" style="font-size: 12px; padding: 6px 12px;">
-                            🛠️ Emergency Recovery
-                        </button>
-                    </div>
-                    <div id="recoveryStatus" style="margin-top: 10px; font-size: 12px; color: #6c757d; min-height: 20px;"></div>
                 </div>
             </div>
             
@@ -2332,12 +2397,30 @@
                             <option value="season">Season</option>
                             <option value="customer">Customer</option>
                             <option value="style_number">Style Number</option>
+                            <option value="style_name">Style Name</option>
                         </select>
             </div>
             
                     <div class="filter-group">
                         <label for="searchInput">Search Value</label>
-                        <input type="text" id="searchInput" class="search-input" placeholder="Select filter type first..." onkeyup="handleSearchKeyup(event)">
+                        <div style="position: relative;">
+                            <input type="text" id="searchInput" class="search-input" placeholder="Select filter type first..." onkeyup="handleSearchKeyup(event)" oninput="showLiveSuggestions()" onfocus="showLiveSuggestions()" onblur="hideLiveSuggestions()">
+                            <div id="liveSuggestions" style="
+                                position: absolute;
+                                top: 100%;
+                                left: 0;
+                                right: 0;
+                                background: white;
+                                border: 1px solid #ddd;
+                                border-top: none;
+                                border-radius: 0 0 8px 8px;
+                                max-height: 200px;
+                                overflow-y: auto;
+                                z-index: 1000;
+                                display: none;
+                                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                            "></div>
+                        </div>
                     </div>
                     
                     <button class="search-button" onclick="searchData()">
@@ -2379,7 +2462,7 @@
         </div>
 
         <!-- Product Type Selection - Bottom of Page -->
-        <div id="productSelection" class="product-selection-container scroll-animate">
+        <div id="productSelection" class="product-selection-container">
             <div class="product-selection-header scroll-slide-left scroll-stagger-1">
                 <h2>IMPORT EXCEL FILES FTY CBD</h2>
             </div>
@@ -2394,7 +2477,7 @@
         </div>
 
         <!-- TEMPLATE 1: Factory Cost Breakdown Table - Bottom of Page -->
-        <div id="costBreakdown" class="cost-breakdown-container scroll-animate" style="display: none;">
+        <div id="costBreakdown" class="cost-breakdown-container" style="display: none;">
             <div class="cost-breakdown-header scroll-fade-in">
                 <div class="header-content scroll-slide-left scroll-stagger-1">
                     <h2>Factory Cost Breakdown</h2>
@@ -3891,6 +3974,10 @@
                 hideIntroOverlay();
                 // Make sure main content is visible
                 document.getElementById('productSelection').style.display = 'block';
+                // Ensure welcome message is visible if connection failed
+                document.getElementById('welcomeMessage').style.display = 'block';
+                document.getElementById('autoConnectStatus').style.display = 'none';
+                document.getElementById('connectButton').style.display = 'inline-block';
             }, 10000); // 10 second timeout
             
             try {
@@ -3933,6 +4020,7 @@
                     showStatus('connectionStatus', '✅ Auto-connected to Supabase successfully!', 'success');
                     document.getElementById('dataTableSection').style.display = 'block';
                     document.getElementById('autoConnectStatus').style.display = 'none';
+                    document.getElementById('welcomeMessage').style.display = 'none';
                     
                     // Auto-load databank table data immediately
                     setTimeout(() => {
@@ -3951,6 +4039,7 @@
                     showStatus('connectionStatus', '❌ Auto-connection failed: ' + (result.message || 'Unknown error'), 'error');
                     document.getElementById('autoConnectStatus').style.display = 'none';
                     document.getElementById('connectButton').style.display = 'inline-block';
+                    document.getElementById('welcomeMessage').style.display = 'block';
                     
                     // Hide intro overlay even if connection fails
                     setTimeout(() => {
@@ -3964,6 +4053,7 @@
                 showStatus('connectionStatus', '❌ Auto-connection error: ' + error.message, 'error');
                 document.getElementById('autoConnectStatus').style.display = 'none';
                 document.getElementById('connectButton').style.display = 'inline-block';
+                document.getElementById('welcomeMessage').style.display = 'block';
                 
                 // Hide intro overlay even if there's an error
                 setTimeout(() => {
@@ -4077,7 +4167,7 @@
 
         // Auto-load databank table data - LOAD ALL DATA FROM SUPABASE
         async function loadDatabankData() {
-            console.log('🔄 Loading ALL data from Supabase database...');
+            // Loading ALL data from Supabase database...
             
             // Don't load database data if we're processing Excel
             if (window.isProcessingExcel) {
@@ -4233,9 +4323,7 @@
         }
 
         function displayTableData(data) {
-            console.log('🔍 displayTableData called with:', data);
-            console.log('🔍 Data length:', data ? data.length : 'undefined');
-            console.log('🔍 Data type:', typeof data);
+            // Displaying table data with', data ? data.length : 'undefined', 'rows');
             
             // Store current data globally for pagination
             window.currentTableData = data;
@@ -4421,34 +4509,56 @@
             // More robust check for header row
             let dataToShow = data;
             
-            // Check if first row values match column names (case-insensitive)
-            const isHeaderRow = firstRowValues.every(val => {
-                const valStr = String(val).toLowerCase();
-                return firstRowKeys.some(key => key.toLowerCase() === valStr);
+            // Function to check if a row contains header-like data
+            function isHeaderRow(row) {
+                if (!row || typeof row !== 'object') return false;
+                
+                const values = Object.values(row);
+                const valueStrings = values.map(val => String(val || '').toLowerCase().trim());
+                
+                // Check if values match column names (case-insensitive)
+                const keys = Object.keys(row);
+                const keyStrings = keys.map(key => key.toLowerCase().trim());
+                
+                // Check if all values match some key
+                const allValuesMatchKeys = valueStrings.every(val => 
+                    val === '' || keyStrings.some(key => key === val)
+                );
+                
+                // Check if values contain display column names
+                const containsDisplayNames = valueStrings.some(val => 
+                    displayColumns.some(displayName => displayName.toLowerCase() === val)
+                );
+                
+                // Check for common header patterns
+                const commonHeaders = ['season', 'customer', 'style number', 'style name', 'main material', 'material consumption', 'material price', 'trim cost', 'total material cost', 'knitting machine', 'knitting time', 'knitting cpm', 'knitting cost', 'ops cost', 'knitting + ops cost', 'packaging', 'oh', 'profit', 'fty adjustment', 'ttl fty cost'];
+                const containsCommonHeaders = valueStrings.some(val => 
+                    commonHeaders.includes(val)
+                );
+                
+                // Check if row has too many empty values (typical of header rows)
+                const emptyCount = valueStrings.filter(val => val === '' || val === 'null' || val === 'undefined').length;
+                const isEmptyRow = emptyCount > (values.length * 0.7); // 70% empty
+                
+                return allValuesMatchKeys || containsDisplayNames || containsCommonHeaders || isEmptyRow;
+            }
+            
+            // Check all rows and filter out header-like rows
+            dataToShow = data.filter((row, index) => {
+                const isHeader = isHeaderRow(row);
+                if (isHeader) {
+                    console.log(`Row ${index} detected as header row, filtering out:`, row);
+                }
+                return !isHeader;
             });
             
-            // Also check if first row contains our specific display column names
-            const containsDisplayNames = firstRowValues.some(val => {
-                const valStr = String(val).toLowerCase();
-                return displayColumns.some(displayName => displayName.toLowerCase() === valStr);
-            });
+            console.log(`Filtered out ${data.length - dataToShow.length} header rows`);
+            console.log('Remaining data rows:', dataToShow.length);
             
-            // Check for common header patterns
-            const commonHeaders = ['season', 'customer', 'style number', 'style name', 'main material'];
-            const containsCommonHeaders = firstRowValues.some(val => {
-                const valStr = String(val).toLowerCase();
-                return commonHeaders.includes(valStr);
-            });
-            
-            console.log('Is header row (keys match):', isHeaderRow);
-            console.log('Contains display names:', containsDisplayNames);
-            console.log('Contains common headers:', containsCommonHeaders);
-            
-            if (isHeaderRow || containsDisplayNames || containsCommonHeaders) {
-                console.log('Detected header row, skipping first row');
-                dataToShow = data.slice(1);
-            } else {
-                console.log('First row appears to be data, keeping all rows');
+            // Safety check: if all rows were filtered out, show original data
+            if (dataToShow.length === 0) {
+                console.warn('⚠️ All rows were filtered out as headers, showing original data');
+                dataToShow = data;
             }
             
             console.log('Data to show (first 3 rows):', dataToShow.slice(0, 3));
@@ -4463,7 +4573,10 @@
                         html += `<td style="padding: 10px 8px; border: 1px solid #ddd; font-size: 13px; color: #c62828; font-style: italic; text-align: center; background: #ffebee; vertical-align: middle;">—</td>`;
                     } else {
                         const value = row[col];
-                        console.log(`Row ${rowIndex}, Column ${col}: value =`, value, 'type =', typeof value);
+                        // Debug logging for first few rows only
+                        if (rowIndex < 3) {
+                            console.log(`Row ${rowIndex}, Column ${col}: value =`, value, 'type =', typeof value);
+                        }
                         
                         // Handle different value types
                         let displayValue = '';
@@ -4494,6 +4607,7 @@
                     <div style="padding: 15px; background: #f8f9fa; text-align: center; border-top: 1px solid #ddd; border-radius: 0 0 8px 8px;">
                         <small style="color: #6c757d;">
                             <span style="color: #c62828;">●</span> Columns in red are missing from database
+                            ${data.length !== dataToShow.length ? `<br><span style="color: #28a745;">✓</span> Filtered out ${data.length - dataToShow.length} header row(s)` : ''}
                         </small>
                     </div>
                 </div>
@@ -4692,6 +4806,9 @@
                     break;
                 case 'style_number':
                     searchInput.placeholder = 'Enter style number (e.g., TNFF27-014)...';
+                    break;
+                case 'style_name':
+                    searchInput.placeholder = 'Enter style name (e.g., VANS WORLDWIDE BEANIE)...';
                     break;
                 default:
                     searchInput.placeholder = 'Select filter type first...';
@@ -5032,13 +5149,24 @@
                 const response = await fetch(apiUrl);
                 const supabaseData = await response.json();
                 
+                // Handle different response formats
+                let records = [];
+                if (Array.isArray(supabaseData)) {
+                    records = supabaseData;
+                } else if (supabaseData.data && Array.isArray(supabaseData.data)) {
+                    records = supabaseData.data;
+                } else {
+                    console.error('❌ Unexpected data format from API:', supabaseData);
+                    records = [];
+                }
+                
                 console.log('🗄️ Supabase data (first 3 rows):');
-                console.log(supabaseData.slice(0, 3));
+                console.log(records.slice(0, 3));
                 
                 // Compare specific fields
                 for (let i = 0; i < 3; i++) {
                     const website = allTableData[i];
-                    const supabase = supabaseData[i];
+                    const supabase = records[i];
                     
                     console.log(`\n📊 Row ${i + 1} comparison:`);
                     console.log(`Website style_name: "${website?.style_name}"`);
@@ -5574,15 +5702,27 @@
                 }
                 
                 const supabaseData = await response.json();
-                console.log(`🔍 Searching through ${supabaseData.length} records in Supabase...`);
-                console.log('🗄️ First 3 Supabase records for comparison:', supabaseData.slice(0, 3));
+                
+                // Handle different response formats
+                let records = [];
+                if (Array.isArray(supabaseData)) {
+                    records = supabaseData;
+                } else if (supabaseData.data && Array.isArray(supabaseData.data)) {
+                    records = supabaseData.data;
+                } else {
+                    console.error('❌ Unexpected data format from API:', supabaseData);
+                    throw new Error('Invalid data format received from API');
+                }
+                
+                console.log(`🔍 Searching through ${records.length} records in Supabase...`);
+                console.log('🗄️ First 3 Supabase records for comparison:', records.slice(0, 3));
                 
                 // Try to find a record that matches the content
                 let bestMatch = null;
                 let bestMatchScore = 0;
                 
-                for (let i = 0; i < supabaseData.length; i++) {
-                    const supabaseRecord = supabaseData[i];
+                for (let i = 0; i < records.length; i++) {
+                    const supabaseRecord = records[i];
                     let matchScore = 0;
                     let totalFields = 0;
                     let matchingFields = [];
@@ -5957,7 +6097,12 @@
             }
             
             // Update cell display without refreshing the table
-            cell.innerHTML = newValue || '<span style="color: #6c757d; font-style: italic;">—</span>';
+            try {
+                cell.innerHTML = newValue || '<span style="color: #6c757d; font-style: italic;">—</span>';
+            } catch (error) {
+                console.warn('⚠️ DOM update error, using textContent instead:', error);
+                cell.textContent = newValue || '—';
+            }
             cell.classList.remove('editable-cell');
             
             // Update stored original value
@@ -7551,6 +7696,12 @@
             console.log('Document ready state:', document.readyState);
             console.log('Window loaded:', document.readyState === 'complete');
             
+            // Ensure welcome message is visible on page load
+            const welcomeMessage = document.getElementById('welcomeMessage');
+            if (welcomeMessage) {
+                welcomeMessage.style.display = 'block';
+            }
+            
             // Check which containers are visible
             const costBreakdown = document.getElementById('costBreakdown');
             const ballcapsBreakdown = document.getElementById('ballcapsBreakdown');
@@ -7656,7 +7807,7 @@
                     try {
                         // Load XLSX library synchronously
                         const script = document.createElement('script');
-                        script.src = 'xlsx.min.js';
+                        script.src = 'js/xlsx.min.js';
                         document.head.appendChild(script);
                         
                         // Wait a moment for the script to load
@@ -7950,7 +8101,191 @@
         function handleSearchKeyup(event) {
             if (event.key === 'Enter') {
                 searchData();
+                hideLiveSuggestions();
+            } else if (event.key === 'Escape') {
+                hideLiveSuggestions();
             }
+        }
+
+        // Show live search suggestions as user types
+        function showLiveSuggestions() {
+            const filterType = document.getElementById('filterType').value;
+            const searchValue = document.getElementById('searchInput').value.trim();
+            const suggestionsDiv = document.getElementById('liveSuggestions');
+            
+            // Don't show suggestions if no filter type selected or search value is too short
+            if (!filterType || searchValue.length < 2) {
+                hideLiveSuggestions();
+                return;
+            }
+            
+            // Get suggestions from current data
+            const suggestions = getLiveSuggestions(filterType, searchValue);
+            
+            if (suggestions.length === 0) {
+                hideLiveSuggestions();
+                return;
+            }
+            
+            // Display suggestions
+            suggestionsDiv.innerHTML = suggestions.map(suggestion => `
+                <div class="suggestion-item" style="
+                    padding: 10px 15px;
+                    cursor: pointer;
+                    border-bottom: 1px solid #f0f0f0;
+                    transition: background-color 0.2s ease;
+                " onmouseover="this.style.backgroundColor='#f8f9fa'" onmouseout="this.style.backgroundColor='white'" onclick="selectSuggestion('${suggestion.replace(/'/g, "\\'")}')">
+                    <div style="font-weight: 500; color: #333;">${suggestion}</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 2px;">Click to select</div>
+                </div>
+            `).join('');
+            
+            suggestionsDiv.style.display = 'block';
+        }
+
+        // Hide live suggestions
+        function hideLiveSuggestions() {
+            // Add small delay to allow clicks on suggestions
+            setTimeout(() => {
+                const suggestionsDiv = document.getElementById('liveSuggestions');
+                if (suggestionsDiv) {
+                    suggestionsDiv.style.display = 'none';
+                }
+            }, 150);
+        }
+
+        // Get live suggestions based on current data
+        function getLiveSuggestions(filterType, searchValue) {
+            if (!allTableData || allTableData.length === 0) {
+                return [];
+            }
+            
+            // Map filter type to actual database field name
+            const fieldMapping = {
+                'season': ['season', 'Season', 'SEASON', 'seasons', 'SEASONS'],
+                'customer': ['customer', 'Customer', 'CUSTOMER', 'customers', 'CUSTOMERS'],
+                'style_number': ['style_number', 'styleNumber', 'Style Number', 'STYLE_NUMBER', 'style_no', 'styleNo', 'STYLE_NO'],
+                'style_name': ['style_name', 'styleName', 'Style Name', 'STYLE_NAME', 'style', 'STYLE']
+            };
+            
+            const possibleFieldNames = fieldMapping[filterType] || [filterType];
+            const actualFieldName = possibleFieldNames.find(name => allTableData[0] && allTableData[0].hasOwnProperty(name));
+            
+            if (!actualFieldName) {
+                return [];
+            }
+            
+            // Get unique values from the field
+            const uniqueValues = [...new Set(allTableData.map(row => String(row[actualFieldName] || '').trim()).filter(value => value.length > 0))];
+            
+            // Filter and score suggestions
+            const suggestions = uniqueValues.map(value => ({
+                value: value,
+                similarity: calculateSimilarity(value, searchValue)
+            })).filter(item => item.similarity >= 0.2) // Lower threshold for suggestions
+            .sort((a, b) => b.similarity - a.similarity)
+            .slice(0, 8) // Show top 8 suggestions
+            .map(item => item.value);
+            
+            return suggestions;
+        }
+
+        // Select a suggestion
+        function selectSuggestion(suggestion) {
+            document.getElementById('searchInput').value = suggestion;
+            hideLiveSuggestions();
+            // Optionally auto-search when suggestion is selected
+            // searchData();
+        }
+
+        // Calculate similarity between two strings using multiple algorithms
+        function calculateSimilarity(str1, str2) {
+            if (!str1 || !str2) return 0;
+            
+            // Normalize strings
+            const s1 = str1.toLowerCase().trim();
+            const s2 = str2.toLowerCase().trim();
+            
+            // Exact match gets highest score
+            if (s1 === s2) return 1.0;
+            
+            // Contains match gets high score
+            if (s1.includes(s2) || s2.includes(s1)) return 0.9;
+            
+            // Calculate Levenshtein distance similarity
+            const levenshteinSimilarity = 1 - (levenshteinDistance(s1, s2) / Math.max(s1.length, s2.length));
+            
+            // Calculate Jaccard similarity (word-based)
+            const jaccardSimilarity = calculateJaccardSimilarity(s1, s2);
+            
+            // Calculate substring similarity
+            const substringSimilarity = calculateSubstringSimilarity(s1, s2);
+            
+            // Weighted combination of different similarity measures
+            const finalSimilarity = (
+                levenshteinSimilarity * 0.4 +
+                jaccardSimilarity * 0.3 +
+                substringSimilarity * 0.3
+            );
+            
+            return Math.max(0, Math.min(1, finalSimilarity));
+        }
+        
+        // Levenshtein distance calculation
+        function levenshteinDistance(str1, str2) {
+            const matrix = [];
+            for (let i = 0; i <= str2.length; i++) {
+                matrix[i] = [i];
+            }
+            for (let j = 0; j <= str1.length; j++) {
+                matrix[0][j] = j;
+            }
+            for (let i = 1; i <= str2.length; i++) {
+                for (let j = 1; j <= str1.length; j++) {
+                    if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+            return matrix[str2.length][str1.length];
+        }
+        
+        // Jaccard similarity (word-based)
+        function calculateJaccardSimilarity(str1, str2) {
+            const words1 = new Set(str1.split(/\s+/).filter(w => w.length > 0));
+            const words2 = new Set(str2.split(/\s+/).filter(w => w.length > 0));
+            
+            const intersection = new Set([...words1].filter(x => words2.has(x)));
+            const union = new Set([...words1, ...words2]);
+            
+            return intersection.size / union.size;
+        }
+        
+        // Substring similarity
+        function calculateSubstringSimilarity(str1, str2) {
+            const longer = str1.length > str2.length ? str1 : str2;
+            const shorter = str1.length > str2.length ? str2 : str1;
+            
+            if (longer.length === 0) return 1.0;
+            
+            let maxMatch = 0;
+            for (let i = 0; i <= longer.length - shorter.length; i++) {
+                let match = 0;
+                for (let j = 0; j < shorter.length; j++) {
+                    if (longer[i + j] === shorter[j]) {
+                        match++;
+                    }
+                }
+                maxMatch = Math.max(maxMatch, match);
+            }
+            
+            return maxMatch / longer.length;
         }
 
         // Search data based on selected filter and search value - LOADS FRESH DATA FROM SUPABASE
@@ -8019,12 +8354,29 @@
                     
                     console.log(`Searching in field: ${actualFieldName} (mapped from ${filterType})`);
                     
-                    // Filter the data on the client side and store in global filteredData
-                    filteredData = result.data.filter(row => {
+                    // Enhanced fuzzy search with similarity scoring
+                    const searchResults = result.data.map(row => {
                         const fieldValue = String(row[actualFieldName] || '').toLowerCase();
                         const searchTerm = searchValue.toLowerCase();
-                        return fieldValue.includes(searchTerm);
+                        
+                        // Calculate similarity score
+                        const similarity = calculateSimilarity(fieldValue, searchTerm);
+                        
+                        return {
+                            row: row,
+                            similarity: similarity,
+                            fieldValue: fieldValue
+                        };
+                    }).filter(item => {
+                        // Include results with good similarity (threshold of 0.3 = 30% similarity)
+                        return item.similarity >= 0.3;
+                    }).sort((a, b) => {
+                        // Sort by similarity score (highest first)
+                        return b.similarity - a.similarity;
                     });
+                    
+                    // Extract just the rows for filteredData
+                    filteredData = searchResults.map(item => item.row);
                     
                     console.log(`Found ${filteredData.length} matching records out of ${result.data.length} total`);
                     
@@ -8038,7 +8390,13 @@
                         displayCurrentPageData();
                         updatePagination();
                         
-                        showStatus('tableData', `✅ Found ${filteredData.length} records matching "${searchValue}" in ${filterType} (searched ${result.data.length} FRESH records from Supabase)`, 'success');
+                        // Show similarity information in console for debugging
+                        console.log('🔍 Search results with similarity scores:');
+                        searchResults.slice(0, 5).forEach((item, index) => {
+                            console.log(`${index + 1}. ${item.fieldValue} (${(item.similarity * 100).toFixed(1)}% match)`);
+                        });
+                        
+                        showStatus('tableData', `✅ Found ${filteredData.length} similar records for "${searchValue}" in ${filterType} (searched ${result.data.length} FRESH records from Supabase)`, 'success');
                     } else {
                         showStatus('tableData', `❌ No records found matching "${searchValue}" in ${filterType} (searched ${result.data.length} FRESH records from Supabase)`, 'error');
                     }
@@ -8091,6 +8449,7 @@
             document.getElementById('filterType').value = '';
             document.getElementById('searchInput').value = '';
             document.getElementById('searchInput').placeholder = 'Select filter type first...';
+            hideLiveSuggestions();
             
             // Reset pagination to show all data
             filteredData = null;
@@ -11076,6 +11435,308 @@
             }
         }
 
+        // Toggle emergency recovery panel with slide animation
+        function toggleEmergencyPanel() {
+            const popup = document.getElementById('emergencyRecoveryPopup');
+            const backdrop = document.getElementById('emergencyBackdrop');
+            const button = document.getElementById('floatingEmergencyBtn');
+            
+            if (popup.style.display === 'none' || popup.style.display === '') {
+                // Show popup - slide out from button
+                const buttonRect = button.getBoundingClientRect();
+                const buttonCenterX = buttonRect.left + buttonRect.width / 2;
+                const buttonCenterY = buttonRect.top + buttonRect.height / 2;
+                
+                // Position popup at button location initially
+                popup.style.left = buttonCenterX + 'px';
+                popup.style.top = buttonCenterY + 'px';
+                popup.style.transform = 'translate(-50%, -50%) scale(0.1)';
+                popup.style.opacity = '0';
+                popup.style.display = 'block';
+                backdrop.style.display = 'block';
+                
+                // Button animation - shrink and change color
+                button.style.transform = 'scale(0.8)';
+                button.style.background = 'linear-gradient(135deg, #e74c3c, #c0392b)';
+                button.style.boxShadow = '0 0 20px rgba(231, 76, 60, 0.6)';
+                button.classList.add('pulse');
+                
+                // Animate popup sliding out to center
+                requestAnimationFrame(() => {
+                    popup.style.transition = 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                    popup.style.left = '50%';
+                    popup.style.top = '50%';
+                    popup.style.transform = 'translate(-50%, -50%) scale(1)';
+                    popup.style.opacity = '1';
+                    
+                    // Add bounce effect
+                    popup.classList.add('bounce');
+                    setTimeout(() => {
+                        popup.classList.remove('bounce');
+                    }, 600);
+                });
+                
+                // Animate backdrop fade in
+                backdrop.style.transition = 'opacity 0.3s ease';
+                backdrop.style.opacity = '1';
+                
+            } else {
+                // Hide popup - slide back to button
+                const buttonRect = button.getBoundingClientRect();
+                const buttonCenterX = buttonRect.left + buttonRect.width / 2;
+                const buttonCenterY = buttonRect.top + buttonRect.height / 2;
+                
+                // Animate popup sliding back to button
+                popup.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                popup.style.left = buttonCenterX + 'px';
+                popup.style.top = buttonCenterY + 'px';
+                popup.style.transform = 'translate(-50%, -50%) scale(0.1)';
+                popup.style.opacity = '0';
+                
+                // Animate backdrop fade out
+                backdrop.style.transition = 'opacity 0.2s ease';
+                backdrop.style.opacity = '0';
+                
+                // Button animation - return to normal
+                button.style.transform = 'scale(1)';
+                button.style.background = 'linear-gradient(135deg, #ff6b6b, #ee5a24)';
+                button.style.boxShadow = '0 4px 15px rgba(255, 107, 107, 0.3)';
+                button.classList.remove('pulse');
+                
+                // Hide elements after animation
+                setTimeout(() => {
+                    popup.style.display = 'none';
+                    backdrop.style.display = 'none';
+                    // Reset popup position for next time
+                    popup.style.left = '50%';
+                    popup.style.top = '50%';
+                    popup.style.transform = 'translate(-50%, -50%) scale(0.1)';
+                }, 300);
+            }
+        }
+
+        // Add CSS for smooth transitions and animations
+        const style = document.createElement('style');
+        style.textContent = `
+            #emergencyRecoveryPopup {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.1);
+                transition: none; /* Will be set dynamically */
+                position: fixed;
+                z-index: 1001;
+            }
+            
+            #floatingEmergencyBtn {
+                transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            }
+            
+            #floatingEmergencyBtn:hover {
+                box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4) !important;
+                transform: scale(1.05) !important;
+            }
+            
+            #emergencyRecoveryPopup button {
+                transition: all 0.2s ease;
+            }
+            
+            #emergencyRecoveryPopup button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
+            
+            #emergencyBackdrop {
+                transition: opacity 0.3s ease;
+                opacity: 0;
+            }
+            
+            /* Pulse animation for button when popup is open */
+            @keyframes emergencyPulse {
+                0% { box-shadow: 0 0 20px rgba(231, 76, 60, 0.6); }
+                50% { box-shadow: 0 0 30px rgba(231, 76, 60, 0.8); }
+                100% { box-shadow: 0 0 20px rgba(231, 76, 60, 0.6); }
+            }
+            
+            #floatingEmergencyBtn.pulse {
+                animation: emergencyPulse 1.5s infinite;
+            }
+            
+            /* Bounce effect for popup opening */
+            @keyframes emergencyBounce {
+                0% { transform: translate(-50%, -50%) scale(0.1); }
+                50% { transform: translate(-50%, -50%) scale(1.1); }
+                100% { transform: translate(-50%, -50%) scale(1); }
+            }
+            
+            #emergencyRecoveryPopup.bounce {
+                animation: emergencyBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            }
+            
+            /* Live suggestions styling */
+            #liveSuggestions {
+                font-family: inherit;
+            }
+            
+            .suggestion-item:hover {
+                background-color: #f8f9fa !important;
+            }
+            
+            .suggestion-item:last-child {
+                border-bottom: none;
+            }
+            
+            /* Highlight matching text in suggestions */
+            .suggestion-highlight {
+                background-color: #fff3cd;
+                padding: 1px 2px;
+                border-radius: 2px;
+            }
+            
+            /* Responsive edit buttons */
+            @media (max-width: 768px) {
+                .edit-table-button, .done-edit-button, .cancel-edit-button {
+                    padding: 10px 16px !important;
+                    font-size: 13px !important;
+                    border-radius: 20px !important;
+                }
+                
+                /* Adjust button container positioning for mobile */
+                .table-header > div[style*="position: absolute"] {
+                    top: 15px !important;
+                    right: 15px !important;
+                }
+            }
+            
+            @media (max-width: 480px) {
+                .edit-table-button, .done-edit-button, .cancel-edit-button {
+                    padding: 8px 12px !important;
+                    font-size: 12px !important;
+                    border-radius: 15px !important;
+                }
+                
+                /* Further adjust for small mobile screens */
+                .table-header > div[style*="position: absolute"] {
+                    top: 10px !important;
+                    right: 10px !important;
+                    gap: 8px !important;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
     </script>
+
+    <!-- Floating Emergency Recovery Button -->
+    <div id="floatingEmergencyBtn" style="
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000;
+        background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 15px 20px;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        font-size: 14px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        transition: all 0.3s ease;
+        user-select: none;
+    " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onclick="toggleEmergencyPanel()">
+        <span style="margin-right: 8px; font-size: 16px;">🚨</span>
+        Emergency
+    </div>
+
+    <!-- Emergency Data Recovery Popup -->
+    <div id="emergencyRecoveryPopup" style="
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1001;
+        background: white;
+        border: 2px solid #ffc107;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        min-width: 400px;
+        max-width: 90vw;
+        display: none;
+    ">
+        <!-- Close button -->
+        <div style="position: absolute; top: 10px; right: 15px; cursor: pointer; font-size: 20px; color: #666;" onclick="toggleEmergencyPanel()">×</div>
+        
+        <h4 style="color: #856404; margin: 0 0 15px 0; display: flex; align-items: center; font-size: 18px;">
+            <span style="margin-right: 10px; font-size: 20px;">🚨</span>
+            Emergency Data Recovery
+        </h4>
+        <p style="color: #856404; margin: 0 0 20px 0; font-size: 14px; line-height: 1.5;">
+            If your data appears corrupted (showing column names instead of actual data), use these buttons to fix it:
+        </p>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;">
+            <button onclick="runCheckCorruption()" id="checkCorruptionBtn" style="
+                background: #6f42c1; 
+                color: white; 
+                border: none; 
+                padding: 12px 20px; 
+                border-radius: 6px; 
+                cursor: pointer; 
+                display: flex; 
+                align-items: center; 
+                font-size: 14px;
+                font-weight: 500;
+                transition: all 0.2s ease;
+                flex: 1;
+                min-width: 150px;
+                justify-content: center;
+            " onmouseover="this.style.background='#5a32a3'" onmouseout="this.style.background='#6f42c1'">
+                <span style="margin-right: 8px;">🔍</span>
+                Check Data Corruption
+            </button>
+            <button onclick="runEmergencyRecovery()" id="emergencyRecoveryBtn" style="
+                background: #6f42c1; 
+                color: white; 
+                border: none; 
+                padding: 12px 20px; 
+                border-radius: 6px; 
+                cursor: pointer; 
+                display: flex; 
+                align-items: center; 
+                font-size: 14px;
+                font-weight: 500;
+                transition: all 0.2s ease;
+                flex: 1;
+                min-width: 150px;
+                justify-content: center;
+            " onmouseover="this.style.background='#5a32a3'" onmouseout="this.style.background='#6f42c1'">
+                <span style="margin-right: 8px;">🔧</span>
+                Emergency Recovery
+            </button>
+        </div>
+        <div id="recoveryStatus" style="
+            margin-top: 15px; 
+            font-size: 14px; 
+            color: #856404;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid #ffc107;
+        "></div>
+    </div>
+
+    <!-- Backdrop overlay -->
+    <div id="emergencyBackdrop" style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        display: none;
+    " onclick="toggleEmergencyPanel()"></div>
+
 </body>
 </html>
