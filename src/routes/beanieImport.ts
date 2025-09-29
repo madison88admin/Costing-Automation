@@ -42,20 +42,20 @@ router.post('/save', async (req: Request, res: Response) => {
     const result = await beanieService.saveBeanieCostData(excelData);
 
     if (result.success) {
-      res.json({
+      return res.json({
         success: true,
         message: result.message,
         data: result.data
       });
     } else {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         error: result.message
       });
     }
   } catch (error) {
     logger.error('Error saving beanie cost data:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to save beanie cost data',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -93,13 +93,13 @@ router.get('/:costId', async (req: Request, res: Response) => {
     // Get the beanie cost data
     const data = await beanieService.getBeanieCostData(parseInt(costId));
 
-    res.json({
+    return res.json({
       success: true,
       data
     });
   } catch (error) {
     logger.error('Error getting beanie cost data:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to get beanie cost data',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -136,13 +136,13 @@ router.get('/', async (req: Request, res: Response) => {
     // Get all beanie cost data
     const data = await beanieService.getAllBeanieCostData();
 
-    res.json({
+    return res.json({
       success: true,
       data
     });
   } catch (error) {
     logger.error('Error getting all beanie cost data:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to get beanie cost data',
       message: error instanceof Error ? error.message : 'Unknown error'

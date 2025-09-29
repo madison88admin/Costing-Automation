@@ -424,6 +424,272 @@ class TNFBallCapsImporter {
         console.log('Parsed TNF Ball Caps data:', result);
         return result;
     }
+
+    /**
+     * Make existing UI text editable by converting table cells to input fields
+     * @param {Object} data - Parsed data to populate
+     */
+    makeUIEditable(data) {
+        console.log('🎨 Making UI text editable...');
+        
+        // Make all table cells editable
+        this.makeTableCellsEditable();
+        
+        // Populate with data
+        this.populateEditableFields(data);
+        
+        console.log('✅ UI is now editable');
+    }
+
+    /**
+     * Convert table cells to editable input fields
+     */
+    makeTableCellsEditable() {
+        // Find all tables in the document
+        const tables = document.querySelectorAll('table');
+        
+        tables.forEach(table => {
+            const rows = table.querySelectorAll('tr');
+            
+            rows.forEach((row, rowIndex) => {
+                // Skip header rows
+                if (rowIndex === 0) return;
+                
+                const cells = row.querySelectorAll('td');
+                
+                cells.forEach((cell, cellIndex) => {
+                    // Skip if already editable
+                    if (cell.querySelector('input, textarea')) return;
+                    
+                    const originalText = cell.textContent.trim();
+                    
+                    // Create input field
+                    let input;
+                    if (cellIndex === 0) {
+                        // First column (material) - use textarea for longer text
+                        input = document.createElement('textarea');
+                        input.rows = 2;
+                        input.style.cssText = `
+                            width: 100%;
+                            border: none;
+                            padding: 4px;
+                            resize: vertical;
+                            min-height: 30px;
+                            font-family: inherit;
+                            font-size: inherit;
+                            background: transparent;
+                        `;
+                    } else {
+                        // Other columns - use input
+                        input = document.createElement('input');
+                        input.type = 'text';
+                        input.style.cssText = `
+                            width: 100%;
+                            border: none;
+                            padding: 4px;
+                            font-family: inherit;
+                            font-size: inherit;
+                            background: transparent;
+                        `;
+                    }
+                    
+                    // Set value and placeholder
+                    input.value = originalText;
+                    input.placeholder = originalText || 'Enter value...';
+                    
+                    // Add hover and focus effects
+                    input.addEventListener('mouseenter', () => {
+                        input.style.backgroundColor = '#f8f9fa';
+                        input.style.border = '1px solid #007bff';
+                        input.style.borderRadius = '3px';
+                    });
+                    
+                    input.addEventListener('mouseleave', () => {
+                        if (document.activeElement !== input) {
+                            input.style.backgroundColor = 'transparent';
+                            input.style.border = 'none';
+                            input.style.borderRadius = '0';
+                        }
+                    });
+                    
+                    input.addEventListener('focus', () => {
+                        input.style.backgroundColor = '#fff';
+                        input.style.border = '2px solid #007bff';
+                        input.style.borderRadius = '3px';
+                        input.style.boxShadow = '0 0 0 2px rgba(0, 123, 255, 0.25)';
+                    });
+                    
+                    input.addEventListener('blur', () => {
+                        input.style.backgroundColor = 'transparent';
+                        input.style.border = 'none';
+                        input.style.borderRadius = '0';
+                        input.style.boxShadow = 'none';
+                    });
+                    
+                    // Clear cell content and add input
+                    cell.innerHTML = '';
+                    cell.appendChild(input);
+                });
+            });
+        });
+    }
+
+    /**
+     * Populate editable fields with data
+     * @param {Object} data - Data to populate
+     */
+    populateEditableFields(data) {
+        // Make header fields editable and populate them
+        this.makeHeaderFieldsEditable();
+        this.populateHeaderFields(data);
+        
+        // Populate material sections
+        this.populateMaterialSection('fabric', data.fabric);
+        this.populateMaterialSection('trim', data.trim);
+        this.populateMaterialSection('embroidery', data.embroidery);
+    }
+
+    /**
+     * Make header fields editable by converting them to input fields
+     */
+    makeHeaderFieldsEditable() {
+        // Find and make all info-value spans editable
+        const infoValues = document.querySelectorAll('.info-value');
+        infoValues.forEach(span => {
+            this.makeFieldEditable(span);
+        });
+    }
+
+    /**
+     * Make a specific field editable
+     * @param {string|Element} selector - CSS selector for the field or element
+     * @param {string} value - Value to set (optional)
+     */
+    makeFieldEditable(selector, value = null) {
+        const elements = typeof selector === 'string' ? document.querySelectorAll(selector) : [selector];
+        elements.forEach(element => {
+            // Skip if already editable
+            if (element.querySelector('input, textarea')) return;
+            
+            const originalText = element.textContent.trim();
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = value !== null ? value : originalText;
+            input.placeholder = originalText || 'Enter value...';
+            input.style.cssText = `
+                width: 100%;
+                border: none;
+                padding: 4px;
+                font-family: inherit;
+                font-size: inherit;
+                background: transparent;
+                text-align: inherit;
+            `;
+            
+            // Add hover and focus effects
+            input.addEventListener('mouseenter', () => {
+                input.style.backgroundColor = '#f8f9fa';
+                input.style.border = '1px solid #007bff';
+                input.style.borderRadius = '3px';
+            });
+            
+            input.addEventListener('mouseleave', () => {
+                if (document.activeElement !== input) {
+                    input.style.backgroundColor = 'transparent';
+                    input.style.border = 'none';
+                    input.style.borderRadius = '0';
+                }
+            });
+            
+            input.addEventListener('focus', () => {
+                input.style.backgroundColor = '#fff';
+                input.style.border = '2px solid #007bff';
+                input.style.borderRadius = '3px';
+                input.style.boxShadow = '0 0 0 2px rgba(0, 123, 255, 0.25)';
+            });
+            
+            input.addEventListener('blur', () => {
+                input.style.backgroundColor = 'transparent';
+                input.style.border = 'none';
+                input.style.borderRadius = '0';
+                input.style.boxShadow = 'none';
+            });
+            
+            // Clear element content and add input
+            element.innerHTML = '';
+            element.appendChild(input);
+        });
+    }
+
+    /**
+     * Populate header fields with data
+     * @param {Object} data - Data to populate
+     */
+    populateHeaderFields(data) {
+        this.setFieldValue('input[name="customer"]', data.customer);
+        this.setFieldValue('input[name="season"]', data.season);
+        this.setFieldValue('input[name="styleNumber"]', data.styleNumber);
+        this.setFieldValue('input[name="styleName"]', data.styleName);
+        this.setFieldValue('input[name="costedQuantity"]', data.costedQuantity);
+        this.setFieldValue('input[name="leadtime"]', data.leadtime);
+        this.setFieldValue('input[name="totalMaterialCost"]', data.totalMaterialCost);
+        this.setFieldValue('input[name="totalFactoryCost"]', data.totalFactoryCost);
+    }
+
+    /**
+     * Set field value by selector
+     * @param {string} selector - CSS selector
+     * @param {string} value - Value to set
+     */
+    setFieldValue(selector, value) {
+        const field = document.querySelector(selector);
+        if (field) {
+            field.value = value || '';
+        }
+    }
+
+    /**
+     * Populate material section data
+     * @param {string} sectionName - Name of the section
+     * @param {Array} items - Array of items
+     */
+    populateMaterialSection(sectionName, items) {
+        // Find table rows that might contain this section
+        const tables = document.querySelectorAll('table');
+        
+        tables.forEach(table => {
+            const headers = Array.from(table.querySelectorAll('th')).map(th => th.textContent.toLowerCase());
+            
+            // Check if this table has material-related headers
+            if (headers.includes('material') && headers.includes('consumption')) {
+                const rows = table.querySelectorAll('tr');
+                
+                // Skip header row
+                for (let i = 1; i < rows.length && i - 1 < items.length; i++) {
+                    const cells = rows[i].querySelectorAll('td');
+                    const item = items[i - 1];
+                    
+                    if (cells.length >= 4 && item) {
+                        // Material
+                        const materialInput = cells[0].querySelector('input, textarea');
+                        if (materialInput) materialInput.value = item.material || '';
+                        
+                        // Consumption
+                        const consumptionInput = cells[1].querySelector('input');
+                        if (consumptionInput) consumptionInput.value = item.consumption || '';
+                        
+                        // Price
+                        const priceInput = cells[2].querySelector('input');
+                        if (priceInput) priceInput.value = item.price || '';
+                        
+                        // Cost
+                        const costInput = cells[3].querySelector('input');
+                        if (costInput) costInput.value = item.cost || '';
+                    }
+                }
+            }
+        });
+    }
 }
 
 // Export for use in other modules

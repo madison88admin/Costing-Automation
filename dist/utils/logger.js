@@ -19,4 +19,3 @@ if (process.env.NODE_ENV !== 'production') {
     }));
 }
 exports.default = logger;
-//# sourceMappingURL=logger.js.map

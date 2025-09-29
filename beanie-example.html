@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beanie Excel Reader - First Sheet</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .upload-area {
+            border: 2px dashed #007bff;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            background-color: #f8f9fa;
+        }
+        .upload-area:hover {
+            background-color: #e9ecef;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            display: none;
+        }
+        .summary {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+        .loading {
+            text-align: center;
+            color: #007bff;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧶 Beanie Excel Reader</h1>
+        <p style="text-align: center; color: #666;">Upload an Excel file to read the first sheet and parse beanie cost data</p>
+        
+        <div class="upload-area">
+            <h3>📁 Choose Excel File</h3>
+            <p>Supported formats: .xlsx, .xls, .xlsm</p>
+            <input type="file" id="fileInput" accept=".xlsx,.xls,.xlsm">
+            <br>
+            <button id="readBtn" onclick="readExcelFile()" disabled>📖 Read First Sheet</button>
+            <button id="editBtn" onclick="editData()" disabled>✏️ Edit Data</button>
+            <button id="saveBtn" onclick="saveData()" disabled>💾 Save as JSON</button>
+            <button id="exportBtn" onclick="exportData()" disabled>📊 Export to Excel</button>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            ⏳ Reading Excel file and parsing first sheet...
+        </div>
+
+        <div id="results" class="results">
+            <h3>📊 Parsing Results</h3>
+            <div id="summary"></div>
+            <div id="details"></div>
+            <div id="editable"></div>
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+    </div>
+
+    <script src="public/js/beanieImport.js"></script>
+    <script>
+        let parsedData = null;
+        const fileInput = document.getElementById('fileInput');
+        const readBtn = document.getElementById('readBtn');
+        const editBtn = document.getElementById('editBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const error = document.getElementById('error');
+        const summary = document.getElementById('summary');
+        const details = document.getElementById('details');
+        const editable = document.getElementById('editable');
+
+        // Enable read button when file is selected
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                readBtn.disabled = false;
+                hideError();
+                hideResults();
+            } else {
+                readBtn.disabled = true;
+                editBtn.disabled = true;
+                saveBtn.disabled = true;
+                exportBtn.disabled = true;
+            }
+        });
+
+        async function readExcelFile() {
+            const file = fileInput.files[0];
+            if (!file) {
+                showError('Please select a file first');
+                return;
+            }
+
+            try {
+                showLoading();
+                hideError();
+                hideResults();
+
+                const importer = new TNFBeanieImporter();
+                parsedData = await importer.readExcelFile(file);
+                
+                // Display the data as editable table directly
+                const editableHtml = importer.createEditableTable(parsedData);
+                editable.innerHTML = editableHtml;
+                
+                // Add global functions for the editable table
+                window.saveEdits = function() {
+                    const editedData = importer.getEditedData();
+                    parsedData = editedData;
+                    alert('✅ Changes saved successfully!');
+                };
+                
+                window.exportToExcel = function() {
+                    const editedData = importer.getEditedData();
+                    importer.exportToExcel(editedData);
+                };
+                
+                window.addRow = function(section) {
+                    const table = document.getElementById(section + 'Table');
+                    const tbody = table.querySelector('tbody');
+                    const newRow = document.createElement('tr');
+                    
+                    if (section === 'operations') {
+                        newRow.innerHTML = `
+                            <td><textarea class="edit-textarea" data-field="operation" data-index="new" rows="2"></textarea></td>
+                            <td><input type="number" step="0.01" value="0" class="edit-input" data-field="cost" data-index="new"></td>
+                            <td><button onclick="removeRow('${section}', this)" class="remove-btn">❌</button></td>
+                        `;
+                    } else if (section === 'packaging' || section === 'overhead') {
+                        newRow.innerHTML = `
+                            <td><textarea class="edit-textarea" data-field="item" data-index="new" rows="2"></textarea></td>
+                            <td><input type="number" step="0.01" value="0" class="edit-input" data-field="cost" data-index="new"></td>
+                            <td><button onclick="removeRow('${section}', this)" class="remove-btn">❌</button></td>
+                        `;
+                    } else {
+                        newRow.innerHTML = `
+                            <td><textarea class="edit-textarea" data-field="material" data-index="new" rows="2"></textarea></td>
+                            <td><input type="text" value="" class="edit-input" data-field="consumption" data-index="new"></td>
+                            <td><input type="number" step="0.01" value="0" class="edit-input" data-field="price" data-index="new"></td>
+                            <td><input type="number" step="0.01" value="0" class="edit-input" data-field="cost" data-index="new"></td>
+                            <td><button onclick="removeRow('${section}', this)" class="remove-btn">❌</button></td>
+                        `;
+                    }
+                    tbody.appendChild(newRow);
+                };
+                
+                window.removeRow = function(section, element) {
+                    if (typeof element === 'number') {
+                        // Called with index
+                        const table = document.getElementById(section + 'Table');
+                        const tbody = table.querySelector('tbody');
+                        const rows = tbody.querySelectorAll('tr');
+                        if (rows[element]) {
+                            rows[element].remove();
+                        }
+                    } else {
+                        // Called with button element
+                        element.closest('tr').remove();
+                    }
+                };
+                
+                window.recalculateTotals = function() {
+                    // Simple total recalculation
+                    let totalMaterial = 0;
+                    let totalFactory = 0;
+                    
+                    // Calculate material costs
+                    ['yarn', 'fabric', 'trim', 'knitting'].forEach(section => {
+                        const rows = document.querySelectorAll(`#${section}Table tbody tr`);
+                        rows.forEach(row => {
+                            const costInput = row.querySelector('input[data-field="cost"]');
+                            if (costInput && costInput.value) {
+                                totalMaterial += parseFloat(costInput.value) || 0;
+                            }
+                        });
+                    });
+                    
+                    // Calculate factory costs
+                    ['operations', 'packaging', 'overhead'].forEach(section => {
+                        const rows = document.querySelectorAll(`#${section}Table tbody tr`);
+                        rows.forEach(row => {
+                            const costInput = row.querySelector('input[data-field="cost"]');
+                            if (costInput && costInput.value) {
+                                totalFactory += parseFloat(costInput.value) || 0;
+                            }
+                        });
+                    });
+                    
+                    // Update totals
+                    const totalMaterialInput = document.getElementById('totalMaterialCost');
+                    const totalFactoryInput = document.getElementById('totalFactoryCost');
+                    if (totalMaterialInput) totalMaterialInput.value = totalMaterial.toFixed(2);
+                    if (totalFactoryInput) totalFactoryInput.value = totalFactory.toFixed(2);
+                };
+                
+                // Show the editable interface
+                editable.style.display = 'block';
+                summary.style.display = 'none';
+                details.style.display = 'none';
+                
+                editBtn.disabled = false;
+                saveBtn.disabled = false;
+                exportBtn.disabled = false;
+                
+            } catch (err) {
+                showError('Error reading Excel file: ' + err.message);
+                console.error('Error:', err);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function editData() {
+            if (!parsedData) {
+                showError('No data to edit. Please read a file first.');
+                return;
+            }
+
+            try {
+                const importer = new TNFBeanieImporter();
+                const editableHtml = importer.createEditableTable(parsedData);
+                editable.innerHTML = editableHtml;
+                
+                // Add global functions for the editable table
+                window.saveEdits = function() {
+                    const editedData = importer.getEditedData();
+                    parsedData = editedData;
+                    showResults(importer.displayData(editedData));
+                    alert('✅ Changes saved successfully!');
+                };
+                
+                window.exportToExcel = function() {
+                    const editedData = importer.getEditedData();
+                    importer.exportToExcel(editedData);
+                };
+                
+                window.addRow = function(section) {
+                    const table = document.getElementById(section + 'Table');
+                    const tbody = table.querySelector('tbody');
+                    const newRow = document.createElement('tr');
+                    
+                    if (section === 'operations') {
+                        newRow.innerHTML = `
+                            <td><textarea class="edit-textarea" data-field="operation" data-index="new" rows="2"></textarea></td>
+                            <td><input type="number" step="0.01" value="0" class="edit-input" data-field="cost" data-index="new"></td>
+                            <td><button onclick="removeRow('${section}', this)" class="remove-btn">❌</button></td>
+                        `;
+                    } else if (section === 'packaging' || section === 'overhead') {
+                        newRow.innerHTML = `
+                            <td><textarea class="edit-textarea" data-field="item" data-index="new" rows="2"></textarea></td>
+                            <td><input type="number" step="0.01" value="0" class="edit-input" data-field="cost" data-index="new"></td>
+                            <td><button onclick="removeRow('${section}', this)" class="remove-btn">❌</button></td>
+                        `;
+                    } else {
+                        newRow.innerHTML = `
+                            <td><textarea class="edit-textarea" data-field="material" data-index="new" rows="2"></textarea></td>
+                            <td><input type="text" value="" class="edit-input" data-field="consumption" data-index="new"></td>
+                            <td><input type="number" step="0.01" value="0" class="edit-input" data-field="price" data-index="new"></td>
+                            <td><input type="number" step="0.01" value="0" class="edit-input" data-field="cost" data-index="new"></td>
+                            <td><button onclick="removeRow('${section}', this)" class="remove-btn">❌</button></td>
+                        `;
+                    }
+                    tbody.appendChild(newRow);
+                };
+                
+                window.removeRow = function(section, element) {
+                    if (typeof element === 'number') {
+                        // Called with index
+                        const table = document.getElementById(section + 'Table');
+                        const tbody = table.querySelector('tbody');
+                        const rows = tbody.querySelectorAll('tr');
+                        if (rows[element]) {
+                            rows[element].remove();
+                        }
+                    } else {
+                        // Called with element
+                        element.closest('tr').remove();
+                    }
+                };
+                
+                window.recalculateTotals = function() {
+                    const editedData = importer.getEditedData();
+                    let totalMaterial = 0;
+                    
+                    editedData.yarn.forEach(item => {
+                        totalMaterial += parseFloat(item.cost) || 0;
+                    });
+                    editedData.fabric.forEach(item => {
+                        totalMaterial += parseFloat(item.cost) || 0;
+                    });
+                    editedData.trim.forEach(item => {
+                        totalMaterial += parseFloat(item.cost) || 0;
+                    });
+                    editedData.knitting.forEach(item => {
+                        totalMaterial += parseFloat(item.cost) || 0;
+                    });
+                    
+                    document.getElementById('totalMaterialCost').value = totalMaterial.toFixed(2);
+                    alert('✅ Totals recalculated!');
+                };
+                
+            } catch (err) {
+                showError('Error creating editable table: ' + err.message);
+                console.error('Error:', err);
+            }
+        }
+
+        function saveData() {
+            if (!parsedData) {
+                showError('No data to save. Please read a file first.');
+                return;
+            }
+
+            try {
+                const importer = new TNFBeanieImporter();
+                importer.saveToFile(parsedData);
+            } catch (err) {
+                showError('Error saving file: ' + err.message);
+                console.error('Error:', err);
+            }
+        }
+
+        function exportData() {
+            if (!parsedData) {
+                showError('No data to export. Please read a file first.');
+                return;
+            }
+
+            try {
+                const importer = new TNFBeanieImporter();
+                importer.exportToExcel(parsedData);
+            } catch (err) {
+                showError('Error exporting to Excel: ' + err.message);
+                console.error('Error:', err);
+            }
+        }
+
+        function showLoading() {
+            loading.style.display = 'block';
+            readBtn.disabled = true;
+        }
+
+        function hideLoading() {
+            loading.style.display = 'none';
+            readBtn.disabled = false;
+        }
+
+        function showResults(displayResult) {
+            const { summary: summaryData, fullData } = displayResult;
+            
+            summary.innerHTML = `
+                <h4>📋 Summary</h4>
+                <p><strong>Customer:</strong> ${summaryData.customer}</p>
+                <p><strong>Season:</strong> ${summaryData.season}</p>
+                <p><strong>Style Number:</strong> ${summaryData.styleNumber}</p>
+                <p><strong>Style Name:</strong> ${summaryData.styleName}</p>
+                <p><strong>Costed Quantity:</strong> ${summaryData.costedQuantity}</p>
+                <p><strong>Leadtime:</strong> ${summaryData.leadtime}</p>
+                <p><strong>Total Material Cost:</strong> $${summaryData.totalMaterialCost}</p>
+                <p><strong>Total Factory Cost:</strong> $${summaryData.totalFactoryCost}</p>
+            `;
+
+            details.innerHTML = `
+                <h4>📊 Item Counts</h4>
+                <p>Yarn Items: ${summaryData.itemCounts.yarn}</p>
+                <p>Fabric Items: ${summaryData.itemCounts.fabric}</p>
+                <p>Trim Items: ${summaryData.itemCounts.trim}</p>
+                <p>Knitting Items: ${summaryData.itemCounts.knitting}</p>
+                <p>Operations: ${summaryData.itemCounts.operations}</p>
+                <p>Packaging: ${summaryData.itemCounts.packaging}</p>
+                <p>Overhead: ${summaryData.itemCounts.overhead}</p>
+            `;
+
+            results.style.display = 'block';
+        }
+
+        function hideResults() {
+            results.style.display = 'none';
+        }
+
+        function showError(message) {
+            error.textContent = message;
+            error.style.display = 'block';
+        }
+
+        function hideError() {
+            error.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
