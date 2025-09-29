@@ -84,7 +84,7 @@ router.post('/insert/:connectionId', async (req: Request, res: Response) => {
 router.put('/update/:connectionId', async (req: Request, res: Response) => {
   try {
     const { connectionId } = req.params;
-    const { table, id, data } = req.body;
+    const { table, id, idField = 'id', data } = req.body;
 
     if (!table || !id || !data) {
       return res.status(400).json({ error: 'Table name, ID, and data are required' });
@@ -103,7 +103,8 @@ router.put('/update/:connectionId', async (req: Request, res: Response) => {
       dataTableService = new DataTableService(connection);
     }
 
-    const result = await dataTableService.updateRecord(table, id, data);
+    // Use custom update method that handles different ID fields
+    const result = await updateRecordWithCustomId(dataTableService, table, id, idField, data);
     return res.json({ success: true, data: result });
   } catch (error) {
     logger.error('Error updating record:', error);
@@ -113,6 +114,41 @@ router.put('/update/:connectionId', async (req: Request, res: Response) => {
     });
   }
 });
+
+// Helper function to update record with custom ID field
+async function updateRecordWithCustomId(service: DataTableService | SupabaseService, table: string, id: string | number, idField: string, data: Record<string, any>): Promise<any> {
+  if (service instanceof SupabaseService) {
+    // For Supabase, we need to use the REST API with custom ID field
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Supabase configuration missing');
+    }
+
+    const response = await fetch(`${supabaseUrl}/rest/v1/${table}?${idField}=eq.${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseKey,
+        'Authorization': `Bearer ${supabaseKey}`,
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Supabase update failed (${response.status}): ${errorText}`);
+    }
+
+    const result = await response.json();
+    return result[0]; // Return the first (and should be only) updated record
+  } else {
+    // For other database types, use the standard update method
+    return await service.updateRecord(table, id, data);
+  }
+}
 
 router.delete('/delete/:connectionId', async (req: Request, res: Response) => {
   try {

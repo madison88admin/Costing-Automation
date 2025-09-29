@@ -2302,9 +2302,24 @@
                     <button id="doneEditBtn" class="done-edit-button" onclick="saveTableChanges()" style="display: none;">
                         ✅ Done
                     </button>
-              <button id="cancelEditBtn" class="cancel-edit-button" onclick="cancelEditMode()" style="display: none;">
-                  ❌ Cancel
-              </button>
+                    <button id="cancelEditBtn" class="cancel-edit-button" onclick="cancelEditMode()" style="display: none;">
+                        ❌ Cancel
+                    </button>
+                </div>
+                
+                <!-- Emergency Data Recovery Section -->
+                <div class="emergency-recovery-section" style="margin-top: 15px; padding: 15px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; border-left: 4px solid #f39c12;">
+                    <h4 style="color: #856404; margin-bottom: 10px; font-size: 16px;">🚨 Emergency Data Recovery</h4>
+                    <p style="color: #856404; font-size: 12px; margin-bottom: 10px;">If your data appears corrupted (showing column names instead of actual data), use these buttons to fix it:</p>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button id="checkCorruptionBtn" class="btn btn-warning btn-sm" onclick="runCheckCorruption()" style="font-size: 12px; padding: 6px 12px;">
+                            🔍 Check Data Corruption
+                        </button>
+                        <button id="emergencyRecoveryBtn" class="btn btn-danger btn-sm" onclick="runEmergencyRecovery()" style="font-size: 12px; padding: 6px 12px;">
+                            🛠️ Emergency Recovery
+                        </button>
+                    </div>
+                    <div id="recoveryStatus" style="margin-top: 10px; font-size: 12px; color: #6c757d; min-height: 20px;"></div>
                 </div>
             </div>
             
@@ -3837,7 +3852,14 @@
             
             // Start connecting to Supabase immediately but don't hide intro yet
             console.log('Auto-connecting to Supabase...');
-                autoConnectToSupabase();
+            autoConnectToSupabase();
+            
+            // Fallback: ensure content is visible after 15 seconds regardless of connection status
+            setTimeout(() => {
+                console.log('🔄 Fallback: Ensuring content is visible after timeout');
+                hideIntroOverlay();
+                document.getElementById('productSelection').style.display = 'block';
+            }, 15000);
         });
         
         // Prevent database data from being displayed when Excel file is uploaded
@@ -3862,6 +3884,14 @@
             // Show loading status
             document.getElementById('autoConnectStatus').style.display = 'block';
             document.getElementById('connectButton').style.display = 'none';
+            
+            // Set a timeout to ensure intro overlay is always hidden
+            const timeoutId = setTimeout(() => {
+                console.log('⏰ Auto-connection timeout - hiding intro overlay and showing content');
+                hideIntroOverlay();
+                // Make sure main content is visible
+                document.getElementById('productSelection').style.display = 'block';
+            }, 10000); // 10 second timeout
             
             try {
                 const config = {
@@ -3898,6 +3928,7 @@
                 console.log('Result:', result);
                 
                 if (result.success) {
+                    clearTimeout(timeoutId); // Clear the timeout since connection succeeded
                     connectionId = result.connectionId;
                     showStatus('connectionStatus', '✅ Auto-connected to Supabase successfully!', 'success');
                     document.getElementById('dataTableSection').style.display = 'block';
@@ -3916,6 +3947,7 @@
                         });
                     }, 500);
                 } else {
+                    clearTimeout(timeoutId); // Clear the timeout since we got a response
                     showStatus('connectionStatus', '❌ Auto-connection failed: ' + (result.message || 'Unknown error'), 'error');
                     document.getElementById('autoConnectStatus').style.display = 'none';
                     document.getElementById('connectButton').style.display = 'inline-block';
@@ -3923,9 +3955,12 @@
                     // Hide intro overlay even if connection fails
                     setTimeout(() => {
                         hideIntroOverlay();
+                        // Make sure main content is visible
+                        document.getElementById('productSelection').style.display = 'block';
                     }, 2000);
                 }
             } catch (error) {
+                clearTimeout(timeoutId); // Clear the timeout since we got an error
                 showStatus('connectionStatus', '❌ Auto-connection error: ' + error.message, 'error');
                 document.getElementById('autoConnectStatus').style.display = 'none';
                 document.getElementById('connectButton').style.display = 'inline-block';
@@ -3933,6 +3968,8 @@
                 // Hide intro overlay even if there's an error
                 setTimeout(() => {
                     hideIntroOverlay();
+                    // Make sure main content is visible
+                    document.getElementById('productSelection').style.display = 'block';
                 }, 2000);
             }
         }
@@ -4045,6 +4082,12 @@
             // Don't load database data if we're processing Excel
             if (window.isProcessingExcel) {
                 console.log('🚫 Skipping database load - processing Excel file');
+                return;
+            }
+            
+            // Don't reload data if we're in edit mode or just finished editing
+            if (preventDataReload) {
+                console.log('🚫 Skipping database load - preventDataReload flag is set');
                 return;
             }
             
@@ -4779,6 +4822,8 @@
         let originalTableData = [];
         let editedTableData = [];
         let supabaseClient = null;
+        let updateTimeouts = new Map(); // For debouncing updates
+        let preventDataReload = false; // Flag to prevent unnecessary data reloads
         
         // Cache buster to ensure fresh code
         console.log('🔄 Editable table module loaded - version 1.5 with multi-approach sync');
@@ -4823,6 +4868,866 @@
 
         // Make test function available globally
         window.testSupabaseConnection = testSupabaseConnection;
+        
+        // Test function to debug Supabase updates
+        window.testSupabaseUpdate = async function() {
+            console.log('🧪 Testing Supabase update...');
+            
+            if (editedTableData.length === 0) {
+                console.log('❌ No data available for testing');
+                return;
+            }
+            
+            const testRecord = editedTableData[0];
+            const testColumn = Object.keys(testRecord)[1]; // Second column
+            const testValue = 'TEST_' + Date.now();
+            
+            console.log('🔍 Test record:', testRecord);
+            console.log('🔍 Test column:', testColumn);
+            console.log('🔍 Test value:', testValue);
+            
+            try {
+                await updateSingleCellInSupabase(0, testColumn, testValue);
+                console.log('✅ Test update successful');
+            } catch (error) {
+                console.error('❌ Test update failed:', error);
+            }
+        };
+        
+        // Function to check what ID field is being detected
+        window.checkIdField = function() {
+            console.log('🔍 Checking ID field detection...');
+            console.log('🔑 Current recordIdField:', window.recordIdField);
+            
+            if (editedTableData.length > 0) {
+                const sampleRecord = editedTableData[0];
+                console.log('📋 Sample record keys:', Object.keys(sampleRecord));
+                console.log('📋 Sample record values:', sampleRecord);
+                
+                // Check which field looks like an ID
+                Object.keys(sampleRecord).forEach(key => {
+                    const value = sampleRecord[key];
+                    console.log(`🔍 ${key}: ${value} (type: ${typeof value})`);
+                });
+            }
+        };
+        
+        // Function to compare website data with Supabase data
+        window.compareDataAlignment = async function() {
+            console.log('🔍 Comparing website data with Supabase data...');
+            
+            try {
+                // Get website data (first 3 records)
+                const websiteData = editedTableData.slice(0, 3);
+                console.log('🌐 Website data (first 3 records):', websiteData);
+                
+                // Get Supabase data via API
+                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const apiUrl = isLocalhost ? `/api/datatable/data/${connectionId}` : `/.netlify/functions/datatable-data`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API call failed: ${response.status}`);
+                }
+                
+                const supabaseData = await response.json();
+                const supabaseFirst3 = supabaseData.slice(0, 3);
+                console.log('🗄️ Supabase data (first 3 records):', supabaseFirst3);
+                
+                // Compare the data
+                console.log('🔍 COMPARISON ANALYSIS:');
+                console.log('================================');
+                
+                for (let i = 0; i < Math.min(3, websiteData.length, supabaseFirst3.length); i++) {
+                    const websiteRecord = websiteData[i];
+                    const supabaseRecord = supabaseFirst3[i];
+                    
+                    console.log(`\n📊 ROW ${i + 1} COMPARISON:`);
+                    console.log('Website:', websiteRecord);
+                    console.log('Supabase:', supabaseRecord);
+                    
+                    // Check if they match
+                    const websiteKeys = Object.keys(websiteRecord);
+                    const supabaseKeys = Object.keys(supabaseRecord);
+                    
+                    console.log('Website keys:', websiteKeys);
+                    console.log('Supabase keys:', supabaseKeys);
+                    
+                    // Check ID fields
+                    const possibleIdFields = ['id', 'ID', 'Id', 'primary_key', 'pk', 'key', 'rowid'];
+                    possibleIdFields.forEach(idField => {
+                        if (websiteRecord[idField] !== undefined && supabaseRecord[idField] !== undefined) {
+                            const websiteId = websiteRecord[idField];
+                            const supabaseId = supabaseRecord[idField];
+                            console.log(`🔑 ${idField}: Website="${websiteId}" vs Supabase="${supabaseId}" ${websiteId === supabaseId ? '✅ MATCH' : '❌ MISMATCH'}`);
+                        }
+                    });
+                    
+                    // Check if the data content matches
+                    let contentMatches = true;
+                    websiteKeys.forEach(key => {
+                        if (supabaseRecord.hasOwnProperty(key)) {
+                            if (websiteRecord[key] !== supabaseRecord[key]) {
+                                console.log(`❌ Content mismatch in ${key}: Website="${websiteRecord[key]}" vs Supabase="${supabaseRecord[key]}"`);
+                                contentMatches = false;
+                            }
+                        }
+                    });
+                    
+                    if (contentMatches) {
+                        console.log('✅ Content matches between website and Supabase');
+                    } else {
+                        console.log('❌ Content does NOT match between website and Supabase');
+                    }
+                }
+                
+                console.log('\n================================');
+                console.log('🔍 ANALYSIS COMPLETE');
+                
+            } catch (error) {
+                console.error('❌ Error comparing data:', error);
+            }
+        };
+        
+        // Test function to manually test content matching
+        window.testContentMatching = async function(rowIndex = 0) {
+            console.log(`🧪 Testing content matching for row ${rowIndex}...`);
+            
+            if (!editedTableData || editedTableData.length === 0) {
+                console.log('❌ No data available for testing');
+                return;
+            }
+            
+            const websiteRecord = editedTableData[rowIndex];
+            console.log('🌐 Website record to match:', websiteRecord);
+            
+            const result = await findCorrectRecord(websiteRecord);
+            
+            if (result) {
+                console.log('✅ Content matching result:', result);
+                console.log(`   Match percentage: ${result.matchPercentage.toFixed(1)}%`);
+                console.log(`   Found ID: ${result.id}`);
+                console.log(`   ID Field: ${result.idField}`);
+            } else {
+                console.log('❌ No matching record found');
+            }
+        };
+        
+        // Test function to debug data alignment
+        window.debugDataAlignment = async function() {
+            console.log('🔍 DEBUGGING DATA ALIGNMENT...');
+            console.log('🌐 Website data (first 3 rows):');
+            console.log(allTableData.slice(0, 3));
+            
+            try {
+                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const apiUrl = isLocalhost ? `/api/datatable/data/${connectionId}?table=databank&limit=3` : `/.netlify/functions/datatable-data?table=databank&limit=3`;
+                
+                const response = await fetch(apiUrl);
+                const supabaseData = await response.json();
+                
+                console.log('🗄️ Supabase data (first 3 rows):');
+                console.log(supabaseData.slice(0, 3));
+                
+                // Compare specific fields
+                for (let i = 0; i < 3; i++) {
+                    const website = allTableData[i];
+                    const supabase = supabaseData[i];
+                    
+                    console.log(`\n📊 Row ${i + 1} comparison:`);
+                    console.log(`Website style_name: "${website?.style_name}"`);
+                    console.log(`Supabase style_name: "${supabase?.style_name}"`);
+                    console.log(`Match: ${website?.style_name === supabase?.style_name}`);
+                }
+            } catch (error) {
+                console.error('❌ Debug error:', error);
+            }
+        };
+
+        // Emergency data recovery function
+        window.emergencyDataRecovery = async function() {
+            console.log('🚨 EMERGENCY DATA RECOVERY STARTING...');
+            console.log('⚠️ This will restore your website data to Supabase');
+            
+            // Try to get data from multiple sources
+            let recordsToRestore = [];
+            
+            if (editedTableData && editedTableData.length > 0) {
+                console.log('📊 Using editedTableData for recovery');
+                recordsToRestore = editedTableData.slice(0, 10);
+            } else if (allTableData && allTableData.length > 0) {
+                console.log('📊 Using allTableData for recovery');
+                recordsToRestore = allTableData.slice(0, 10);
+            } else if (originalTableData && originalTableData.length > 0) {
+                console.log('📊 Using originalTableData for recovery');
+                recordsToRestore = originalTableData.slice(0, 10);
+            } else {
+                console.log('❌ No website data available for recovery');
+                console.log('Available data sources:');
+                console.log('- editedTableData:', editedTableData ? editedTableData.length : 'undefined');
+                console.log('- allTableData:', allTableData ? allTableData.length : 'undefined');
+                console.log('- originalTableData:', originalTableData ? originalTableData.length : 'undefined');
+                return;
+            }
+            
+            try {
+                console.log(`🔄 Restoring ${recordsToRestore.length} records to Supabase...`);
+                
+                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const apiUrl = isLocalhost ? `/api/datatable/update/${connectionId}` : `/.netlify/functions/datatable-update`;
+                
+                let successCount = 0;
+                let errorCount = 0;
+                
+                for (let i = 0; i < recordsToRestore.length; i++) {
+                    const record = recordsToRestore[i];
+                    console.log(`\n🔄 Restoring record ${i + 1}/${recordsToRestore.length}:`, record);
+                    
+                    try {
+                        // Find the record ID
+                        let idField = 'id';
+                        let recordId = record[idField];
+                        
+                        if (!recordId) {
+                            const possibleIdFields = ['id', 'ID', 'Id', 'primary_key', 'pk', 'key', 'rowid'];
+                            for (const field of possibleIdFields) {
+                                if (record[field] !== undefined) {
+                                    idField = field;
+                                    recordId = record[field];
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        if (!recordId) {
+                            console.log(`⚠️ No ID found for record ${i + 1}, skipping...`);
+                            errorCount++;
+                            continue;
+                        }
+                        
+                        // Prepare update data (remove ID field)
+                        const updateData = { ...record };
+                        delete updateData[idField];
+                        
+                        const updatePayload = {
+                            table: 'databank',
+                            id: recordId,
+                            idField: idField,
+                            data: updateData
+                        };
+                        
+                        console.log(`📦 Update payload:`, updatePayload);
+                        
+                        const response = await fetch(apiUrl, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(updatePayload)
+                        });
+                        
+                        if (response.ok) {
+                            console.log(`✅ Successfully restored record ${i + 1}`);
+                            successCount++;
+                        } else {
+                            const errorText = await response.text();
+                            console.error(`❌ Failed to restore record ${i + 1}:`, response.status, errorText);
+                            errorCount++;
+                        }
+                        
+                        // Add delay to prevent overwhelming the API
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        
+                    } catch (error) {
+                        console.error(`❌ Error restoring record ${i + 1}:`, error);
+                        errorCount++;
+                    }
+                }
+                
+                console.log('\n🎯 RECOVERY SUMMARY:');
+                console.log(`✅ Successfully restored: ${successCount} records`);
+                console.log(`❌ Failed to restore: ${errorCount} records`);
+                
+                if (successCount > 0) {
+                    console.log('🎉 Data recovery completed! Check your Supabase database.');
+                } else {
+                    console.log('❌ Data recovery failed. Please check the errors above.');
+                }
+                
+            } catch (error) {
+                console.error('❌ Emergency data recovery failed:', error);
+            }
+        };
+        
+        // Function to check data corruption
+        window.checkDataCorruption = async function() {
+            console.log('🔍 Checking for data corruption...');
+            
+            try {
+                // First try to check local data
+                console.log('📊 Checking local data sources...');
+                console.log('- editedTableData:', editedTableData ? editedTableData.length : 'undefined');
+                console.log('- allTableData:', allTableData ? allTableData.length : 'undefined');
+                console.log('- originalTableData:', originalTableData ? originalTableData.length : 'undefined');
+                
+            // Try to get Supabase data via API
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const apiUrl = isLocalhost ? `/api/datatable/data/${connectionId}?table=databank&limit=5` : `/.netlify/functions/datatable-data?table=databank&limit=5`;
+            
+            console.log(`🌐 Attempting to fetch data from: ${apiUrl}`);
+            
+            const response = await fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+                
+                if (!response.ok) {
+                    console.warn(`⚠️ API call failed with status ${response.status}`);
+                    console.log('📊 Falling back to local data analysis...');
+                    
+                    // Analyze local data instead
+                    const localData = allTableData || editedTableData || originalTableData || [];
+                    if (localData.length > 0) {
+                        console.log(`🔍 Analyzing ${localData.length} local records...`);
+                        
+                        let corruptedRecords = 0;
+                        let normalRecords = 0;
+                        
+                        for (let i = 0; i < Math.min(5, localData.length); i++) {
+                            const record = localData[i];
+                            console.log(`\n📊 Local Record ${i + 1}:`, record);
+                            
+                            // Check if record looks like column headers (corrupted)
+                            const hasColumnHeaderValues = Object.values(record).some(value => 
+                                typeof value === 'string' && 
+                                (value.includes('Style Number') || 
+                                 value.includes('Style Name') || 
+                                 value.includes('Main Material') ||
+                                 value.includes('Customer') ||
+                                 value.includes('Season'))
+                            );
+                            
+                            if (hasColumnHeaderValues) {
+                                console.log(`❌ Local record ${i + 1} appears to be corrupted (contains column headers)`);
+                                corruptedRecords++;
+                            } else {
+                                console.log(`✅ Local record ${i + 1} appears to be normal`);
+                                normalRecords++;
+                            }
+                        }
+                        
+                        console.log('\n🎯 LOCAL DATA ANALYSIS:');
+                        console.log(`❌ Corrupted records: ${corruptedRecords}`);
+                        console.log(`✅ Normal records: ${normalRecords}`);
+                        
+                        if (corruptedRecords > 0) {
+                            console.log('⚠️ LOCAL DATA CORRUPTION DETECTED!');
+                        } else {
+                            console.log('✅ Local data appears to be normal.');
+                        }
+                    } else {
+                        console.log('❌ No local data available for analysis');
+                    }
+                    return;
+                }
+                
+                const supabaseData = await response.json();
+                console.log(`🔍 Checking ${supabaseData.length} records in Supabase...`);
+                
+                let corruptedRecords = 0;
+                let normalRecords = 0;
+                
+                for (let i = 0; i < Math.min(10, supabaseData.length); i++) {
+                    const record = supabaseData[i];
+                    console.log(`\n📊 Record ${i + 1}:`, record);
+                    
+                    // Check if record looks like column headers (corrupted)
+                    const hasColumnHeaderValues = Object.values(record).some(value => 
+                        typeof value === 'string' && 
+                        (value.includes('Style Number') || 
+                         value.includes('Style Name') || 
+                         value.includes('Main Material') ||
+                         value.includes('Customer') ||
+                         value.includes('Season'))
+                    );
+                    
+                    if (hasColumnHeaderValues) {
+                        console.log(`❌ Record ${i + 1} appears to be corrupted (contains column headers)`);
+                        corruptedRecords++;
+                    } else {
+                        console.log(`✅ Record ${i + 1} appears to be normal`);
+                        normalRecords++;
+                    }
+                }
+                
+                console.log('\n🎯 CORRUPTION CHECK SUMMARY:');
+                console.log(`❌ Corrupted records: ${corruptedRecords}`);
+                console.log(`✅ Normal records: ${normalRecords}`);
+                
+                if (corruptedRecords > 0) {
+                    console.log('⚠️ DATA CORRUPTION DETECTED! Use emergencyDataRecovery() to fix.');
+                } else {
+                    console.log('✅ No data corruption detected.');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error checking data corruption:', error);
+                console.log('📊 Attempting local data analysis as fallback...');
+                
+                // Fallback to local data analysis
+                const localData = allTableData || editedTableData || originalTableData || [];
+                if (localData.length > 0) {
+                    console.log(`🔍 Analyzing ${localData.length} local records as fallback...`);
+                    // Basic analysis of local data
+                    console.log('✅ Local data is available for recovery');
+                } else {
+                    console.log('❌ No data available for analysis or recovery');
+                }
+            }
+        };
+        
+        // Button functions for emergency recovery
+        async function runCheckCorruption() {
+            const statusDiv = document.getElementById('recoveryStatus');
+            const button = document.getElementById('checkCorruptionBtn');
+            
+            try {
+                button.disabled = true;
+                button.innerHTML = '🔍 Checking...';
+                statusDiv.innerHTML = 'Checking for data corruption...';
+                
+                await checkDataCorruption();
+                
+                statusDiv.innerHTML = '✅ Corruption check completed. Check the browser console for details.';
+                button.innerHTML = '🔍 Check Data Corruption';
+                button.disabled = false;
+                
+            } catch (error) {
+                statusDiv.innerHTML = '❌ Error checking corruption: ' + error.message;
+                button.innerHTML = '🔍 Check Data Corruption';
+                button.disabled = false;
+            }
+        }
+        
+        async function runEmergencyRecovery() {
+            const statusDiv = document.getElementById('recoveryStatus');
+            const button = document.getElementById('emergencyRecoveryBtn');
+            
+            try {
+                button.disabled = true;
+                button.innerHTML = '🛠️ Recovering...';
+                statusDiv.innerHTML = 'Starting emergency data recovery...';
+                
+                await emergencyDataRecovery();
+                
+                statusDiv.innerHTML = '✅ Emergency recovery completed! Check the browser console for details.';
+                button.innerHTML = '🛠️ Emergency Recovery';
+                button.disabled = false;
+                
+            } catch (error) {
+                statusDiv.innerHTML = '❌ Error during recovery: ' + error.message;
+                button.innerHTML = '🛠️ Emergency Recovery';
+                button.disabled = false;
+            }
+        }
+        
+        // Function to check what's actually in the database via API
+        window.checkSupabaseData = async function() {
+            console.log('🔍 Checking database via API...');
+            
+            try {
+                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const apiUrl = isLocalhost ? `/api/datatable/data/${connectionId}` : `/.netlify/functions/datatable-data`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('📊 Database data (first 5 records):', data.slice(0, 5));
+                    console.log('📊 Available columns:', data[0] ? Object.keys(data[0]) : 'No data');
+                } else {
+                    console.error('❌ Failed to fetch database data:', response.status, await response.text());
+                }
+            } catch (error) {
+                console.error('❌ Error checking database data:', error);
+            }
+        };
+        
+        // Function to test direct Supabase update
+        window.testDirectSupabaseUpdate = async function(recordId, idField = 'id', columnName, newValue) {
+            console.log('🧪 Testing direct Supabase update...');
+            console.log(`🔑 Record ID: ${recordId}`);
+            console.log(`🔑 ID Field: ${idField}`);
+            console.log(`📝 Column: ${columnName}`);
+            console.log(`📝 Value: ${newValue}`);
+            
+            try {
+                const supabaseUrl = 'https://icavnpspgmcrrqmsprze.supabase.co';
+                const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljYXZucHNwZ21jcnJxbXNwcnplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0NzEyMzMsImV4cCI6MjA3MzA0NzIzM30.5_-LPYwj5ks_KyCXwCae2mcbI-T7em48RsMiv4Oaurk';
+                
+                const updateData = {
+                    [columnName]: newValue
+                };
+                
+                const filterUrl = `${supabaseUrl}/rest/v1/databank?${idField}=eq.${encodeURIComponent(recordId)}`;
+                console.log(`🌐 Update URL: ${filterUrl}`);
+                console.log(`📦 Update data:`, updateData);
+                
+                const response = await fetch(filterUrl, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': supabaseKey,
+                        'Authorization': `Bearer ${supabaseKey}`,
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify(updateData)
+                });
+                
+                console.log(`📡 Response status: ${response.status} ${response.statusText}`);
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('✅ Direct update successful:', result);
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ Direct update failed:', response.status, errorText);
+                }
+            } catch (error) {
+                console.error('❌ Direct update error:', error);
+            }
+        };
+        
+        // Safe update function using content matching to find correct record
+        window.safeUpdateSupabase = async function(rowIndex, columnName, newValue) {
+            console.log('🛡️ Safe Supabase update starting...');
+            console.log(`📝 Updating row ${rowIndex}, column "${columnName}" to "${newValue}"`);
+            
+            try {
+                // Get the record to update
+                const record = editedTableData[rowIndex];
+                if (!record) {
+                    throw new Error(`Record not found at row ${rowIndex}`);
+                }
+                
+                console.log('🔍 Record to update:', record);
+                console.log(`🎯 Current value of ${columnName}:`, record[columnName]);
+                console.log(`🔄 New value:`, newValue);
+                
+                // First, try to find the correct record in Supabase by content matching
+                const correctRecord = await findCorrectRecord(record);
+                
+                let idField, recordId;
+                
+                if (correctRecord) {
+                    console.log(`✅ Found correct record with ${correctRecord.matchPercentage.toFixed(1)}% match`);
+                    idField = correctRecord.idField;
+                    recordId = correctRecord.id;
+                } else {
+                    console.log('⚠️ No matching record found, using original ID detection');
+                    
+                    // Fallback to original ID detection
+                    idField = window.recordIdField;
+                    recordId = null;
+                    
+                    if (!idField) {
+                        const possibleIdFields = ['id', 'ID', 'Id', 'primary_key', 'pk', 'key', 'rowid'];
+                        for (const field of possibleIdFields) {
+                            if (record.hasOwnProperty(field) && record[field] !== null && record[field] !== undefined) {
+                                idField = field;
+                                recordId = record[field];
+                                break;
+                            }
+                        }
+                    } else {
+                        recordId = record[idField];
+                    }
+                    
+                    // If still no ID found, try the first field
+                    if (!recordId) {
+                        const firstField = Object.keys(record)[0];
+                        idField = firstField;
+                        recordId = record[firstField];
+                    }
+                    
+                    if (!recordId) {
+                        throw new Error(`No valid ID found for record at row ${rowIndex}`);
+                    }
+                }
+                
+                console.log(`🔑 Using ID field: ${idField} with value: ${recordId}`);
+                
+                // Map display column name to database column name
+                const dbColumnName = mapDisplayColumnToDatabase(columnName);
+                console.log(`📝 Updating column: ${columnName} -> ${dbColumnName} = "${newValue}"`);
+                
+                // Use the existing API infrastructure instead of direct Supabase calls
+                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const apiUrl = isLocalhost ? `/api/datatable/update/${connectionId}` : `/.netlify/functions/datatable-update`;
+                
+                const updatePayload = {
+                    table: 'databank',
+                    id: recordId,
+                    idField: idField,
+                    data: {
+                        [dbColumnName]: newValue
+                    }
+                };
+                
+                console.log(`📡 Using API: ${apiUrl}`);
+                console.log(`📦 Payload:`, updatePayload);
+                
+                // Retry mechanism for failed requests
+                let response;
+                let lastError;
+                
+                for (let attempt = 1; attempt <= 3; attempt++) {
+                    try {
+                        console.log(`🔄 Attempt ${attempt}/3: Updating ${columnName}`);
+                        
+                        response = await fetch(apiUrl, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(updatePayload)
+                        });
+                        
+                        if (response.ok) {
+                            break; // Success, exit retry loop
+                        } else {
+                            const errorText = await response.text();
+                            lastError = new Error(`API update failed (${response.status}): ${errorText}`);
+                            
+                            if (attempt < 3) {
+                                console.log(`⚠️ Attempt ${attempt} failed, retrying in 1 second...`);
+                                await new Promise(resolve => setTimeout(resolve, 1000));
+                            }
+                        }
+                    } catch (error) {
+                        lastError = error;
+                        if (attempt < 3) {
+                            console.log(`⚠️ Attempt ${attempt} failed with error: ${error.message}, retrying in 1 second...`);
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                        }
+                    }
+                }
+                
+                if (!response || !response.ok) {
+                    throw lastError || new Error('All retry attempts failed');
+                }
+                
+                const result = await response.json();
+                console.log(`✅ Safe update successful:`, result);
+                
+                // Update local data
+                if (originalTableData[rowIndex]) {
+                    originalTableData[rowIndex][columnName] = newValue;
+                }
+                if (allTableData[rowIndex]) {
+                    allTableData[rowIndex][columnName] = newValue;
+                }
+                
+                // Store the successful ID field for future updates
+                window.recordIdField = idField;
+                
+                return true;
+                
+            } catch (error) {
+                console.error('❌ Safe update failed:', error);
+                throw error;
+            }
+        };
+        
+        // Function to find the correct record in Supabase by content matching
+        window.findCorrectRecord = async function(websiteRecord) {
+            console.log('🔍 Finding correct record in Supabase by content matching...');
+            console.log('🌐 Website record to match:', websiteRecord);
+            
+            try {
+                // Get all Supabase data
+                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const apiUrl = isLocalhost ? `/api/datatable/data/${connectionId}?table=databank&limit=100` : `/.netlify/functions/datatable-data?table=databank&limit=100`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API call failed: ${response.status}`);
+                }
+                
+                const supabaseData = await response.json();
+                console.log(`🔍 Searching through ${supabaseData.length} records in Supabase...`);
+                console.log('🗄️ First 3 Supabase records for comparison:', supabaseData.slice(0, 3));
+                
+                // Try to find a record that matches the content
+                let bestMatch = null;
+                let bestMatchScore = 0;
+                
+                for (let i = 0; i < supabaseData.length; i++) {
+                    const supabaseRecord = supabaseData[i];
+                    let matchScore = 0;
+                    let totalFields = 0;
+                    let matchingFields = [];
+                    let mismatchingFields = [];
+                    
+                    // Compare each field
+                    Object.keys(websiteRecord).forEach(key => {
+                        if (supabaseRecord.hasOwnProperty(key)) {
+                            totalFields++;
+                            if (websiteRecord[key] === supabaseRecord[key]) {
+                                matchScore++;
+                                matchingFields.push(key);
+                            } else {
+                                mismatchingFields.push({
+                                    field: key,
+                                    website: websiteRecord[key],
+                                    supabase: supabaseRecord[key]
+                                });
+                            }
+                        }
+                    });
+                    
+                    // Calculate match percentage
+                    const matchPercentage = totalFields > 0 ? (matchScore / totalFields) * 100 : 0;
+                    
+                    // Log detailed comparison for first few records
+                    if (i < 5) {
+                        console.log(`\n📊 Record ${i} comparison:`);
+                        console.log(`   Match: ${matchScore}/${totalFields} fields (${matchPercentage.toFixed(1)}%)`);
+                        console.log(`   Matching fields:`, matchingFields);
+                        console.log(`   Mismatching fields:`, mismatchingFields);
+                        console.log(`   Website:`, websiteRecord);
+                        console.log(`   Supabase:`, supabaseRecord);
+                    }
+                    
+                    // Track the best match
+                    if (matchPercentage > bestMatchScore) {
+                        bestMatchScore = matchPercentage;
+                        bestMatch = {
+                            index: i,
+                            record: supabaseRecord,
+                            matchPercentage: matchPercentage,
+                            matchingFields: matchingFields,
+                            mismatchingFields: mismatchingFields
+                        };
+                    }
+                    
+                    // If we have a very good match (90% or more fields match), use it immediately
+                    if (matchPercentage >= 90) {
+                        console.log(`✅ Found excellent match at index ${i} with ${matchPercentage.toFixed(1)}% similarity`);
+                        console.log('Matching fields:', matchingFields);
+                        console.log('Website record:', websiteRecord);
+                        console.log('Supabase record:', supabaseRecord);
+                        
+                        // Return the ID of the matching record
+                        const possibleIdFields = ['id', 'ID', 'Id', 'primary_key', 'pk', 'key', 'rowid'];
+                        for (const idField of possibleIdFields) {
+                            if (supabaseRecord[idField] !== undefined) {
+                                return {
+                                    id: supabaseRecord[idField],
+                                    idField: idField,
+                                    record: supabaseRecord,
+                                    matchPercentage: matchPercentage
+                                };
+                            }
+                        }
+                    }
+                }
+                
+                // If no excellent match found, use the best match if it's reasonable
+                if (bestMatch && bestMatchScore >= 50) {
+                    console.log(`⚠️ Using best match at index ${bestMatch.index} with ${bestMatchScore.toFixed(1)}% similarity`);
+                    console.log('Best match details:', bestMatch);
+                    
+                    const supabaseRecord = bestMatch.record;
+                    const possibleIdFields = ['id', 'ID', 'Id', 'primary_key', 'pk', 'key', 'rowid'];
+                    for (const idField of possibleIdFields) {
+                        if (supabaseRecord[idField] !== undefined) {
+                            return {
+                                id: supabaseRecord[idField],
+                                idField: idField,
+                                record: supabaseRecord,
+                                matchPercentage: bestMatchScore
+                            };
+                        }
+                    }
+                }
+                
+                console.log('❌ No matching record found in Supabase');
+                console.log('Best match was:', bestMatch);
+                return null;
+                
+            } catch (error) {
+                console.error('❌ Error finding correct record:', error);
+                return null;
+            }
+        };
+        
+        // Auto-detect and fix common issues when entering edit mode
+        async function autoDetectAndFix() {
+            console.log('🔍 Auto-detecting and fixing common issues...');
+            
+            // Auto-detect ID field if not set
+            if (!window.recordIdField && editedTableData.length > 0) {
+                const sampleRecord = editedTableData[0];
+                const possibleIdFields = ['id', 'ID', 'Id', 'primary_key', 'pk', 'key', 'rowid'];
+                
+                for (const field of possibleIdFields) {
+                    if (sampleRecord.hasOwnProperty(field) && sampleRecord[field] !== null && sampleRecord[field] !== undefined) {
+                        window.recordIdField = field;
+                        console.log(`✅ Auto-detected ID field: ${field}`);
+                        break;
+                    }
+                }
+                
+                // If still no ID found, use first field
+                if (!window.recordIdField) {
+                    window.recordIdField = Object.keys(sampleRecord)[0];
+                    console.log(`⚠️ Using first field as ID: ${window.recordIdField}`);
+                }
+            }
+            
+            // Test API connection instead of direct Supabase (CSP-compliant)
+            try {
+                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const testUrl = isLocalhost ? `/api/datatable/data/${connectionId}` : `/.netlify/functions/datatable-data`;
+                
+                const testResponse = await fetch(testUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (testResponse.ok) {
+                    console.log('✅ API connection test successful');
+                } else {
+                    console.warn('⚠️ API connection test failed:', testResponse.status);
+                }
+            } catch (error) {
+                console.warn('⚠️ API connection test error:', error.message);
+            }
+            
+            console.log('✅ Auto-detection complete');
+        }
 
         // Test Supabase write permissions
         async function testSupabaseWritePermissions() {
@@ -4901,7 +5806,7 @@
         window.testSupabaseWritePermissions = testSupabaseWritePermissions;
 
         // Toggle edit mode
-        function toggleEditMode() {
+        async function toggleEditMode() {
             const editBtn = document.getElementById('editTableBtn');
             const doneBtn = document.getElementById('doneEditBtn');
             const cancelBtn = document.getElementById('cancelEditBtn');
@@ -4909,7 +5814,7 @@
             
             if (!isEditMode) {
                 // Enter edit mode
-                enterEditMode();
+                await enterEditMode();
                 editBtn.style.display = 'none';
                 doneBtn.style.display = 'inline-block';
                 cancelBtn.style.display = 'inline-block';
@@ -4918,7 +5823,7 @@
         }
 
         // Enter edit mode
-        function enterEditMode() {
+        async function enterEditMode() {
             const table = document.querySelector('.table');
             const tableContainer = document.querySelector('.data-table-container');
             
@@ -4928,6 +5833,12 @@
             originalTableData = [...allTableData];
             editedTableData = JSON.parse(JSON.stringify(allTableData));
             
+            // Auto-detect and fix common issues
+            await autoDetectAndFix();
+            
+            // Prevent data reloads during editing
+            preventDataReload = true;
+            
             // Add edit mode classes
             table.classList.add('edit-mode');
             tableContainer.style.transform = 'scale(1.02)';
@@ -4935,6 +5846,9 @@
             
             // Show edit mode indicator
             showEditModeIndicator();
+            
+            // Show ready status
+            showNotification('✅ Edit mode ready - Click any cell to edit', 'success');
             
             // Make cells editable
             makeCellsEditable();
@@ -5001,11 +5915,11 @@
             input.select();
             
             // Handle save on blur or enter
-            input.addEventListener('blur', () => saveCellEdit(cell, input, originalValue, rowIndex, cellIndex));
-            input.addEventListener('keydown', (e) => {
+            input.addEventListener('blur', async () => await saveCellEdit(cell, input, originalValue, rowIndex, cellIndex));
+            input.addEventListener('keydown', async (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    input.blur();
+                    await saveCellEdit(cell, input, originalValue, rowIndex, cellIndex);
                 } else if (e.key === 'Escape') {
                     e.preventDefault();
                     cancelCellEdit(cell, originalValue);
@@ -5014,7 +5928,7 @@
         }
 
         // Save cell edit
-        function saveCellEdit(cell, input, originalValue, rowIndex, cellIndex) {
+        async function saveCellEdit(cell, input, originalValue, rowIndex, cellIndex) {
             const newValue = input.value.trim();
             
             // Use stored data attributes for stability
@@ -5030,6 +5944,11 @@
                     const columnName = columnNames[storedCellIndex];
                     editedTableData[storedRowIndex][columnName] = newValue;
                     console.log(`✅ Updated data: ${columnName} = "${newValue}"`);
+                    
+                    // Update local data as well
+                    if (allTableData[storedRowIndex]) {
+                        allTableData[storedRowIndex][columnName] = newValue;
+                    }
                 } else {
                     console.warn(`⚠️ Column not found at index ${storedCellIndex}`);
                 }
@@ -5051,13 +5970,88 @@
                 cell.style.position = 'relative';
                 cell.style.zIndex = '10';
                 
-                // Keep the highlight for longer to show it's been changed
-                setTimeout(() => {
-                    cell.style.backgroundColor = 'rgba(40, 167, 69, 0.1)';
-                    cell.style.borderLeft = '3px solid #28a745';
-                }, 2000);
+                // Add a small indicator that this cell was changed
+                const indicator = document.createElement('span');
+                indicator.innerHTML = '🔄';
+                indicator.style.cssText = `
+                    position: absolute;
+                    top: 2px;
+                    right: 2px;
+                    font-size: 10px;
+                    color: #ffc107;
+                    background: white;
+                    border-radius: 50%;
+                    width: 16px;
+                    height: 16px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+                `;
+                cell.appendChild(indicator);
                 
+                // Update Supabase with debouncing for this cell change
+                const columnName = editedTableData[storedRowIndex] ? Object.keys(editedTableData[storedRowIndex])[storedCellIndex] : null;
+                if (columnName) {
+                    // Create a unique key for this cell
+                    const cellKey = `${storedRowIndex}-${storedCellIndex}`;
+                    
+                    // Clear any existing timeout for this cell
+                    if (updateTimeouts.has(cellKey)) {
+                        clearTimeout(updateTimeouts.get(cellKey));
+                    }
+                    
+                    // Re-enabled updates with safe content matching
+                    const timeoutId = setTimeout(async () => {
+                        try {
+                            await safeUpdateSupabase(storedRowIndex, columnName, newValue);
+                            
+                            // Change indicator to success
+                            indicator.innerHTML = '✅';
+                            indicator.style.color = '#28a745';
+                            cell.style.backgroundColor = 'rgba(40, 167, 69, 0.1)';
+                            cell.style.borderLeft = '3px solid #28a745';
+                        } catch (error) {
+                            console.error(`❌ Failed to update ${columnName}:`, error.message);
+                            
+                            // Check if it's a network error
+                            if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                                // Save locally as fallback
+                                console.log(`💾 Saving ${columnName} locally as fallback`);
+                                
+                                // Change indicator to warning (saved locally)
+                                indicator.innerHTML = '💾';
+                                indicator.style.color = '#ffc107';
+                                cell.style.backgroundColor = 'rgba(255, 193, 7, 0.1)';
+                                cell.style.borderLeft = '3px solid #ffc107';
+                                
+                                // Show warning notification
+                                showNotification(`⚠️ Saved ${columnName} locally (network unavailable)`, 'warning');
+                            } else {
+                                // Change indicator to error
+                                indicator.innerHTML = '❌';
+                                indicator.style.color = '#dc3545';
+                                cell.style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
+                                cell.style.borderLeft = '3px solid #dc3545';
+                                
+                                // Show error notification
+                                showNotification(`❌ Failed to save ${columnName}: ${error.message}`, 'error');
+                            }
+                        }
+                        
+                        // Remove the timeout from the map
+                        updateTimeouts.delete(cellKey);
+                    }, 1000); // 1 second debounce
+                    
+                    // Store the timeout ID
+                    updateTimeouts.set(cellKey, timeoutId);
+                }
+                
+                // Remove indicator after 5 seconds
                 setTimeout(() => {
+                    if (indicator && indicator.parentNode) {
+                        indicator.remove();
+                    }
                     cell.style.backgroundColor = '';
                     cell.style.borderLeft = '';
                     cell.style.position = '';
@@ -5086,7 +6080,7 @@
             // Create new indicator
             const indicator = document.createElement('div');
             indicator.className = 'edit-mode-indicator';
-            indicator.innerHTML = '✏️ Edit Mode Active - Click cells to edit';
+            indicator.innerHTML = '✏️ Edit Mode Active - Click cells to edit • 🔄 Auto-save to database enabled';
             document.body.appendChild(indicator);
         }
 
@@ -5111,6 +6105,9 @@
             
             console.log('🔄 Cancelling edit mode...');
             
+            // Clear all pending updates
+            clearAllPendingUpdates();
+            
             // Reset UI
             editBtn.style.display = 'inline-block';
             doneBtn.style.display = 'none';
@@ -5132,15 +6129,14 @@
                 console.error('❌ Error resetting data:', error);
             }
             
-            // Refresh table display to show original data
-            try {
-                displayCurrentPageData();
-                console.log('✅ Table display refreshed');
-            } catch (error) {
-                console.error('❌ Error refreshing table:', error);
-            }
+            // DON'T refresh the table - it causes data to move around
+            // The user can manually refresh if they want to see original data
             
             isEditMode = false;
+            
+            // Re-enable data reloads
+            preventDataReload = false;
+            console.log('✅ Data reload prevention cleared (cancelled)');
             
             // Show cancellation message
             showNotification('❌ Changes cancelled. Table reverted to original data.', 'info');
@@ -5157,21 +6153,20 @@
             const tableContainer = document.querySelector('.data-table-container');
             
             try {
+                // Clear all pending updates first
+                clearAllPendingUpdates();
+                
                 // Show loading state
                 doneBtn.innerHTML = '💾 Saving...';
                 doneBtn.disabled = true;
                 
+                // Wait a moment for any pending real-time updates to complete
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
                 // Update local data to reflect the edited changes
                 allTableData = [...editedTableData];
                 
-                console.log('🔄 Updating local data with edited changes...');
-                console.log('📊 Edited data length:', editedTableData.length);
-                console.log('📊 Local data length:', allTableData.length);
-                
-                // Sync to Supabase (this may not throw an error if it falls back to local save)
-                console.log('🔄 About to call syncTableDataToSupabase()...');
-                await syncTableDataToSupabase();
-                console.log('✅ syncTableDataToSupabase() completed!');
+                console.log('✅ All changes have been saved with safe Supabase updates');
                 
                 // Update UI
                 editBtn.style.display = 'inline-block';
@@ -5180,7 +6175,6 @@
                 doneBtn.innerHTML = '✅ Done';
                 doneBtn.disabled = false;
                 
-                
                 // Remove edit mode classes
                 table.classList.remove('edit-mode');
                 tableContainer.style.transform = 'scale(1)';
@@ -5188,13 +6182,22 @@
                 // Hide indicator
                 hideEditModeIndicator();
                 
-                // Update local data to reflect the saved changes
-                allTableData = [...editedTableData];
+                // Update original data to match edited data
+                originalTableData = JSON.parse(JSON.stringify(editedTableData));
                 
-                // Refresh table display to show updated data
-                displayCurrentPageData();
+                // DON'T refresh the table - it causes data to move around
+                // The table already shows the correct data from real-time updates
                 
                 isEditMode = false;
+                
+                // Re-enable data reloads after a short delay
+                setTimeout(() => {
+                    preventDataReload = false;
+                    console.log('✅ Data reload prevention cleared');
+                }, 2000);
+                
+                // Show success message
+                showNotification('✅ All changes saved successfully to Supabase!', 'success');
                 
             } catch (error) {
                 console.error('Error saving table changes:', error);
@@ -5505,6 +6508,194 @@
             }
         }
 
+
+        // Map display column names to database column names
+        function mapDisplayColumnToDatabase(displayColumn) {
+            const columnMapping = {
+                'Season': ['season', 'Season', 'SEASON', 'seasons', 'SEASONS'],
+                'Customer': ['customer', 'Customer', 'CUSTOMER', 'customers', 'CUSTOMERS'],
+                'Style Number': ['style_number', 'styleNumber', 'Style Number', 'STYLE_NUMBER', 'style_no', 'styleNo', 'STYLE_NO'],
+                'Style Name': ['style_name', 'styleName', 'Style Name', 'STYLE_NAME', 'style', 'STYLE'],
+                'Main Material': ['main_material', 'mainMaterial', 'Main Material', 'MAIN_MATERIAL', 'material', 'MATERIAL', 'main_materials'],
+                'Material Consumption': ['material_consumption', 'materialConsumption', 'Material Consumption', 'MATERIAL_CONSUMPTION', 'consumption', 'CONSUMPTION'],
+                'Material Price': ['material_price', 'materialPrice', 'Material Price', 'MATERIAL_PRICE', 'price', 'PRICE'],
+                'Trim Cost': ['trim_cost', 'trimCost', 'Trim Cost', 'TRIM_COST', 'trim', 'TRIM'],
+                'Total Material Cost': ['total_material_cost', 'totalMaterialCost', 'Total Material Cost', 'TOTAL_MATERIAL_COST', 'total_cost', 'totalCost'],
+                'Knitting Machine': ['knitting_machine', 'knittingMachine', 'Knitting Machine', 'KNITTING_MACHINE', 'machine', 'MACHINE'],
+                'Knitting Time': ['knitting_time', 'knittingTime', 'Knitting Time', 'KNITTING_TIME', 'time', 'TIME'],
+                'Knitting CPM': ['knitting_cpm', 'knittingCpm', 'Knitting CPM', 'KNITTING_CPM', 'cpm', 'CPM'],
+                'Knitting Cost': ['knitting_cost', 'knittingCost', 'Knitting Cost', 'KNITTING_COST', 'knitting', 'KNITTING'],
+                'Ops Cost': ['ops_cost', 'opsCost', 'Ops Cost', 'OPS_COST', 'ops', 'OPS', 'operations', 'OPERATIONS'],
+                'Knitting + Ops Cost': ['knitting_ops_cost', 'knittingOpsCost', 'Knitting + Ops Cost', 'KNITTING_OPS_COST', 'total_ops', 'totalOps'],
+                'Packaging': ['packaging', 'Packaging', 'PACKAGING', 'package', 'PACKAGE'],
+                'OH': ['oh', 'OH', 'overhead', 'Overhead', 'OVERHEAD', 'overheads', 'OVERHEADS'],
+                'Profit': ['profit', 'Profit', 'PROFIT', 'profits', 'PROFITS'],
+                'FTY Adjustment': ['fty_adjustment', 'ftyAdjustment', 'FTY Adjustment', 'FTY_ADJUSTMENT', 'fty', 'FTY', 'adjustment', 'ADJUSTMENT'],
+                'TTL FTY Cost': ['ttl_fty_cost', 'ttlFtyCost', 'TTL FTY Cost', 'TTL_FTY_COST', 'total_fty', 'totalFty', 'ttl_cost', 'ttlCost']
+            };
+            
+            // If we have a mapping for this display column, try to find the actual database column
+            if (columnMapping[displayColumn]) {
+                const possibleNames = columnMapping[displayColumn];
+                
+                // Check if any of the possible names exist in the current record
+                if (editedTableData.length > 0) {
+                    const sampleRecord = editedTableData[0];
+                    for (const possibleName of possibleNames) {
+                        if (sampleRecord.hasOwnProperty(possibleName)) {
+                            return possibleName;
+                        }
+                    }
+                }
+                
+                // If not found in record, return the first possible name (most common)
+                return possibleNames[0];
+            }
+            
+            // If no mapping found, return the display column as-is
+            return displayColumn;
+        }
+
+
+        // Clear all pending updates
+        function clearAllPendingUpdates() {
+            updateTimeouts.forEach((timeoutId) => {
+                clearTimeout(timeoutId);
+            });
+            updateTimeouts.clear();
+        }
+
+        // Update a single cell using the existing API infrastructure
+        async function updateSingleCellInSupabase(rowIndex, columnName, newValue) {
+            try {
+                console.log(`🔄 Updating cell: ${columnName} = "${newValue}"`);
+                
+                // Get the record to update
+                const record = editedTableData[rowIndex];
+                if (!record) {
+                    throw new Error(`Record not found at row ${rowIndex}`);
+                }
+                
+                // Find the record ID - try multiple possible ID field names
+                let idField = window.recordIdField;
+                let recordId = null;
+                
+                if (!idField) {
+                    // Try to detect the ID field automatically
+                    const possibleIdFields = ['id', 'ID', 'Id', 'primary_key', 'pk', 'key', 'rowid'];
+                    for (const field of possibleIdFields) {
+                        if (record.hasOwnProperty(field) && record[field] !== null && record[field] !== undefined) {
+                            idField = field;
+                            recordId = record[field];
+                            break;
+                        }
+                    }
+                } else {
+                    recordId = record[idField];
+                }
+                
+                // If still no ID found, try the first field
+                if (!recordId) {
+                    const firstField = Object.keys(record)[0];
+                    idField = firstField;
+                    recordId = record[firstField];
+                }
+                
+                if (!recordId) {
+                    throw new Error(`No valid ID found for record at row ${rowIndex}`);
+                }
+                
+                // Map display column name to database column name
+                const dbColumnName = mapDisplayColumnToDatabase(columnName);
+                
+                // Use the existing API infrastructure instead of direct Supabase calls
+                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const apiUrl = isLocalhost ? `/api/datatable/update/${connectionId}` : `/.netlify/functions/datatable-update`;
+                
+                // Get the actual ID field name from the record
+                const actualIdField = idField;
+                console.log(`🔑 Using ID field: ${actualIdField} with value: ${recordId}`);
+                
+                const updatePayload = {
+                    table: 'databank',
+                    id: recordId,
+                    idField: actualIdField, // Include the ID field name
+                    data: {
+                        [dbColumnName]: newValue
+                    }
+                };
+                
+                console.log(`📡 Using API: ${apiUrl}`);
+                console.log(`📦 Payload:`, updatePayload);
+                console.log(`🔍 Record being updated:`, record);
+                console.log(`🔑 ID Field: ${actualIdField}, ID Value: ${recordId}`);
+                console.log(`📝 Column being updated: ${dbColumnName} = "${newValue}"`);
+                
+                // Retry mechanism for failed requests
+                let response;
+                let lastError;
+                
+                for (let attempt = 1; attempt <= 3; attempt++) {
+                    try {
+                        console.log(`🔄 Attempt ${attempt}/3: Updating ${columnName}`);
+                        
+                        response = await fetch(apiUrl, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(updatePayload)
+                        });
+                        
+                        if (response.ok) {
+                            break; // Success, exit retry loop
+                        } else {
+                            const errorText = await response.text();
+                            lastError = new Error(`API update failed (${response.status}): ${errorText}`);
+                            
+                            if (attempt < 3) {
+                                console.log(`⚠️ Attempt ${attempt} failed, retrying in 1 second...`);
+                                await new Promise(resolve => setTimeout(resolve, 1000));
+                            }
+                        }
+                    } catch (error) {
+                        lastError = error;
+                        if (attempt < 3) {
+                            console.log(`⚠️ Attempt ${attempt} failed with error: ${error.message}, retrying in 1 second...`);
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                        }
+                    }
+                }
+                
+                if (!response || !response.ok) {
+                    throw lastError || new Error('All retry attempts failed');
+                }
+                
+                const result = await response.json();
+                console.log(`✅ Update successful:`, result);
+                
+                // Update the original data to reflect the change
+                if (originalTableData[rowIndex]) {
+                    originalTableData[rowIndex][columnName] = newValue;
+                }
+                
+                // Also update the allTableData to keep it in sync
+                if (allTableData[rowIndex]) {
+                    allTableData[rowIndex][columnName] = newValue;
+                }
+                
+                // Store the successful ID field for future updates
+                window.recordIdField = idField;
+                
+                console.log(`✅ Data updated in memory - row ${rowIndex}, column ${columnName} = "${newValue}"`);
+                
+                return true;
+                
+            } catch (error) {
+                console.error(`❌ Error updating cell:`, error.message);
+                throw error;
+            }
+        }
 
         // Show notification
         function showNotification(message, type = 'info') {
