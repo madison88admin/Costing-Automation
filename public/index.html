@@ -2590,6 +2590,7 @@
             }
         }
 
+
     </style>
 </head>
 <body>
@@ -12405,22 +12406,40 @@
 
                 if (result.success) {
                     // Update notification to success
-                    notificationManager.updateMessage(loadingId, 'Upload Complete', 'Beanie data saved successfully to Supabase!');
-                    notificationManager.updateProgress(loadingId, 100);
+                    const action = result.action || 'saved';
+                    const duplicateFound = result.duplicateFound || false;
                     
-                    // Hide loading notification and show success
-                    setTimeout(() => {
-                        notificationManager.hide(loadingId);
-                        showSuccessNotification('Beanie cost data saved successfully to database!', {
-                            duration: 5000
-                        });
-                    }, 1000);
+                    if (duplicateFound) {
+                        notificationManager.updateMessage(loadingId, 'Update Complete', 'Existing record found and updated in Supabase!');
+                        notificationManager.updateProgress(loadingId, 100);
+                        
+                        // Hide loading notification and show update success
+                        setTimeout(() => {
+                            notificationManager.hide(loadingId);
+                            showSuccessNotification('🔄 Existing beanie data updated successfully! Duplicate prevented.', {
+                                duration: 6000
+                            });
+                        }, 1000);
+                    } else {
+                        notificationManager.updateMessage(loadingId, 'Upload Complete', 'New beanie data saved successfully to Supabase!');
+                        notificationManager.updateProgress(loadingId, 100);
+                        
+                        // Hide loading notification and show success
+                        setTimeout(() => {
+                            notificationManager.hide(loadingId);
+                            showSuccessNotification('✅ New beanie data saved successfully to database!', {
+                                duration: 5000
+                            });
+                        }, 1000);
+                    }
                     
                     console.log('Saved data:', result.data);
+                    
                     
                     // Auto-refresh the datatable
                     if (typeof loadDatabankData === 'function') {
                         console.log('Auto-refreshing datatable...');
+                        
                         loadDatabankData();
                     }
                 } else {
@@ -12507,22 +12526,40 @@
 
                 if (result.success) {
                     // Update notification to success
-                    notificationManager.updateMessage(loadingId, 'Upload Complete', 'Ballcaps data saved successfully to Supabase!');
-                    notificationManager.updateProgress(loadingId, 100);
+                    const action = result.action || 'saved';
+                    const duplicateFound = result.duplicateFound || false;
                     
-                    // Hide loading notification and show success
-                    setTimeout(() => {
-                        notificationManager.hide(loadingId);
-                        showSuccessNotification('Ballcaps cost data saved successfully to database!', {
-                            duration: 5000
-                        });
-                    }, 1000);
+                    if (duplicateFound) {
+                        notificationManager.updateMessage(loadingId, 'Update Complete', 'Existing ballcaps record found and updated in Supabase!');
+                        notificationManager.updateProgress(loadingId, 100);
+                        
+                        // Hide loading notification and show update success
+                        setTimeout(() => {
+                            notificationManager.hide(loadingId);
+                            showSuccessNotification('🔄 Existing ballcaps data updated successfully! Duplicate prevented.', {
+                                duration: 6000
+                            });
+                        }, 1000);
+                    } else {
+                        notificationManager.updateMessage(loadingId, 'Upload Complete', 'New ballcaps data saved successfully to Supabase!');
+                        notificationManager.updateProgress(loadingId, 100);
+                        
+                        // Hide loading notification and show success
+                        setTimeout(() => {
+                            notificationManager.hide(loadingId);
+                            showSuccessNotification('✅ New ballcaps data saved successfully to database!', {
+                                duration: 5000
+                            });
+                        }, 1000);
+                    }
                     
                     console.log('Saved data:', result.data);
+                    
                     
                     // Auto-refresh the datatable
                     if (typeof loadDatabankData === 'function') {
                         console.log('Auto-refreshing datatable...');
+                        
                         loadDatabankData();
                     }
                 } else {
@@ -12561,6 +12598,8 @@
                 saveBtn.innerHTML = originalText;
             }
         }
+
+
 
         // Toggle emergency recovery panel with slide animation
         function toggleEmergencyPanel() {

@@ -142,7 +142,7 @@ async function updateRecordWithCustomId(service: DataTableService | SupabaseServ
       throw new Error(`Supabase update failed (${response.status}): ${errorText}`);
     }
 
-    const result = await response.json();
+    const result = await response.json() as any[];
     return result[0]; // Return the first (and should be only) updated record
   } else {
     // For other database types, use the standard update method

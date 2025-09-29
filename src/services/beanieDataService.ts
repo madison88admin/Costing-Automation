@@ -254,7 +254,7 @@ export class BeanieDataService {
   async getBeanieCostData(costId: number): Promise<any> {
     try {
       // Get main cost record
-      const { data: costData, error: costError } = await this.supabase.supabase
+      const { data: costData, error: costError } = await this.supabase.client
         .from('costs')
         .select('*')
         .eq('id', costId)
@@ -263,7 +263,7 @@ export class BeanieDataService {
       if (costError) throw costError;
 
       // Get cost items
-      const { data: itemsData, error: itemsError } = await this.supabase.supabase
+      const { data: itemsData, error: itemsError } = await this.supabase.client
         .from('cost_items')
         .select('*')
         .eq('cost_id', costId)
@@ -301,7 +301,7 @@ export class BeanieDataService {
    */
   async getAllBeanieCostData(): Promise<any[]> {
     try {
-      const { data, error } = await this.supabase.supabase
+      const { data, error } = await this.supabase.client
         .from('costs')
         .select('*')
         .eq('product_type', 'beanie')
