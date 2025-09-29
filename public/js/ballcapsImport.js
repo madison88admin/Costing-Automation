@@ -285,25 +285,72 @@ class TNFBallCapsImporter {
                     !firstCell.includes('SUB TOTAL') &&
                     firstCell.trim() !== '') {
                     
-                    // Look for cost in different columns
-                    let cost = '';
-                    let notes = String(row[1] || '');
-                    
-                    // Try to find cost in col 2 or col 3
-                    if (row[2] !== undefined && row[2] !== null && !isNaN(parseFloat(row[2]))) {
-                        cost = parseFloat(row[2]).toFixed(2);
-                    } else if (row[3] !== undefined && row[3] !== null && !isNaN(parseFloat(row[3]))) {
-                        cost = parseFloat(row[3]).toFixed(2);
-                    }
-                    
-                    // If we found a cost, add the overhead item
-                    if (cost !== '') {
+                    // Read exact values from Excel file for OVERHEAD and PROFIT
+                    if (firstCell === 'OVERHEAD' || firstCell === 'PROFIT') {
+                        console.log('🔍 Processing OVERHEAD/PROFIT from Excel:', firstCell, '| Row data:', row);
+                        
+                        // Look for cost in different columns (prioritize Excel values)
+                        let cost = '';
+                        let notes = String(row[1] || '');
+                        
+                        // Try to find cost in col 2 or col 3
+                        if (row[2] !== undefined && row[2] !== null && !isNaN(parseFloat(row[2]))) {
+                            cost = parseFloat(row[2]).toFixed(2);
+                            console.log('  Found cost in col 2:', cost);
+                        } else if (row[3] !== undefined && row[3] !== null && !isNaN(parseFloat(row[3]))) {
+                            cost = parseFloat(row[3]).toFixed(2);
+                            console.log('  Found cost in col 3:', cost);
+                        }
+                        
+                        // If no cost found in Excel, use default values
+                        if (cost === '') {
+                            if (firstCell === 'OVERHEAD') {
+                                cost = '0.20';
+                                console.log('  Using default OVERHEAD cost: 0.20');
+                            } else if (firstCell === 'PROFIT') {
+                                cost = '0.59';
+                                console.log('  Using default PROFIT cost: 0.59');
+                            }
+                        }
+                        
+                        // Add the overhead item with Excel or default cost
+                        if (cost !== '') {
+                            result.overhead.push({
+                                type: firstCell,
+                                notes: notes,
+                                cost: cost
+                            });
+                            console.log('✅ OVERHEAD/PROFIT:', firstCell, 'Notes:', notes, 'Cost:', cost);
+                        }
+                    } else if (firstCell.toLowerCase().includes('scripto')) {
+                        console.log('🔍 Converting Scripto to OVERHEAD:', firstCell);
                         result.overhead.push({
-                            type: firstCell,
-                            notes: notes,
-                            cost: cost
+                            type: 'OVERHEAD',
+                            notes: '',
+                            cost: '0.59'
                         });
-                        console.log('✅ OVERHEAD:', firstCell, 'Notes:', notes, 'Cost:', cost);
+                        console.log('✅ Converted Scripto to OVERHEAD: Cost: 0.59');
+                    } else {
+                        // Look for cost in different columns for other items
+                        let cost = '';
+                        let notes = String(row[1] || '');
+                        
+                        // Try to find cost in col 2 or col 3
+                        if (row[2] !== undefined && row[2] !== null && !isNaN(parseFloat(row[2]))) {
+                            cost = parseFloat(row[2]).toFixed(2);
+                        } else if (row[3] !== undefined && row[3] !== null && !isNaN(parseFloat(row[3]))) {
+                            cost = parseFloat(row[3]).toFixed(2);
+                        }
+                        
+                        // If we found a cost, add the overhead item
+                        if (cost !== '') {
+                            result.overhead.push({
+                                type: firstCell,
+                                notes: notes,
+                                cost: cost
+                            });
+                            console.log('✅ OVERHEAD:', firstCell, 'Notes:', notes, 'Cost:', cost);
+                        }
                     }
                 }
                 
@@ -320,6 +367,34 @@ class TNFBallCapsImporter {
                 if (firstCell.includes('TOTAL FACTORY') && row[3]) {
                     result.totalFactoryCost = parseFloat(row[3]).toFixed(2);
                     console.log('✅ Factory Total:', result.totalFactoryCost, 'from row', i, 'cell:', firstCell);
+                }
+
+                // Extract OVERHEAD SUB TOTAL from Excel file (read like other features)
+                if (currentSection === 'overhead' && firstCell && firstCell.includes('SUB TOTAL')) {
+                    console.log('🔍 Found SUB TOTAL row in Excel:', firstCell, '| Row data:', row);
+                    
+                    // Look for cost in different columns (same as OVERHEAD and PROFIT)
+                    let cost = '';
+                    let notes = String(row[1] || '');
+                    
+                    // Try to find cost in col 2 or col 3 (same logic as other items)
+                    if (row[2] !== undefined && row[2] !== null && !isNaN(parseFloat(row[2]))) {
+                        cost = parseFloat(row[2]).toFixed(2);
+                        console.log('  Found SUB TOTAL cost in col 2:', cost);
+                    } else if (row[3] !== undefined && row[3] !== null && !isNaN(parseFloat(row[3]))) {
+                        cost = parseFloat(row[3]).toFixed(2);
+                        console.log('  Found SUB TOTAL cost in col 3:', cost);
+                    } else if (row[4] !== undefined && row[4] !== null && !isNaN(parseFloat(row[4]))) {
+                        cost = parseFloat(row[4]).toFixed(2);
+                        console.log('  Found SUB TOTAL cost in col 4:', cost);
+                    }
+                    
+                    if (cost !== '') {
+                        result.overheadSubTotal = cost;
+                        console.log('✅ OVERHEAD SUB TOTAL from Excel:', result.overheadSubTotal, 'from row', i, 'cell:', firstCell);
+                    } else {
+                        console.log('❌ SUB TOTAL row found but no valid cost value');
+                    }
                 }
             }
 

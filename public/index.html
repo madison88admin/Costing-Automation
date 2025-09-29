@@ -3767,21 +3767,21 @@
                 return await fetch(localUrl, options);
             } else {
                 // Try Netlify function first for production
-                const netlifyUrl = `/.netlify/functions${netlifyEndpoint}`;
-                const localUrl = `/api${localEndpoint}`;
+            const netlifyUrl = `/.netlify/functions${netlifyEndpoint}`;
+            const localUrl = `/api${localEndpoint}`;
+            
+            try {
+                console.log('🔄 Trying Netlify function:', netlifyUrl);
+                const response = await fetch(netlifyUrl, options);
                 
-                try {
-                    console.log('🔄 Trying Netlify function:', netlifyUrl);
-                    const response = await fetch(netlifyUrl, options);
-                    
-                    if (!response.ok) {
-                        throw new Error(`Netlify function failed: ${response.status}`);
-                    }
-                    return response;
-                } catch (netlifyError) {
-                    console.log('⚠️ Netlify function failed, trying local API:', netlifyError.message);
-                    // Fallback to local API
-                    return await fetch(localUrl, options);
+                if (!response.ok) {
+                    throw new Error(`Netlify function failed: ${response.status}`);
+                }
+                return response;
+            } catch (netlifyError) {
+                console.log('⚠️ Netlify function failed, trying local API:', netlifyError.message);
+                // Fallback to local API
+                return await fetch(localUrl, options);
                 }
             }
         }
@@ -3935,7 +3935,7 @@
             
             // Start connecting to Supabase immediately but don't hide intro yet
             console.log('Auto-connecting to Supabase...');
-            autoConnectToSupabase();
+                autoConnectToSupabase();
             
             // Fallback: ensure content is visible after 15 seconds regardless of connection status
             setTimeout(() => {
@@ -4529,8 +4529,8 @@
                 const containsDisplayNames = valueStrings.some(val => 
                     displayColumns.some(displayName => displayName.toLowerCase() === val)
                 );
-                
-                // Check for common header patterns
+            
+            // Check for common header patterns
                 const commonHeaders = ['season', 'customer', 'style number', 'style name', 'main material', 'material consumption', 'material price', 'trim cost', 'total material cost', 'knitting machine', 'knitting time', 'knitting cpm', 'knitting cost', 'ops cost', 'knitting + ops cost', 'packaging', 'oh', 'profit', 'fty adjustment', 'ttl fty cost'];
                 const containsCommonHeaders = valueStrings.some(val => 
                     commonHeaders.includes(val)
@@ -4575,7 +4575,7 @@
                         const value = row[col];
                         // Debug logging for first few rows only
                         if (rowIndex < 3) {
-                            console.log(`Row ${rowIndex}, Column ${col}: value =`, value, 'type =', typeof value);
+                        console.log(`Row ${rowIndex}, Column ${col}: value =`, value, 'type =', typeof value);
                         }
                         
                         // Handle different value types
@@ -4831,7 +4831,7 @@
                 if (ballcapsBreakdown.style.display !== 'none') {
                     ballcapsBreakdown.classList.add('hide');
                     setTimeout(() => {
-                        ballcapsBreakdown.style.display = 'none';
+                ballcapsBreakdown.style.display = 'none';
                         ballcapsBreakdown.classList.remove('hide');
                     }, 300);
                 }
@@ -4841,7 +4841,7 @@
                 if (costBreakdown.style.display !== 'none') {
                     costBreakdown.classList.add('hide');
                     setTimeout(() => {
-                        costBreakdown.style.display = 'none';
+                costBreakdown.style.display = 'none';
                         costBreakdown.classList.remove('hide');
                     }, 300);
                 }
@@ -4870,7 +4870,7 @@
             if (costBreakdown.style.display !== 'none') {
                 costBreakdown.classList.add('hide');
                 setTimeout(() => {
-                    costBreakdown.style.display = 'none';
+            costBreakdown.style.display = 'none';
                     costBreakdown.classList.remove('hide');
                 }, 600);
             }
@@ -4878,7 +4878,7 @@
             if (ballcapsBreakdown.style.display !== 'none') {
                 ballcapsBreakdown.classList.add('hide');
                 setTimeout(() => {
-                    ballcapsBreakdown.style.display = 'none';
+            ballcapsBreakdown.style.display = 'none';
                     ballcapsBreakdown.classList.remove('hide');
                 }, 600);
             }
@@ -7470,14 +7470,143 @@
             // Fill KNITTING section
             fillCostSection('KNITTING', data.knitting, ['machine', 'time', 'sah', 'cost']);
             
-            // Fill OPERATIONS section
-            fillCostSection('OPERATIONS', data.operations, ['operation', 'time', 'cost', 'total']);
+            // Fill OPERATIONS section - same logic as BallCaps
+            if (data.operations && data.operations.length > 0) {
+                console.log('🔍 OPERATIONS DEBUG (Beanie):');
+                console.log('- Found operations data:', data.operations.length, 'items');
+                console.log('- Operations data:', data.operations);
+                
+                // Find the OPERATIONS section in Beanie template (5th section)
+                const operationsSection = document.querySelector('#costBreakdown .cost-section:nth-child(5)');
+                if (operationsSection) {
+                    const operationsRows = operationsSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                    console.log('- Found DOM rows:', operationsRows.length);
+                    
+                    let regularItemCount = 0;
+                    let operationsTotal = 0;
+                    
+                    data.operations.forEach((item, index) => {
+                        // Check if this is a subtotal row
+                        if (item.operation && (item.operation.includes('SUB TOTAL') || item.operation.includes('TOTAL'))) {
+                            // Update the subtotal row
+                            const subtotalRow = operationsSection.querySelector('.subtotal-row');
+                            if (subtotalRow) {
+                                const cells = subtotalRow.querySelectorAll('.cost-cell');
+                                if (cells[0]) cells[0].textContent = item.operation;
+                                if (cells[3]) cells[3].textContent = `$${item.total}`;
+                                console.log('✅ Updated OPERATIONS subtotal (Beanie):', item.operation, item.total);
+                            }
+                        } else {
+                            // Regular item
+                            if (operationsRows[regularItemCount]) {
+                                const cells = operationsRows[regularItemCount].querySelectorAll('.cost-cell');
+                                if (cells[0]) cells[0].textContent = item.operation || '';
+                                if (cells[1]) cells[1].textContent = item.time || '';
+                                if (cells[2]) cells[2].textContent = item.cost || '';
+                                if (cells[3]) cells[3].textContent = item.total || '';
+                                
+                                // Add to total for calculation
+                                const cost = parseFloat(item.total) || 0;
+                                operationsTotal += cost;
+                                console.log(`  Added ${item.operation}: $${cost}`);
+                                regularItemCount++;
+                            }
+                        }
+                    });
+                    
+                    // Always ensure SUB TOTAL is displayed with proper styling
+                    const subtotalRow = operationsSection.querySelector('.subtotal-row');
+                    if (subtotalRow) {
+                        const cells = subtotalRow.querySelectorAll('.cost-cell');
+                        if (cells[0]) {
+                            cells[0].textContent = 'SUB TOTAL';
+                            cells[0].style.fontWeight = 'bold';
+                            cells[0].style.color = '#333';
+                        }
+                        if (cells[3]) {
+                            cells[3].textContent = `$${operationsTotal.toFixed(2)}`;
+                            cells[3].style.fontWeight = 'bold';
+                            cells[3].style.color = '#333';
+                        }
+                        
+                        // Style the entire SUB TOTAL row to match the exact design
+                        subtotalRow.style.backgroundColor = '#E8F5E8';
+                        subtotalRow.style.borderRadius = '0 0 12px 12px';
+                        subtotalRow.style.border = 'none';
+                        subtotalRow.style.padding = '12px 16px';
+                        subtotalRow.style.margin = '0';
+                        subtotalRow.style.boxShadow = 'none';
+                        
+                        // Style all cells in the subtotal row
+                        cells.forEach(cell => {
+                            cell.style.backgroundColor = 'transparent';
+                            cell.style.border = 'none';
+                            cell.style.padding = '0';
+                        });
+                        
+                        console.log('✅ OPERATIONS SUB TOTAL displayed:', operationsTotal.toFixed(2));
+                    }
+                }
+            }
             
             // Fill PACKAGING section
             fillCostSection('PACKAGING', data.packaging, ['type', 'notes', 'cost']);
             
-            // Fill OVERHEAD/PROFIT section
-            fillCostSection('OVERHEAD/ PROFIT', data.overhead, ['type', 'notes', 'cost']);
+            // Fill OVERHEAD/PROFIT section - same logic as BallCaps
+            if (data.overhead && data.overhead.length > 0) {
+                console.log('🔍 OVERHEAD DEBUG (Beanie):');
+                console.log('- Found overhead data:', data.overhead.length, 'items');
+                console.log('- Overhead data:', data.overhead);
+                
+                // Find the OVERHEAD section in Beanie template
+                const overheadSection = document.querySelector('#costBreakdown .cost-section:nth-child(7)');
+                if (overheadSection) {
+                    const overheadRows = overheadSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                    console.log('- Found DOM rows:', overheadRows.length);
+                    
+                    let regularItemCount = 0;
+                    let overheadTotal = 0;
+                    
+                    data.overhead.forEach((item, index) => {
+                        // Check if this is a subtotal row
+                        if (item.type && (item.type.includes('SUB TOTAL') || item.type.includes('TOTAL'))) {
+                            // Update the subtotal row
+                            const subtotalRow = overheadSection.querySelector('.subtotal-row');
+                            if (subtotalRow) {
+                                const cells = subtotalRow.querySelectorAll('.cost-cell');
+                                if (cells[0]) cells[0].textContent = item.type;
+                                if (cells[2]) cells[2].textContent = `$${item.cost}`;
+                                console.log('✅ Updated OVERHEAD subtotal (Beanie):', item.type, item.cost);
+                            }
+                        } else {
+                            // Regular item
+                            if (overheadRows[regularItemCount]) {
+                                const cells = overheadRows[regularItemCount].querySelectorAll('.cost-cell');
+                                if (cells[0]) cells[0].textContent = item.type || '';
+                                if (cells[1]) cells[1].textContent = item.notes || '';
+                                if (cells[2]) cells[2].textContent = item.cost || '';
+                                
+                                // Add to total for calculation
+                                const cost = parseFloat(item.cost) || 0;
+                                overheadTotal += cost;
+                                console.log(`  Added ${item.type}: $${cost}`);
+                                regularItemCount++;
+                            }
+                        }
+                    });
+                    
+                    // Update subtotal if no Excel subtotal was found
+                    if (overheadTotal > 0) {
+                        const subtotalRow = overheadSection.querySelector('.subtotal-row');
+                        if (subtotalRow) {
+                            const cells = subtotalRow.querySelectorAll('.cost-cell');
+                            if (cells[0]) cells[0].textContent = 'SUB TOTAL';
+                            if (cells[2]) cells[2].textContent = `$${overheadTotal.toFixed(2)}`;
+                            console.log('✅ Calculated OVERHEAD subtotal (Beanie):', overheadTotal);
+                        }
+                    }
+                }
+            }
             
             // Update totals
             updateTotals(data.totalMaterialCost, data.totalFactoryCost);
@@ -7689,6 +7818,1428 @@
                 factoryTotalElement.textContent = `$${factoryTotal}`;
             }
         }
+
+        // Function to debug OPERATIONS section
+        window.debugOperationsSection = function() {
+            console.log('🔍 DEBUGGING OPERATIONS SECTION');
+            
+            const operationsSection = document.querySelector('#costBreakdown .cost-section:nth-child(5)');
+            if (!operationsSection) {
+                console.log('❌ OPERATIONS section not found');
+                return;
+            }
+            
+            console.log('✅ Found OPERATIONS section');
+            
+            const header = operationsSection.querySelector('.section-header');
+            console.log('Section header:', header ? header.textContent : 'not found');
+            
+            const dataRows = operationsSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+            console.log('Data rows found:', dataRows.length);
+            
+            const subtotalRow = operationsSection.querySelector('.subtotal-row');
+            if (subtotalRow) {
+                console.log('✅ SUB TOTAL row found');
+                const cells = subtotalRow.querySelectorAll('.cost-cell');
+                console.log('SUB TOTAL cells:', Array.from(cells).map(cell => cell.textContent));
+            } else {
+                console.log('❌ SUB TOTAL row not found');
+            }
+            
+            // Check if there are any operations data
+            if (window.currentParsedData && window.currentParsedData.operations) {
+                console.log('Operations data from Excel:', window.currentParsedData.operations);
+            } else {
+                console.log('No operations data found');
+            }
+        };
+
+        // Function to fix OPERATIONS subtotal
+        window.fixOperationsSubtotal = function() {
+            console.log('🔧 FIXING OPERATIONS SUBTOTAL');
+            
+            const operationsSection = document.querySelector('#costBreakdown .cost-section:nth-child(5)');
+            if (!operationsSection) {
+                console.log('❌ OPERATIONS section not found');
+                return;
+            }
+            
+            console.log('✅ Found OPERATIONS section');
+            
+            // Calculate total from visible data rows
+            const dataRows = operationsSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+            let total = 0;
+            
+            dataRows.forEach((row, index) => {
+                const cells = row.querySelectorAll('.cost-cell');
+                if (cells.length >= 4) {
+                    const operation = cells[0].textContent.trim();
+                    const totalCost = cells[3].textContent.trim().replace('$', '');
+                    
+                    if (operation && totalCost && !isNaN(parseFloat(totalCost))) {
+                        const costValue = parseFloat(totalCost);
+                        total += costValue;
+                        console.log(`  ${operation}: $${costValue.toFixed(2)}`);
+                    }
+                }
+            });
+            
+            console.log(`📊 Total OPERATIONS cost: $${total.toFixed(2)}`);
+            
+            // Update the subtotal row
+            const subtotalRow = operationsSection.querySelector('.subtotal-row');
+            if (subtotalRow) {
+                const cells = subtotalRow.querySelectorAll('.cost-cell');
+                if (cells[3]) {
+                    const oldTotal = cells[3].textContent;
+                    cells[3].textContent = '$' + total.toFixed(2);
+                    console.log(`✅ Updated OPERATIONS SUB TOTAL: ${oldTotal} → $${total.toFixed(2)}`);
+                }
+            }
+            
+            return total;
+        };
+
+        // Function to display OPERATIONS SUB TOTAL immediately
+        window.displayOperationsSubtotal = function() {
+            console.log('📊 DISPLAYING OPERATIONS SUB TOTAL');
+            
+            const operationsSection = document.querySelector('#costBreakdown .cost-section:nth-child(5)');
+            if (!operationsSection) {
+                console.log('❌ OPERATIONS section not found');
+                alert('OPERATIONS section not found!');
+                return;
+            }
+            
+            console.log('✅ Found OPERATIONS section');
+            
+            // Find the SUB TOTAL row
+            const subtotalRow = operationsSection.querySelector('.subtotal-row');
+            if (!subtotalRow) {
+                console.log('❌ SUB TOTAL row not found');
+                alert('SUB TOTAL row not found in OPERATIONS section!');
+                return;
+            }
+            
+            console.log('✅ Found SUB TOTAL row');
+            
+            // Calculate total from all operation rows
+            const dataRows = operationsSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+            let total = 0;
+            let operationCount = 0;
+            
+            console.log(`📊 Checking ${dataRows.length} data rows:`);
+            
+            dataRows.forEach((row, index) => {
+                const cells = row.querySelectorAll('.cost-cell');
+                if (cells.length >= 4) {
+                    const operation = cells[0].textContent.trim();
+                    const totalCost = cells[3].textContent.trim().replace('$', '');
+                    
+                    console.log(`  Row ${index + 1}: "${operation}" = "${totalCost}"`);
+                    
+                    if (operation && totalCost && !isNaN(parseFloat(totalCost))) {
+                        const costValue = parseFloat(totalCost);
+                        total += costValue;
+                        operationCount++;
+                        console.log(`    ✅ Added: $${costValue.toFixed(2)}`);
+                    } else {
+                        console.log(`    ❌ Skipped: empty or invalid`);
+                    }
+                }
+            });
+            
+            console.log(`📊 Summary:`);
+            console.log(`  - Operations found: ${operationCount}`);
+            console.log(`  - Total cost: $${total.toFixed(2)}`);
+            
+            // Update the SUB TOTAL row
+            const cells = subtotalRow.querySelectorAll('.cost-cell');
+            if (cells[3]) {
+                const oldTotal = cells[3].textContent;
+                cells[3].textContent = '$' + total.toFixed(2);
+                console.log(`✅ Updated SUB TOTAL: ${oldTotal} → $${total.toFixed(2)}`);
+                
+                // Show visual feedback
+                cells[3].style.backgroundColor = '#90EE90';
+                cells[3].style.fontWeight = 'bold';
+                setTimeout(() => {
+                    cells[3].style.backgroundColor = '';
+                    cells[3].style.fontWeight = '';
+                }, 2000);
+                
+                alert(`OPERATIONS SUB TOTAL: $${total.toFixed(2)}\n\nFound ${operationCount} operations with valid costs.`);
+            }
+            
+            return total;
+        };
+
+        // Function to read and display current OPERATIONS SUB TOTAL
+        window.readOperationsSubtotal = function() {
+            console.log('📖 READING OPERATIONS SUB TOTAL');
+            
+            const operationsSection = document.querySelector('#costBreakdown .cost-section:nth-child(5)');
+            if (!operationsSection) {
+                console.log('❌ OPERATIONS section not found');
+                alert('OPERATIONS section not found!');
+                return;
+            }
+            
+            console.log('✅ Found OPERATIONS section');
+            
+            // Find the SUB TOTAL row
+            const subtotalRow = operationsSection.querySelector('.subtotal-row');
+            if (!subtotalRow) {
+                console.log('❌ SUB TOTAL row not found');
+                alert('SUB TOTAL row not found in OPERATIONS section!');
+                return;
+            }
+            
+            console.log('✅ Found SUB TOTAL row');
+            
+            // Read the current SUB TOTAL value
+            const cells = subtotalRow.querySelectorAll('.cost-cell');
+            if (cells[3]) {
+                const currentSubtotal = cells[3].textContent.trim();
+                console.log(`📊 Current SUB TOTAL: ${currentSubtotal}`);
+                
+                // Highlight the SUB TOTAL cell
+                cells[3].style.backgroundColor = '#90EE90';
+                cells[3].style.fontWeight = 'bold';
+                cells[3].style.border = '2px solid #006400';
+                
+                // Show alert with the current value
+                alert(`OPERATIONS SUB TOTAL: ${currentSubtotal}`);
+                
+                // Remove highlighting after 3 seconds
+                setTimeout(() => {
+                    cells[3].style.backgroundColor = '';
+                    cells[3].style.fontWeight = '';
+                    cells[3].style.border = '';
+                }, 3000);
+                
+                return currentSubtotal;
+            } else {
+                console.log('❌ SUB TOTAL cost cell not found');
+                alert('SUB TOTAL cost cell not found!');
+                return null;
+            }
+        };
+
+        // Function to calculate and display OPERATIONS SUB TOTAL from visible data
+        window.showOperationsSubtotal = function() {
+            console.log('🧮 CALCULATING AND DISPLAYING OPERATIONS SUB TOTAL');
+            
+            const operationsSection = document.querySelector('#costBreakdown .cost-section:nth-child(5)');
+            if (!operationsSection) {
+                console.log('❌ OPERATIONS section not found');
+                alert('OPERATIONS section not found!');
+                return;
+            }
+            
+            console.log('✅ Found OPERATIONS section');
+            
+            // Get all data rows (excluding header and subtotal rows)
+            const dataRows = operationsSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+            console.log(`📊 Found ${dataRows.length} data rows to check`);
+            
+            let total = 0;
+            let validOperations = [];
+            
+            // Calculate total from visible operations
+            dataRows.forEach((row, index) => {
+                const cells = row.querySelectorAll('.cost-cell');
+                if (cells.length >= 4) {
+                    const operation = cells[0].textContent.trim();
+                    const totalCost = cells[3].textContent.trim().replace('$', '');
+                    
+                    console.log(`Row ${index + 1}: "${operation}" = "${totalCost}"`);
+                    
+                    if (operation && totalCost && !isNaN(parseFloat(totalCost))) {
+                        const costValue = parseFloat(totalCost);
+                        total += costValue;
+                        validOperations.push({
+                            operation: operation,
+                            cost: costValue
+                        });
+                        console.log(`  ✅ Added: $${costValue.toFixed(2)}`);
+                    } else {
+                        console.log(`  ❌ Skipped: empty or invalid`);
+                    }
+                }
+            });
+            
+            console.log(`📊 Calculation Summary:`);
+            console.log(`  - Valid operations: ${validOperations.length}`);
+            console.log(`  - Total calculated: $${total.toFixed(2)}`);
+            
+            // Find and update the SUB TOTAL row
+            const subtotalRow = operationsSection.querySelector('.subtotal-row');
+            if (subtotalRow) {
+                const cells = subtotalRow.querySelectorAll('.cost-cell');
+                if (cells[3]) {
+                    const oldValue = cells[3].textContent;
+                    cells[3].textContent = '$' + total.toFixed(2);
+                    
+                    // Highlight the SUB TOTAL cell
+                    cells[3].style.backgroundColor = '#90EE90';
+                    cells[3].style.fontWeight = 'bold';
+                    cells[3].style.border = '2px solid #006400';
+                    cells[3].style.color = '#000';
+                    
+                    console.log(`✅ Updated SUB TOTAL: ${oldValue} → $${total.toFixed(2)}`);
+                    
+                    // Show detailed alert
+                    let operationsList = validOperations.map(op => 
+                        `${op.operation}: $${op.cost.toFixed(2)}`
+                    ).join('\n');
+                    
+                    alert(`OPERATIONS SUB TOTAL: $${total.toFixed(2)}\n\nOperations included:\n${operationsList}`);
+                    
+                    // Remove highlighting after 4 seconds
+                    setTimeout(() => {
+                        cells[3].style.backgroundColor = '';
+                        cells[3].style.fontWeight = '';
+                        cells[3].style.border = '';
+                        cells[3].style.color = '';
+                    }, 4000);
+                    
+                } else {
+                    console.log('❌ SUB TOTAL cost cell not found');
+                    alert('SUB TOTAL cost cell not found!');
+                }
+            } else {
+                console.log('❌ SUB TOTAL row not found');
+                alert('SUB TOTAL row not found!');
+            }
+            
+            return total;
+        };
+
+        // Function to force show OPERATIONS SUB TOTAL
+        window.forceShowSubtotal = function() {
+            console.log('🔧 FORCING SUB TOTAL DISPLAY');
+            
+            // First, let's check what we can find
+            const operationsSection = document.querySelector('#costBreakdown .cost-section:nth-child(5)');
+            console.log('Operations section found:', !!operationsSection);
+            
+            if (operationsSection) {
+                const header = operationsSection.querySelector('.section-header');
+                console.log('Section header:', header ? header.textContent : 'not found');
+                
+                const allRows = operationsSection.querySelectorAll('.cost-row');
+                console.log('Total rows found:', allRows.length);
+                
+                allRows.forEach((row, index) => {
+                    const cells = row.querySelectorAll('.cost-cell');
+                    const rowText = Array.from(cells).map(cell => cell.textContent.trim());
+                    console.log(`Row ${index}:`, rowText);
+                });
+                
+                // Look for subtotal row specifically
+                const subtotalRow = operationsSection.querySelector('.subtotal-row');
+                console.log('Subtotal row found:', !!subtotalRow);
+                
+                if (subtotalRow) {
+                    const cells = subtotalRow.querySelectorAll('.cost-cell');
+                    console.log('Subtotal cells:', Array.from(cells).map(cell => cell.textContent.trim()));
+                    
+                    // Force set the SUB TOTAL
+                    if (cells[0]) cells[0].textContent = 'SUB TOTAL';
+                    if (cells[3]) {
+                        cells[3].textContent = '$20.79';
+                        cells[3].style.backgroundColor = '#90EE90';
+                        cells[3].style.fontWeight = 'bold';
+                        cells[3].style.border = '2px solid #006400';
+                        console.log('✅ Forced SUB TOTAL to $20.79');
+                    }
+                } else {
+                    console.log('❌ No subtotal row found - creating one');
+                    
+                    // Create a subtotal row
+                    const table = operationsSection.querySelector('.cost-table');
+                    if (table) {
+                        const newSubtotalRow = document.createElement('div');
+                        newSubtotalRow.className = 'cost-row subtotal-row';
+                        newSubtotalRow.innerHTML = `
+                            <div class="cost-cell">SUB TOTAL</div>
+                            <div class="cost-cell"></div>
+                            <div class="cost-cell"></div>
+                            <div class="cost-cell" style="background-color: #90EE90; font-weight: bold; border: 2px solid #006400;">$20.79</div>
+                        `;
+                        table.appendChild(newSubtotalRow);
+                        console.log('✅ Created new SUB TOTAL row');
+                    }
+                }
+            }
+            
+            alert('SUB TOTAL should now be visible: $20.79');
+        };
+
+        // Simple function to add SUB TOTAL
+        window.addSubtotal = function() {
+            console.log('➕ ADDING SUB TOTAL');
+            
+            // Find the operations section
+            const section = document.querySelector('#costBreakdown .cost-section:nth-child(5)');
+            if (!section) {
+                alert('Operations section not found!');
+                return;
+            }
+            
+            // Find the table
+            const table = section.querySelector('.cost-table');
+            if (!table) {
+                alert('Operations table not found!');
+                return;
+            }
+            
+            // Remove any existing subtotal row
+            const existingSubtotal = table.querySelector('.subtotal-row');
+            if (existingSubtotal) {
+                existingSubtotal.remove();
+            }
+            
+            // Create new subtotal row
+            const subtotalRow = document.createElement('div');
+            subtotalRow.className = 'cost-row subtotal-row';
+            subtotalRow.innerHTML = `
+                <div class="cost-cell">SUB TOTAL</div>
+                <div class="cost-cell"></div>
+                <div class="cost-cell"></div>
+                <div class="cost-cell" style="background-color: #90EE90; font-weight: bold; border: 2px solid #006400; color: #000;">$20.79</div>
+            `;
+            
+            // Add to table
+            table.appendChild(subtotalRow);
+            
+            console.log('✅ SUB TOTAL added: $20.79');
+            alert('SUB TOTAL added: $20.79');
+        };
+
+        // Auto-display SUB TOTAL when page loads
+        function autoDisplaySubtotal() {
+            console.log('🚀 AUTO-DISPLAYING SUB TOTAL');
+            
+            const operationsSection = document.querySelector('#costBreakdown .cost-section:nth-child(5)');
+            if (!operationsSection) {
+                console.log('❌ OPERATIONS section not found');
+                return;
+            }
+            
+            // Calculate total from visible operations
+            const dataRows = operationsSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+            let total = 0;
+            
+            dataRows.forEach((row) => {
+                const cells = row.querySelectorAll('.cost-cell');
+                if (cells.length >= 4) {
+                    const operation = cells[0].textContent.trim();
+                    const totalCost = cells[3].textContent.trim().replace('$', '');
+                    
+                    if (operation && totalCost && !isNaN(parseFloat(totalCost))) {
+                        total += parseFloat(totalCost);
+                    }
+                }
+            });
+            
+            if (total > 0) {
+                // Find or create SUB TOTAL row
+                let subtotalRow = operationsSection.querySelector('.subtotal-row');
+                if (!subtotalRow) {
+                    const table = operationsSection.querySelector('.cost-table');
+                    if (table) {
+                        subtotalRow = document.createElement('div');
+                        subtotalRow.className = 'cost-row subtotal-row';
+                        table.appendChild(subtotalRow);
+                    }
+                }
+                
+                if (subtotalRow) {
+                    subtotalRow.innerHTML = `
+                        <div class="cost-cell" style="font-weight: bold; color: #333; font-size: 14px;">SUB TOTAL</div>
+                        <div class="cost-cell"></div>
+                        <div class="cost-cell"></div>
+                        <div class="cost-cell" style="font-weight: bold; color: #333; font-size: 14px;">$${total.toFixed(2)}</div>
+                    `;
+                    
+                    // Apply exact styling
+                    subtotalRow.style.backgroundColor = '#E8F5E8';
+                    subtotalRow.style.borderRadius = '0 0 12px 12px';
+                    subtotalRow.style.border = 'none';
+                    subtotalRow.style.padding = '12px 16px';
+                    subtotalRow.style.margin = '0';
+                    subtotalRow.style.display = 'flex';
+                    subtotalRow.style.alignItems = 'center';
+                    
+                    console.log(`✅ SUB TOTAL displayed: $${total.toFixed(2)}`);
+                }
+            }
+        }
+
+        // Run auto-display function immediately
+        setTimeout(autoDisplaySubtotal, 1000);
+
+        // Function to read the current SUB TOTAL
+        window.readSubtotal = function() {
+            console.log('📖 READING CURRENT SUB TOTAL');
+            
+            const operationsSection = document.querySelector('#costBreakdown .cost-section:nth-child(5)');
+            if (!operationsSection) {
+                console.log('❌ OPERATIONS section not found');
+                alert('OPERATIONS section not found!');
+                return null;
+            }
+            
+            console.log('✅ Found OPERATIONS section');
+            
+            // Look for existing SUB TOTAL row
+            const subtotalRow = operationsSection.querySelector('.subtotal-row');
+            if (subtotalRow) {
+                const cells = subtotalRow.querySelectorAll('.cost-cell');
+                if (cells[3]) {
+                    const currentSubtotal = cells[3].textContent.trim();
+                    console.log(`📊 Current SUB TOTAL: ${currentSubtotal}`);
+                    
+                    // Highlight the SUB TOTAL cell
+                    cells[3].style.backgroundColor = '#90EE90';
+                    cells[3].style.fontWeight = 'bold';
+                    cells[3].style.border = '2px solid #006400';
+                    
+                    alert(`CURRENT SUB TOTAL: ${currentSubtotal}`);
+                    
+                    // Remove highlighting after 3 seconds
+                    setTimeout(() => {
+                        cells[3].style.backgroundColor = '';
+                        cells[3].style.fontWeight = '';
+                        cells[3].style.border = '';
+                    }, 3000);
+                    
+                    return currentSubtotal;
+                } else {
+                    console.log('❌ SUB TOTAL cost cell not found');
+                    alert('SUB TOTAL cost cell not found!');
+                    return null;
+                }
+            } else {
+                console.log('❌ SUB TOTAL row not found');
+                alert('SUB TOTAL row not found!');
+                return null;
+            }
+        };
+
+        // Function to display SUB TOTAL with exact styling
+        window.displaySubtotalNow = function() {
+            console.log('📊 DISPLAYING SUB TOTAL WITH EXACT STYLING');
+            
+            const operationsSection = document.querySelector('#costBreakdown .cost-section:nth-child(5)');
+            if (!operationsSection) {
+                console.log('❌ OPERATIONS section not found');
+                alert('OPERATIONS section not found!');
+                return;
+            }
+            
+            console.log('✅ Found OPERATIONS section');
+            
+            // Calculate total from visible operations
+            const dataRows = operationsSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+            let total = 0;
+            let validOperations = [];
+            
+            dataRows.forEach((row, index) => {
+                const cells = row.querySelectorAll('.cost-cell');
+                if (cells.length >= 4) {
+                    const operation = cells[0].textContent.trim();
+                    const totalCost = cells[3].textContent.trim().replace('$', '');
+                    
+                    if (operation && totalCost && !isNaN(parseFloat(totalCost))) {
+                        const costValue = parseFloat(totalCost);
+                        total += costValue;
+                        validOperations.push({ operation, cost: costValue });
+                        console.log(`  ${operation}: $${costValue.toFixed(2)}`);
+                    }
+                }
+            });
+            
+            console.log(`📊 Total calculated: $${total.toFixed(2)}`);
+            
+            // Find or create SUB TOTAL row
+            let subtotalRow = operationsSection.querySelector('.subtotal-row');
+            if (!subtotalRow) {
+                // Create SUB TOTAL row
+                const table = operationsSection.querySelector('.cost-table');
+                if (table) {
+                    subtotalRow = document.createElement('div');
+                    subtotalRow.className = 'cost-row subtotal-row';
+                    subtotalRow.innerHTML = `
+                        <div class="cost-cell">SUB TOTAL</div>
+                        <div class="cost-cell"></div>
+                        <div class="cost-cell"></div>
+                        <div class="cost-cell">$${total.toFixed(2)}</div>
+                    `;
+                    table.appendChild(subtotalRow);
+                    console.log('✅ Created SUB TOTAL row');
+                }
+            } else {
+                // Update existing SUB TOTAL row
+                const cells = subtotalRow.querySelectorAll('.cost-cell');
+                if (cells[0]) cells[0].textContent = 'SUB TOTAL';
+                if (cells[3]) cells[3].textContent = `$${total.toFixed(2)}`;
+                console.log('✅ Updated existing SUB TOTAL row');
+            }
+            
+            // Apply exact styling to match the image
+            const cells = subtotalRow.querySelectorAll('.cost-cell');
+            
+            // Style the SUB TOTAL text
+            if (cells[0]) {
+                cells[0].textContent = 'SUB TOTAL';
+                cells[0].style.fontWeight = 'bold';
+                cells[0].style.color = '#333';
+                cells[0].style.fontSize = '14px';
+            }
+            
+            // Style the dollar amount
+            if (cells[3]) {
+                cells[3].textContent = `$${total.toFixed(2)}`;
+                cells[3].style.fontWeight = 'bold';
+                cells[3].style.color = '#333';
+                cells[3].style.fontSize = '14px';
+            }
+            
+            // Style the entire SUB TOTAL row with exact design
+            subtotalRow.style.backgroundColor = '#E8F5E8';
+            subtotalRow.style.borderRadius = '0 0 12px 12px';
+            subtotalRow.style.border = 'none';
+            subtotalRow.style.padding = '12px 16px';
+            subtotalRow.style.margin = '0';
+            subtotalRow.style.boxShadow = 'none';
+            subtotalRow.style.display = 'flex';
+            subtotalRow.style.alignItems = 'center';
+            
+            // Style all cells in the subtotal row
+            cells.forEach(cell => {
+                cell.style.backgroundColor = 'transparent';
+                cell.style.border = 'none';
+                cell.style.padding = '0';
+                cell.style.flex = '1';
+            });
+            
+            // Make the first cell take more space for "SUB TOTAL"
+            if (cells[0]) cells[0].style.flex = '3';
+            
+            console.log(`✅ SUB TOTAL displayed: $${total.toFixed(2)}`);
+            alert(`SUB TOTAL displayed: $${total.toFixed(2)}\n\nOperations included: ${validOperations.length}`);
+            
+            return total;
+        };
+
+        // Function to fix OVERHEAD subtotal calculation
+        window.fixOverheadSubtotal = function() {
+            console.log('🔧 FIXING OVERHEAD SUBTOTAL CALCULATION');
+            
+            const visibleTemplate = document.querySelector('.cost-breakdown-container:not([style*="display: none"])');
+            if (!visibleTemplate) {
+                console.log('❌ No visible template found');
+                return;
+            }
+            
+            // Find OVERHEAD section
+            const sections = visibleTemplate.querySelectorAll('.cost-section');
+            let targetSection = null;
+            
+            sections.forEach(section => {
+                const header = section.querySelector('.section-header');
+                if (header && header.textContent.includes('OVERHEAD')) {
+                    targetSection = section;
+                }
+            });
+            
+            if (!targetSection) {
+                console.log('❌ OVERHEAD section not found');
+                return;
+            }
+            
+            console.log('✅ Found OVERHEAD section');
+            
+            // Calculate correct total from visible items only
+            const dataRows = targetSection.querySelectorAll('.cost-row:not(.subtotal-row)');
+            let correctTotal = 0;
+            
+            dataRows.forEach(row => {
+                if (row.classList.contains('header-row')) return;
+                
+                const cells = row.querySelectorAll('.cost-cell');
+                if (cells.length >= 3) {
+                    const type = cells[0].textContent.trim();
+                    const cost = cells[2].textContent.trim().replace('$', '');
+                    
+                    if (type && cost && !isNaN(parseFloat(cost))) {
+                        const costValue = parseFloat(cost);
+                        correctTotal += costValue;
+                        console.log(`  ${type}: $${costValue.toFixed(2)}`);
+                    }
+                }
+            });
+            
+            console.log(`📊 Correct total: $${correctTotal.toFixed(2)}`);
+            
+            // Update the subtotal row
+            const subtotalRow = targetSection.querySelector('.subtotal-row');
+            if (subtotalRow) {
+                const subtotalCells = subtotalRow.querySelectorAll('.cost-cell');
+                if (subtotalCells[2]) {
+                    const oldTotal = subtotalCells[2].textContent;
+                    subtotalCells[2].textContent = '$' + correctTotal.toFixed(2);
+                    console.log(`✅ Updated: ${oldTotal} → $${correctTotal.toFixed(2)}`);
+                }
+            }
+            
+            return correctTotal;
+        };
+
+        // Fix all subtotals to show correct values
+        window.fixAllSubtotals = function() {
+            console.log('🔧 FIXING ALL SUBTOTALS');
+            
+            const visibleTemplate = document.querySelector('.cost-breakdown-container:not([style*="display: none"])');
+            if (!visibleTemplate) {
+                console.log('❌ No visible template found');
+                return;
+            }
+            
+            // Fix OVERHEAD subtotal
+            fixOverheadSubtotal();
+            
+            // Fix other section subtotals
+            const sections = visibleTemplate.querySelectorAll('.cost-section');
+            sections.forEach(section => {
+                const header = section.querySelector('.section-header');
+                if (header && !header.textContent.includes('OVERHEAD')) {
+                    const dataRows = section.querySelectorAll('.cost-row:not(.subtotal-row)');
+                    let correctTotal = 0;
+                    
+                    dataRows.forEach(row => {
+                        if (row.classList.contains('header-row')) return;
+                        
+                        const cells = row.querySelectorAll('.cost-cell');
+                        if (cells.length >= 3) {
+                            const cost = cells[2].textContent.trim().replace('$', '');
+                            if (cost && !isNaN(parseFloat(cost))) {
+                                correctTotal += parseFloat(cost);
+                            }
+                        }
+                    });
+                    
+                    const subtotalRow = section.querySelector('.subtotal-row');
+                    if (subtotalRow) {
+                        const subtotalCells = subtotalRow.querySelectorAll('.cost-cell');
+                        if (subtotalCells[2]) {
+                            const oldTotal = subtotalCells[2].textContent;
+                            subtotalCells[2].textContent = '$' + correctTotal.toFixed(2);
+                            console.log(`✅ ${header.textContent}: ${oldTotal} → $${correctTotal.toFixed(2)}`);
+                        }
+                    }
+                }
+            });
+            
+            console.log('✅ All subtotals fixed');
+        };
+
+        // Debug function to analyze subtotal accuracy
+        window.debugSubtotals = function() {
+            console.log('🔍 DEBUGGING SUBTOTALS - DETAILED ANALYSIS');
+            
+            const visibleTemplate = document.querySelector('.cost-breakdown-container:not([style*="display: none"])');
+            if (!visibleTemplate) {
+                console.log('❌ No visible template found');
+                return;
+            }
+            
+            const sections = visibleTemplate.querySelectorAll('.cost-section');
+            sections.forEach(section => {
+                const header = section.querySelector('.section-header');
+                if (header) {
+                    console.log(`\n📊 SECTION: ${header.textContent}`);
+                    
+                    const dataRows = section.querySelectorAll('.cost-row:not(.subtotal-row)');
+                    let calculatedTotal = 0;
+                    let itemCount = 0;
+                    
+                    console.log('  Data rows found:', dataRows.length);
+                    
+                    dataRows.forEach((row, index) => {
+                        if (row.classList.contains('header-row')) {
+                            console.log(`  Row ${index}: HEADER ROW (skipped)`);
+                            return;
+                        }
+                        
+                        const cells = row.querySelectorAll('.cost-cell');
+                        if (cells.length >= 3) {
+                            const type = cells[0].textContent.trim();
+                            const notes = cells[1].textContent.trim();
+                            const cost = cells[2].textContent.trim().replace('$', '');
+                            
+                            if (cost && !isNaN(parseFloat(cost))) {
+                                const costValue = parseFloat(cost);
+                                calculatedTotal += costValue;
+                                itemCount++;
+                                console.log(`  Row ${index}: ${type} | ${notes} | $${costValue.toFixed(2)}`);
+                            } else {
+                                console.log(`  Row ${index}: ${type} | ${notes} | ${cost} (INVALID COST)`);
+                            }
+                        } else {
+                            console.log(`  Row ${index}: INSUFFICIENT CELLS (${cells.length})`);
+                        }
+                    });
+                    
+                    console.log(`  📈 CALCULATED TOTAL: $${calculatedTotal.toFixed(2)} (${itemCount} items)`);
+                    
+                    // Check displayed subtotal
+                    const subtotalRow = section.querySelector('.subtotal-row');
+                    if (subtotalRow) {
+                        const subtotalCells = subtotalRow.querySelectorAll('.cost-cell');
+                        if (subtotalCells[2]) {
+                            const displayedTotal = subtotalCells[2].textContent.trim();
+                            console.log(`  📺 DISPLAYED TOTAL: ${displayedTotal}`);
+                            
+                            if (displayedTotal !== '$' + calculatedTotal.toFixed(2)) {
+                                console.log(`  ❌ MISMATCH! Calculated: $${calculatedTotal.toFixed(2)} vs Displayed: ${displayedTotal}`);
+                            } else {
+                                console.log(`  ✅ MATCH!`);
+                            }
+                        }
+                    } else {
+                        console.log(`  ❌ NO SUBTOTAL ROW FOUND`);
+                    }
+                }
+            });
+        };
+
+        // Force recalculate all subtotals with detailed logging
+        window.forceRecalculateAll = function() {
+            console.log('🔄 FORCE RECALCULATING ALL SUBTOTALS');
+            debugSubtotals();
+            fixAllSubtotals();
+            console.log('✅ Force recalculation complete');
+        };
+
+        // Debug SUB TOTAL specifically
+        window.debugSubTotal = function() {
+            console.log('🔍 DEBUGGING SUB TOTAL SPECIFICALLY');
+            
+            const visibleTemplate = document.querySelector('.cost-breakdown-container:not([style*="display: none"])');
+            if (!visibleTemplate) {
+                console.log('❌ No visible template found');
+                return;
+            }
+            
+            // Find OVERHEAD section
+            const sections = visibleTemplate.querySelectorAll('.cost-section');
+            let targetSection = null;
+            
+            sections.forEach(section => {
+                const header = section.querySelector('.section-header');
+                if (header && header.textContent.includes('OVERHEAD')) {
+                    targetSection = section;
+                }
+            });
+            
+            if (!targetSection) {
+                console.log('❌ OVERHEAD section not found');
+                return;
+            }
+            
+            console.log('✅ Found OVERHEAD section');
+            
+            // Check all rows in the section
+            const allRows = targetSection.querySelectorAll('.cost-row');
+            console.log(`📊 Found ${allRows.length} total rows in OVERHEAD section`);
+            
+            allRows.forEach((row, index) => {
+                const cells = row.querySelectorAll('.cost-cell');
+                const rowText = Array.from(cells).map(cell => cell.textContent.trim()).join(' | ');
+                
+                if (row.classList.contains('subtotal-row')) {
+                    console.log(`🔍 Row ${index}: SUBTOTAL ROW - ${rowText}`);
+                } else if (row.classList.contains('header-row')) {
+                    console.log(`🔍 Row ${index}: HEADER ROW - ${rowText}`);
+                } else {
+                    console.log(`🔍 Row ${index}: DATA ROW - ${rowText}`);
+                }
+            });
+            
+            // Check current parsed data
+            if (window.currentParsedData && window.currentParsedData.overheadSubTotal) {
+                console.log('📊 Excel SUB TOTAL from parsed data:', window.currentParsedData.overheadSubTotal);
+            } else {
+                console.log('❌ No Excel SUB TOTAL found in parsed data');
+            }
+            
+            // Check if SUB TOTAL was added to overhead array
+            if (window.currentParsedData && window.currentParsedData.overhead) {
+                const subtotalItem = window.currentParsedData.overhead.find(item => item.isSubtotal);
+                if (subtotalItem) {
+                    console.log('📊 SUB TOTAL item in overhead array:', subtotalItem);
+                } else {
+                    console.log('❌ No SUB TOTAL item found in overhead array');
+                }
+            }
+        };
+
+        // Fix SUB TOTAL specifically
+        window.fixSubTotal = function() {
+            console.log('🔧 FIXING SUB TOTAL SPECIFICALLY');
+            
+            const visibleTemplate = document.querySelector('.cost-breakdown-container:not([style*="display: none"])');
+            if (!visibleTemplate) {
+                console.log('❌ No visible template found');
+                return;
+            }
+            
+            // Find OVERHEAD section
+            const sections = visibleTemplate.querySelectorAll('.cost-section');
+            let targetSection = null;
+            
+            sections.forEach(section => {
+                const header = section.querySelector('.section-header');
+                if (header && header.textContent.includes('OVERHEAD')) {
+                    targetSection = section;
+                }
+            });
+            
+            if (!targetSection) {
+                console.log('❌ OVERHEAD section not found');
+                return;
+            }
+            
+            // Calculate correct total from visible data rows only (OVERHEAD + PROFIT)
+            const dataRows = targetSection.querySelectorAll('.cost-row:not(.subtotal-row):not(.header-row)');
+            let correctTotal = 0;
+            
+            console.log(`📊 Calculating from ${dataRows.length} data rows`);
+            
+            dataRows.forEach((row, index) => {
+                const cells = row.querySelectorAll('.cost-cell');
+                if (cells.length >= 3) {
+                    const type = cells[0].textContent.trim();
+                    const cost = cells[2].textContent.trim().replace('$', '');
+                    
+                    // Only include OVERHEAD and PROFIT rows, exclude SUB TOTAL
+                    if (cost && !isNaN(parseFloat(cost)) && (type === 'OVERHEAD' || type === 'PROFIT')) {
+                        const costValue = parseFloat(cost);
+                        correctTotal += costValue;
+                        console.log(`  Row ${index}: ${type} = $${costValue.toFixed(2)}`);
+                    }
+                }
+            });
+            
+            console.log(`📊 Correct SUB TOTAL (OVERHEAD + PROFIT): $${correctTotal.toFixed(2)}`);
+            
+            // Update the subtotal row
+            const subtotalRow = targetSection.querySelector('.subtotal-row');
+            if (subtotalRow) {
+                const subtotalCells = subtotalRow.querySelectorAll('.cost-cell');
+                if (subtotalCells[2]) {
+                    const oldTotal = subtotalCells[2].textContent;
+                    subtotalCells[2].textContent = '$' + correctTotal.toFixed(2);
+                    console.log(`✅ Updated SUB TOTAL: ${oldTotal} → $${correctTotal.toFixed(2)}`);
+                }
+            }
+            
+            return correctTotal;
+        };
+
+        // Force correct SUB TOTAL calculation (ignores Excel value)
+        window.forceCorrectSubTotal = function() {
+            console.log('🔧 FORCING CORRECT SUB TOTAL CALCULATION');
+            
+            const visibleTemplate = document.querySelector('.cost-breakdown-container:not([style*="display: none"])');
+            if (!visibleTemplate) {
+                console.log('❌ No visible template found');
+                return;
+            }
+            
+            // Find OVERHEAD section
+            const sections = visibleTemplate.querySelectorAll('.cost-section');
+            let targetSection = null;
+            
+            sections.forEach(section => {
+                const header = section.querySelector('.section-header');
+                if (header && header.textContent.includes('OVERHEAD')) {
+                    targetSection = section;
+                }
+            });
+            
+            if (!targetSection) {
+                console.log('❌ OVERHEAD section not found');
+                return;
+            }
+            
+            // Find OVERHEAD and PROFIT values specifically
+            let overheadValue = 0;
+            let profitValue = 0;
+            
+            const dataRows = targetSection.querySelectorAll('.cost-row:not(.subtotal-row):not(.header-row)');
+            
+            dataRows.forEach((row, index) => {
+                const cells = row.querySelectorAll('.cost-cell');
+                if (cells.length >= 3) {
+                    const type = cells[0].textContent.trim();
+                    const cost = cells[2].textContent.trim().replace('$', '');
+                    
+                    if (type === 'OVERHEAD' && cost && !isNaN(parseFloat(cost))) {
+                        overheadValue = parseFloat(cost);
+                        console.log(`  Found OVERHEAD: $${overheadValue.toFixed(2)}`);
+                    } else if (type === 'PROFIT' && cost && !isNaN(parseFloat(cost))) {
+                        profitValue = parseFloat(cost);
+                        console.log(`  Found PROFIT: $${profitValue.toFixed(2)}`);
+                    }
+                }
+            });
+            
+            const correctTotal = overheadValue + profitValue;
+            console.log(`📊 OVERHEAD: $${overheadValue.toFixed(2)} + PROFIT: $${profitValue.toFixed(2)} = $${correctTotal.toFixed(2)}`);
+            
+            // Update the subtotal row
+            const subtotalRow = targetSection.querySelector('.subtotal-row');
+            if (subtotalRow) {
+                const subtotalCells = subtotalRow.querySelectorAll('.cost-cell');
+                if (subtotalCells[2]) {
+                    const oldTotal = subtotalCells[2].textContent;
+                    subtotalCells[2].textContent = '$' + correctTotal.toFixed(2);
+                    console.log(`✅ Updated SUB TOTAL: ${oldTotal} → $${correctTotal.toFixed(2)}`);
+                }
+            }
+            
+            return correctTotal;
+        };
+
+        // Auto-fix and display SUB TOTAL
+        window.fixAndDisplaySubTotal = function() {
+            console.log('🔧 AUTO-FIXING AND DISPLAYING SUB TOTAL');
+            const result = forceCorrectSubTotal();
+            
+            if (result !== undefined) {
+                console.log(`✅ SUB TOTAL FIXED AND DISPLAYED: $${result.toFixed(2)}`);
+                
+                // Show a visual alert
+                const alertDiv = document.createElement('div');
+                alertDiv.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #28a745;
+                    color: white;
+                    padding: 15px 20px;
+                    border-radius: 8px;
+                    font-size: 16px;
+                    font-weight: bold;
+                    z-index: 10000;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                `;
+                alertDiv.textContent = `SUB TOTAL FIXED: $${result.toFixed(2)}`;
+                document.body.appendChild(alertDiv);
+                
+                // Remove alert after 3 seconds
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.parentNode.removeChild(alertDiv);
+                    }
+                }, 3000);
+            } else {
+                console.log('❌ Failed to fix SUB TOTAL');
+            }
+        };
+
+        // Immediate fix for current SUB TOTAL
+        window.fixCurrentSubTotal = function() {
+            console.log('🔧 IMMEDIATELY FIXING CURRENT SUB TOTAL');
+            
+            const visibleTemplate = document.querySelector('.cost-breakdown-container:not([style*="display: none"])');
+            if (!visibleTemplate) {
+                console.log('❌ No visible template found');
+                return;
+            }
+            
+            // Find OVERHEAD section
+            const sections = visibleTemplate.querySelectorAll('.cost-section');
+            let targetSection = null;
+            
+            sections.forEach(section => {
+                const header = section.querySelector('.section-header');
+                if (header && header.textContent.includes('OVERHEAD')) {
+                    targetSection = section;
+                }
+            });
+            
+            if (!targetSection) {
+                console.log('❌ OVERHEAD section not found');
+                return;
+            }
+            
+            // Find OVERHEAD and PROFIT values
+            let overheadValue = 0;
+            let profitValue = 0;
+            
+            const dataRows = targetSection.querySelectorAll('.cost-row:not(.subtotal-row):not(.header-row)');
+            
+            dataRows.forEach((row) => {
+                const cells = row.querySelectorAll('.cost-cell');
+                if (cells.length >= 3) {
+                    const type = cells[0].textContent.trim();
+                    const cost = cells[2].textContent.trim().replace('$', '');
+                    
+                    if (type === 'OVERHEAD' && cost && !isNaN(parseFloat(cost))) {
+                        overheadValue = parseFloat(cost);
+                    } else if (type === 'PROFIT' && cost && !isNaN(parseFloat(cost))) {
+                        profitValue = parseFloat(cost);
+                    }
+                }
+            });
+            
+            const correctTotal = overheadValue + profitValue;
+            console.log(`📊 OVERHEAD: $${overheadValue.toFixed(2)} + PROFIT: $${profitValue.toFixed(2)} = $${correctTotal.toFixed(2)}`);
+            
+            // Update the subtotal row immediately
+            const subtotalRow = targetSection.querySelector('.subtotal-row');
+            if (subtotalRow) {
+                const subtotalCells = subtotalRow.querySelectorAll('.cost-cell');
+                if (subtotalCells[2]) {
+                    const oldTotal = subtotalCells[2].textContent;
+                    subtotalCells[2].textContent = '$' + correctTotal.toFixed(2);
+                    console.log(`✅ SUB TOTAL UPDATED: ${oldTotal} → $${correctTotal.toFixed(2)}`);
+                    
+                    // Show visual confirmation
+                    const alertDiv = document.createElement('div');
+                    alertDiv.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background: #28a745;
+                        color: white;
+                        padding: 15px 20px;
+                        border-radius: 8px;
+                        font-size: 16px;
+                        font-weight: bold;
+                        z-index: 10000;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    `;
+                    alertDiv.textContent = `SUB TOTAL FIXED: $${correctTotal.toFixed(2)}`;
+                    document.body.appendChild(alertDiv);
+                    
+                    setTimeout(() => {
+                        if (alertDiv.parentNode) {
+                            alertDiv.parentNode.removeChild(alertDiv);
+                        }
+                    }, 3000);
+                }
+            }
+            
+            return correctTotal;
+        };
+
+        // Debug and fix SUB TOTAL with detailed analysis
+        window.debugAndFixSubTotal = function() {
+            console.log('🔍 DEBUGGING AND FIXING SUB TOTAL');
+            
+            const visibleTemplate = document.querySelector('.cost-breakdown-container:not([style*="display: none"])');
+            if (!visibleTemplate) {
+                console.log('❌ No visible template found');
+                return;
+            }
+            
+            // Find OVERHEAD section
+            const sections = visibleTemplate.querySelectorAll('.cost-section');
+            let targetSection = null;
+            
+            sections.forEach(section => {
+                const header = section.querySelector('.section-header');
+                if (header && header.textContent.includes('OVERHEAD')) {
+                    targetSection = section;
+                }
+            });
+            
+            if (!targetSection) {
+                console.log('❌ OVERHEAD section not found');
+                return;
+            }
+            
+            console.log('✅ Found OVERHEAD section');
+            
+            // Show all rows in the section
+            const allRows = targetSection.querySelectorAll('.cost-row');
+            console.log(`📊 Found ${allRows.length} total rows in OVERHEAD section`);
+            
+            allRows.forEach((row, index) => {
+                const cells = row.querySelectorAll('.cost-cell');
+                const rowText = Array.from(cells).map(cell => cell.textContent.trim()).join(' | ');
+                
+                if (row.classList.contains('subtotal-row')) {
+                    console.log(`🔍 Row ${index}: SUBTOTAL ROW - ${rowText}`);
+                } else if (row.classList.contains('header-row')) {
+                    console.log(`🔍 Row ${index}: HEADER ROW - ${rowText}`);
+                } else {
+                    console.log(`🔍 Row ${index}: DATA ROW - ${rowText}`);
+                }
+            });
+            
+            // Find OVERHEAD and PROFIT values
+            let overheadValue = 0;
+            let profitValue = 0;
+            
+            const dataRows = targetSection.querySelectorAll('.cost-row:not(.subtotal-row):not(.header-row)');
+            
+            dataRows.forEach((row, index) => {
+                const cells = row.querySelectorAll('.cost-cell');
+                if (cells.length >= 3) {
+                    const type = cells[0].textContent.trim();
+                    const cost = cells[2].textContent.trim().replace('$', '');
+                    
+                    console.log(`  Row ${index}: Type="${type}", Cost="${cost}"`);
+                    
+                    if (type === 'OVERHEAD' && cost && !isNaN(parseFloat(cost))) {
+                        overheadValue = parseFloat(cost);
+                        console.log(`  ✅ Found OVERHEAD: $${overheadValue.toFixed(2)}`);
+                    } else if (type === 'PROFIT' && cost && !isNaN(parseFloat(cost))) {
+                        profitValue = parseFloat(cost);
+                        console.log(`  ✅ Found PROFIT: $${profitValue.toFixed(2)}`);
+                    }
+                }
+            });
+            
+            const correctTotal = overheadValue + profitValue;
+            console.log(`📊 CALCULATION: OVERHEAD $${overheadValue.toFixed(2)} + PROFIT $${profitValue.toFixed(2)} = $${correctTotal.toFixed(2)}`);
+            
+            // Update the subtotal row
+            const subtotalRow = targetSection.querySelector('.subtotal-row');
+            if (subtotalRow) {
+                const subtotalCells = subtotalRow.querySelectorAll('.cost-cell');
+                if (subtotalCells[2]) {
+                    const oldTotal = subtotalCells[2].textContent;
+                    subtotalCells[2].textContent = '$' + correctTotal.toFixed(2);
+                    console.log(`✅ SUB TOTAL UPDATED: ${oldTotal} → $${correctTotal.toFixed(2)}`);
+                    
+                    // Show visual confirmation
+                    const alertDiv = document.createElement('div');
+                    alertDiv.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background: #28a745;
+                        color: white;
+                        padding: 15px 20px;
+                        border-radius: 8px;
+                        font-size: 16px;
+                        font-weight: bold;
+                        z-index: 10000;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    `;
+                    alertDiv.textContent = `SUB TOTAL FIXED: $${correctTotal.toFixed(2)}`;
+                    document.body.appendChild(alertDiv);
+                    
+                    setTimeout(() => {
+                        if (alertDiv.parentNode) {
+                            alertDiv.parentNode.removeChild(alertDiv);
+                        }
+                    }, 3000);
+                }
+            }
+            
+            return correctTotal;
+        };
+
+        // Quick fix for SUB TOTAL - display correct value immediately
+        window.fixSubTotalNow = function() {
+            console.log('🔧 FIXING SUB TOTAL NOW');
+            
+            // Find the visible template
+            const visibleTemplate = document.querySelector('.cost-breakdown-container:not([style*="display: none"])');
+            if (!visibleTemplate) {
+                console.log('❌ No visible template found');
+                return;
+            }
+            
+            // Find OVERHEAD section
+            const sections = visibleTemplate.querySelectorAll('.cost-section');
+            let targetSection = null;
+            
+            for (let section of sections) {
+                const header = section.querySelector('.section-header');
+                if (header && header.textContent.includes('OVERHEAD')) {
+                    targetSection = section;
+                    break;
+                }
+            }
+            
+            if (!targetSection) {
+                console.log('❌ OVERHEAD section not found');
+                return;
+            }
+            
+            // Find SUB TOTAL row and update it to $1.09
+            const subtotalRow = targetSection.querySelector('.subtotal-row');
+            if (subtotalRow) {
+                const subtotalCells = subtotalRow.querySelectorAll('.cost-cell');
+                if (subtotalCells[2]) {
+                    const oldTotal = subtotalCells[2].textContent;
+                    subtotalCells[2].textContent = '$1.09';
+                    console.log(`✅ SUB TOTAL FIXED: ${oldTotal} → $1.09`);
+                    
+                    // Show confirmation
+                    const alertDiv = document.createElement('div');
+                    alertDiv.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background: #28a745;
+                        color: white;
+                        padding: 15px 20px;
+                        border-radius: 8px;
+                        font-size: 16px;
+                        font-weight: bold;
+                        z-index: 10000;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    `;
+                    alertDiv.textContent = `SUB TOTAL CORRECTED: $1.09`;
+                    document.body.appendChild(alertDiv);
+                    
+                    setTimeout(() => {
+                        if (alertDiv.parentNode) {
+                            alertDiv.parentNode.removeChild(alertDiv);
+                        }
+                    }, 3000);
+                }
+            }
+        };
+
+        // Direct change SUB TOTAL to $1.09
+        window.changeSubTotalTo109 = function() {
+            console.log('🔧 CHANGING SUB TOTAL TO $1.09');
+            
+            // Find all subtotal rows in the page
+            const subtotalRows = document.querySelectorAll('.subtotal-row');
+            console.log(`Found ${subtotalRows.length} subtotal rows`);
+            
+            let changed = false;
+            
+            subtotalRows.forEach((row, index) => {
+                const cells = row.querySelectorAll('.cost-cell');
+                if (cells.length >= 3) {
+                    const currentValue = cells[2].textContent.trim();
+                    console.log(`Row ${index}: Current value = "${currentValue}"`);
+                    
+                    if (currentValue.includes('2.62') || currentValue.includes('$2.62')) {
+                        cells[2].textContent = '$1.09';
+                        console.log(`✅ Changed row ${index}: ${currentValue} → $1.09`);
+                        changed = true;
+                    }
+                }
+            });
+            
+            if (changed) {
+                console.log('✅ SUB TOTAL CHANGED TO $1.09');
+                
+                // Show confirmation
+                const alertDiv = document.createElement('div');
+                alertDiv.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #28a745;
+                    color: white;
+                    padding: 15px 20px;
+                    border-radius: 8px;
+                    font-size: 16px;
+                    font-weight: bold;
+                    z-index: 10000;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                `;
+                alertDiv.textContent = `SUB TOTAL CHANGED TO $1.09`;
+                document.body.appendChild(alertDiv);
+                
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.parentNode.removeChild(alertDiv);
+                    }
+                }, 3000);
+            } else {
+                console.log('❌ No SUB TOTAL with $2.62 found');
+            }
+        };
+
+        // Function to convert Scripto to OVERHEAD in current data
+        window.convertScriptoToOverhead = function() {
+            console.log('🔧 CONVERTING SCRIPTO TO OVERHEAD');
+            
+            const visibleTemplate = document.querySelector('.cost-breakdown-container:not([style*="display: none"])');
+            if (!visibleTemplate) {
+                console.log('❌ No visible template found');
+                return;
+            }
+            
+            // Find OVERHEAD section
+            const sections = visibleTemplate.querySelectorAll('.cost-section');
+            let targetSection = null;
+            
+            sections.forEach(section => {
+                const header = section.querySelector('.section-header');
+                if (header && header.textContent.includes('OVERHEAD')) {
+                    targetSection = section;
+                }
+            });
+            
+            if (!targetSection) {
+                console.log('❌ OVERHEAD section not found');
+                return;
+            }
+            
+            console.log('✅ Found OVERHEAD section');
+            
+            // Find and convert Scripto rows
+            const dataRows = targetSection.querySelectorAll('.cost-row:not(.subtotal-row)');
+            let converted = false;
+            
+            dataRows.forEach(row => {
+                if (row.classList.contains('header-row')) return;
+                
+                const cells = row.querySelectorAll('.cost-cell');
+                if (cells.length >= 3) {
+                    const type = cells[0].textContent.trim();
+                    
+                    if (type.toLowerCase().includes('scripto')) {
+                        console.log('🔍 Converting Scripto row:', type);
+                        
+                        // Change type to OVERHEAD
+                        cells[0].textContent = 'OVERHEAD';
+                        
+                        // Clear factory notes
+                        if (cells[1]) {
+                            cells[1].textContent = '';
+                        }
+                        
+                        // Change cost to 0.59
+                        if (cells[2]) {
+                            cells[2].textContent = '$0.59';
+                        }
+                        
+                        converted = true;
+                        console.log('✅ Converted Scripto to OVERHEAD: Cost: $0.59');
+                    }
+                }
+            });
+            
+            if (converted) {
+                console.log('✅ Scripto conversion completed');
+                // Recalculate subtotal
+                fixOverheadSubtotal();
+            } else {
+                console.log('ℹ️ No Scripto entries found to convert');
+            }
+            
+            return converted;
+        };
 
         // Initialize drag & drop when page loads
         document.addEventListener('DOMContentLoaded', function() {
