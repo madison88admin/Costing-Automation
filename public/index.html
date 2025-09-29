@@ -449,6 +449,329 @@
             letter-spacing: -0.02em;
         }
 
+        /* Simple triangle filter button styles */
+        .filter-triangle {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 10px;
+            margin-left: 8px;
+            padding: 2px 4px;
+            transition: all 0.2s ease;
+            opacity: 0.7;
+        }
+
+        .filter-triangle:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .filter-triangle.active {
+            opacity: 1;
+            color: #ffd700;
+        }
+
+        .header-with-filter {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .filter-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .filter-dropdown.show {
+            display: block;
+        }
+
+        .filter-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.2s ease;
+            font-size: 12px;
+        }
+
+        .filter-option:hover {
+            background-color: #f8f9fa;
+        }
+
+        .filter-option:last-child {
+            border-bottom: none;
+        }
+
+        .filter-option.selected {
+            background-color: #e3f2fd;
+            color: #1976d2;
+            font-weight: 500;
+        }
+
+        .filter-clear {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 2px 6px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 10px;
+            margin-left: 4px;
+        }
+
+        .filter-clear:hover {
+            background: #ff5252;
+        }
+
+        /* Custom Season Filter Panel */
+        .season-filter-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            display: none;
+        }
+
+        .season-filter-overlay.show {
+            display: block;
+        }
+
+        .season-filter-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 16px;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.25);
+            z-index: 10000;
+            padding: 24px;
+            max-width: 480px;
+            width: 90%;
+            max-height: 75vh;
+            overflow: hidden;
+            display: none;
+        }
+
+        .season-filter-panel.show {
+            display: block;
+        }
+
+        /* Customer Filter Panel - Same styles as Season */
+        .customer-filter-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            display: none;
+        }
+
+        .customer-filter-overlay.show {
+            display: block;
+        }
+
+        .customer-filter-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 16px;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.25);
+            z-index: 10000;
+            padding: 24px;
+            max-width: 480px;
+            width: 90%;
+            max-height: 75vh;
+            overflow: hidden;
+            display: none;
+        }
+
+        .customer-filter-panel.show {
+            display: block;
+        }
+
+        .customer-filter-header {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .customer-options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            max-height: 320px;
+            overflow-y: auto;
+            padding: 8px 0;
+            margin-bottom: 20px;
+        }
+
+        .customer-option {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .customer-option:hover {
+            background-color: #f8f9fa;
+            border-color: #e9ecef;
+            transform: translateX(2px);
+        }
+
+        .customer-option.selected {
+            background-color: #e3f2fd;
+            border-color: #2196f3;
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+        }
+
+        .customer-radio {
+            margin-right: 12px;
+            width: 16px;
+            height: 16px;
+            accent-color: #2196f3;
+        }
+
+        .customer-label {
+            font-size: 14px;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .season-filter-header {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .season-options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            max-height: 320px;
+            overflow-y: auto;
+            padding: 8px 0;
+            margin-bottom: 20px;
+        }
+
+        .season-option {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .season-option:hover {
+            background-color: #f8f9fa;
+            border-color: #e9ecef;
+            transform: translateX(2px);
+        }
+
+        .season-option.selected {
+            background-color: #e3f2fd;
+            border-color: #2196f3;
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+        }
+
+        .season-radio {
+            margin-right: 12px;
+            width: 16px;
+            height: 16px;
+            accent-color: #2196f3;
+        }
+
+        .season-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .filter-panel-actions {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .filter-apply-btn, .filter-clear-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+            min-width: 80px;
+        }
+
+        .filter-apply-btn {
+            background: linear-gradient(135deg, #2196f3, #1976d2);
+            color: white;
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+        }
+
+        .filter-apply-btn:hover {
+            background: linear-gradient(135deg, #1976d2, #1565c0);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(33, 150, 243, 0.4);
+        }
+
+        .filter-clear-btn {
+            background: #f8f9fa;
+            color: #6c757d;
+            border: 2px solid #e9ecef;
+        }
+
+        .filter-clear-btn:hover {
+            background: #e9ecef;
+            color: #495057;
+            border-color: #dee2e6;
+            transform: translateY(-1px);
+        }
+
+
         .table-stats {
             display: flex;
             align-items: center;
@@ -4533,13 +4856,60 @@
                                 <tr>
             `;
             
-            // Add column headers with display names
+            // Add column headers with display names and triangle filter buttons (only for specific columns)
+            const filterableColumns = ['Season', 'Customer', 'Style Number', 'Style Name', 'Main Material'];
+            
             columnHeaders.forEach((header, index) => {
                 const isMissing = mappedColumns[index] === null;
+                const hasFilter = filterableColumns.includes(header);
                 const headerStyle = isMissing ? 
-                    'padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; background: #ffebee; color: #c62828; font-style: italic; font-weight: 600;' :
-                    'padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600;';
-                html += `<th style="${headerStyle}">${header}${isMissing ? ' (Missing)' : ''}</th>`;
+                    'padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; background: #ffebee; color: #c62828; font-style: italic; font-weight: 600; position: relative;' :
+                    'padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;';
+                
+                if (hasFilter) {
+                    if (header === 'Season') {
+                        // Special Season filter panel
+                        html += `
+                            <th style="${headerStyle}">
+                                <div class="header-with-filter">
+                                    <span>${header}${isMissing ? ' (Missing)' : ''}</span>
+                                    <button class="filter-triangle" onclick="toggleSeasonFilter(${index})" title="Filter ${header}">
+                                        ▼
+                                    </button>
+                                </div>
+                            </th>
+                        `;
+                    } else if (header === 'Customer') {
+                        // Special Customer filter popup
+                        html += `
+                            <th style="${headerStyle}">
+                                <div class="header-with-filter">
+                                    <span>${header}${isMissing ? ' (Missing)' : ''}</span>
+                                    <button class="filter-triangle" onclick="toggleCustomerFilter(${index})" title="Filter ${header}">
+                                        ▼
+                                    </button>
+                                </div>
+                            </th>
+                        `;
+                    } else {
+                        // Regular filter dropdown for other columns
+                        html += `
+                            <th style="${headerStyle}">
+                                <div class="header-with-filter">
+                                    <span>${header}${isMissing ? ' (Missing)' : ''}</span>
+                                    <button class="filter-triangle" onclick="toggleFilter('${header}', ${index})" title="Filter ${header}">
+                                        ▼
+                                    </button>
+                                </div>
+                                <div class="filter-dropdown" id="filter-${index}">
+                                    <!-- Filter options will be populated here -->
+                                </div>
+                            </th>
+                        `;
+                    }
+                } else {
+                    html += `<th style="${headerStyle}">${header}${isMissing ? ' (Missing)' : ''}</th>`;
+                }
             });
             
             html += `
@@ -4705,6 +5075,645 @@
                 `;
             }
         }
+
+        // Filter functionality
+        let currentFilters = {};
+        let seasonFilterSelections = {};
+        let customerFilterSelections = {};
+
+        // Season filter functions
+        function toggleSeasonFilter(columnIndex) {
+            const overlay = document.getElementById('season-filter-overlay');
+            const popup = document.getElementById('season-filter-popup');
+            const optionsContainer = document.getElementById('season-options-popup');
+            
+            // Close all other filter panels
+            document.querySelectorAll('.filter-dropdown').forEach(p => {
+                p.classList.remove('show');
+            });
+            
+            // Show overlay and popup
+            overlay.classList.add('show');
+            popup.classList.add('show');
+            
+            // Populate season options if not already done
+            if (optionsContainer.children.length === 0) {
+                populateSeasonOptions(columnIndex, optionsContainer);
+            }
+        }
+
+        function closeSeasonFilter() {
+            const overlay = document.getElementById('season-filter-overlay');
+            const popup = document.getElementById('season-filter-popup');
+            
+            overlay.classList.remove('show');
+            popup.classList.remove('show');
+        }
+
+        function populateSeasonOptions(columnIndex, container) {
+            const seasonList = [
+                'H22', 'F22', 'H21', 'SP22', 'SS22', 'F22-INDO', 'S22-INDO', 'F22-CHINA', 'S22-CHINA',
+                'F21-INDO', 'F20-CHINA', 'S22', '3', 'F23-CHINA', 'S23', 'F23', '11', 'F23-INDO',
+                'S23-INDO', 'S23-CHINA', 'H23', 'H23-INDO', 'H23-CHINA', 'S24', 'F21 INDO', 'F22 SMU',
+                'F23 SMU - INDO', 'F23 -INDO', 'F24- INDO', 'F24', 'F24-Indo', 'F24-China', 'F24 Indo price',
+                'F24-China price', 'F24 China price', 'F24  Indo price', 'F24-Indo price', 'S24 - INDO',
+                'S24- CHINA - RTO', 'SP24-China', 'SP24', 'SP24-Indo', 'F25', 'F22W23', 'F21', 'F20',
+                'AW21', 'AW22', 'F222', 'AW19', 'SU23-INDO', 'SS23', 'FH23', 'F25 Indo', 'F25-Indo',
+                'F25 -Indo', 'F26', 'S26', 'S25', 'SS26-Indonesia', 'F26- INDO', 'F26-Indonesia',
+                'F26 INDO', 'AW25', 'F27', 'H25', 'F26- China', 'F25- INDO', 'F25-Indo price',
+                'F25 Indo price', 'F25 - INDO', 'F26 PREDEV'
+            ];
+
+            // Sort the season list alphabetically
+            const sortedSeasonList = seasonList.sort((a, b) => a.localeCompare(b));
+
+            container.innerHTML = sortedSeasonList.map(season => `
+                <div class="season-option" onclick="selectSeasonOption('${season}', ${columnIndex}, this)">
+                    <input type="radio" class="season-radio" name="season-${columnIndex}" value="${season}">
+                    <span class="season-label">${season}</span>
+                </div>
+            `).join('');
+        }
+
+        function selectSeasonOption(season, columnIndex, element) {
+            // Update visual selection
+            const container = element.parentElement;
+            container.querySelectorAll('.season-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            element.classList.add('selected');
+            
+            // Update radio button
+            const radio = element.querySelector('.season-radio');
+            radio.checked = true;
+            
+            // Store selection (use 0 as default for popup)
+            seasonFilterSelections[0] = season;
+        }
+
+        function clearSeasonFilterPopup() {
+            const container = document.getElementById('season-options-popup');
+            container.querySelectorAll('.season-option').forEach(opt => {
+                opt.classList.remove('selected');
+                const radio = opt.querySelector('.season-radio');
+                radio.checked = false;
+            });
+            
+            delete seasonFilterSelections[0]; // Use 0 as default for popup
+            delete currentFilters['Season'];
+            
+            console.log('Cleared Season filter. Current filters:', currentFilters);
+            
+            // Update UI
+            const filterButton = document.querySelector('.header-with-filter .filter-triangle');
+            if (filterButton) {
+                filterButton.classList.remove('active');
+            }
+            
+            // Apply filters to update the table
+            applyFilters();
+            
+            // Close the popup
+            closeSeasonFilter();
+        }
+
+        function applySeasonFilterPopup() {
+            const selectedSeason = seasonFilterSelections[0]; // Use 0 as default for popup
+            
+            if (selectedSeason) {
+                currentFilters['Season'] = selectedSeason;
+                
+                // Update UI
+                const filterButton = document.querySelector('.header-with-filter .filter-triangle');
+                if (filterButton) {
+                    filterButton.classList.add('active');
+                }
+            } else {
+                delete currentFilters['Season'];
+                
+                // Update UI
+                const filterButton = document.querySelector('.header-with-filter .filter-triangle');
+                if (filterButton) {
+                    filterButton.classList.remove('active');
+                }
+            }
+            
+            // Apply filters to update the table
+            applyFilters();
+            
+            // Close the popup
+            closeSeasonFilter();
+        }
+
+        // Customer filter functions
+        function toggleCustomerFilter(columnIndex) {
+            const overlay = document.getElementById('customer-filter-overlay');
+            const popup = document.getElementById('customer-filter-popup');
+            const optionsContainer = document.getElementById('customer-options-popup');
+            
+            // Close all other filter panels
+            document.querySelectorAll('.filter-dropdown').forEach(p => {
+                p.classList.remove('show');
+            });
+            
+            // Show overlay and popup
+            overlay.classList.add('show');
+            popup.classList.add('show');
+            
+            // Populate customer options if not already done
+            if (optionsContainer.children.length === 0) {
+                populateCustomerOptions(columnIndex, optionsContainer);
+            }
+        }
+
+        function closeCustomerFilter() {
+            const overlay = document.getElementById('customer-filter-overlay');
+            const popup = document.getElementById('customer-filter-popup');
+            
+            overlay.classList.remove('show');
+            popup.classList.remove('show');
+        }
+
+        function populateCustomerOptions(columnIndex, container) {
+            const customerList = [
+                'VANS', 'TNF', 'SMARTWOOL', 'UA DOME', 'UA IN LINE', 'BURTON', 'ALTRA', 'COLUMBIA',
+                'ARCTERYX', 'EDDIE BAUER', 'FAB FIT FUN', 'HAGLOFS', 'FOOTASYLUM', 'HERSCHEL', 'MADISON 88',
+                'JACK WOLFSKIN', 'MARMOT', 'MOUNTAIN HARDWEAR', 'MUSTO', 'ODLO', 'ON AG', 'PRANA',
+                'PEAK PERFORMANCE', 'OUTDOOR RESEARCH', 'LL BEAN', 'HELLY HANSEN WW', 'HELLY HANSEN SMU',
+                'HELLY HANSEN', 'SAGA', 'SPYDER', 'HUNTER', 'FJALL RAVEN', '511 TACTICAL', 'TOMMY HILFIGER',
+                'OBERMEYER', '66 Degree', 'Callaway', 'ROSSIGNOL', 'TM', 'UA', 'Stance', 'Ridestore'
+            ];
+
+            // Sort the customer list alphabetically
+            const sortedCustomerList = customerList.sort((a, b) => a.localeCompare(b));
+
+            container.innerHTML = sortedCustomerList.map(customer => `
+                <div class="customer-option" onclick="selectCustomerOption('${customer}', ${columnIndex}, this)">
+                    <input type="radio" class="customer-radio" name="customer-${columnIndex}" value="${customer}">
+                    <span class="customer-label">${customer}</span>
+                </div>
+            `).join('');
+        }
+
+        function selectCustomerOption(customer, columnIndex, element) {
+            // Update visual selection
+            const container = element.parentElement;
+            container.querySelectorAll('.customer-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            element.classList.add('selected');
+            
+            // Update radio button
+            const radio = element.querySelector('.customer-radio');
+            radio.checked = true;
+            
+            // Store selection (use 0 as default for popup)
+            customerFilterSelections[0] = customer;
+        }
+
+        function clearCustomerFilterPopup() {
+            const container = document.getElementById('customer-options-popup');
+            container.querySelectorAll('.customer-option').forEach(opt => {
+                opt.classList.remove('selected');
+                const radio = opt.querySelector('.customer-radio');
+                radio.checked = false;
+            });
+            
+            delete customerFilterSelections[0]; // Use 0 as default for popup
+            delete currentFilters['Customer'];
+            
+            console.log('Cleared Customer filter. Current filters:', currentFilters);
+            
+            // Update UI
+            const filterButtons = document.querySelectorAll('.header-with-filter .filter-triangle');
+            filterButtons.forEach(button => {
+                if (button.onclick.toString().includes('toggleCustomerFilter')) {
+                    button.classList.remove('active');
+                }
+            });
+            
+            // Apply filters to update the table
+            applyFilters();
+            
+            // Close the popup
+            closeCustomerFilter();
+        }
+
+        function applyCustomerFilterPopup() {
+            const selectedCustomer = customerFilterSelections[0]; // Use 0 as default for popup
+            
+            if (selectedCustomer) {
+                currentFilters['Customer'] = selectedCustomer;
+                
+                // Update UI
+                const filterButtons = document.querySelectorAll('.header-with-filter .filter-triangle');
+                filterButtons.forEach(button => {
+                    if (button.onclick.toString().includes('toggleCustomerFilter')) {
+                        button.classList.add('active');
+                    }
+                });
+            } else {
+                delete currentFilters['Customer'];
+                
+                // Update UI
+                const filterButtons = document.querySelectorAll('.header-with-filter .filter-triangle');
+                filterButtons.forEach(button => {
+                    if (button.onclick.toString().includes('toggleCustomerFilter')) {
+                        button.classList.remove('active');
+                    }
+                });
+            }
+            
+            // Apply filters to update the table
+            applyFilters();
+            
+            // Close the popup
+            closeCustomerFilter();
+        }
+
+        function toggleFilter(columnName, columnIndex) {
+            const dropdown = document.getElementById(`filter-${columnIndex}`);
+            const filterButton = dropdown.previousElementSibling.querySelector('.filter-triangle');
+            
+            // Close all other dropdowns
+            document.querySelectorAll('.filter-dropdown').forEach(dd => {
+                if (dd.id !== `filter-${columnIndex}`) {
+                    dd.classList.remove('show');
+                }
+            });
+            
+            if (dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+                return;
+            }
+            
+            dropdown.classList.add('show');
+            
+            // Populate filter options if not already done
+            if (dropdown.children.length === 0) {
+                populateFilterOptions(columnName, columnIndex, dropdown);
+            }
+        }
+
+        function populateFilterOptions(columnName, columnIndex, dropdown) {
+            if (!window.currentTableData || window.currentTableData.length === 0) {
+                dropdown.innerHTML = '<div class="filter-option">No data available</div>';
+                return;
+            }
+
+            // Only allow filtering for specific columns
+            const filterableColumns = ['Season', 'Customer', 'Style Number', 'Style Name', 'Main Material'];
+            if (!filterableColumns.includes(columnName)) {
+                dropdown.innerHTML = '<div class="filter-option">Filtering not available for this column</div>';
+                return;
+            }
+
+            // Get unique values for this column
+            const uniqueValues = new Set();
+            const columnMapping = {
+                'Season': ['season', 'Season', 'SEASON', 'seasons', 'SEASONS'],
+                'Customer': ['customer', 'Customer', 'CUSTOMER', 'customers', 'CUSTOMERS'],
+                'Style Number': ['style_number', 'styleNumber', 'Style Number', 'STYLE_NUMBER', 'style_no', 'styleNo', 'STYLE_NO'],
+                'Style Name': ['style_name', 'styleName', 'Style Name', 'STYLE_NAME', 'style', 'STYLE'],
+                'Main Material': ['main_material', 'mainMaterial', 'Main Material', 'MAIN_MATERIAL', 'material', 'MATERIAL', 'main_materials']
+            };
+
+            const possibleNames = columnMapping[columnName] || [columnName];
+            let actualColumnName = null;
+            
+            // Find the actual column name in the data
+            for (const row of window.currentTableData) {
+                for (const key of Object.keys(row)) {
+                    if (possibleNames.includes(key)) {
+                        actualColumnName = key;
+                        break;
+                    }
+                }
+                if (actualColumnName) break;
+            }
+
+            if (!actualColumnName) {
+                dropdown.innerHTML = '<div class="filter-option">Column not found in data</div>';
+                return;
+            }
+
+            // Collect unique values
+            window.currentTableData.forEach(row => {
+                const value = row[actualColumnName];
+                if (value !== null && value !== undefined && value !== '') {
+                    uniqueValues.add(String(value).trim());
+                }
+            });
+
+            // Sort values
+            const sortedValues = Array.from(uniqueValues).sort();
+
+            // Create filter options
+            dropdown.innerHTML = `
+                <div class="filter-option" onclick="selectFilterOption('${columnName}', ${columnIndex}, '', this)">
+                    <strong>All (${sortedValues.length})</strong>
+                </div>
+                ${sortedValues.map(value => `
+                    <div class="filter-option" onclick="selectFilterOption('${columnName}', ${columnIndex}, '${value.replace(/'/g, "\\'")}', this)">
+                        ${value}
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        function selectFilterOption(columnName, columnIndex, value, element) {
+            // Update visual selection
+            element.parentElement.querySelectorAll('.filter-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            element.classList.add('selected');
+
+            // Store filter
+            if (value === '') {
+                delete currentFilters[columnName];
+            } else {
+                currentFilters[columnName] = value;
+            }
+
+            // Update UI
+            const filterButton = document.querySelector(`#filter-${columnIndex}`).previousElementSibling.querySelector('.filter-triangle');
+            
+            if (currentFilters[columnName]) {
+                filterButton.classList.add('active');
+            } else {
+                filterButton.classList.remove('active');
+            }
+
+            // Close dropdown
+            document.getElementById(`filter-${columnIndex}`).classList.remove('show');
+
+            // Apply filters
+            applyFilters();
+        }
+
+        function applyFilters() {
+            console.log('applyFilters called with filters:', currentFilters);
+            
+            if (!window.currentTableData || window.currentTableData.length === 0) {
+                console.log('No table data available');
+                return;
+            }
+
+            let filteredData = window.currentTableData;
+            console.log('Starting with', filteredData.length, 'rows');
+            
+            // Debug: Show available column names
+            if (filteredData.length > 0) {
+                console.log('Available column names:', Object.keys(filteredData[0]));
+                console.log('Sample data:', filteredData[0]);
+            }
+
+            // Apply each filter (only for allowed columns)
+            Object.keys(currentFilters).forEach(columnName => {
+                const filterValue = currentFilters[columnName];
+                if (!filterValue) return;
+
+                // Only allow filtering for specific columns
+                const filterableColumns = ['Season', 'Customer', 'Style Number', 'Style Name', 'Main Material'];
+                if (!filterableColumns.includes(columnName)) return;
+
+                // Find the actual column name (case-insensitive)
+                const columnMapping = {
+                    'Season': ['season', 'Season', 'SEASON', 'seasons', 'SEASONS'],
+                    'Customer': ['customer', 'Customer', 'CUSTOMER', 'customers', 'CUSTOMERS'],
+                    'Style Number': ['style_number', 'styleNumber', 'Style Number', 'STYLE_NUMBER', 'style_no', 'styleNo', 'STYLE_NO'],
+                    'Style Name': ['style_name', 'styleName', 'Style Name', 'STYLE_NAME', 'style', 'STYLE'],
+                    'Main Material': ['main_material', 'mainMaterial', 'Main Material', 'MAIN_MATERIAL', 'material', 'MATERIAL', 'main_materials']
+                };
+
+                const possibleNames = columnMapping[columnName] || [columnName];
+                let actualColumnName = null;
+                
+                // First try exact match
+                for (const row of filteredData) {
+                    for (const key of Object.keys(row)) {
+                        if (possibleNames.includes(key)) {
+                            actualColumnName = key;
+                            break;
+                        }
+                    }
+                    if (actualColumnName) break;
+                }
+                
+                // If no exact match, try case-insensitive
+                if (!actualColumnName) {
+                    for (const row of filteredData) {
+                        for (const key of Object.keys(row)) {
+                            const keyLower = key.toLowerCase();
+                            const possibleLower = possibleNames.map(name => name.toLowerCase());
+                            if (possibleLower.includes(keyLower)) {
+                                actualColumnName = key;
+                                break;
+                            }
+                        }
+                        if (actualColumnName) break;
+                    }
+                }
+                
+                // If still no match, try partial matching
+                if (!actualColumnName) {
+                    for (const row of filteredData) {
+                        for (const key of Object.keys(row)) {
+                            const keyLower = key.toLowerCase();
+                            if (keyLower.includes(columnName.toLowerCase()) || columnName.toLowerCase().includes(keyLower)) {
+                                actualColumnName = key;
+                                break;
+                            }
+                        }
+                        if (actualColumnName) break;
+                    }
+                }
+
+                if (actualColumnName) {
+                    const beforeCount = filteredData.length;
+                    console.log(`Found column "${actualColumnName}" for filter "${columnName}"`);
+                    console.log(`Looking for rows containing "${filterValue}" in column "${actualColumnName}"`);
+                    
+                    filteredData = filteredData.filter(row => {
+                        const value = String(row[actualColumnName] || '').trim();
+                        const matches = value.toLowerCase().includes(filterValue.toLowerCase());
+                        console.log(`Row value: "${value}" contains "${filterValue}": ${matches}`);
+                        return matches;
+                    });
+                    console.log(`Filtered ${columnName} from ${beforeCount} to ${filteredData.length} rows`);
+                } else {
+                    console.log(`Could not find column mapping for ${columnName}. Available keys:`, Object.keys(filteredData[0] || {}));
+                }
+            });
+
+            console.log('Final filtered data length:', filteredData.length);
+            console.log('Active filters:', currentFilters);
+            
+            // If no filters applied, show all data
+            if (Object.keys(currentFilters).length === 0) {
+                console.log('No filters applied, showing all data');
+                filteredData = window.currentTableData;
+            } else {
+                console.log('Filters are active, showing filtered data only');
+            }
+            
+            // Update the table with filtered data
+            updateTableWithFilteredData(filteredData);
+        }
+
+        function updateTableWithFilteredData(filteredData) {
+            console.log('updateTableWithFilteredData called with', filteredData.length, 'rows');
+            const tableElement = document.getElementById('tableData');
+            if (!tableElement) {
+                console.log('tableElement not found');
+                return;
+            }
+
+            // Get the current table structure
+            let table = tableElement.querySelector('.table');
+            if (!table) {
+                console.log('table not found, trying to find any table');
+                table = tableElement.querySelector('table');
+            }
+            
+            if (!table) {
+                console.log('No table found, cannot update');
+                return;
+            }
+
+            // Get or create tbody
+            let tbody = table.querySelector('tbody');
+            if (!tbody) {
+                console.log('tbody not found, creating one');
+                tbody = document.createElement('tbody');
+                table.appendChild(tbody);
+            }
+
+            // Clear existing rows
+            tbody.innerHTML = '';
+            console.log('Cleared tbody, adding', filteredData.length, 'rows');
+
+            // Add filtered rows
+            filteredData.forEach((row, rowIndex) => {
+                const tr = document.createElement('tr');
+                tr.style.backgroundColor = rowIndex % 2 === 0 ? '#f8f9fa' : 'white';
+                
+                // Get the column mapping from the original table creation
+                const displayColumns = [
+                    'Season', 'Customer', 'Style Number', 'Style Name', 'Main Material',
+                    'Material Consumption', 'Material Price', 'Trim Cost', 'Total Material Cost',
+                    'Knitting Machine', 'Knitting Time', 'Knitting CPM', 'Knitting Cost',
+                    'Ops Cost', 'Knitting + Ops Cost', 'Packaging', 'OH', 'Profit',
+                    'FTY Adjustment', 'TTL FTY Cost'
+                ];
+
+                const columnMapping = {
+                    'Season': ['season', 'Season', 'SEASON', 'seasons', 'SEASONS'],
+                    'Customer': ['customer', 'Customer', 'CUSTOMER', 'customers', 'CUSTOMERS'],
+                    'Style Number': ['style_number', 'styleNumber', 'Style Number', 'STYLE_NUMBER', 'style_no', 'styleNo', 'STYLE_NO'],
+                    'Style Name': ['style_name', 'styleName', 'Style Name', 'STYLE_NAME', 'style', 'STYLE'],
+                    'Main Material': ['main_material', 'mainMaterial', 'Main Material', 'MAIN_MATERIAL', 'material', 'MATERIAL', 'main_materials'],
+                    'Material Consumption': ['material_consumption', 'materialConsumption', 'Material Consumption', 'MATERIAL_CONSUMPTION', 'consumption', 'CONSUMPTION'],
+                    'Material Price': ['material_price', 'materialPrice', 'Material Price', 'MATERIAL_PRICE', 'price', 'PRICE'],
+                    'Trim Cost': ['trim_cost', 'trimCost', 'Trim Cost', 'TRIM_COST', 'trim', 'TRIM'],
+                    'Total Material Cost': ['total_material_cost', 'totalMaterialCost', 'Total Material Cost', 'TOTAL_MATERIAL_COST', 'total_cost', 'totalCost'],
+                    'Knitting Machine': ['knitting_machine', 'knittingMachine', 'Knitting Machine', 'KNITTING_MACHINE', 'machine', 'MACHINE'],
+                    'Knitting Time': ['knitting_time', 'knittingTime', 'Knitting Time', 'KNITTING_TIME', 'time', 'TIME'],
+                    'Knitting CPM': ['knitting_cpm', 'knittingCpm', 'Knitting CPM', 'KNITTING_CPM', 'cpm', 'CPM'],
+                    'Knitting Cost': ['knitting_cost', 'knittingCost', 'Knitting Cost', 'KNITTING_COST', 'knitting', 'KNITTING'],
+                    'Ops Cost': ['ops_cost', 'opsCost', 'Ops Cost', 'OPS_COST', 'ops', 'OPS', 'operations', 'OPERATIONS'],
+                    'Knitting + Ops Cost': ['knitting_ops_cost', 'knittingOpsCost', 'Knitting + Ops Cost', 'KNITTING_OPS_COST', 'total_ops', 'totalOps'],
+                    'Packaging': ['packaging', 'Packaging', 'PACKAGING', 'package', 'PACKAGE'],
+                    'OH': ['oh', 'OH', 'overhead', 'Overhead', 'OVERHEAD', 'overheads', 'OVERHEADS'],
+                    'Profit': ['profit', 'Profit', 'PROFIT', 'profits', 'PROFITS'],
+                    'FTY Adjustment': ['fty_adjustment', 'ftyAdjustment', 'FTY Adjustment', 'FTY_ADJUSTMENT', 'fty', 'FTY', 'adjustment', 'ADJUSTMENT'],
+                    'TTL FTY Cost': ['ttl_fty_cost', 'ttlFtyCost', 'TTL FTY Cost', 'TTL_FTY_COST', 'total_fty', 'totalFty', 'ttl_cost', 'ttlCost']
+                };
+
+                displayColumns.forEach(displayName => {
+                    const possibleNames = columnMapping[displayName] || [displayName];
+                    const foundColumn = possibleNames.find(name => Object.keys(row).includes(name));
+                    
+                    const td = document.createElement('td');
+                    td.style.padding = '8px';
+                    td.style.border = '1px solid #ddd';
+                    td.style.textAlign = 'left';
+                    td.style.minWidth = '150px';
+                    td.style.whiteSpace = 'nowrap';
+                    
+                    if (foundColumn) {
+                        td.textContent = row[foundColumn] || '';
+                    } else {
+                        td.textContent = '';
+                        td.style.fontStyle = 'italic';
+                        td.style.color = '#999';
+                    }
+                    
+                    tr.appendChild(td);
+                });
+
+                tbody.appendChild(tr);
+            });
+            
+            // Update table stats
+            updateTableStats(filteredData.length);
+            
+            // Force table to be visible
+            table.style.display = 'table';
+            tableElement.style.display = 'block';
+            
+            console.log('Table updated successfully with', filteredData.length, 'rows');
+        }
+        
+        function updateTableStats(filteredCount) {
+            const statsElement = document.querySelector('.table-stats');
+            if (statsElement) {
+                const totalCount = window.currentTableData ? window.currentTableData.length : 0;
+                statsElement.innerHTML = `
+                    <span>Showing ${filteredCount} of ${totalCount} rows</span>
+                    ${Object.keys(currentFilters).length > 0 ? '<span style="color: #2196f3;">Filters applied</span>' : ''}
+                `;
+            }
+        }
+        
+        function clearAllFilters() {
+            currentFilters = {};
+            seasonFilterSelections = {};
+            customerFilterSelections = {};
+            
+            // Remove active states from all filter buttons
+            document.querySelectorAll('.filter-triangle').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show all data
+            if (window.currentTableData) {
+                updateTableWithFilteredData(window.currentTableData);
+            }
+        }
+        
+        // Test function for debugging
+        function testFilter(columnName, value) {
+            console.log(`Testing filter: ${columnName} = ${value}`);
+            currentFilters[columnName] = value;
+            applyFilters();
+        }
+        
+        // Make test function globally available
+        window.testFilter = testFilter;
+        window.clearAllFilters = clearAllFilters;
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('th') && !e.target.closest('.season-filter-overlay') && !e.target.closest('.season-filter-panel') && !e.target.closest('.customer-filter-overlay') && !e.target.closest('.customer-filter-panel')) {
+                document.querySelectorAll('.filter-dropdown').forEach(panel => {
+                    panel.classList.remove('show');
+                });
+                // Close filter popups
+                closeSeasonFilter();
+                closeCustomerFilter();
+            }
+        });
 
         function showColumnMappingDebug(availableColumns, displayColumns, mappedColumns) {
             // Create a debug panel to show column mapping
@@ -11854,7 +12863,33 @@
         background: rgba(0, 0, 0, 0.5);
         z-index: 1000;
         display: none;
-    " onclick="toggleEmergencyPanel()"></div>
+    " onclick="toggleEmergencyPanel()">    </div>
+
+    <!-- Season Filter Overlay and Popup -->
+    <div class="season-filter-overlay" id="season-filter-overlay" onclick="closeSeasonFilter()"></div>
+    <div class="season-filter-panel" id="season-filter-popup">
+        <div class="season-filter-header">Filter Season</div>
+        <div class="season-options-grid" id="season-options-popup">
+            <!-- Season options will be populated here -->
+        </div>
+        <div class="filter-panel-actions">
+            <button class="filter-clear-btn" onclick="clearSeasonFilterPopup()">Clear</button>
+            <button class="filter-apply-btn" onclick="applySeasonFilterPopup()">Apply</button>
+        </div>
+    </div>
+
+    <!-- Customer Filter Overlay and Popup -->
+    <div class="customer-filter-overlay" id="customer-filter-overlay" onclick="closeCustomerFilter()"></div>
+    <div class="customer-filter-panel" id="customer-filter-popup">
+        <div class="customer-filter-header">Filter Customer</div>
+        <div class="customer-options-grid" id="customer-options-popup">
+            <!-- Customer options will be populated here -->
+        </div>
+        <div class="filter-panel-actions">
+            <button class="filter-clear-btn" onclick="clearCustomerFilterPopup()">Clear</button>
+            <button class="filter-apply-btn" onclick="applyCustomerFilterPopup()">Apply</button>
+        </div>
+    </div>
 
 </body>
 </html>
