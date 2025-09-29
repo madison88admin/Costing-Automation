@@ -24,8 +24,8 @@ class ExcelUtils {
             
             // Add overall timeout to prevent infinite waiting
             const timeoutId = setTimeout(() => {
-                reject(new Error('XLSX library loading timed out after 10 seconds'));
-            }, 10000);
+                reject(new Error('XLSX library loading timed out after 5 seconds. Please check if js/xlsx.min.js exists and try refreshing the page.'));
+            }, 5000);
             
             // Check if script is already being loaded
             const existingScript = document.querySelector('script[src*="xlsx"]');
@@ -62,15 +62,13 @@ class ExcelUtils {
                     }
                 }, 100);
                 
-                // If we're still waiting for the existing script, return early
-                if (attempts < maxAttempts) {
-                    return;
-                }
+                // Return early to let the interval run
+                return;
             }
             
             // Use local XLSX library to avoid CSP issues
             const script = document.createElement('script');
-            script.src = 'xlsx.min.js';
+            script.src = 'js/xlsx.min.js';
             
             script.onload = () => {
                 console.log('📦 XLSX library script loaded, checking availability...');
@@ -92,7 +90,7 @@ class ExcelUtils {
             script.onerror = (error) => {
                 console.error('❌ Failed to load local XLSX library:', error);
                 clearTimeout(timeoutId);
-                reject(new Error('Failed to load XLSX library. Please ensure xlsx.min.js is available in the public folder.'));
+                reject(new Error('Failed to load XLSX library. Please ensure js/xlsx.min.js exists in the public folder and try refreshing the page.'));
             };
             
             document.head.appendChild(script);

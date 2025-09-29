@@ -1970,6 +1970,33 @@
             opacity: 1;
         }
 
+        /* Fallback: Show elements after 1 second if they haven't animated */
+        .scroll-fade-in.fallback-visible {
+            opacity: 1;
+        }
+
+        /* Make header visible immediately */
+        .header {
+            opacity: 1 !important;
+        }
+
+        .header .nav-logo,
+        .header .header-title {
+            opacity: 1 !important;
+            transform: none !important;
+        }
+
+        /* Make main product selection visible immediately */
+        .product-selection-container {
+            opacity: 1 !important;
+        }
+
+        .product-selection-header,
+        .product-selection-buttons {
+            opacity: 1 !important;
+            transform: none !important;
+        }
+
         .scroll-slide-left {
             opacity: 0;
             transform: translateX(-50px);
@@ -1977,6 +2004,11 @@
         }
 
         .scroll-slide-left.animate-in {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .scroll-slide-left.fallback-visible {
             opacity: 1;
             transform: translateX(0);
         }
@@ -1992,6 +2024,11 @@
             transform: translateX(0);
         }
 
+        .scroll-slide-right.fallback-visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
         .scroll-scale-up {
             opacity: 0;
             transform: scale(0.8);
@@ -1999,6 +2036,11 @@
         }
 
         .scroll-scale-up.animate-in {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .scroll-scale-up.fallback-visible {
             opacity: 1;
             transform: scale(1);
         }
@@ -2014,6 +2056,11 @@
             transform: rotate(0deg) scale(1);
         }
 
+        .scroll-rotate-in.fallback-visible {
+            opacity: 1;
+            transform: rotate(0deg) scale(1);
+        }
+
         .scroll-bounce-in {
             opacity: 0;
             transform: translateY(50px) scale(0.9);
@@ -2021,6 +2068,11 @@
         }
 
         .scroll-bounce-in.animate-in {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .scroll-bounce-in.fallback-visible {
             opacity: 1;
             transform: translateY(0) scale(1);
         }
@@ -11065,6 +11117,31 @@
                 floatElements.forEach(el => {
                     el.classList.add('float-animation');
                 });
+                
+                // Immediately check for elements already in viewport
+                this.checkInitialViewport();
+            }
+
+            checkInitialViewport() {
+                const windowHeight = window.innerHeight;
+                
+                this.elements.forEach(item => {
+                    if (item.animated) return;
+
+                    const rect = item.element.getBoundingClientRect();
+                    const elementTop = rect.top;
+                    const elementBottom = rect.bottom;
+
+                    // Check if element is in viewport (with generous bounds)
+                    const isInViewport = elementTop < windowHeight + 100 && elementBottom > -100;
+                    
+                    if (isInViewport) {
+                        setTimeout(() => {
+                            item.element.classList.add('animate-in');
+                            item.animated = true;
+                        }, item.delay * 1000);
+                    }
+                });
             }
 
             initializeParallax() {
@@ -11092,8 +11169,10 @@
                     const elementTop = rect.top;
                     const elementBottom = rect.bottom;
 
-                    // Check if element is in viewport
-                    if (elementTop < windowHeight && elementBottom > 0) {
+                    // Check if element is in viewport (with more generous bounds)
+                    const isInViewport = elementTop < windowHeight + 100 && elementBottom > -100;
+                    
+                    if (isInViewport) {
                         setTimeout(() => {
                             item.element.classList.add('animate-in');
                             item.animated = true;
@@ -11151,6 +11230,45 @@
 
         // Initialize scroll animator
         const scrollAnimator = new ScrollAnimator();
+
+        // Fallback mechanism: Show elements after 1.5 seconds if they haven't animated
+        function addFallbackVisibility() {
+            // Quick fallback for critical elements after 500ms
+            setTimeout(() => {
+                const criticalElements = document.querySelectorAll(`
+                    .header .scroll-fade-in:not(.animate-in),
+                    .product-selection-container .scroll-slide-left:not(.animate-in),
+                    .product-selection-container .scroll-bounce-in:not(.animate-in)
+                `);
+                
+                criticalElements.forEach(element => {
+                    element.classList.add('fallback-visible');
+                });
+                
+                console.log(`Applied quick fallback to ${criticalElements.length} critical elements`);
+            }, 500);
+
+            // Full fallback for all elements after 1.5 seconds
+            setTimeout(() => {
+                const allAnimatedElements = document.querySelectorAll(`
+                    .scroll-fade-in:not(.animate-in):not(.fallback-visible),
+                    .scroll-slide-left:not(.animate-in):not(.fallback-visible),
+                    .scroll-slide-right:not(.animate-in):not(.fallback-visible),
+                    .scroll-scale-up:not(.animate-in):not(.fallback-visible),
+                    .scroll-rotate-in:not(.animate-in):not(.fallback-visible),
+                    .scroll-bounce-in:not(.animate-in):not(.fallback-visible)
+                `);
+                
+                allAnimatedElements.forEach(element => {
+                    element.classList.add('fallback-visible');
+                });
+                
+                console.log(`Applied full fallback visibility to ${allAnimatedElements.length} elements`);
+            }, 1500);
+        }
+
+        // Start fallback timer when page loads
+        document.addEventListener('DOMContentLoaded', addFallbackVisibility);
 
         // Function to trigger scroll animations for newly shown elements
         function triggerScrollAnimations() {
