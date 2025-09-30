@@ -1197,77 +1197,6 @@
             transform: translateY(0);
         }
 
-        .smart-calculate-button {
-            background: linear-gradient(135deg, #9C27B0, #7B1FA2);
-            color: white;
-            border: none;
-            padding: 16px 32px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 16px rgba(156, 39, 176, 0.3);
-            margin-right: 15px;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-width: 180px;
-            height: 70px;
-            justify-content: center;
-        }
-
-        .smart-calculate-button:hover:not(:disabled) {
-            background: linear-gradient(135deg, #7B1FA2, #6A1B9A);
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 8px 24px rgba(156, 39, 176, 0.4);
-        }
-
-        .smart-calculate-button:active:not(:disabled) {
-            transform: translateY(-1px) scale(0.98);
-        }
-
-        .smart-calculate-button:disabled {
-            cursor: not-allowed;
-            opacity: 0.8;
-        }
-
-        .button-icon {
-            font-size: 20px;
-            margin-bottom: 4px;
-            transition: all 0.3s ease;
-        }
-
-        .button-text {
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 2px;
-            transition: all 0.3s ease;
-        }
-
-        .button-subtitle {
-            font-size: 12px;
-            font-weight: 500;
-            opacity: 0.9;
-            transition: all 0.3s ease;
-        }
-
-        .smart-calculate-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.6s;
-        }
-
-        .smart-calculate-button:hover::before {
-            left: 100%;
-        }
 
         .header-content {
             display: flex;
@@ -3245,11 +3174,6 @@
                     <p class="template-description">Template for Beanie</p>
                 </div>
                 <div class="header-buttons">
-                    <button class="smart-calculate-button" onclick="smartCalculate()" id="smartCalculateBtn">
-                        <span class="button-icon">🧮</span>
-                        <span class="button-text">Smart Calculate</span>
-                        <span class="button-subtitle">Test & Calculate</span>
-                    </button>
                     <button class="save-button" onclick="saveBeanieToDatabase()" id="saveBeanieBtn">
                         Save to Database
                     </button>
@@ -9157,9 +9081,16 @@
          * Formula: (CONSUMPTION (G) ÷ 1000) × MATERIAL PRICE (USD/KG)
          */
         function calculateYarnCost(consumption, price) {
-            const consumptionKg = parseFloat(consumption) / 1000;
-            const pricePerKg = parseFloat(price);
-            return (consumptionKg * pricePerKg).toFixed(2);
+            const consumptionValue = parseFloat(consumption);
+            const priceValue = parseFloat(price);
+            
+            // Handle invalid inputs
+            if (isNaN(consumptionValue) || isNaN(priceValue) || consumptionValue < 0 || priceValue < 0) {
+                return '0.00';
+            }
+            
+            const consumptionKg = consumptionValue / 1000;
+            return (consumptionKg * priceValue).toFixed(2);
         }
 
         /**
@@ -9171,8 +9102,14 @@
             const consumptionValue = parseFloat(consumption);
             const priceValue = parseFloat(price);
             
+            // Handle invalid inputs
+            if (isNaN(consumptionValue) || isNaN(priceValue) || consumptionValue < 0 || priceValue < 0) {
+                return '0.00';
+            }
+            
             // Check if this is YARN data (grams and USD/KG) or FABRIC data (yards and USD/YD)
-            // For now, assume it's YARN data if consumption is small (< 100) and price is large (> 10)
+            // YARN data typically has small consumption (< 100) and higher price per unit (> 10)
+            // FABRIC data typically has larger consumption (> 1) and lower price per unit (< 20)
             if (consumptionValue < 100 && priceValue > 10) {
                 // YARN calculation: (grams ÷ 1000) × USD/KG
                 const consumptionKg = consumptionValue / 1000;
@@ -9188,9 +9125,15 @@
          * Formula: CONSUMPTION (PIECE) × MATERIAL PRICE (USD/PC)
          */
         function calculateTrimCost(consumption, price) {
-            const consumptionPieces = parseFloat(consumption);
-            const pricePerPiece = parseFloat(price);
-            return (consumptionPieces * pricePerPiece).toFixed(2);
+            const consumptionValue = parseFloat(consumption);
+            const priceValue = parseFloat(price);
+            
+            // Handle invalid inputs
+            if (isNaN(consumptionValue) || isNaN(priceValue) || consumptionValue < 0 || priceValue < 0) {
+                return '0.00';
+            }
+            
+            return (consumptionValue * priceValue).toFixed(2);
         }
 
         /**
@@ -9198,9 +9141,15 @@
          * Formula: KNITTING TIME (MINS) × KNITTING SAH (USD/MIN)
          */
         function calculateKnittingCost(time, sah) {
-            const timeMins = parseFloat(time);
-            const sahPerMin = parseFloat(sah);
-            return (timeMins * sahPerMin).toFixed(2);
+            const timeValue = parseFloat(time);
+            const sahValue = parseFloat(sah);
+            
+            // Handle invalid inputs
+            if (isNaN(timeValue) || isNaN(sahValue) || timeValue < 0 || sahValue < 0) {
+                return '0.00';
+            }
+            
+            return (timeValue * sahValue).toFixed(2);
         }
 
         /**
@@ -9208,9 +9157,15 @@
          * Formula: OPERATION TIME (MINS) × OPERATION COST (USD/MIN)
          */
         function calculateOperationCost(time, costPerMin) {
-            const timeMins = parseFloat(time);
-            const costPerMinute = parseFloat(costPerMin);
-            return (timeMins * costPerMinute).toFixed(2);
+            const timeValue = parseFloat(time);
+            const costValue = parseFloat(costPerMin);
+            
+            // Handle invalid inputs
+            if (isNaN(timeValue) || isNaN(costValue) || timeValue < 0 || costValue < 0) {
+                return '0.00';
+            }
+            
+            return (timeValue * costValue).toFixed(2);
         }
 
         /**
@@ -9285,11 +9240,17 @@
                     if (cells.length >= 4) {
                         const consumption = cells[1].textContent.trim();
                         const price = cells[2].textContent.trim();
+                        const existingCost = cells[3].textContent.trim().replace('$', '');
                         
+                        // Check if we have consumption and price data for calculation
                         if (consumption && price && !isNaN(parseFloat(consumption)) && !isNaN(parseFloat(price))) {
                             const cost = calculateFabricCost(consumption, price);
                             cells[3].textContent = `$${cost}`;
                             fabricTotal += parseFloat(cost);
+                        }
+                        // If we have direct cost data (from Excel import), use that
+                        else if (existingCost && !isNaN(parseFloat(existingCost)) && parseFloat(existingCost) > 0) {
+                            fabricTotal += parseFloat(existingCost);
                         }
                     }
                 });
@@ -9495,71 +9456,6 @@
             console.log('Final Factory Total (All):', finalFactoryTotal.toFixed(2));
         }
 
-        /**
-         * Smart calculate function that tests and calculates smoothly
-         */
-        function smartCalculate() {
-            const button = document.getElementById('smartCalculateBtn');
-            const icon = button.querySelector('.button-icon');
-            const text = button.querySelector('.button-text');
-            const subtitle = button.querySelector('.button-subtitle');
-            
-            // Step 1: Test calculations first
-            button.disabled = true;
-            icon.textContent = '🧪';
-            text.textContent = 'Testing...';
-            subtitle.textContent = 'Validating formulas';
-            button.style.background = 'linear-gradient(135deg, #FF9800, #F57C00)';
-            
-            console.log('🧪 Smart Calculate: Testing calculations...');
-            
-            // Test all calculation functions
-            const tests = [
-                { name: 'YARN', test: () => calculateYarnCost(10, 14.79), expected: '0.15' },
-                { name: 'FABRIC', test: () => calculateFabricCost(2, 5.00), expected: '10.00' },
-                { name: 'TRIM', test: () => calculateTrimCost(1, 0.50), expected: '0.50' },
-                { name: 'KNITTING', test: () => calculateKnittingCost(8, 0.100), expected: '0.80' },
-                { name: 'OPERATION', test: () => calculateOperationCost(5, 0.20), expected: '1.00' }
-            ];
-            
-            let allTestsPassed = true;
-            tests.forEach(test => {
-                const result = test.test();
-                const passed = result === test.expected;
-                console.log(`${test.name}: ${result} ${passed ? '✅' : '❌'}`);
-                if (!passed) allTestsPassed = false;
-            });
-            
-            // Step 2: Calculate actual template data
-            setTimeout(() => {
-                icon.textContent = '🧮';
-                text.textContent = 'Calculating...';
-                subtitle.textContent = 'Processing data';
-                button.style.background = 'linear-gradient(135deg, #2196F3, #1976D2)';
-                
-                console.log('🧮 Smart Calculate: Processing template data...');
-                calculateBeanieTemplate();
-                
-                // Step 3: Complete
-                setTimeout(() => {
-                    icon.textContent = '✅';
-                    text.textContent = 'Complete';
-                    subtitle.textContent = allTestsPassed ? 'All calculations successful' : 'Calculations completed with warnings';
-                    button.style.background = allTestsPassed ? 
-                        'linear-gradient(135deg, #4CAF50, #45a049)' : 
-                        'linear-gradient(135deg, #FF9800, #F57C00)';
-                    
-                    // Reset after 1.5 seconds
-                    setTimeout(() => {
-                        button.disabled = false;
-                        icon.textContent = '🧮';
-                        text.textContent = 'Smart Calculate';
-                        subtitle.textContent = 'Test & Calculate';
-                        button.style.background = 'linear-gradient(135deg, #9C27B0, #7B1FA2)';
-                    }, 1500);
-                }, 500);
-            }, 800);
-        }
 
         /**
          * Add event listeners for real-time calculations

@@ -261,14 +261,28 @@ var TNFBeanieImporter = class TNFBeanieImporter {
                     !firstCell.includes('MATERIAL PRICE') && 
                     !firstCell.includes('MATERIAL COST') && 
                     !firstCell.includes('TOTAL') && 
-                    row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) > 0) {
-                    result.yarn.push({
-                        material: firstCell,
-                        consumption: String(row[1] || ''),
-                        price: parseFloat(row[2] || 0).toFixed(2),
-                        cost: parseFloat(row[3]).toFixed(2)
-                    });
-                    console.log('✅ YARN:', firstCell, 'Cost:', row[3]);
+                    !firstCell.includes('SUB TOTAL') &&
+                    firstCell.trim() !== '') {
+                    // Calculate cost if not provided or if consumption and price are available
+                    let cost = '';
+                    if (row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) > 0) {
+                        cost = parseFloat(row[3]).toFixed(2);
+                    } else if (row[1] && row[2] && !isNaN(parseFloat(row[1])) && !isNaN(parseFloat(row[2]))) {
+                        // Calculate: (consumption in grams / 1000) * price per kg
+                        const consumptionKg = parseFloat(row[1]) / 1000;
+                        const pricePerKg = parseFloat(row[2]);
+                        cost = (consumptionKg * pricePerKg).toFixed(2);
+                    }
+                    
+                    if (cost) {
+                        result.yarn.push({
+                            material: firstCell,
+                            consumption: String(row[1] || ''),
+                            price: parseFloat(row[2] || 0).toFixed(2),
+                            cost: cost
+                        });
+                        console.log('✅ YARN:', firstCell, 'Cost:', cost);
+                    }
                 }
                 
                 if (currentSection === 'fabric' && firstCell && 
@@ -277,14 +291,29 @@ var TNFBeanieImporter = class TNFBeanieImporter {
                     !firstCell.includes('MATERIAL PRICE') && 
                     !firstCell.includes('MATERIAL COST') && 
                     !firstCell.includes('TOTAL') && 
-                    row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) > 0) {
-                    result.fabric.push({
-                        material: firstCell,
-                        consumption: String(row[1] || ''),
-                        price: parseFloat(row[2] || 0).toFixed(2),
-                        cost: parseFloat(row[3]).toFixed(2)
-                    });
-                    console.log('✅ FABRIC:', firstCell, 'Cost:', row[3]);
+                    !firstCell.includes('SUB TOTAL') &&
+                    firstCell.trim() !== '') {
+                    
+                    // Calculate cost if not provided or if consumption and price are available
+                    let cost = '';
+                    if (row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) > 0) {
+                        cost = parseFloat(row[3]).toFixed(2);
+                    } else if (row[1] && row[2] && !isNaN(parseFloat(row[1])) && !isNaN(parseFloat(row[2]))) {
+                        // Calculate: consumption * price
+                        const consumption = parseFloat(row[1]);
+                        const price = parseFloat(row[2]);
+                        cost = (consumption * price).toFixed(2);
+                    }
+                    
+                    if (cost) {
+                        result.fabric.push({
+                            material: firstCell,
+                            consumption: String(row[1] || ''),
+                            price: parseFloat(row[2] || 0).toFixed(2),
+                            cost: cost
+                        });
+                        console.log('✅ FABRIC:', firstCell, 'Cost:', cost);
+                    }
                 }
                 
                 if (currentSection === 'trim' && firstCell && 
@@ -293,14 +322,29 @@ var TNFBeanieImporter = class TNFBeanieImporter {
                     !firstCell.includes('MATERIAL PRICE') && 
                     !firstCell.includes('MATERIAL COST') && 
                     !firstCell.includes('TOTAL') && 
-                    row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) > 0) {
-                    result.trim.push({
-                        material: firstCell,
-                        consumption: String(row[1] || ''),
-                        price: parseFloat(row[2] || 0).toFixed(2),
-                        cost: parseFloat(row[3]).toFixed(2)
-                    });
-                    console.log('✅ TRIM:', firstCell, 'Cost:', row[3]);
+                    !firstCell.includes('SUB TOTAL') &&
+                    firstCell.trim() !== '') {
+                    
+                    // Calculate cost if not provided or if consumption and price are available
+                    let cost = '';
+                    if (row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) > 0) {
+                        cost = parseFloat(row[3]).toFixed(2);
+                    } else if (row[1] && row[2] && !isNaN(parseFloat(row[1])) && !isNaN(parseFloat(row[2]))) {
+                        // Calculate: consumption * price
+                        const consumption = parseFloat(row[1]);
+                        const price = parseFloat(row[2]);
+                        cost = (consumption * price).toFixed(2);
+                    }
+                    
+                    if (cost) {
+                        result.trim.push({
+                            material: firstCell,
+                            consumption: String(row[1] || ''),
+                            price: parseFloat(row[2] || 0).toFixed(2),
+                            cost: cost
+                        });
+                        console.log('✅ TRIM:', firstCell, 'Cost:', cost);
+                    }
                 }
                 
                 if (currentSection === 'knitting' && firstCell && 
@@ -309,14 +353,29 @@ var TNFBeanieImporter = class TNFBeanieImporter {
                     !firstCell.includes('KNITTING SAH') && 
                     !firstCell.includes('KNITTING COST') && 
                     !firstCell.includes('TOTAL') && 
-                    row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) > 0) {
-                    result.knitting.push({
-                        machine: firstCell,
-                        time: String(row[1] || ''),
-                        sah: parseFloat(row[2] || 0).toFixed(2),
-                        cost: parseFloat(row[3]).toFixed(2)
-                    });
-                    console.log('✅ KNITTING:', firstCell, 'Cost:', row[3]);
+                    !firstCell.includes('SUB TOTAL') &&
+                    firstCell.trim() !== '') {
+                    
+                    // Calculate cost if not provided or if time and rate are available
+                    let cost = '';
+                    if (row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) > 0) {
+                        cost = parseFloat(row[3]).toFixed(2);
+                    } else if (row[1] && row[2] && !isNaN(parseFloat(row[1])) && !isNaN(parseFloat(row[2]))) {
+                        // Calculate: time * rate
+                        const time = parseFloat(row[1]);
+                        const rate = parseFloat(row[2]);
+                        cost = (time * rate).toFixed(2);
+                    }
+                    
+                    if (cost) {
+                        result.knitting.push({
+                            machine: firstCell,
+                            time: String(row[1] || ''),
+                            sah: parseFloat(row[2] || 0).toFixed(2),
+                            cost: cost
+                        });
+                        console.log('✅ KNITTING:', firstCell, 'Cost:', cost);
+                    }
                 }
                 
                 if (currentSection === 'operations' && firstCell && 
