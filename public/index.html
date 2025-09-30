@@ -1173,6 +1173,102 @@
             box-shadow: none;
         }
 
+        .calculate-button {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+            margin-right: 10px;
+        }
+
+        .calculate-button:hover {
+            background: linear-gradient(135deg, #1976D2, #1565C0);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+        }
+
+        .calculate-button:active {
+            transform: translateY(0);
+        }
+
+        .smart-calculate-button {
+            background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 16px rgba(156, 39, 176, 0.3);
+            margin-right: 15px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 180px;
+            height: 70px;
+            justify-content: center;
+        }
+
+        .smart-calculate-button:hover:not(:disabled) {
+            background: linear-gradient(135deg, #7B1FA2, #6A1B9A);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 24px rgba(156, 39, 176, 0.4);
+        }
+
+        .smart-calculate-button:active:not(:disabled) {
+            transform: translateY(-1px) scale(0.98);
+        }
+
+        .smart-calculate-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        .button-icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .button-text {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .button-subtitle {
+            font-size: 12px;
+            font-weight: 500;
+            opacity: 0.9;
+            transition: all 0.3s ease;
+        }
+
+        .smart-calculate-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.6s;
+        }
+
+        .smart-calculate-button:hover::before {
+            left: 100%;
+        }
+
         .header-content {
             display: flex;
             flex-direction: column;
@@ -2563,10 +2659,10 @@
         }
 
         .intro-logo {
-            width: 300px;
+            width: 700px;
             height: auto;
-            max-width: 300px;
-            max-height: 300px;
+            max-width: 700px;
+            max-height: 700px;
             object-fit: contain;
             animation: logoPopFade 3s ease-in-out;
         }
@@ -2587,6 +2683,31 @@
             100% { 
                 opacity: 0;
                 transform: scale(0.8);
+            }
+        }
+
+        /* Responsive design for intro logo */
+        @media (max-width: 1024px) {
+            .intro-logo {
+                width: 600px;
+                max-width: 600px;
+                max-height: 600px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .intro-logo {
+                width: 500px;
+                max-width: 500px;
+                max-height: 500px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .intro-logo {
+                width: 350px;
+                max-width: 350px;
+                max-height: 350px;
             }
         }
 
@@ -3124,6 +3245,11 @@
                     <p class="template-description">Template for Beanie</p>
                 </div>
                 <div class="header-buttons">
+                    <button class="smart-calculate-button" onclick="smartCalculate()" id="smartCalculateBtn">
+                        <span class="button-icon">🧮</span>
+                        <span class="button-text">Smart Calculate</span>
+                        <span class="button-subtitle">Test & Calculate</span>
+                    </button>
                     <button class="save-button" onclick="saveBeanieToDatabase()" id="saveBeanieBtn">
                         Save to Database
                     </button>
@@ -3172,6 +3298,12 @@
                                 <div class="cost-cell"></div>
                                 <div class="cost-cell"></div>
                                 <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row subtotal-row">
+                                <div class="cost-cell">SUB TOTAL</div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell">$0.00</div>
                             </div>
                         </div>
                     </div>
@@ -3773,7 +3905,7 @@
                             <div class="drag-drop-text">drag & drop<br>or click to select</div>
                             <div class="file-formats">CSV • XLSX • XLSM</div>
                         </div>
-                    </div>                   
+                    </div>
                 </div>
             </div>
         </div>
@@ -6160,6 +6292,18 @@
                         ballcapsBreakdown.classList.remove('hide');
                     }, 300);
                 }
+                
+                // Show beanie template
+                costBreakdown.style.display = 'block';
+                costBreakdown.classList.remove('hide');
+                
+                // Enable calculations for beanie template
+                setTimeout(() => {
+                    addCalculationEventListeners();
+                    calculateBeanieTemplate();
+                    console.log('✅ Beanie template calculations enabled');
+                }, 100);
+                
                 console.log('✅ Beanie template shown');
             } else if (productType === 'ballcaps') {
                 // Hide beanie if showing
@@ -8780,11 +8924,22 @@
                 });
             }
             
-            // Fill YARN section
-            fillCostSection('YARN', data.yarn, ['material', 'consumption', 'price', 'cost']);
+            // Fill YARN section (map to FABRIC for beanie template)
+            if (data.yarn && data.yarn.length > 0) {
+                // Convert YARN data to match FABRIC format (grams to yards conversion)
+                const yarnData = data.yarn.map(item => ({
+                    material: item.material,
+                    consumption: item.consumption, // Keep as grams for now
+                    price: item.price, // Keep as USD/KG for now
+                    cost: item.cost
+                }));
+                fillCostSection('FABRIC', yarnData, ['material', 'consumption', 'price', 'cost']);
+            }
             
             // Fill FABRIC section
-            fillCostSection('FABRIC', data.fabric, ['material', 'consumption', 'price', 'cost']);
+            if (data.fabric && data.fabric.length > 0) {
+                fillCostSection('FABRIC', data.fabric, ['material', 'consumption', 'price', 'cost']);
+            }
             
             // Fill EMBROIDERY section (for ballcaps)
             fillCostSection('EMBROIDERY', data.embroidery, ['design', 'stitches', 'price', 'cost']);
@@ -8796,7 +8951,7 @@
             fillCostSection('KNITTING', data.knitting, ['machine', 'time', 'sah', 'cost']);
             
             // Fill OPERATIONS section
-            fillCostSection('OPERATIONS', data.operations, ['operation', 'time', 'cost', 'total']);
+            fillCostSection('OPERATIONS', data.operations, ['operation', 'time', 'costPerMin', 'cost']);
             
             // Fill PACKAGING section
             fillCostSection('PACKAGING', data.packaging, ['type', 'notes', 'cost']);
@@ -8804,8 +8959,10 @@
             // Fill OVERHEAD/PROFIT section
             fillCostSection('OVERHEAD/ PROFIT', data.overhead, ['type', 'notes', 'cost']);
             
-            // Update totals
-            updateTotals(data.totalMaterialCost, data.totalFactoryCost);
+            // Let the calculation system handle totals instead of importing from Excel
+            setTimeout(() => {
+                calculateBeanieTemplate();
+            }, 100);
             
         }
         
@@ -8899,39 +9056,15 @@
                     });
                 }
                 
-                // Handle SUB TOTAL rows
-                const subtotalRow = targetSection.querySelector('.subtotal-row');
-                console.log('🔍 SUB TOTAL row found:', !!subtotalRow);
-                if (subtotalRow && data && Array.isArray(data)) {
-                    const subtotalItem = data.find(item => item.isSubtotal);
-                    console.log('🔍 SUB TOTAL item found:', subtotalItem);
-                    if (subtotalItem) {
-                        const cells = subtotalRow.querySelectorAll('.cost-cell');
-                        console.log('🔍 SUB TOTAL cells found:', cells.length);
-                        const maxColumns = Math.min(columns.length, cells.length);
-                        for (let cellIndex = 0; cellIndex < maxColumns; cellIndex++) {
-                            const column = columns[cellIndex];
-                            if (cells[cellIndex] && subtotalItem[column] !== undefined && subtotalItem[column] !== null) {
-                                cells[cellIndex].textContent = String(subtotalItem[column] || '');
-                                console.log(`✅ Updated SUB TOTAL cell ${cellIndex} (${column}):`, subtotalItem[column]);
-                            }
-                        }
-                        console.log('✅ Updated SUB TOTAL row for', sectionName, ':', subtotalItem);
-                    } else {
-                        console.log('❌ No SUB TOTAL item found in data');
-                    }
-                } else {
-                    console.log('❌ No SUB TOTAL row or data found');
-                }
+                // Skip SUB TOTAL rows - let calculation system handle them
+                console.log('🔍 Skipping SUB TOTAL import - will be calculated by system');
             }
             
-            // Calculate and update subtotal for this section
-            if (targetSection) {
-                updateSectionSubtotal(targetSection, data, columns);
-            }
+            // Let the main calculation system handle all totals
+            console.log('🔍 Section populated - totals will be calculated by main system');
         }
 
-        function updateSectionSubtotal(section, data, columns) {
+        function updateSectionSubtotalWithData(section, data, columns) {
             // Find the subtotal row
             const subtotalRow = section.querySelector('.subtotal-row');
             if (!subtotalRow) return;
@@ -9013,6 +9146,448 @@
             if (factoryTotalElement) {
                 factoryTotalElement.textContent = `$${factoryTotal}`;
             }
+        }
+
+        // ========================================
+        // BEANIE TEMPLATE AUTO-CALCULATION SYSTEM
+        // ========================================
+
+        /**
+         * Calculate material cost for YARN section
+         * Formula: (CONSUMPTION (G) ÷ 1000) × MATERIAL PRICE (USD/KG)
+         */
+        function calculateYarnCost(consumption, price) {
+            const consumptionKg = parseFloat(consumption) / 1000;
+            const pricePerKg = parseFloat(price);
+            return (consumptionKg * pricePerKg).toFixed(2);
+        }
+
+        /**
+         * Calculate material cost for FABRIC section
+         * Formula: CONSUMPTION (YARDS) × MATERIAL PRICE (USD/YD)
+         * Also handles YARN data: (CONSUMPTION (G) ÷ 1000) × MATERIAL PRICE (USD/KG)
+         */
+        function calculateFabricCost(consumption, price) {
+            const consumptionValue = parseFloat(consumption);
+            const priceValue = parseFloat(price);
+            
+            // Check if this is YARN data (grams and USD/KG) or FABRIC data (yards and USD/YD)
+            // For now, assume it's YARN data if consumption is small (< 100) and price is large (> 10)
+            if (consumptionValue < 100 && priceValue > 10) {
+                // YARN calculation: (grams ÷ 1000) × USD/KG
+                const consumptionKg = consumptionValue / 1000;
+                return (consumptionKg * priceValue).toFixed(2);
+            } else {
+                // FABRIC calculation: yards × USD/YD
+                return (consumptionValue * priceValue).toFixed(2);
+            }
+        }
+
+        /**
+         * Calculate material cost for TRIM section
+         * Formula: CONSUMPTION (PIECE) × MATERIAL PRICE (USD/PC)
+         */
+        function calculateTrimCost(consumption, price) {
+            const consumptionPieces = parseFloat(consumption);
+            const pricePerPiece = parseFloat(price);
+            return (consumptionPieces * pricePerPiece).toFixed(2);
+        }
+
+        /**
+         * Calculate knitting cost
+         * Formula: KNITTING TIME (MINS) × KNITTING SAH (USD/MIN)
+         */
+        function calculateKnittingCost(time, sah) {
+            const timeMins = parseFloat(time);
+            const sahPerMin = parseFloat(sah);
+            return (timeMins * sahPerMin).toFixed(2);
+        }
+
+        /**
+         * Calculate operation cost
+         * Formula: OPERATION TIME (MINS) × OPERATION COST (USD/MIN)
+         */
+        function calculateOperationCost(time, costPerMin) {
+            const timeMins = parseFloat(time);
+            const costPerMinute = parseFloat(costPerMin);
+            return (timeMins * costPerMinute).toFixed(2);
+        }
+
+        /**
+         * Calculate total for a section
+         */
+        function calculateSectionTotal(sectionSelector) {
+            const section = document.querySelector(sectionSelector);
+            if (!section) return 0;
+
+            let total = 0;
+            const costCells = section.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row) .cost-cell:last-child');
+            
+            costCells.forEach(cell => {
+                const value = parseFloat(cell.textContent.replace('$', '')) || 0;
+                total += value;
+            });
+
+            return total.toFixed(2);
+        }
+
+        /**
+         * Update section subtotal
+         */
+        function updateSectionSubtotal(sectionSelector, total) {
+            const section = document.querySelector(sectionSelector);
+            if (!section) return;
+
+            const subtotalRow = section.querySelector('.subtotal-row');
+            if (subtotalRow) {
+                const subtotalCell = subtotalRow.querySelector('.cost-cell:last-child');
+                if (subtotalCell) {
+                    subtotalCell.textContent = `$${total}`;
+                }
+            }
+        }
+
+        /**
+         * Calculate and update all beanie template calculations
+         */
+        function calculateBeanieTemplate() {
+            console.log('🧮 Calculating beanie template...');
+            
+            // Find sections by their headers
+            const sections = document.querySelectorAll('#costBreakdown .cost-section');
+            let fabricSection = null;
+            let trimSection = null;
+            let knittingSection = null;
+            let operationsSection = null;
+            let packagingSection = null;
+            let overheadSection = null;
+            
+            sections.forEach(section => {
+                const header = section.querySelector('.section-header');
+                if (header) {
+                    const headerText = header.textContent.trim();
+                    if (headerText === 'FABRIC') fabricSection = section;
+                    else if (headerText === 'TRIM') trimSection = section;
+                    else if (headerText === 'KNITTING') knittingSection = section;
+                    else if (headerText === 'OPERATIONS') operationsSection = section;
+                    else if (headerText === 'PACKAGING') packagingSection = section;
+                    else if (headerText === 'OVERHEAD/ PROFIT' || headerText === 'OVERHEAD/PROFIT') overheadSection = section;
+                }
+            });
+
+            // Calculate FABRIC section
+            if (fabricSection) {
+                const fabricRows = fabricSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                let fabricTotal = 0;
+                
+                fabricRows.forEach(row => {
+                    const cells = row.querySelectorAll('.cost-cell');
+                    if (cells.length >= 4) {
+                        const consumption = cells[1].textContent.trim();
+                        const price = cells[2].textContent.trim();
+                        
+                        if (consumption && price && !isNaN(parseFloat(consumption)) && !isNaN(parseFloat(price))) {
+                            const cost = calculateFabricCost(consumption, price);
+                            cells[3].textContent = `$${cost}`;
+                            fabricTotal += parseFloat(cost);
+                        }
+                    }
+                });
+                
+                // Update FABRIC subtotal
+                updateSectionSubtotal('.cost-section:nth-child(1)', fabricTotal.toFixed(2));
+                console.log('FABRIC Total:', fabricTotal);
+            }
+
+            // Calculate TRIM section
+            if (trimSection) {
+                const trimRows = trimSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                let trimTotal = 0;
+                
+                trimRows.forEach(row => {
+                    const cells = row.querySelectorAll('.cost-cell');
+                    if (cells.length >= 4) {
+                        const consumption = cells[1].textContent.trim();
+                        const price = cells[2].textContent.trim();
+                        const existingCost = cells[3].textContent.trim().replace('$', '');
+                        
+                        // Check if we have consumption and price data for calculation
+                        if (consumption && price && !isNaN(parseFloat(consumption)) && !isNaN(parseFloat(price))) {
+                            const cost = calculateTrimCost(consumption, price);
+                            cells[3].textContent = `$${cost}`;
+                            trimTotal += parseFloat(cost);
+                        }
+                        // If we have direct cost data (from Excel import), use that
+                        else if (existingCost && !isNaN(parseFloat(existingCost)) && parseFloat(existingCost) > 0) {
+                            trimTotal += parseFloat(existingCost);
+                        }
+                    }
+                });
+                
+                // Update TRIM subtotal
+                updateSectionSubtotal('.cost-section:nth-child(2)', trimTotal.toFixed(2));
+                console.log('TRIM Total:', trimTotal);
+            }
+
+            // Calculate KNITTING section
+            if (knittingSection) {
+                const knittingRows = knittingSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                let knittingTotal = 0;
+                
+                knittingRows.forEach(row => {
+                    const cells = row.querySelectorAll('.cost-cell');
+                    if (cells.length >= 4) {
+                        const time = cells[1].textContent.trim();
+                        const sah = cells[2].textContent.trim();
+                        
+                        if (time && sah && !isNaN(parseFloat(time)) && !isNaN(parseFloat(sah))) {
+                            const cost = calculateKnittingCost(time, sah);
+                            cells[3].textContent = `$${cost}`;
+                            knittingTotal += parseFloat(cost);
+                        }
+                    }
+                });
+                
+                // Update KNITTING subtotal
+                updateSectionSubtotal('.cost-section:nth-child(4)', knittingTotal.toFixed(2));
+                console.log('KNITTING Total:', knittingTotal);
+            }
+
+            // Calculate OPERATIONS section
+            if (operationsSection) {
+                const operationRows = operationsSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                let operationsTotal = 0;
+                
+                operationRows.forEach(row => {
+                    const cells = row.querySelectorAll('.cost-cell');
+                    if (cells.length >= 4) {
+                        const time = cells[1].textContent.trim();
+                        const costPerMin = cells[2].textContent.trim();
+                        const existingCost = cells[3].textContent.trim().replace('$', '');
+                        
+                        // Check if we have time and rate data for calculation
+                        if (time && costPerMin && !isNaN(parseFloat(time)) && !isNaN(parseFloat(costPerMin))) {
+                            const cost = calculateOperationCost(time, costPerMin);
+                            cells[3].textContent = `$${cost}`;
+                            operationsTotal += parseFloat(cost);
+                        }
+                        // If we have direct cost data (from Excel import), use that
+                        else if (existingCost && !isNaN(parseFloat(existingCost)) && parseFloat(existingCost) > 0) {
+                            operationsTotal += parseFloat(existingCost);
+                        }
+                    }
+                });
+                
+                // Update OPERATIONS subtotal
+                updateSectionSubtotal('.cost-section:nth-child(5)', operationsTotal.toFixed(2));
+                console.log('OPERATIONS Total:', operationsTotal);
+            }
+
+            // Calculate PACKAGING section (direct costs)
+            if (packagingSection) {
+                const packagingRows = packagingSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                let packagingTotal = 0;
+                
+                packagingRows.forEach(row => {
+                    const cells = row.querySelectorAll('.cost-cell');
+                    if (cells.length >= 3) {
+                        const cost = cells[2].textContent.trim().replace('$', '');
+                        if (cost && !isNaN(parseFloat(cost)) && parseFloat(cost) > 0) {
+                            packagingTotal += parseFloat(cost);
+                        }
+                    }
+                });
+                
+                // Update PACKAGING subtotal
+                updateSectionSubtotal('.cost-section:nth-child(6)', packagingTotal.toFixed(2));
+                console.log('PACKAGING Total:', packagingTotal);
+            }
+
+            // Calculate OVERHEAD section (direct costs)
+            if (overheadSection) {
+                const overheadRows = overheadSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                let overheadTotal = 0;
+                
+                overheadRows.forEach(row => {
+                    const cells = row.querySelectorAll('.cost-cell');
+                    if (cells.length >= 3) {
+                        const cost = cells[2].textContent.trim().replace('$', '');
+                        if (cost && !isNaN(parseFloat(cost)) && parseFloat(cost) > 0) {
+                            overheadTotal += parseFloat(cost);
+                        }
+                    }
+                });
+                
+                // Update OVERHEAD subtotal
+                updateSectionSubtotal('.cost-section:nth-child(7)', overheadTotal.toFixed(2));
+                console.log('OVERHEAD Total:', overheadTotal);
+            }
+
+            // Calculate totals using already calculated section values
+            let totalMaterialCost = 0;
+            let totalFactoryCost = 0;
+            
+            // Get FABRIC total (includes YARN data)
+            if (fabricSection) {
+                const fabricSubtotal = fabricSection.querySelector('.subtotal-row .cost-cell:last-child');
+                if (fabricSubtotal) {
+                    totalMaterialCost += parseFloat(fabricSubtotal.textContent.replace('$', '')) || 0;
+                }
+            }
+            
+            // Get TRIM total
+            if (trimSection) {
+                const trimSubtotal = trimSection.querySelector('.subtotal-row .cost-cell:last-child');
+                if (trimSubtotal) {
+                    totalMaterialCost += parseFloat(trimSubtotal.textContent.replace('$', '')) || 0;
+                }
+            }
+            
+            // Get KNITTING total
+            if (knittingSection) {
+                const knittingSubtotal = knittingSection.querySelector('.subtotal-row .cost-cell:last-child');
+                if (knittingSubtotal) {
+                    totalFactoryCost += parseFloat(knittingSubtotal.textContent.replace('$', '')) || 0;
+                }
+            }
+            
+            // Get OPERATIONS total
+            if (operationsSection) {
+                const operationsSubtotal = operationsSection.querySelector('.subtotal-row .cost-cell:last-child');
+                if (operationsSubtotal) {
+                    totalFactoryCost += parseFloat(operationsSubtotal.textContent.replace('$', '')) || 0;
+                }
+            }
+            
+            // Get PACKAGING total
+            if (packagingSection) {
+                const packagingSubtotal = packagingSection.querySelector('.subtotal-row .cost-cell:last-child');
+                if (packagingSubtotal) {
+                    totalFactoryCost += parseFloat(packagingSubtotal.textContent.replace('$', '')) || 0;
+                }
+            }
+            
+            // Get OVERHEAD total
+            if (overheadSection) {
+                const overheadSubtotal = overheadSection.querySelector('.subtotal-row .cost-cell:last-child');
+                if (overheadSubtotal) {
+                    totalFactoryCost += parseFloat(overheadSubtotal.textContent.replace('$', '')) || 0;
+                }
+            }
+            
+            // Update material total
+            const materialTotalElement = document.querySelector('#costBreakdown .total-material-cost .total-value');
+            if (materialTotalElement) {
+                materialTotalElement.textContent = `$${totalMaterialCost.toFixed(2)}`;
+            }
+            
+            // Calculate final factory total (material + factory costs)
+            const finalFactoryTotal = totalMaterialCost + totalFactoryCost;
+            
+            const factoryTotalElement = document.querySelector('#costBreakdown .total-factory-cost .total-value');
+            if (factoryTotalElement) {
+                factoryTotalElement.textContent = `$${finalFactoryTotal.toFixed(2)}`;
+            }
+
+            console.log('✅ Beanie template calculations completed');
+            console.log('Material Total:', totalMaterialCost.toFixed(2));
+            console.log('Factory Total (Manufacturing):', totalFactoryCost.toFixed(2));
+            console.log('Final Factory Total (All):', finalFactoryTotal.toFixed(2));
+        }
+
+        /**
+         * Smart calculate function that tests and calculates smoothly
+         */
+        function smartCalculate() {
+            const button = document.getElementById('smartCalculateBtn');
+            const icon = button.querySelector('.button-icon');
+            const text = button.querySelector('.button-text');
+            const subtitle = button.querySelector('.button-subtitle');
+            
+            // Step 1: Test calculations first
+            button.disabled = true;
+            icon.textContent = '🧪';
+            text.textContent = 'Testing...';
+            subtitle.textContent = 'Validating formulas';
+            button.style.background = 'linear-gradient(135deg, #FF9800, #F57C00)';
+            
+            console.log('🧪 Smart Calculate: Testing calculations...');
+            
+            // Test all calculation functions
+            const tests = [
+                { name: 'YARN', test: () => calculateYarnCost(10, 14.79), expected: '0.15' },
+                { name: 'FABRIC', test: () => calculateFabricCost(2, 5.00), expected: '10.00' },
+                { name: 'TRIM', test: () => calculateTrimCost(1, 0.50), expected: '0.50' },
+                { name: 'KNITTING', test: () => calculateKnittingCost(8, 0.100), expected: '0.80' },
+                { name: 'OPERATION', test: () => calculateOperationCost(5, 0.20), expected: '1.00' }
+            ];
+            
+            let allTestsPassed = true;
+            tests.forEach(test => {
+                const result = test.test();
+                const passed = result === test.expected;
+                console.log(`${test.name}: ${result} ${passed ? '✅' : '❌'}`);
+                if (!passed) allTestsPassed = false;
+            });
+            
+            // Step 2: Calculate actual template data
+            setTimeout(() => {
+                icon.textContent = '🧮';
+                text.textContent = 'Calculating...';
+                subtitle.textContent = 'Processing data';
+                button.style.background = 'linear-gradient(135deg, #2196F3, #1976D2)';
+                
+                console.log('🧮 Smart Calculate: Processing template data...');
+                calculateBeanieTemplate();
+                
+                // Step 3: Complete
+                setTimeout(() => {
+                    icon.textContent = '✅';
+                    text.textContent = 'Complete';
+                    subtitle.textContent = allTestsPassed ? 'All calculations successful' : 'Calculations completed with warnings';
+                    button.style.background = allTestsPassed ? 
+                        'linear-gradient(135deg, #4CAF50, #45a049)' : 
+                        'linear-gradient(135deg, #FF9800, #F57C00)';
+                    
+                    // Reset after 1.5 seconds
+                    setTimeout(() => {
+                        button.disabled = false;
+                        icon.textContent = '🧮';
+                        text.textContent = 'Smart Calculate';
+                        subtitle.textContent = 'Test & Calculate';
+                        button.style.background = 'linear-gradient(135deg, #9C27B0, #7B1FA2)';
+                    }, 1500);
+                }, 500);
+            }, 800);
+        }
+
+        /**
+         * Add event listeners for real-time calculations
+         */
+        function addCalculationEventListeners() {
+            // Add input event listeners to all cost cells
+            const costSections = document.querySelectorAll('#costBreakdown .cost-section');
+            
+            costSections.forEach(section => {
+                const inputCells = section.querySelectorAll('.cost-cell:not(.header-row .cost-cell)');
+                
+                inputCells.forEach(cell => {
+                    // Make cells editable
+                    cell.contentEditable = true;
+                    cell.style.border = '1px solid #ddd';
+                    cell.style.padding = '4px';
+                    cell.style.minHeight = '20px';
+                    
+                    // Add event listener for input changes
+                    cell.addEventListener('input', function() {
+                        // Debounce the calculation
+                        clearTimeout(this.calculationTimeout);
+                        this.calculationTimeout = setTimeout(() => {
+                            calculateBeanieTemplate();
+                        }, 500);
+                    });
+                });
+            });
         }
 
         // Initialize drag & drop when page loads
