@@ -2590,6 +2590,270 @@
             }
         }
 
+        /* Combined Help & Tutorial Button Styles */
+        .help-tutorial-button {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 80px;
+            height: 50px;
+            border-radius: 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            user-select: none;
+        }
+
+        .help-tutorial-button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .help-tutorial-button:active {
+            transform: translateY(-1px) scale(1.02);
+            transition: all 0.1s ease;
+        }
+
+        .help-tutorial-icon {
+            font-size: 18px;
+            line-height: 1;
+            transition: all 0.3s ease;
+        }
+
+        /* Remove floating animation for solid button style */
+
+        /* Help Panel Styles */
+        .help-panel {
+            position: fixed;
+            top: 0;
+            left: -400px;
+            width: 400px;
+            height: 100vh;
+            background: white;
+            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.15);
+            z-index: 10001;
+            transition: left 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .help-panel.show {
+            left: 0;
+        }
+
+        .help-panel-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .help-panel-header h2 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .help-close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.2s ease;
+        }
+
+        .help-close-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .help-panel-content {
+            padding: 20px;
+        }
+
+        .help-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .help-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .help-section h3 {
+            color: #2c3e50;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .help-section ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .help-section li {
+            padding: 8px 0;
+            color: #555;
+            line-height: 1.5;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .help-section li:before {
+            content: "•";
+            color: #667eea;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        .help-section strong {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        /* Quick Guide Grid Styles */
+        .quick-guide-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .quick-guide-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .quick-guide-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .quick-guide-item h4 {
+            color: #667eea;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+        }
+
+        .quick-guide-item p {
+            color: #666;
+            font-size: 12px;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        /* Help Overlay */
+        .help-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .help-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Responsive Design for Help Panel */
+        @media (max-width: 768px) {
+            .help-panel {
+                width: 100%;
+                left: -100%;
+            }
+            
+            .help-tutorial-button {
+                bottom: 15px;
+                left: 15px;
+                width: 70px;
+                height: 45px;
+                border-radius: 22px;
+                font-size: 14px;
+            }
+            
+            .help-tutorial-button:hover {
+                transform: translateY(-3px) scale(1.05);
+            }
+            
+            .help-tutorial-button:active {
+                transform: translateY(-1px) scale(1.02);
+            }
+            
+            .help-tutorial-icon {
+                font-size: 16px;
+            }
+
+            .quick-guide-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .help-tutorial-button {
+                bottom: 10px;
+                left: 10px;
+                width: 65px;
+                height: 40px;
+                border-radius: 20px;
+                font-size: 12px;
+            }
+            
+            .help-tutorial-button:hover {
+                transform: translateY(-2px) scale(1.05);
+            }
+            
+            .help-tutorial-button:active {
+                transform: translateY(-1px) scale(1.02);
+            }
+            
+            .help-tutorial-icon {
+                font-size: 14px;
+            }
+        }
+
+
 
     </style>
 </head>
@@ -2799,13 +3063,13 @@
                         </div>
                     </div>
                     
-                    <button class="search-button" onclick="searchData()">
+                    <button class="search-button" onclick="searchData()" id="searchButton">
                         Search
                     </button>
-                    <button class="clear-button" onclick="clearSearch()">
+                    <button class="clear-button" onclick="clearSearch()" id="clearButton">
                         Clear
                     </button>
-                    <button class="import-button" onclick="exportToExcel()">
+                    <button class="import-button" onclick="exportToExcel()" id="exportButton">
                         Export
                     </button>
                 </div>
@@ -2842,11 +3106,11 @@
             <div class="product-selection-header scroll-slide-left scroll-stagger-1">
                 <h2>IMPORT EXCEL FILES FTY CBD</h2>
             </div>
-            <div class="product-selection-buttons scroll-bounce-in scroll-stagger-2">
-                <button class="product-button beanie-button scroll-scale-up scroll-stagger-3" onclick="showTemplate('beanie'); scrollToSection('costBreakdown')">
+            <div class="product-selection-buttons scroll-bounce-in scroll-stagger-2" id="productSelectionButtons">
+                <button class="product-button beanie-button scroll-scale-up scroll-stagger-3" onclick="showTemplate('beanie'); scrollToSection('costBreakdown')" id="beanieButton">
                     Beanie
                 </button>
-                <button class="product-button ballcaps-button scroll-scale-up scroll-stagger-4" onclick="showTemplate('ballcaps'); scrollToSection('ballcapsBreakdown')">
+                <button class="product-button ballcaps-button scroll-scale-up scroll-stagger-4" onclick="showTemplate('ballcaps'); scrollToSection('ballcapsBreakdown')" id="ballcapsButton">
                     BallCaps
                 </button>
             </div>
@@ -3509,8 +3773,7 @@
                             <div class="drag-drop-text">drag & drop<br>or click to select</div>
                             <div class="file-formats">CSV • XLSX • XLSM</div>
                         </div>
-                    </div>
-                    
+                    </div>                   
                 </div>
             </div>
         </div>
@@ -12789,6 +13052,32 @@
         `;
         document.head.appendChild(style);
 
+        // Combined Help & Tutorial Functions
+        function toggleHelpTutorial() {
+            const helpPanel = document.getElementById('help-panel');
+            const helpOverlay = document.getElementById('help-overlay');
+            
+            if (helpPanel.classList.contains('show')) {
+                helpPanel.classList.remove('show');
+                helpOverlay.classList.remove('show');
+            } else {
+                helpPanel.classList.add('show');
+                helpOverlay.classList.add('show');
+            }
+        }
+
+        // Close help panel when pressing Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const helpPanel = document.getElementById('help-panel');
+                const helpOverlay = document.getElementById('help-overlay');
+                if (helpPanel.classList.contains('show')) {
+                    helpPanel.classList.remove('show');
+                    helpOverlay.classList.remove('show');
+                }
+            }
+        });
+
     </script>
 
     <!-- Floating Emergency Recovery Button -->
@@ -12929,6 +13218,94 @@
             <button class="filter-apply-btn" onclick="applyCustomerFilterPopup()">Apply</button>
         </div>
     </div>
+
+    <!-- Combined Help & Tutorial Button -->
+    <button class="help-tutorial-button" id="help-tutorial-button" onclick="toggleHelpTutorial()" title="Help & Quick Guide">
+        <span class="help-tutorial-icon">❓</span>
+        Help
+    </button>
+
+    <!-- Combined Help & Tutorial Panel -->
+    <div class="help-panel" id="help-panel">
+        <div class="help-panel-header">
+            <h2>Help & Quick Guide</h2>
+            <button class="help-close-btn" onclick="toggleHelpTutorial()">&times;</button>
+        </div>
+        <div class="help-panel-content">
+            <!-- Quick Guide Section -->
+            <div class="help-section quick-guide-section">
+                <h3>🚀 Quick Start Guide</h3>
+                <div class="quick-guide-grid">
+                    <div class="quick-guide-item">
+                        <h4>1. Choose Product Type</h4>
+                        <p>Select Beanie or BallCaps template</p>
+                    </div>
+                    <div class="quick-guide-item">
+                        <h4>2. Upload Excel Files</h4>
+                        <p>Use the templates to import data</p>
+                    </div>
+                    <div class="quick-guide-item">
+                        <h4>3. Search & Filter</h4>
+                        <p>Find specific records quickly</p>
+                    </div>
+                    <div class="quick-guide-item">
+                        <h4>4. Edit Data</h4>
+                        <p>Modify records directly in the table</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Help Sections -->
+            <div class="help-section">
+                <h3>📊 Data Management</h3>
+                <ul>
+                    <li><strong>Import Data:</strong> Use the product type buttons to upload Excel files with product data</li>
+                    <li><strong>View Data:</strong> All imported records are displayed in a comprehensive table format</li>
+                    <li><strong>Search & Filter:</strong> Use the search bar and filter buttons to find specific records</li>
+                </ul>
+            </div>
+            
+            <div class="help-section">
+                <h3>🔍 Search & Filter Features</h3>
+                <ul>
+                    <li><strong>Filter Type:</strong> Select Season, Customer, Style Number, or Style Name</li>
+                    <li><strong>Search Value:</strong> Enter your search term to find matching records</li>
+                    <li><strong>Clear Filters:</strong> Use the "Clear" button to reset all filters</li>
+                </ul>
+            </div>
+            
+            <div class="help-section">
+                <h3>✏️ Table Management</h3>
+                <ul>
+                    <li><strong>Edit Table:</strong> Click "Edit Table" to modify records directly</li>
+                    <li><strong>Add Records:</strong> Create new entries with real-time validation</li>
+                    <li><strong>Export Data:</strong> Download your data as Excel files</li>
+                </ul>
+            </div>
+            
+            <div class="help-section">
+                <h3>🎯 Tips & Tricks</h3>
+                <ul>
+                    <li>Use keyboard shortcuts: Escape to close panels</li>
+                    <li>Click on column headers to sort data</li>
+                    <li>All features have hover tooltips for guidance</li>
+                    <li>Check status indicators for real-time feedback</li>
+                </ul>
+            </div>
+            
+            <div class="help-section">
+                <h3>🆘 Troubleshooting</h3>
+                <ul>
+                    <li><strong>Import Issues:</strong> Ensure Excel files have proper headers and data format</li>
+                    <li><strong>Connection Problems:</strong> Check your internet connection and try refreshing</li>
+                    <li><strong>Data Not Loading:</strong> Use the refresh button or clear browser cache</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Panel Overlay -->
+    <div class="help-overlay" id="help-overlay" onclick="toggleHelpTutorial()"></div>
 
 </body>
 </html>
