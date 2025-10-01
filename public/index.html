@@ -8702,6 +8702,17 @@
                     // Prevent auto-loading of database data while processing Excel
                     window.isProcessingExcel = true;
                     
+                    console.log('🔄 Starting template population for type:', templateType);
+                    console.log('📊 Parsed data summary:', {
+                        customer: parsedData.customer,
+                        season: parsedData.season,
+                        styleNumber: parsedData.styleNumber,
+                        styleName: parsedData.styleName,
+                        costedQuantity: parsedData.costedQuantity,
+                        leadtime: parsedData.leadtime,
+                        notes: parsedData.notes ? parsedData.notes.substring(0, 50) + '...' : 'None'
+                    });
+                    
                     // Populate the appropriate template based on detected type
                     if (templateType === 'ballcaps') {
                         populateBallCapsTemplate(parsedData);
@@ -8714,6 +8725,12 @@
                     
                     // Store parsed data globally for saving to database
                     window.currentParsedData = parsedData;
+                    
+                    // Ensure interface is fully updated
+                    setTimeout(() => {
+                        console.log('✅ Template population completed for', templateType, 'template');
+                        console.log('✅ Interface should now show updated data for:', parsedData.customer, parsedData.styleNumber);
+                    }, 100);
                     window.currentTemplateType = templateType;
                     
                     // Reset Excel processing flag
@@ -8803,6 +8820,15 @@
                 }
             });
             
+            // Clear notes section
+            const notesSections = document.querySelectorAll('.notes-section');
+            notesSections.forEach(notesSection => {
+                const notesContent = notesSection.querySelector('.notes-content');
+                if (notesContent) {
+                    notesContent.innerHTML = '<div class="note-item">Add your costing notes here...</div><div class="note-item"></div><div class="note-item"></div><div class="note-item"></div><div class="note-item"></div><div class="note-item"></div><div class="note-item"></div><div class="pricing-tiers"><div class="pricing-item">Pricing tiers will appear here</div></div>';
+                }
+            });
+            
             // Clear totals
             const materialTotal = document.querySelector('.material-total');
             const factoryTotal = document.querySelector('.factory-total');
@@ -8824,28 +8850,64 @@
                 console.log('✅ Mapped costedQuantity to moq:', data.moq);
             }
             
-            // Fill Product Information
-            const productInfo = document.querySelector('.product-info');
-            if (productInfo) {
-                const infoRows = productInfo.querySelectorAll('.info-row');
-                const values = [data.customer, data.season, data.styleNumber, data.styleName, data.moq, data.leadtime];
-                const labels = ['customer', 'season', 'styleNumber', 'styleName', 'moq', 'leadtime'];
-                
-                console.log('- infoRows found:', infoRows.length);
-                console.log('- values:', values);
-                
-                infoRows.forEach((row, index) => {
-                    const valueSpan = row.querySelector('.info-value');
-                    const label = labels[index];
-                    const value = values[index];
-                    console.log(`- Processing ${label}:`, value);
-                    if (valueSpan && value) {
-                        valueSpan.textContent = value;
-                        console.log(`✅ Set ${label} to:`, value);
-                    } else {
-                        console.log(`❌ Skipped ${label} - no value or element`);
+            // Fill Product Information - Target the visible beanie template specifically
+            const visibleTemplate = document.querySelector('#costBreakdown:not([style*="display: none"]) .product-info');
+            if (!visibleTemplate) {
+                console.error('❌ No visible beanie template found for product info');
+                return;
+            }
+            
+            const infoRows = visibleTemplate.querySelectorAll('.info-row');
+            // For beanie template: Customer, Season, Style#, Style Name, Costed Quantity, Leadtime
+            const values = [data.customer, data.season, data.styleNumber, data.styleName, data.costedQuantity || data.moq, data.leadtime];
+            const labels = ['customer', 'season', 'styleNumber', 'styleName', 'costedQuantity', 'leadtime'];
+            
+            console.log('- infoRows found:', infoRows.length);
+            console.log('- values:', values);
+            
+            infoRows.forEach((row, index) => {
+                const valueSpan = row.querySelector('.info-value');
+                const label = labels[index];
+                const value = values[index];
+                console.log(`- Processing ${label}:`, value);
+                if (valueSpan && value) {
+                    valueSpan.textContent = value;
+                    console.log(`✅ Set ${label} to:`, value);
+                } else {
+                    console.log(`❌ Skipped ${label} - no value or element`);
+                }
+            });
+            
+            // Fill Notes section
+            if (data.notes) {
+                const notesSection = visibleTemplate.parentElement.querySelector('.notes-section');
+                if (notesSection) {
+                    const notesContent = notesSection.querySelector('.notes-content');
+                    if (notesContent) {
+                        // Clear existing content
+                        notesContent.innerHTML = '';
+                        
+                        // Split notes by lines and create note items
+                        const notesLines = data.notes.split('\n').filter(line => line.trim());
+                        
+                        notesLines.forEach(line => {
+                            const noteItem = document.createElement('div');
+                            noteItem.className = 'note-item';
+                            noteItem.textContent = line.trim();
+                            notesContent.appendChild(noteItem);
+                        });
+                        
+                        // Add pricing tiers section if it doesn't exist
+                        if (!notesContent.querySelector('.pricing-tiers')) {
+                            const pricingTiers = document.createElement('div');
+                            pricingTiers.className = 'pricing-tiers';
+                            pricingTiers.innerHTML = '<div class="pricing-item">Pricing tiers will appear here</div>';
+                            notesContent.appendChild(pricingTiers);
+                        }
+                        
+                        console.log('✅ Notes populated with', notesLines.length, 'lines');
                     }
-                });
+                }
             }
             
             // Fill YARN section (map to FABRIC for beanie template)
@@ -10789,9 +10851,40 @@
                         });
                         
                         const result = [];
-                        // Process only first sheet for speed (can be changed)
-                        const sheetName = workbook.SheetNames[0];
-                        const worksheet = workbook.Sheets[sheetName];
+                        
+                        // Debug: Show all available sheets
+                        console.log('📋 Available sheets in Excel file:');
+                        workbook.SheetNames.forEach((name, index) => {
+                            console.log(`  Sheet ${index}: "${name}"`);
+                        });
+                        
+                        // Find the first visible/non-hidden sheet
+                        let targetSheetName = null;
+                        let targetSheetIndex = 0;
+                        
+                        for (let i = 0; i < workbook.SheetNames.length; i++) {
+                            const sheetName = workbook.SheetNames[i];
+                            const worksheet = workbook.Sheets[sheetName];
+                            
+                            // Check if sheet is visible (not hidden)
+                            if (worksheet && !worksheet['!hidden']) {
+                                targetSheetName = sheetName;
+                                targetSheetIndex = i;
+                                console.log(`✅ Selected visible sheet: "${sheetName}" (index ${i})`);
+                                break;
+                            } else {
+                                console.log(`⚠️ Skipping hidden sheet: "${sheetName}"`);
+                            }
+                        }
+                        
+                        // Fallback to first sheet if no visible sheet found
+                        if (!targetSheetName) {
+                            targetSheetName = workbook.SheetNames[0];
+                            targetSheetIndex = 0;
+                            console.log(`⚠️ No visible sheet found, using first sheet: "${targetSheetName}"`);
+                        }
+                        
+                        const worksheet = workbook.Sheets[targetSheetName];
                         
                         // ULTRA FAST conversion with minimal options
                         const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
@@ -11486,8 +11579,35 @@
                                     throw new Error('No worksheets found in the Excel file');
                                 }
                                 
-                                const sheetName = workbook.SheetNames[0];
-                                const worksheet = workbook.Sheets[sheetName];
+                                // Debug: Show all available sheets
+                                console.log('📋 Available sheets in Excel file (enhanced import):');
+                                workbook.SheetNames.forEach((name, index) => {
+                                    console.log(`  Sheet ${index}: "${name}"`);
+                                });
+                                
+                                // Find the first visible/non-hidden sheet
+                                let targetSheetName = null;
+                                for (let i = 0; i < workbook.SheetNames.length; i++) {
+                                    const sheetName = workbook.SheetNames[i];
+                                    const worksheet = workbook.Sheets[sheetName];
+                                    
+                                    // Check if sheet is visible (not hidden)
+                                    if (worksheet && !worksheet['!hidden']) {
+                                        targetSheetName = sheetName;
+                                        console.log(`✅ Selected visible sheet: "${sheetName}" (index ${i})`);
+                                        break;
+                                    } else {
+                                        console.log(`⚠️ Skipping hidden sheet: "${sheetName}"`);
+                                    }
+                                }
+                                
+                                // Fallback to first sheet if no visible sheet found
+                                if (!targetSheetName) {
+                                    targetSheetName = workbook.SheetNames[0];
+                                    console.log(`⚠️ No visible sheet found, using first sheet: "${targetSheetName}"`);
+                                }
+                                
+                                const worksheet = workbook.Sheets[targetSheetName];
                                 
                                 if (!worksheet) {
                                     throw new Error('Could not read the first worksheet');
@@ -11502,6 +11622,10 @@
                                 });
                                 
                                 console.log(`Excel file processed: ${jsonData.length} rows, ${jsonData[0] ? jsonData[0].length : 0} columns`);
+                                console.log('📊 First few rows from selected sheet:');
+                                jsonData.slice(0, 5).forEach((row, index) => {
+                                    console.log(`  Row ${index}:`, row);
+                                });
                                 resolve(jsonData);
                                 
                             } catch (xlsxError) {
@@ -12167,11 +12291,20 @@
             console.log('- Packaging items:', parsedData.packaging?.length || 0);
             console.log('- Overhead items:', parsedData.overhead?.length || 0);
             
-            // Populate basic info
-            const infoValues = document.querySelectorAll('#ballcapsBreakdown .info-value');
+            // Populate basic info - Target the visible ballcaps template specifically
+            const visibleTemplate = document.querySelector('#ballcapsBreakdown:not([style*="display: none"]) .product-info');
+            if (!visibleTemplate) {
+                console.error('❌ No visible ballcaps template found for product info');
+                return;
+            }
+            
+            const infoRows = visibleTemplate.querySelectorAll('.info-row');
+            // For ballcaps template: Customer, Season, Style#, Style Name, MOQ, Leadtime
+            const values = [parsedData.customer, parsedData.season, parsedData.styleNumber, parsedData.styleName, parsedData.moq || parsedData.costedQuantity, parsedData.leadtime];
             const labels = ['customer', 'season', 'styleNumber', 'styleName', 'moq', 'leadtime'];
+            
             console.log('🔍 Debugging MOQ population:');
-            console.log('- infoValues found:', infoValues.length);
+            console.log('- infoRows found:', infoRows.length);
             console.log('- labels:', labels);
             console.log('- parsedData.moq:', parsedData.moq);
             console.log('- parsedData.costedQuantity:', parsedData.costedQuantity);
@@ -12413,6 +12546,38 @@
                         cells[0].textContent = 'SUB TOTAL';
                         cells[2].textContent = `$${overheadTotal.toFixed(2)}`;
                         console.log('✅ Calculated OVERHEAD subtotal:', overheadTotal.toFixed(2));
+                    }
+                }
+            }
+            
+            // Populate Notes section
+            if (parsedData.notes) {
+                const notesSection = visibleTemplate.parentElement.querySelector('.notes-section');
+                if (notesSection) {
+                    const notesContent = notesSection.querySelector('.notes-content');
+                    if (notesContent) {
+                        // Clear existing content
+                        notesContent.innerHTML = '';
+                        
+                        // Split notes by lines and create note items
+                        const notesLines = parsedData.notes.split('\n').filter(line => line.trim());
+                        
+                        notesLines.forEach(line => {
+                            const noteItem = document.createElement('div');
+                            noteItem.className = 'note-item';
+                            noteItem.textContent = line.trim();
+                            notesContent.appendChild(noteItem);
+                        });
+                        
+                        // Add pricing tiers section if it doesn't exist
+                        if (!notesContent.querySelector('.pricing-tiers')) {
+                            const pricingTiers = document.createElement('div');
+                            pricingTiers.className = 'pricing-tiers';
+                            pricingTiers.innerHTML = '<div class="pricing-item">Pricing tiers will appear here</div>';
+                            notesContent.appendChild(pricingTiers);
+                        }
+                        
+                        console.log('✅ BallCaps Notes populated with', notesLines.length, 'lines');
                     }
                 }
             }

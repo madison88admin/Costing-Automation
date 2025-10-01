@@ -67,6 +67,7 @@ var TNFBeanieImporter = class TNFBeanieImporter {
             description: "",
             costedQuantity: "",
             leadtime: "",
+            notes: "",
             
             // Beanie specific sections - match the actual Excel structure
             yarn: [],
@@ -106,35 +107,73 @@ var TNFBeanieImporter = class TNFBeanieImporter {
             
             console.log('🔍 All data string length:', allDataString.length);
             console.log('🔍 First 500 chars of data:', allDataString.substring(0, 500));
+            console.log('🔍 Full data array for debugging:', data);
+            console.log('🔍 Looking for Customer, Season, Style# patterns in data...');
+            
+            // Debug: Show all rows that contain "Customer", "Season", "Style#" etc.
+            data.forEach((row, rowIndex) => {
+                if (row && row.length > 0) {
+                    const rowString = row.join(' | ');
+                    if (rowString.toLowerCase().includes('customer') || 
+                        rowString.toLowerCase().includes('season') || 
+                        rowString.toLowerCase().includes('style') ||
+                        rowString.toLowerCase().includes('notes')) {
+                        console.log(`🔍 Row ${rowIndex}:`, rowString);
+                    }
+                }
+            });
             
             // Extract actual values from the Excel data structure
             // Look for the actual values in the data, not force specific ones
+            console.log('🔍 Starting extraction with enhanced pattern matching...');
+            
             for (let i = 0; i < data.length; i++) {
                 const row = data[i];
                 if (!row) continue;
                 
-                // Look for Season pattern in the data
+                // Debug: Show the first few rows to understand structure
+                if (i < 10) {
+                    console.log(`🔍 Row ${i}:`, row);
+                }
+                
+                // Look for basic info patterns in the data - try multiple patterns
                 for (let j = 0; j < row.length; j++) {
                     const cell = String(row[j] || '').trim();
-                    if (cell.includes('Season：') && j + 1 < row.length && row[j + 1]) {
+                    
+                    // Customer extraction - try multiple patterns
+                    if ((cell.includes('Customer:') || cell.includes('Customer') || cell === 'Customer') && j + 1 < row.length && row[j + 1]) {
+                        result.customer = String(row[j + 1]).trim();
+                        console.log('✅ Customer found:', result.customer, 'from row', i, 'column', j+1);
+                    }
+                    
+                    // Season extraction - try multiple patterns
+                    if ((cell.includes('Season:') || cell.includes('Season') || cell === 'Season') && j + 1 < row.length && row[j + 1]) {
                         result.season = String(row[j + 1]).trim();
-                        console.log('✅ Season found:', result.season);
+                        console.log('✅ Season found:', result.season, 'from row', i, 'column', j+1);
                     }
-                    if (cell.includes('Style#:') && j + 1 < row.length && row[j + 1]) {
+                    
+                    // Style# extraction - be more specific to avoid confusion with Style Name
+                    if ((cell.includes('Style#:') || cell.includes('Style#') || cell === 'Style#') && j + 1 < row.length && row[j + 1]) {
                         result.styleNumber = String(row[j + 1]).trim();
-                        console.log('✅ Style# found:', result.styleNumber);
+                        console.log('✅ Style# found:', result.styleNumber, 'from row', i, 'column', j+1);
                     }
-                    if (cell.includes('Style Name:') && j + 1 < row.length && row[j + 1]) {
+                    
+                    // Style Name extraction - try multiple patterns
+                    if ((cell.includes('Style Name:') || cell.includes('Style Name') || cell === 'Style Name') && j + 1 < row.length && row[j + 1]) {
                         result.styleName = String(row[j + 1]).trim();
-                        console.log('✅ Style Name found:', result.styleName);
+                        console.log('✅ Style Name found:', result.styleName, 'from row', i, 'column', j+1);
                     }
-                    if (cell.includes('Costed Quantity:') && j + 1 < row.length && row[j + 1]) {
+                    
+                    // Costed Quantity extraction - try multiple patterns
+                    if ((cell.includes('Costed Quantity:') || cell.includes('Costed Quantity') || cell === 'Costed Quantity') && j + 1 < row.length && row[j + 1]) {
                         result.costedQuantity = String(row[j + 1]).trim();
-                        console.log('✅ Costed Quantity found:', result.costedQuantity);
+                        console.log('✅ Costed Quantity found:', result.costedQuantity, 'from row', i, 'column', j+1);
                     }
-                    if (cell.includes('Leadtime:') && j + 1 < row.length && row[j + 1]) {
+                    
+                    // Leadtime extraction - try multiple patterns
+                    if ((cell.includes('Leadtime:') || cell.includes('Leadtime') || cell === 'Leadtime') && j + 1 < row.length && row[j + 1]) {
                         result.leadtime = String(row[j + 1]).trim();
-                        console.log('✅ Leadtime found:', result.leadtime);
+                        console.log('✅ Leadtime found:', result.leadtime, 'from row', i, 'column', j+1);
                     }
                 }
             }
@@ -495,6 +534,111 @@ var TNFBeanieImporter = class TNFBeanieImporter {
                 }
             }
 
+            // Extract Notes section - look for rows that contain notes information
+            console.log('🔍 Extracting Notes section with enhanced detection...');
+            let notesContent = [];
+            let inNotesSection = false;
+            
+            for (let i = 0; i < data.length; i++) {
+                const row = data[i];
+                if (!row || row.length === 0) continue;
+                
+                const firstCell = String(row[0] || '').trim();
+                const allRowContent = row.filter(cell => cell && String(cell).trim() !== '').join(' ');
+                
+                // Look for Notes section header - be more specific to avoid false positives
+                if ((firstCell.toLowerCase() === 'notes' || firstCell.toLowerCase() === 'note') ||
+                    (allRowContent.toLowerCase() === 'notes' || allRowContent.toLowerCase() === 'note')) {
+                    inNotesSection = true;
+                    console.log('✅ Found Notes section header at row', i, ':', firstCell);
+                    continue;
+                }
+                
+                // If we're in notes section, collect content
+                if (inNotesSection) {
+                    // Stop if we hit another major section or knitting machine data
+                    if (firstCell.includes('FABRIC') || firstCell.includes('YARN') || firstCell.includes('TRIM') || 
+                        firstCell.includes('OPERATIONS') || firstCell.includes('PACKAGING') || firstCell.includes('OVERHEAD') ||
+                        firstCell.includes('TOTAL') || firstCell.includes('SUBTOTAL') || firstCell.includes('KNITTING') ||
+                        allRowContent.includes('Flat-') || allRowContent.includes('Circular') || allRowContent.includes('Scripto') ||
+                        allRowContent.includes('Automatic') || allRowContent.includes('Jacquard')) {
+                        console.log('🛑 Stopping notes extraction at row', i, 'due to section/machine data:', firstCell || allRowContent);
+                        break;
+                    }
+                    
+                    // Collect non-empty content, but skip machine/technical data
+                    if (allRowContent.trim() && !allRowContent.match(/^[A-Za-z-]+ \d+ \d+\.?\d* \d+\.?\d*$/)) {
+                        notesContent.push(allRowContent.trim());
+                        console.log('📝 Added to notes:', allRowContent.trim());
+                    } else if (allRowContent.trim()) {
+                        console.log('⚠️ Skipped machine/technical data:', allRowContent.trim());
+                    }
+                }
+            }
+            
+            // Alternative notes detection - look for multi-line notes content in single cells
+            if (notesContent.length === 0) {
+                console.log('🔍 Trying alternative notes detection - looking for multi-line notes content...');
+                for (let i = 0; i < data.length; i++) {
+                    const row = data[i];
+                    if (!row || row.length === 0) continue;
+                    
+                    // Check each cell in the row for multi-line notes content
+                    for (let j = 0; j < row.length; j++) {
+                        const cellContent = String(row[j] || '').trim();
+                        
+                        // Look for cells that contain multiple notes lines (contains both (UJ-F19-011) and pricing info)
+                        if (cellContent.includes('(UJ-F19-011)') && 
+                            (cellContent.includes('MCQ') || cellContent.includes('$') || cellContent.includes('pcs'))) {
+                            
+                            console.log('📝 Found multi-line notes content in cell:', j, 'of row:', i);
+                            console.log('📝 Raw content:', cellContent);
+                            
+                            // Split the content by newlines and filter out empty lines
+                            const lines = cellContent.split('\n').filter(line => line.trim() !== '');
+                            
+                            // Extract only the actual notes content (skip headers and technical data)
+                            lines.forEach(line => {
+                                const cleanLine = line.trim();
+                                // Look for actual notes patterns
+                                if (cleanLine.includes('(UJ-F19-011)') || 
+                                    cleanLine.includes('MCQ') || 
+                                    cleanLine.includes('surcharge') ||
+                                    cleanLine.includes('HYDD') ||
+                                    cleanLine.includes('RWS TC') ||
+                                    cleanLine.includes('pcs $') ||
+                                    cleanLine.includes('% = ') ||
+                                    (cleanLine.includes('kg') && cleanLine.includes('pcs'))) {
+                                    
+                                    notesContent.push(cleanLine);
+                                    console.log('📝 Added notes line:', cleanLine);
+                                }
+                            });
+                            
+                            break; // Found notes, stop looking in this row
+                        }
+                    }
+                }
+            }
+            
+            // Join all notes content
+            if (notesContent.length > 0) {
+                result.notes = notesContent.join('\n');
+                console.log('✅ Notes extracted (', notesContent.length, 'lines):', result.notes.substring(0, 200) + '...');
+            } else {
+                console.log('⚠️ No notes section found - checking if data structure is different');
+                // Debug: Show all rows that might contain notes
+                for (let i = 0; i < Math.min(20, data.length); i++) {
+                    const row = data[i];
+                    if (row && row.length > 0) {
+                        const rowContent = row.join(' | ');
+                        if (rowContent.includes('$') || rowContent.includes('MCQ') || rowContent.includes('pcs')) {
+                            console.log(`🔍 Potential notes row ${i}:`, rowContent);
+                        }
+                    }
+                }
+            }
+
         } catch (error) {
             console.error('❌ Error in parsing:', error);
             // Re-throw the error so it can be caught by the calling code
@@ -508,6 +652,7 @@ var TNFBeanieImporter = class TNFBeanieImporter {
         console.log('Style Name:', result.styleName);
         console.log('Costed Quantity:', result.costedQuantity);
         console.log('Leadtime:', result.leadtime);
+        console.log('Notes:', result.notes ? result.notes.substring(0, 100) + '...' : 'None');
         console.log('YARN items:', result.yarn.length, result.yarn);
         console.log('FABRIC items:', result.fabric.length, result.fabric);
         console.log('TRIM items:', result.trim.length, result.trim);
