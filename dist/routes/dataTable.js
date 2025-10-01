@@ -78,7 +78,7 @@ router.post('/insert/:connectionId', async (req, res) => {
 router.put('/update/:connectionId', async (req, res) => {
     try {
         const { connectionId } = req.params;
-        const { table, id, data } = req.body;
+        const { table, id, idField = 'id', data } = req.body;
         if (!table || !id || !data) {
             return res.status(400).json({ error: 'Table name, ID, and data are required' });
         }
@@ -93,7 +93,7 @@ router.put('/update/:connectionId', async (req, res) => {
         else {
             dataTableService = new dataTableService_1.DataTableService(connection);
         }
-        const result = await dataTableService.updateRecord(table, id, data);
+        const result = await updateRecordWithCustomId(dataTableService, table, id, idField, data);
         return res.json({ success: true, data: result });
     }
     catch (error) {
@@ -104,6 +104,34 @@ router.put('/update/:connectionId', async (req, res) => {
         });
     }
 });
+async function updateRecordWithCustomId(service, table, id, idField, data) {
+    if (service instanceof supabaseService_1.SupabaseService) {
+        const supabaseUrl = process.env.SUPABASE_URL;
+        const supabaseKey = process.env.SUPABASE_ANON_KEY;
+        if (!supabaseUrl || !supabaseKey) {
+            throw new Error('Supabase configuration missing');
+        }
+        const response = await fetch(`${supabaseUrl}/rest/v1/${table}?${idField}=eq.${id}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'apikey': supabaseKey,
+                'Authorization': `Bearer ${supabaseKey}`,
+                'Prefer': 'return=representation'
+            },
+            body: JSON.stringify(data)
+        });
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Supabase update failed (${response.status}): ${errorText}`);
+        }
+        const result = await response.json();
+        return result[0];
+    }
+    else {
+        return await service.updateRecord(table, id, data);
+    }
+}
 router.delete('/delete/:connectionId', async (req, res) => {
     try {
         const { connectionId } = req.params;

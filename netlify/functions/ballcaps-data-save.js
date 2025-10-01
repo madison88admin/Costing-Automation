@@ -263,22 +263,155 @@ exports.handler = async (event, context) => {
     }
     console.log('Insert data prepared:', JSON.stringify(insertData, null, 2));
 
-    // Insert data into Supabase
-    const { data: result, error: insertError } = await supabase
+    // Check for existing records before inserting
+    console.log('Checking for existing ballcaps records...');
+    
+    // Clean the search criteria (trim whitespace and normalize)
+    const cleanCustomer = (insertData.customer || '').toString().trim();
+    const cleanSeason = (insertData.season || '').toString().trim();
+    const cleanStyleNumber = (insertData.style_number || '').toString().trim();
+    
+    console.log('Cleaned search criteria:', {
+      customer: cleanCustomer,
+      season: cleanSeason,
+      style_number: cleanStyleNumber
+    });
+    
+    // Try multiple approaches to find duplicates
+    let existingRecords = [];
+    let checkError = null;
+    
+    // First try exact match with cleaned data
+    const { data: exactMatch, error: exactError } = await supabase
       .from(finalTableName)
-      .insert([insertData])
-      .select();
+      .select('id, customer, season, style_number, style_name, created_at')
+      .eq('customer', cleanCustomer)
+      .eq('season', cleanSeason)
+      .eq('style_number', cleanStyleNumber);
+    
+    if (exactError || !exactMatch || exactMatch.length === 0) {
+      console.log('Exact match failed, trying case-insensitive...');
+      // Try case-insensitive match
+      const { data: caseInsensitive, error: caseError } = await supabase
+        .from(finalTableName)
+        .select('id, customer, season, style_number, style_name, created_at')
+        .ilike('customer', cleanCustomer)
+        .ilike('season', cleanSeason)
+        .ilike('style_number', cleanStyleNumber);
+      
+      if (caseError || !caseInsensitive || caseInsensitive.length === 0) {
+        console.log('Case-insensitive match failed, trying partial match...');
+        // Try partial match
+        const { data: partialMatch, error: partialError } = await supabase
+          .from(finalTableName)
+          .select('id, customer, season, style_number, style_name, created_at')
+          .ilike('customer', `%${cleanCustomer}%`)
+          .ilike('season', `%${cleanSeason}%`)
+          .ilike('style_number', `%${cleanStyleNumber}%`);
+        
+        existingRecords = partialMatch || [];
+        checkError = partialError;
+      } else {
+        existingRecords = caseInsensitive || [];
+        checkError = caseError;
+      }
+    } else {
+      existingRecords = exactMatch || [];
+      checkError = exactError;
+    }
+    
+    console.log('Duplicate check result:', {
+      existingRecords: existingRecords,
+      count: existingRecords ? existingRecords.length : 0,
+      error: checkError
+    });
 
-    if (insertError) {
-      console.error('Supabase insert error:', insertError);
+    if (checkError) {
+      console.error('Error checking for existing records:', checkError);
       return {
         statusCode: 500,
         headers,
         body: JSON.stringify({
           success: false,
-          error: 'Failed to save data to database'
+          error: `Failed to check for existing records: ${checkError.message}`
         })
       };
+    }
+
+    let result;
+    let action = 'inserted';
+
+    // If no duplicates found with main criteria, try a more lenient approach
+    if (!existingRecords || existingRecords.length === 0) {
+      console.log('No duplicates found with main criteria, trying lenient matching...');
+      
+      // Try matching just customer and season (more lenient)
+      const { data: lenientMatch, error: lenientError } = await supabase
+        .from(finalTableName)
+        .select('id, customer, season, style_number, style_name, created_at')
+        .ilike('customer', `%${cleanCustomer}%`)
+        .ilike('season', `%${cleanSeason}%`);
+      
+      if (lenientMatch && lenientMatch.length > 0) {
+        console.log(`Found ${lenientMatch.length} potential duplicate(s) with lenient matching`);
+        existingRecords = lenientMatch;
+      }
+    }
+
+    if (existingRecords && existingRecords.length > 0) {
+      // Duplicate found - update existing record
+      console.log(`Found ${existingRecords.length} existing ballcaps record(s), updating...`);
+      const existingRecord = existingRecords[0];
+      
+      // Update the existing record
+      const { data: updateResult, error: updateError } = await supabase
+        .from(finalTableName)
+        .update({
+          ...insertData,
+          id: existingRecord.id, // Keep the original ID
+          updated_at: new Date().toISOString(),
+          remarks: `Ballcaps data updated on ${new Date().toISOString()} (was: ${existingRecord.created_at})`
+        })
+        .eq('id', existingRecord.id)
+        .select();
+
+      if (updateError) {
+        console.error('Supabase update error:', updateError);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            success: false,
+            error: `Failed to update existing record: ${updateError.message}`,
+            details: updateError
+          })
+        };
+      }
+
+      result = updateResult;
+      action = 'updated';
+    } else {
+      // No duplicate found - insert new record
+      console.log('No existing ballcaps records found, inserting new record...');
+      const { data: insertResult, error: insertError } = await supabase
+        .from(finalTableName)
+        .insert([insertData])
+        .select();
+
+      if (insertError) {
+        console.error('Supabase insert error:', insertError);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            success: false,
+            error: `Failed to save data to database: ${insertError.message}`,
+            details: insertError
+          })
+        };
+      }
+
+      result = insertResult;
     }
 
     return {
@@ -286,8 +419,10 @@ exports.handler = async (event, context) => {
       headers,
       body: JSON.stringify({
         success: true,
-        message: 'Ballcaps data saved successfully to databank',
-        data: result
+        message: `Ballcaps data ${action} successfully`,
+        action: action,
+        data: result,
+        duplicateFound: action === 'updated'
       })
     };
 

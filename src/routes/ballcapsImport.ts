@@ -42,20 +42,20 @@ router.post('/save', async (req: Request, res: Response) => {
     const result = await ballcapsService.saveBallCapsCostData(excelData);
 
     if (result.success) {
-      res.json({
+      return res.json({
         success: true,
         message: result.message,
         data: result.data
       });
     } else {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         error: result.message
       });
     }
   } catch (error) {
     logger.error('Error saving ballcaps cost data:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to save ballcaps cost data',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -93,13 +93,13 @@ router.get('/:costId', async (req: Request, res: Response) => {
     // Get the ballcaps cost data
     const data = await ballcapsService.getBallCapsCostData(parseInt(costId));
 
-    res.json({
+    return res.json({
       success: true,
       data
     });
   } catch (error) {
     logger.error('Error getting ballcaps cost data:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to get ballcaps cost data',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -136,13 +136,13 @@ router.get('/', async (req: Request, res: Response) => {
     // Get all ballcaps cost data
     const data = await ballcapsService.getAllBallCapsCostData();
 
-    res.json({
+    return res.json({
       success: true,
       data
     });
   } catch (error) {
     logger.error('Error getting all ballcaps cost data:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to get ballcaps cost data',
       message: error instanceof Error ? error.message : 'Unknown error'

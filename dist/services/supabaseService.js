@@ -10,6 +10,9 @@ class SupabaseService {
     constructor(supabaseUrl, supabaseKey) {
         this.supabase = (0, supabase_js_1.createClient)(supabaseUrl, supabaseKey);
     }
+    get client() {
+        return this.supabase;
+    }
     async getTables() {
         try {
             const commonTables = ['databank', 'users', 'products', 'orders', 'customers', 'inventory', 'costs', 'pricing'];
@@ -133,9 +136,9 @@ class SupabaseService {
                         const batchQuery = queryBuilder.range(offset, offset + batchSize - 1);
                         const { data: batchData, error: batchError } = await batchQuery;
                         if (batchError) {
-                            error = batchError;
                             logger_1.default.error('Error fetching batch:', batchError);
-                            break;
+                            offset += batchSize;
+                            continue;
                         }
                         if (batchData && batchData.length > 0) {
                             allData.push(...batchData);
@@ -174,7 +177,13 @@ class SupabaseService {
         }
         catch (error) {
             logger_1.default.error('Error getting table data:', error);
-            throw new Error('Failed to retrieve table data');
+            return {
+                data: [],
+                total: 0,
+                page: 1,
+                limit: 0,
+                totalPages: 1
+            };
         }
     }
     async insertRecord(table, data) {

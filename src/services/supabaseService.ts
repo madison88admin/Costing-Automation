@@ -9,6 +9,10 @@ export class SupabaseService {
     this.supabase = createClient(supabaseUrl, supabaseKey);
   }
 
+  get client(): SupabaseClient {
+    return this.supabase;
+  }
+
   async getTables(): Promise<string[]> {
     try {
       // For Supabase, we'll use a different approach
@@ -210,12 +214,12 @@ export class SupabaseService {
       };
     } catch (error) {
       logger.error('Error getting table data:', error);
-      // Return partial data if available, don't fail completely
+      // Return empty data on error
       return {
-        data: allData || [],
-        total: allData?.length || 0,
+        data: [],
+        total: 0,
         page: 1,
-        limit: allData?.length || 0,
+        limit: 0,
         totalPages: 1
       };
     }
