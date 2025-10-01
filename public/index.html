@@ -1602,6 +1602,68 @@
             opacity: 0.8;
         }
 
+        .drag-drop-options {
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .drag-drop-options.show {
+            display: flex;
+        }
+
+        .option-button {
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(139, 195, 74, 0.1) 100%);
+            border: 2px solid rgba(76, 175, 80, 0.3);
+            border-radius: 12px;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 11px;
+            font-weight: 600;
+            color: #2E7D32;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-button:hover {
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.2) 0%, rgba(139, 195, 74, 0.2) 100%);
+            border-color: rgba(76, 175, 80, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+            color: #1B5E20;
+        }
+
+        .option-button.clear {
+            background: linear-gradient(135deg, rgba(255, 87, 34, 0.1) 0%, rgba(255, 138, 101, 0.1) 100%);
+            border-color: rgba(255, 87, 34, 0.3);
+            color: #E65100;
+        }
+
+        .option-button.clear:hover {
+            background: linear-gradient(135deg, rgba(255, 87, 34, 0.2) 0%, rgba(255, 138, 101, 0.2) 100%);
+            border-color: rgba(255, 87, 34, 0.5);
+            box-shadow: 0 4px 15px rgba(255, 87, 34, 0.3);
+            color: #D84315;
+        }
+
+        .drag-drop-area.has-file {
+            background: linear-gradient(135deg, rgba(232, 245, 232, 0.4) 0%, rgba(200, 230, 201, 0.4) 100%);
+            border-color: rgba(76, 175, 80, 0.7);
+        }
+
+        .drag-drop-area.has-file .drag-drop-icon {
+            opacity: 0.7;
+        }
+
+        .drag-drop-area.has-file .drag-drop-text {
+            color: #2E7D32;
+        }
+
+
         .import-template-button {
             background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
             color: white;
@@ -3488,6 +3550,10 @@
                             <div class="drag-drop-text">drag & drop<br>or click to select</div>
                             <div class="file-formats">CSV • XLSX • XLSM</div>
                         </div>
+                        <div class="drag-drop-options">
+                            <div class="option-button" onclick="uploadAnotherFile()">📁 Upload Another File</div>
+                            <div class="option-button clear" onclick="clearForm()">🗑️ Clear Form</div>
+                        </div>
                     </div>
                     
                 </div>
@@ -3828,6 +3894,10 @@
                             <div class="drag-drop-icon">📄</div>
                             <div class="drag-drop-text">drag & drop<br>or click to select</div>
                             <div class="file-formats">CSV • XLSX • XLSM</div>
+                        </div>
+                        <div class="drag-drop-options">
+                            <div class="option-button" onclick="uploadAnotherFile()">📁 Upload Another File</div>
+                            <div class="option-button clear" onclick="clearForm()">🗑️ Clear Form</div>
                         </div>
                     </div>
                 </div>
@@ -8358,14 +8428,14 @@
                     e.stopPropagation();
                     
                     // Test if click is working
-                    alert('Drag & drop area clicked! This means the click handler is working.');
+                    console.log('Drag & drop area clicked! This means the click handler is working.');
                     
                     const fileInput = document.getElementById('hiddenFileInput');
                     if (fileInput) {
                         fileInput.click();
                     } else {
                         console.error('File input not found');
-                        alert('File input not found!');
+                        console.log('File input not found!');
                     }
                 });
                 
@@ -8410,7 +8480,7 @@
                 
                 if (!allowedTypes.includes(fileExtension)) {
                     console.error('Invalid file type:', fileExtension);
-                    alert('Please select a valid file type (.xlsx, .xls, .xlsm, .csv)');
+                    console.log('Please select a valid file type (.xlsx, .xls, .xlsm, .csv)');
                     return;
                 }
                 
@@ -8730,6 +8800,9 @@
                     setTimeout(() => {
                         console.log('✅ Template population completed for', templateType, 'template');
                         console.log('✅ Interface should now show updated data for:', parsedData.customer, parsedData.styleNumber);
+                        
+                        // Show drag-drop options after successful import
+                        showDragDropOptions();
                     }, 100);
                     window.currentTemplateType = templateType;
                     
@@ -8805,12 +8878,13 @@
                 });
             }
             
-            // Clear all cost sections
+            // Clear all cost sections (including subtotals and totals)
             const sections = ['YARN', 'FABRIC', 'EMBROIDERY', 'TRIM', 'KNITTING', 'OPERATIONS', 'PACKAGING', 'OVERHEAD/ PROFIT'];
             sections.forEach(sectionName => {
                 const section = document.querySelector(`[data-section="${sectionName}"]`);
                 if (section) {
-                    const rows = section.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                    // Clear all rows including subtotals
+                    const rows = section.querySelectorAll('.cost-row:not(.header-row)');
                     rows.forEach(row => {
                         const cells = row.querySelectorAll('.cost-cell');
                         cells.forEach(cell => {
@@ -8818,6 +8892,18 @@
                         });
                     });
                 }
+            });
+            
+            // Clear material and submaterials total
+            const totalMaterialCost = document.querySelector('.total-material-cost .total-value');
+            if (totalMaterialCost) totalMaterialCost.textContent = '$0.00';
+            
+            // Clear all other totals
+            const materialTotal = document.querySelector('.material-total');
+            const factoryTotal = document.querySelector('.factory-total');
+            const allTotalValues = document.querySelectorAll('.total-value, .material-total, .factory-total');
+            allTotalValues.forEach(total => {
+                if (total) total.textContent = '';
             });
             
             // Clear notes section
@@ -8829,13 +8915,71 @@
                 }
             });
             
-            // Clear totals
-            const materialTotal = document.querySelector('.material-total');
-            const factoryTotal = document.querySelector('.factory-total');
-            if (materialTotal) materialTotal.textContent = '';
-            if (factoryTotal) factoryTotal.textContent = '';
+            // Clear any calculated totals or subtotals
+            const subtotalRows = document.querySelectorAll('.subtotal-row .cost-cell');
+            subtotalRows.forEach(cell => {
+                cell.textContent = '';
+            });
             
-            console.log('✅ Database data cleared from interface');
+            console.log('✅ All extracted data cleared from interface');
+        }
+
+        // Dynamic drag-drop functionality
+        function showDragDropOptions() {
+            console.log('📁 Showing drag-drop options after file processing...');
+            const dragDropAreas = document.querySelectorAll('.drag-drop-area');
+            dragDropAreas.forEach(area => {
+                area.classList.add('has-file');
+                const options = area.querySelector('.drag-drop-options');
+                if (options) {
+                    options.classList.add('show');
+                }
+            });
+        }
+
+        function hideDragDropOptions() {
+            console.log('📁 Hiding drag-drop options...');
+            const dragDropAreas = document.querySelectorAll('.drag-drop-area');
+            dragDropAreas.forEach(area => {
+                area.classList.remove('has-file');
+                const options = area.querySelector('.drag-drop-options');
+                if (options) {
+                    options.classList.remove('show');
+                }
+            });
+        }
+
+        function uploadAnotherFile() {
+            console.log('📁 Upload another file clicked...');
+            const fileInput = document.getElementById('fileInput');
+            if (fileInput) {
+                fileInput.click();
+            }
+        }
+
+        function clearForm() {
+            console.log('🗑️ Clear form clicked...');
+            
+            // Clear all extracted data
+            clearDatabaseData();
+            
+            // Hide drag-drop options
+            hideDragDropOptions();
+            
+            // Reset file input
+            const fileInput = document.getElementById('fileInput');
+            if (fileInput) {
+                fileInput.value = '';
+            }
+            
+            // Keep templates visible but reset to initial state
+            // Show the beanie template by default (initial state)
+            const beanieTemplate = document.getElementById('costBreakdown');
+            const ballcapsTemplate = document.getElementById('ballcapsBreakdown');
+            if (beanieTemplate) beanieTemplate.style.display = 'block';
+            if (ballcapsTemplate) ballcapsTemplate.style.display = 'none';
+            
+            console.log('✅ Form cleared successfully - templates remain visible');
         }
 
         function fillTemplateWithData(data) {
@@ -10348,19 +10492,19 @@
 
         function editRecord(index) {
             console.log('Edit record:', index);
-            alert('Edit functionality coming soon!');
+            console.log('Edit functionality coming soon!');
         }
 
         function deleteRecord(index) {
             if (confirm('Are you sure you want to delete this record?')) {
                 console.log('Delete record:', index);
-                alert('Delete functionality coming soon!');
+                console.log('Delete functionality coming soon!');
             }
         }
 
         function exportData() {
             console.log('Export data');
-            alert('Export functionality coming soon!');
+            console.log('Export functionality coming soon!');
         }
 
         // Load more data (incremental)
