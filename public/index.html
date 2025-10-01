@@ -11854,8 +11854,11 @@
             }
             
             // Check for BallCaps template indicators
-            if (dataString.includes('fabric/s') || dataString.includes('other fabric/s') || dataString.includes('trim/s') || dataString.includes('embroidery')) {
-                console.log('BallCaps template detected based on FABRIC/S/EMBROIDERY sections');
+            if (dataString.includes('fabric/s') || dataString.includes('other fabric/s') || dataString.includes('trim/s') || 
+                dataString.includes('embroidery') || dataString.includes('corporate cap') || dataString.includes('flat brim') ||
+                dataString.includes('rossignol') || dataString.includes('moq') || dataString.includes('visor') ||
+                dataString.includes('sweatband') || dataString.includes('cotton twill')) {
+                console.log('BallCaps template detected based on FABRIC/S/EMBROIDERY/CAP sections');
                 return 'ballcaps';
             }
             
@@ -11865,7 +11868,8 @@
                 return 'beanie';
             }
             
-            if (dataString.includes('cap') || dataString.includes('baseball') || dataString.includes('ballcap')) {
+            if (dataString.includes('cap') || dataString.includes('baseball') || dataString.includes('ballcap') ||
+                dataString.includes('corporate') || dataString.includes('flat brim') || dataString.includes('visor')) {
                 console.log('BallCaps template detected based on style name');
                 return 'ballcaps';
             }
@@ -12460,13 +12464,17 @@
                 console.log('✅ Mapped costedQuantity to moq:', parsedData.moq);
             }
             
-            infoValues.forEach((element, index) => {
+            infoRows.forEach((element, index) => {
                 const label = labels[index];
                 const value = parsedData[label];
                 console.log(`- Processing ${label}:`, value);
                 if (label && value) {
-                    element.textContent = value;
-                    console.log(`✅ Set ${label} to:`, value);
+                    // Find the info-value span within this row
+                    const valueElement = element.querySelector('.info-value');
+                    if (valueElement) {
+                        valueElement.textContent = value;
+                        console.log(`✅ Set ${label} to:`, value);
+                    }
                 } else {
                     console.log(`❌ Skipped ${label} - no value`);
                 }
@@ -12713,8 +12721,8 @@
                             notesContent.appendChild(noteItem);
                         });
                         
-                        // Add pricing tiers section if it doesn't exist
-                        if (!notesContent.querySelector('.pricing-tiers')) {
+                        // Only add pricing tiers placeholder if no actual notes were found
+                        if (notesLines.length === 0 && !notesContent.querySelector('.pricing-tiers')) {
                             const pricingTiers = document.createElement('div');
                             pricingTiers.className = 'pricing-tiers';
                             pricingTiers.innerHTML = '<div class="pricing-item">Pricing tiers will appear here</div>';
