@@ -400,7 +400,7 @@ class TNFBallCapsImporter {
                         cost = parseFloat(row[3]).toFixed(2);
                     }
                     
-                    // Add the packaging item if we found a cost (including 0)
+                    // Add the packaging item if we found a cost (including 0.00)
                     if (cost !== '') {
                         result.packaging.push({
                             type: firstCell,
@@ -420,23 +420,68 @@ class TNFBallCapsImporter {
                     
                     // Look for cost in different columns
                     let cost = '';
-                    let notes = String(row[1] || '');
                     
-                    // Try to find cost in col 2 or col 3
-                    if (row[2] !== undefined && row[2] !== null && !isNaN(parseFloat(row[2]))) {
-                        cost = parseFloat(row[2]).toFixed(2);
-                    } else if (row[3] !== undefined && row[3] !== null && !isNaN(parseFloat(row[3]))) {
-                        cost = parseFloat(row[3]).toFixed(2);
+                    // Try to find cost in the last column (most likely position for cost)
+                    // Check from right to left to find the first valid cost value
+                    console.log(`🔍 Searching for cost in row for ${firstCell}:`, row);
+                    for (let colIndex = row.length - 1; colIndex >= 2; colIndex--) {
+                        console.log(`🔍 Checking column ${colIndex}:`, row[colIndex], 'isNaN:', isNaN(parseFloat(row[colIndex])));
+                        if (row[colIndex] !== undefined && row[colIndex] !== null && !isNaN(parseFloat(row[colIndex]))) {
+                            cost = parseFloat(row[colIndex]).toFixed(2);
+                            console.log(`🔍 Found cost ${cost} in column ${colIndex} for ${firstCell}`);
+                            break;
+                        }
                     }
                     
-                    // If we found a cost, add the overhead item
-                    if (cost !== '') {
+                    // Special handling for OVERHEAD/PROFIT section
+                    // Only include actual overhead and profit items, not knitting machines or operations
+                    let itemType = firstCell;
+                    let shouldInclude = false;
+                    
+                    // Only include items that are actually overhead or profit
+                    if (firstCell.toLowerCase() === 'overhead' || firstCell.toLowerCase() === 'profit') {
+                        shouldInclude = true;
+                        if (firstCell.toLowerCase() === 'profit') {
+                            itemType = 'PROFIT'; // Use all caps to match Excel format
+                        } else {
+                            itemType = 'OVERHEAD';
+                        }
+                        console.log('🔍 Confirmed overhead/profit item:', itemType, 'Cost:', cost, 'Should include:', shouldInclude);
+                    } else {
+                        // Check if this looks like a knitting machine or operation (should be excluded)
+                        const knittingMachines = ['scripto', 'flat-', 'circular', 'automatic', 'jacquard', 'hand knit'];
+                        const operations = ['finger linking', 'cutting', 'sewing', 'blind sewing', 'hand sewing', 'labeling', 'embroidery', 'printing', 'washing', 'overlock', 'linking', 'neaten', 'steaming', 'packing', 'closing', 'lining', 'poms', 'tassel', 'braid'];
+                        
+                        const isKnittingMachine = knittingMachines.some(machine => firstCell.toLowerCase().includes(machine));
+                        const isOperation = operations.some(op => firstCell.toLowerCase().includes(op));
+                        
+                        if (isKnittingMachine || isOperation) {
+                            console.log('🔍 Excluding knitting machine/operation from overhead:', firstCell);
+                            shouldInclude = false;
+                        } else {
+                            // If it's not clearly a knitting machine or operation, include it
+                            shouldInclude = true;
+                            console.log('🔍 Including item in overhead:', firstCell);
+                        }
+                    }
+                    
+                    // If we found a cost and should include this item, add the overhead item
+                    console.log('🔍 Final check - Cost:', cost, 'Should include:', shouldInclude, 'Item:', firstCell);
+                    if (cost !== '' && shouldInclude) {
                         result.overhead.push({
-                            type: firstCell,
-                            notes: notes,
+                            type: itemType,
                             cost: cost
                         });
-                        console.log('✅ OVERHEAD:', firstCell, 'Notes:', notes, 'Cost:', cost);
+                        console.log('✅ OVERHEAD/PROFIT:', itemType, 'Cost:', cost);
+                    } else if (cost !== '' && !shouldInclude) {
+                        console.log('❌ Excluded from overhead:', firstCell, 'Cost:', cost);
+                    } else if (cost === '') {
+                        console.log('❌ No cost found for:', firstCell);
+                    }
+                    
+                    // Special debug for OVERHEAD item
+                    if (firstCell.toLowerCase() === 'overhead') {
+                        console.log('🔍 OVERHEAD DEBUG - Cost:', cost, 'Type:', typeof cost, 'Should include:', shouldInclude, 'Item type:', itemType);
                     }
                 }
                 

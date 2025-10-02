@@ -3505,6 +3505,26 @@
                                 <div class="cost-cell"></div>
                                 <div class="cost-cell"></div>
                             </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
                             <div class="cost-row subtotal-row">
                                 <div class="cost-cell">SUB TOTAL</div>
                                 <div class="cost-cell"></div>
@@ -3519,8 +3539,27 @@
                         <div class="cost-table">
                             <div class="cost-row header-row">
                                 <div class="cost-cell">OVERHEAD/PROFIT</div>
-                                <div class="cost-cell">Factory Notes</div>
                                 <div class="cost-cell">COST</div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
                             </div>
                             <div class="cost-row">
                                 <div class="cost-cell"></div>
@@ -3845,6 +3884,26 @@
                                 <div class="cost-cell"></div>
                                 <div class="cost-cell"></div>
                             </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
                             <div class="cost-row subtotal-row">
                                 <div class="cost-cell">SUB TOTAL</div>
                                 <div class="cost-cell"></div>
@@ -3859,8 +3918,27 @@
                         <div class="cost-table">
                             <div class="cost-row header-row">
                                 <div class="cost-cell">OVERHEAD/PROFIT</div>
-                                <div class="cost-cell">Factory Notes</div>
                                 <div class="cost-cell">COST</div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                            </div>
+                            <div class="cost-row">
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
                             </div>
                             <div class="cost-row">
                                 <div class="cost-cell"></div>
@@ -8940,12 +9018,21 @@
             }
             
             // Clear all cost sections (including subtotals and totals)
-            const sections = ['YARN', 'FABRIC', 'EMBROIDERY', 'TRIM', 'KNITTING', 'OPERATIONS', 'PACKAGING', 'OVERHEAD/ PROFIT'];
+            const sections = ['YARN', 'FABRIC', 'EMBROIDERY', 'TRIM', 'KNITTING', 'OPERATIONS', 'PACKAGING', 'OVERHEAD/PROFIT'];
             sections.forEach(sectionName => {
-                const section = document.querySelector(`[data-section="${sectionName}"]`);
-                if (section) {
+                // Find section by header text instead of data-section attribute
+                const allSections = document.querySelectorAll('.cost-section');
+                let targetSection = null;
+                allSections.forEach(section => {
+                    const header = section.querySelector('.section-header');
+                    if (header && header.textContent.trim() === sectionName) {
+                        targetSection = section;
+                    }
+                });
+                
+                if (targetSection) {
                     // Clear all rows including subtotals
-                    const rows = section.querySelectorAll('.cost-row:not(.header-row)');
+                    const rows = targetSection.querySelectorAll('.cost-row:not(.header-row)');
                     rows.forEach(row => {
                         const cells = row.querySelectorAll('.cost-cell');
                         cells.forEach(cell => {
@@ -9149,7 +9236,7 @@
             
             // Fill OVERHEAD/PROFIT section
             console.log('🔍 OVERHEAD DATA FROM EXCEL:', data.overhead);
-            fillCostSection('OVERHEAD/PROFIT', data.overhead, ['type', 'notes', 'cost']);
+            fillCostSection('OVERHEAD/PROFIT', data.overhead, ['type', 'cost']);
             
             // Let the calculation system handle totals instead of importing from Excel
             setTimeout(() => {
@@ -9710,12 +9797,16 @@
             if (overheadSection) {
                 const overheadRows = overheadSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
                 let overheadTotal = 0;
+                console.log('🔍 OVERHEAD: Found', overheadRows.length, 'rows');
                 
-                overheadRows.forEach(row => {
+                overheadRows.forEach((row, index) => {
                     const cells = row.querySelectorAll('.cost-cell');
-                    if (cells.length >= 3) {
-                        const cost = cells[2].textContent.trim().replace('$', '');
+                    console.log(`🔍 OVERHEAD Row ${index}:`, Array.from(cells).map(c => c.textContent.trim()));
+                    
+                    if (cells.length >= 2) {
+                        const cost = cells[1].textContent.trim().replace('$', ''); // Cost is now in column 1 (second column)
                         if (cost && !isNaN(parseFloat(cost)) && parseFloat(cost) > 0) {
+                            console.log(`✅ OVERHEAD Row ${index} - Cost: ${cost}`);
                             overheadTotal += parseFloat(cost);
                         }
                     }
