@@ -10,15 +10,10 @@ class BallCapsDataService {
     constructor(supabase) {
         this.supabase = supabase;
     }
-    /**
-     * Save already parsed ballcaps cost data to database
-     */
     async saveBallCapsCostData(parsedData) {
         try {
-            // Data is already parsed by the frontend, extract the actual data
             const actualData = parsedData.data || parsedData;
             logger_1.default.info('Saving already parsed ballcaps cost data:', actualData);
-            // Save the main cost record to databank table
             const costRecord = await this.saveMainCostRecord(actualData);
             logger_1.default.info('Ballcaps cost data saved successfully to databank table');
             return {
@@ -35,24 +30,15 @@ class BallCapsDataService {
             };
         }
     }
-    /**
-     * Save the main cost record
-     */
     async saveMainCostRecord(data) {
-        // Calculate totals from parsed data
         const materialTotal = parseFloat(data.totalMaterialCost) || 0;
         const factoryTotal = parseFloat(data.totalFactoryCost) || 0;
-        // Get main material (first fabric item)
         const mainMaterial = data.fabric && data.fabric.length > 0 ? data.fabric[0].material : '';
         const materialConsumption = data.fabric && data.fabric.length > 0 ? data.fabric[0].consumption : '';
         const materialPrice = data.fabric && data.fabric.length > 0 ? data.fabric[0].price : '';
-        // Calculate trim cost (sum of all trim items)
         const trimCost = data.trim ? data.trim.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0) : 0;
-        // Get operations cost
         const opsCost = data.operations && data.operations.length > 0 ? parseFloat(data.operations[0].cost) || 0 : 0;
-        // Get packaging cost
         const packagingCost = data.packaging ? data.packaging.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0) : 0;
-        // Get overhead and profit
         const overhead = data.overhead ? data.overhead.find(item => item.type === 'OVERHEAD') : null;
         const profit = data.overhead ? data.overhead.find(item => item.type === 'PROFIT') : null;
         const ohCost = overhead ? parseFloat(overhead.cost) || 0 : 0;
@@ -94,9 +80,6 @@ class BallCapsDataService {
         });
         return await this.supabase.insertRecord('databank', costRecord);
     }
-    /**
-     * Save section data (fabric, embroidery, trim, etc.)
-     */
     async saveSectionData(costId, data) {
         logger_1.default.info(`Saving section data for cost ID: ${costId}`);
         logger_1.default.info('Available sections:', {
@@ -107,7 +90,6 @@ class BallCapsDataService {
             packaging: data.packaging?.length || 0,
             overhead: data.overhead?.length || 0
         });
-        // Save FABRIC data
         if (data.fabric && data.fabric.length > 0) {
             const fabricRecords = data.fabric.map(item => ({
                 cost_id: costId,
@@ -121,7 +103,6 @@ class BallCapsDataService {
             logger_1.default.info(`Saving ${fabricRecords.length} fabric records:`, fabricRecords);
             await this.supabase.bulkInsert('cost_items', fabricRecords);
         }
-        // Save EMBROIDERY data (OTHER FABRIC/S - TRIM/S)
         if (data.embroidery && data.embroidery.length > 0) {
             const embroideryRecords = data.embroidery.map(item => ({
                 cost_id: costId,
@@ -135,7 +116,6 @@ class BallCapsDataService {
             logger_1.default.info(`Saving ${embroideryRecords.length} embroidery (OTHER FABRIC/S - TRIM/S) records:`, embroideryRecords);
             await this.supabase.bulkInsert('cost_items', embroideryRecords);
         }
-        // Save TRIM data
         if (data.trim && data.trim.length > 0) {
             const trimRecords = data.trim.map(item => ({
                 cost_id: costId,
@@ -149,13 +129,12 @@ class BallCapsDataService {
             logger_1.default.info(`Saving ${trimRecords.length} trim records:`, trimRecords);
             await this.supabase.bulkInsert('cost_items', trimRecords);
         }
-        // Save OPERATIONS data
         if (data.operations && data.operations.length > 0) {
             const operationsRecords = data.operations.map(item => ({
                 cost_id: costId,
                 section: 'operations',
                 operation: item.operation,
-                time: item.time || item.smv, // Support both time and smv fields
+                time: item.time || item.smv,
                 cost: parseFloat(item.cost) || 0,
                 total: parseFloat(item.total) || 0,
                 is_subtotal: item.isSubtotal || false
@@ -163,7 +142,6 @@ class BallCapsDataService {
             logger_1.default.info(`Saving ${operationsRecords.length} operations records:`, operationsRecords);
             await this.supabase.bulkInsert('cost_items', operationsRecords);
         }
-        // Save PACKAGING data
         if (data.packaging && data.packaging.length > 0) {
             const packagingRecords = data.packaging.map(item => ({
                 cost_id: costId,
@@ -176,7 +154,6 @@ class BallCapsDataService {
             logger_1.default.info(`Saving ${packagingRecords.length} packaging records:`, packagingRecords);
             await this.supabase.bulkInsert('cost_items', packagingRecords);
         }
-        // Save OVERHEAD data
         if (data.overhead && data.overhead.length > 0) {
             const overheadRecords = data.overhead.map(item => ({
                 cost_id: costId,
@@ -190,28 +167,22 @@ class BallCapsDataService {
             await this.supabase.bulkInsert('cost_items', overheadRecords);
         }
     }
-    /**
-     * Get ballcaps cost data by ID
-     */
     async getBallCapsCostData(costId) {
         try {
-            // Get main cost record
-            const { data: costData, error: costError } = await this.supabase.supabase
+            const { data: costData, error: costError } = await this.supabase.client
                 .from('costs')
                 .select('*')
                 .eq('id', costId)
                 .single();
             if (costError)
                 throw costError;
-            // Get cost items
-            const { data: itemsData, error: itemsError } = await this.supabase.supabase
+            const { data: itemsData, error: itemsError } = await this.supabase.client
                 .from('cost_items')
                 .select('*')
                 .eq('cost_id', costId)
                 .order('section', { ascending: true });
             if (itemsError)
                 throw itemsError;
-            // Group items by section
             const groupedItems = itemsData.reduce((acc, item) => {
                 if (!acc[item.section]) {
                     acc[item.section] = [];
@@ -234,12 +205,9 @@ class BallCapsDataService {
             throw new Error('Failed to retrieve ballcaps cost data');
         }
     }
-    /**
-     * Get all ballcaps cost records
-     */
     async getAllBallCapsCostData() {
         try {
-            const { data, error } = await this.supabase.supabase
+            const { data, error } = await this.supabase.client
                 .from('costs')
                 .select('*')
                 .eq('product_type', 'ballcaps')
@@ -255,3 +223,4 @@ class BallCapsDataService {
     }
 }
 exports.BallCapsDataService = BallCapsDataService;
+//# sourceMappingURL=ballcapsDataService.js.map

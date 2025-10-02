@@ -8,9 +8,6 @@ const ballcapsDataService_1 = require("../services/ballcapsDataService");
 const connections_1 = require("../utils/connections");
 const logger_1 = __importDefault(require("../utils/logger"));
 const router = (0, express_1.Router)();
-/**
- * Save ballcaps cost data to database
- */
 router.post('/save', async (req, res) => {
     try {
         const { connectionId, excelData } = req.body;
@@ -26,7 +23,6 @@ router.post('/save', async (req, res) => {
                 error: 'Excel data is required'
             });
         }
-        // Get the database connection
         const connection = (0, connections_1.getConnection)(connectionId);
         if (!connection) {
             return res.status(400).json({
@@ -34,9 +30,7 @@ router.post('/save', async (req, res) => {
                 error: 'Database connection not found'
             });
         }
-        // Create ballcaps data service
         const ballcapsService = new ballcapsDataService_1.BallCapsDataService(connection);
-        // Save the ballcaps cost data
         const result = await ballcapsService.saveBallCapsCostData(excelData);
         if (result.success) {
             return res.json({
@@ -61,9 +55,6 @@ router.post('/save', async (req, res) => {
         });
     }
 });
-/**
- * Get ballcaps cost data by ID
- */
 router.get('/:costId', async (req, res) => {
     try {
         const { costId } = req.params;
@@ -74,7 +65,6 @@ router.get('/:costId', async (req, res) => {
                 error: 'Connection ID is required'
             });
         }
-        // Get the database connection
         const connection = (0, connections_1.getConnection)(connectionId);
         if (!connection) {
             return res.status(400).json({
@@ -82,9 +72,7 @@ router.get('/:costId', async (req, res) => {
                 error: 'Database connection not found'
             });
         }
-        // Create ballcaps data service
         const ballcapsService = new ballcapsDataService_1.BallCapsDataService(connection);
-        // Get the ballcaps cost data
         const data = await ballcapsService.getBallCapsCostData(parseInt(costId));
         return res.json({
             success: true,
@@ -100,9 +88,6 @@ router.get('/:costId', async (req, res) => {
         });
     }
 });
-/**
- * Get all ballcaps cost records
- */
 router.get('/', async (req, res) => {
     try {
         const { connectionId } = req.query;
@@ -112,7 +97,6 @@ router.get('/', async (req, res) => {
                 error: 'Connection ID is required'
             });
         }
-        // Get the database connection
         const connection = (0, connections_1.getConnection)(connectionId);
         if (!connection) {
             return res.status(400).json({
@@ -120,9 +104,7 @@ router.get('/', async (req, res) => {
                 error: 'Database connection not found'
             });
         }
-        // Create ballcaps data service
         const ballcapsService = new ballcapsDataService_1.BallCapsDataService(connection);
-        // Get all ballcaps cost data
         const data = await ballcapsService.getAllBallCapsCostData();
         return res.json({
             success: true,
@@ -139,3 +121,4 @@ router.get('/', async (req, res) => {
     }
 });
 exports.default = router;
+//# sourceMappingURL=ballcapsImport.js.map

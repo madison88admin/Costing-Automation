@@ -1,7 +1,9 @@
+import { SupabaseClient } from '@supabase/supabase-js';
 import { DataTableQuery, DataTableResponse, TableInfo } from '../types';
 export declare class SupabaseService {
     private supabase;
     constructor(supabaseUrl: string, supabaseKey: string);
+    get client(): SupabaseClient;
     getTables(): Promise<string[]>;
     getTableInfo(tableName: string): Promise<TableInfo>;
     private inferType;

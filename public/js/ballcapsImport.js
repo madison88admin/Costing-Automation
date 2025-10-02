@@ -37,6 +37,7 @@ class TNFBallCapsImporter {
             styleName: "",
             costedQuantity: "",
             leadtime: "",
+            notes: "", // Added notes field
             
             // Ball caps specific sections
             fabric: [],
@@ -89,6 +90,138 @@ class TNFBallCapsImporter {
                         console.log('✅ Leadtime:', result.leadtime);
                     }
                 }
+            }
+
+            // Extract Notes section - look for rows that contain notes information
+            console.log('🔍 Extracting Notes section for BallCaps...');
+            let notesContent = [];
+            let inNotesSection = false;
+
+            for (let i = 0; i < data.length; i++) {
+                const row = data[i];
+                if (!row || row.length === 0) continue;
+
+                const firstCell = String(row[0] || '').trim();
+                const allRowContent = row.filter(cell => cell && String(cell).trim() !== '').join(' ');
+
+                // Look for Notes section header - be more flexible
+                if ((firstCell.toLowerCase() === 'notes' || firstCell.toLowerCase() === 'note') ||
+                    (allRowContent.toLowerCase() === 'notes' || allRowContent.toLowerCase() === 'note') ||
+                    firstCell.toLowerCase().includes('note')) {
+                    inNotesSection = true;
+                    console.log('✅ Found Notes section header at row', i, ':', firstCell);
+                    continue;
+                }
+
+                // If we're in notes section, collect content
+                if (inNotesSection) {
+                    // Stop if we hit another major section or cost data
+                    if (firstCell.includes('FABRIC') || firstCell.includes('TRIM') || firstCell.includes('EMBROIDERY') ||
+                        firstCell.includes('OPERATIONS') || firstCell.includes('PACKAGING') || firstCell.includes('OVERHEAD') ||
+                        firstCell.includes('TOTAL') || firstCell.includes('SUBTOTAL') || firstCell.includes('COST') ||
+                        allRowContent.includes('$') || allRowContent.includes('USD') || allRowContent.includes('YARD') ||
+                        allRowContent.includes('PIECE') || allRowContent.includes('STITCH')) {
+                        console.log('🛑 Stopping notes extraction at row', i, 'due to section/cost data:', firstCell || allRowContent);
+                        break;
+                    }
+
+                    // Collect non-empty content
+                    if (allRowContent.trim()) {
+                        notesContent.push(allRowContent.trim());
+                        console.log('📝 Added to BallCaps notes:', allRowContent.trim());
+                    }
+                }
+            }
+
+            // Enhanced notes detection - look for specific BallCaps notes patterns
+            if (notesContent.length === 0) {
+                console.log('🔍 Trying enhanced notes detection for BallCaps...');
+                for (let i = 0; i < data.length; i++) {
+                    const row = data[i];
+                    if (!row || row.length === 0) continue;
+
+                    const firstCell = String(row[0] || '').trim();
+                    const allRowContent = row.filter(cell => cell && String(cell).trim() !== '').join(' ');
+
+                    // Look for specific BallCaps notes patterns - be more precise
+                    if (allRowContent.includes('add fabric surcharge') || 
+                        (allRowContent.includes('fabric surcharge') && allRowContent.includes('USD') && allRowContent.includes('MOQ')) ||
+                        (allRowContent.includes('suggest to use') && allRowContent.includes('HU available')) ||
+                        allRowContent.includes('visor /sweatband-suggest')) {
+                        
+                        console.log('📝 Found BallCaps notes pattern at row', i, ':', allRowContent);
+                        
+                        // Clean up the content - remove operations header if present
+                        let cleanContent = allRowContent.trim();
+                        if (cleanContent.includes('OPERATIONS SMV COST')) {
+                            // Remove the entire operations header including (USD/MIN)
+                            cleanContent = cleanContent.replace(/^.*?OPERATIONS SMV COST.*?\(USD\/MIN\)\s*/, '');
+                        }
+                        
+                        // Only add if it looks like actual notes, not cost data
+                        if (!cleanContent.match(/\d+\.\d+\s+\d+\.\d+\s+\d+\.\d+/) && // Skip cost breakdown lines
+                            !cleanContent.includes('Style Name:') && // Skip duplicate style info
+                            !cleanContent.includes('MOQ:') && // Skip duplicate MOQ info
+                            !cleanContent.includes('Cost:') && // Skip cost entries
+                            cleanContent.length > 10) { // Ensure it's substantial content
+                            
+                            notesContent.push(cleanContent);
+                            console.log('✅ Added cleaned notes:', cleanContent);
+                        } else {
+                            console.log('❌ Rejected notes (filtered out):', cleanContent);
+                        }
+                    }
+                }
+            }
+
+            // Alternative notes detection - look for multi-line notes content in single cells
+            if (notesContent.length === 0) {
+                console.log('🔍 Trying alternative notes detection for BallCaps...');
+                for (let i = 0; i < data.length; i++) {
+                    const row = data[i];
+                    if (!row || row.length === 0) continue;
+
+                    // Check each cell in the row for multi-line notes content
+                    for (let j = 0; j < row.length; j++) {
+                        const cellContent = String(row[j] || '').trim();
+
+                        // Look for cells that contain multiple notes lines (contains pricing info and product codes)
+                        if (cellContent.includes('$') && 
+                            (cellContent.includes('MCQ') || cellContent.includes('pcs') || cellContent.includes('surcharge') ||
+                             cellContent.includes('HYDD') || cellContent.includes('RWS') || cellContent.includes('% = '))) {
+
+                            console.log('📝 Found multi-line notes content in BallCaps cell:', j, 'of row:', i);
+                            console.log('📝 Raw content:', cellContent);
+
+                            // Split the content by newlines and filter out empty lines
+                            const lines = cellContent.split('\n').filter(line => line.trim() !== '');
+
+                            // Extract only the actual notes content
+                            lines.forEach(line => {
+                                const cleanLine = line.trim();
+                                // Look for actual notes patterns
+                                if (cleanLine.includes('$') || cleanLine.includes('MCQ') ||
+                                    cleanLine.includes('surcharge') || cleanLine.includes('HYDD') ||
+                                    cleanLine.includes('RWS') || cleanLine.includes('pcs $') ||
+                                    cleanLine.includes('% = ') || (cleanLine.includes('kg') && cleanLine.includes('pcs'))) {
+
+                                    notesContent.push(cleanLine);
+                                    console.log('📝 Added BallCaps notes line:', cleanLine);
+                                }
+                            });
+
+                            break; // Found notes, stop looking in this row
+                        }
+                    }
+                }
+            }
+
+            // Join all notes content
+            if (notesContent.length > 0) {
+                result.notes = notesContent.join('\n');
+                console.log('✅ BallCaps Notes extracted (', notesContent.length, 'lines):', result.notes.substring(0, 200) + '...');
+            } else {
+                console.log('⚠️ No notes section found for BallCaps');
             }
 
             // FLEXIBLE COST DATA PARSING - Search through all rows
@@ -417,6 +550,7 @@ class TNFBallCapsImporter {
         console.log('OPERATIONS items:', result.operations.length, result.operations);
         console.log('PACKAGING items:', result.packaging.length, result.packaging);
         console.log('OVERHEAD items:', result.overhead.length, result.overhead);
+        console.log('Notes:', result.notes ? result.notes.substring(0, 100) + '...' : 'None');
         console.log('Material Total:', result.totalMaterialCost);
         console.log('Factory Total:', result.totalFactoryCost);
         console.log('=== END RESULT ===');
