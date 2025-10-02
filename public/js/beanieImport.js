@@ -182,10 +182,10 @@ var TNFBeanieImporter = class TNFBeanieImporter {
             if (!result.season || !result.styleNumber || !result.styleName || !result.costedQuantity) {
                 console.log('🔍 Fallback to original extraction method...');
                 
-                for (let i = 0; i < data.length; i++) {
-                    const row = data[i];
-                    if (!row) continue;
-                    
+            for (let i = 0; i < data.length; i++) {
+                const row = data[i];
+                if (!row) continue;
+                
                     // Look for Customer info - can be in various positions
                     for (let j = 0; j < row.length; j++) {
                         const cell = String(row[j] || '').trim();
@@ -314,10 +314,10 @@ var TNFBeanieImporter = class TNFBeanieImporter {
                     }
                     
                     if (cost) {
-                        result.yarn.push({
-                            material: firstCell,
-                            consumption: String(row[1] || ''),
-                            price: parseFloat(row[2] || 0).toFixed(2),
+                    result.yarn.push({
+                        material: firstCell,
+                        consumption: String(row[1] || ''),
+                        price: parseFloat(row[2] || 0).toFixed(2),
                             cost: cost
                         });
                         console.log('✅ YARN:', firstCell, 'Cost:', cost);
@@ -345,10 +345,10 @@ var TNFBeanieImporter = class TNFBeanieImporter {
                     }
                     
                     if (cost) {
-                        result.fabric.push({
-                            material: firstCell,
-                            consumption: String(row[1] || ''),
-                            price: parseFloat(row[2] || 0).toFixed(2),
+                    result.fabric.push({
+                        material: firstCell,
+                        consumption: String(row[1] || ''),
+                        price: parseFloat(row[2] || 0).toFixed(2),
                             cost: cost
                         });
                         console.log('✅ FABRIC:', firstCell, 'Cost:', cost);
@@ -376,10 +376,10 @@ var TNFBeanieImporter = class TNFBeanieImporter {
                     }
                     
                     if (cost) {
-                        result.trim.push({
-                            material: firstCell,
-                            consumption: String(row[1] || ''),
-                            price: parseFloat(row[2] || 0).toFixed(2),
+                    result.trim.push({
+                        material: firstCell,
+                        consumption: String(row[1] || ''),
+                        price: parseFloat(row[2] || 0).toFixed(2),
                             cost: cost
                         });
                         console.log('✅ TRIM:', firstCell, 'Cost:', cost);
@@ -407,10 +407,10 @@ var TNFBeanieImporter = class TNFBeanieImporter {
                     }
                     
                     if (cost) {
-                        result.knitting.push({
-                            machine: firstCell,
-                            time: String(row[1] || ''),
-                            sah: parseFloat(row[2] || 0).toFixed(2),
+                    result.knitting.push({
+                        machine: firstCell,
+                        time: String(row[1] || ''),
+                        sah: parseFloat(row[2] || 0).toFixed(2),
                             cost: cost
                         });
                         console.log('✅ KNITTING:', firstCell, 'Cost:', cost);
@@ -530,8 +530,8 @@ var TNFBeanieImporter = class TNFBeanieImporter {
                         
                         // Add the overhead item with Excel or default cost
                         if (cost !== '') {
-                            result.overhead.push({
-                                type: firstCell,
+                        result.overhead.push({
+                            type: firstCell,
                                 notes: notes,
                                 cost: cost
                             });

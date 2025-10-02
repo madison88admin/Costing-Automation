@@ -37,7 +37,6 @@ class TNFBallCapsImporter {
             styleName: "",
             costedQuantity: "",
             leadtime: "",
-            notes: "", // Added notes field
             
             // Ball caps specific sections
             fabric: [],
@@ -56,7 +55,6 @@ class TNFBallCapsImporter {
 
         // FLEXIBLE PARSING - Search through all rows for data patterns
         try {
-            
             // Search for basic info in any row
             for (let i = 0; i < data.length; i++) {
                 const row = data[i];
@@ -92,138 +90,6 @@ class TNFBallCapsImporter {
                 }
             }
 
-            // Extract Notes section - look for rows that contain notes information
-            console.log('🔍 Extracting Notes section for BallCaps...');
-            let notesContent = [];
-            let inNotesSection = false;
-
-            for (let i = 0; i < data.length; i++) {
-                const row = data[i];
-                if (!row || row.length === 0) continue;
-
-                const firstCell = String(row[0] || '').trim();
-                const allRowContent = row.filter(cell => cell && String(cell).trim() !== '').join(' ');
-
-                // Look for Notes section header - be more flexible
-                if ((firstCell.toLowerCase() === 'notes' || firstCell.toLowerCase() === 'note') ||
-                    (allRowContent.toLowerCase() === 'notes' || allRowContent.toLowerCase() === 'note') ||
-                    firstCell.toLowerCase().includes('note')) {
-                    inNotesSection = true;
-                    console.log('✅ Found Notes section header at row', i, ':', firstCell);
-                    continue;
-                }
-
-                // If we're in notes section, collect content
-                if (inNotesSection) {
-                    // Stop if we hit another major section or cost data
-                    if (firstCell.includes('FABRIC') || firstCell.includes('TRIM') || firstCell.includes('EMBROIDERY') ||
-                        firstCell.includes('OPERATIONS') || firstCell.includes('PACKAGING') || firstCell.includes('OVERHEAD') ||
-                        firstCell.includes('TOTAL') || firstCell.includes('SUBTOTAL') || firstCell.includes('COST') ||
-                        allRowContent.includes('$') || allRowContent.includes('USD') || allRowContent.includes('YARD') ||
-                        allRowContent.includes('PIECE') || allRowContent.includes('STITCH')) {
-                        console.log('🛑 Stopping notes extraction at row', i, 'due to section/cost data:', firstCell || allRowContent);
-                        break;
-                    }
-
-                    // Collect non-empty content
-                    if (allRowContent.trim()) {
-                        notesContent.push(allRowContent.trim());
-                        console.log('📝 Added to BallCaps notes:', allRowContent.trim());
-                    }
-                }
-            }
-
-            // Enhanced notes detection - look for specific BallCaps notes patterns
-            if (notesContent.length === 0) {
-                console.log('🔍 Trying enhanced notes detection for BallCaps...');
-                for (let i = 0; i < data.length; i++) {
-                    const row = data[i];
-                    if (!row || row.length === 0) continue;
-
-                    const firstCell = String(row[0] || '').trim();
-                    const allRowContent = row.filter(cell => cell && String(cell).trim() !== '').join(' ');
-
-                    // Look for specific BallCaps notes patterns - be more precise
-                    if (allRowContent.includes('add fabric surcharge') || 
-                        (allRowContent.includes('fabric surcharge') && allRowContent.includes('USD') && allRowContent.includes('MOQ')) ||
-                        (allRowContent.includes('suggest to use') && allRowContent.includes('HU available')) ||
-                        allRowContent.includes('visor /sweatband-suggest')) {
-                        
-                        console.log('📝 Found BallCaps notes pattern at row', i, ':', allRowContent);
-                        
-                        // Clean up the content - remove operations header if present
-                        let cleanContent = allRowContent.trim();
-                        if (cleanContent.includes('OPERATIONS SMV COST')) {
-                            // Remove the entire operations header including (USD/MIN)
-                            cleanContent = cleanContent.replace(/^.*?OPERATIONS SMV COST.*?\(USD\/MIN\)\s*/, '');
-                        }
-                        
-                        // Only add if it looks like actual notes, not cost data
-                        if (!cleanContent.match(/\d+\.\d+\s+\d+\.\d+\s+\d+\.\d+/) && // Skip cost breakdown lines
-                            !cleanContent.includes('Style Name:') && // Skip duplicate style info
-                            !cleanContent.includes('MOQ:') && // Skip duplicate MOQ info
-                            !cleanContent.includes('Cost:') && // Skip cost entries
-                            cleanContent.length > 10) { // Ensure it's substantial content
-                            
-                            notesContent.push(cleanContent);
-                            console.log('✅ Added cleaned notes:', cleanContent);
-                        } else {
-                            console.log('❌ Rejected notes (filtered out):', cleanContent);
-                        }
-                    }
-                }
-            }
-
-            // Alternative notes detection - look for multi-line notes content in single cells
-            if (notesContent.length === 0) {
-                console.log('🔍 Trying alternative notes detection for BallCaps...');
-                for (let i = 0; i < data.length; i++) {
-                    const row = data[i];
-                    if (!row || row.length === 0) continue;
-
-                    // Check each cell in the row for multi-line notes content
-                    for (let j = 0; j < row.length; j++) {
-                        const cellContent = String(row[j] || '').trim();
-
-                        // Look for cells that contain multiple notes lines (contains pricing info and product codes)
-                        if (cellContent.includes('$') && 
-                            (cellContent.includes('MCQ') || cellContent.includes('pcs') || cellContent.includes('surcharge') ||
-                             cellContent.includes('HYDD') || cellContent.includes('RWS') || cellContent.includes('% = '))) {
-
-                            console.log('📝 Found multi-line notes content in BallCaps cell:', j, 'of row:', i);
-                            console.log('📝 Raw content:', cellContent);
-
-                            // Split the content by newlines and filter out empty lines
-                            const lines = cellContent.split('\n').filter(line => line.trim() !== '');
-
-                            // Extract only the actual notes content
-                            lines.forEach(line => {
-                                const cleanLine = line.trim();
-                                // Look for actual notes patterns
-                                if (cleanLine.includes('$') || cleanLine.includes('MCQ') ||
-                                    cleanLine.includes('surcharge') || cleanLine.includes('HYDD') ||
-                                    cleanLine.includes('RWS') || cleanLine.includes('pcs $') ||
-                                    cleanLine.includes('% = ') || (cleanLine.includes('kg') && cleanLine.includes('pcs'))) {
-
-                                    notesContent.push(cleanLine);
-                                    console.log('📝 Added BallCaps notes line:', cleanLine);
-                                }
-                            });
-
-                            break; // Found notes, stop looking in this row
-                        }
-                    }
-                }
-            }
-
-            // Join all notes content
-            if (notesContent.length > 0) {
-                result.notes = notesContent.join('\n');
-                console.log('✅ BallCaps Notes extracted (', notesContent.length, 'lines):', result.notes.substring(0, 200) + '...');
-            } else {
-                console.log('⚠️ No notes section found for BallCaps');
-            }
-
             // FLEXIBLE COST DATA PARSING - Search through all rows
             let currentSection = '';
             
@@ -234,31 +100,35 @@ class TNFBallCapsImporter {
                 const firstCell = String(row[0] || '').trim();
                 
                 // Detect sections
-                if (firstCell === 'FABRIC' || firstCell === 'FABRIC/S' || firstCell.includes('FABRIC')) {
+                if (firstCell === 'FABRIC' || firstCell === 'FABRIC/S') {
                     currentSection = 'fabric';
-                    console.log('🔍 Found FABRIC section at row', i);
-                } else if (firstCell === 'EMBROIDERY' || firstCell === 'OTHER FABRIC/S - TRIM/S' || firstCell.includes('OTHER FABRIC')) {
+                    console.log('🔍 Found FABRIC section');
+                } else if (firstCell === 'EMBROIDERY' || firstCell === 'OTHER FABRIC/S - TRIM/S') {
                     currentSection = 'embroidery';
-                    console.log('🔍 Found OTHER FABRIC/S - TRIM/S section at row', i);
-                } else if (firstCell === 'TRIM' || firstCell === 'TRIM/S' || firstCell.includes('TRIM')) {
+                    console.log('🔍 Found OTHER FABRIC/S - TRIM/S section');
+                } else if (firstCell === 'TRIM' || firstCell === 'TRIM/S') {
                     currentSection = 'trim';
-                    console.log('🔍 Found TRIM section at row', i);
-                } else if (firstCell === 'OPERATIONS' || firstCell.includes('OPERATIONS')) {
+                    console.log('🔍 Found TRIM section');
+                } else if (firstCell === 'OPERATIONS') {
                     currentSection = 'operations';
-                    console.log('🔍 Found OPERATIONS section at row', i);
-                } else if (firstCell === 'PACKAGING' || firstCell.includes('PACKAGING')) {
+                    console.log('🔍 Found OPERATIONS section');
+                } else if (firstCell === 'PACKAGING') {
                     currentSection = 'packaging';
-                    console.log('🔍 Found PACKAGING section at row', i);
-                } else if (firstCell === 'OVERHEAD/ PROFIT' || firstCell === 'OVERHEAD/PROFIT' || firstCell === 'OVERHEAD' || firstCell.includes('OVERHEAD')) {
+                    console.log('🔍 Found PACKAGING section');
+                } else if (firstCell === 'OVERHEAD/ PROFIT' || firstCell === 'OVERHEAD/PROFIT' || firstCell === 'OVERHEAD') {
                     currentSection = 'overhead';
-                    console.log('🔍 Found OVERHEAD section at row', i);
-                } else if (firstCell === 'TOTAL FACTORY COST' || firstCell.includes('TOTAL FACTORY')) {
-                    console.log('🔍 Found TOTAL FACTORY COST at row', i);
+                    console.log('🔍 Found OVERHEAD section');
+                } else if (firstCell === 'TOTAL FACTORY COST') {
+                    console.log('🔍 Found TOTAL FACTORY COST');
                 }
                 
+                // Debug: Log current section and row data for operations/overhead
+                if (currentSection === 'operations' || currentSection === 'overhead') {
+                    console.log(`🔍 Current section: ${currentSection}, Row ${i}:`, firstCell, '|', row[1], '|', row[2], '|', row[3]);
+                }
                 
                 // Detect header rows and set current section based on context
-                if (firstCell.includes('(Name/Code/Description)') && row[1] && row[1].includes('CONSUMPTION')) {
+                if (firstCell.includes('(Name/Code/Description)Description') && row[1] && row[1].includes('CONSUMPTION')) {
                     // This is a header row, determine section based on context
                     if (row[1].includes('YARD') && row[2] && row[2].includes('USD/YD')) {
                         currentSection = 'fabric';
@@ -325,216 +195,56 @@ class TNFBallCapsImporter {
                     console.log('✅ TRIM:', firstCell, 'Cost:', row[3]);
                 }
                 
-                if (currentSection === 'operations' && 
-                    !firstCell.includes('OPERATIONS') && 
-                    !firstCell.includes('SMV') && 
-                    !firstCell.includes('COST') && 
-                    !firstCell.includes('SUB TOTAL') && 
-                    !firstCell.includes('TOTAL')) {
-                    
-                    // More flexible operations parsing - look for any row with operation data
-                    let smv = '';
-                    let cost = '';
-                    let total = '';
-                    let operationName = firstCell || 'Operation'; // Use first cell if it's not empty
-                    
-                    // If first cell is empty but we have operation name in column 2, use that
-                    if (!firstCell && row[2] && typeof row[2] === 'string' && !row[2].includes('undefined')) {
-                        operationName = row[2];
-                    }
-                    
-                    // Try to find SMV in col 1
-                    if (row[1] && !isNaN(parseFloat(row[1]))) {
-                        smv = parseFloat(row[1]).toFixed(2);
-                    }
-                    
-                    // Try to find cost in col 2 or col 3
-                    if (row[2] && !isNaN(parseFloat(row[2]))) {
-                        cost = parseFloat(row[2]).toFixed(2);
-                    } else if (row[3] && !isNaN(parseFloat(row[3]))) {
-                        cost = parseFloat(row[3]).toFixed(2);
-                    }
-                    
-                    // Try to find total in col 3 or col 4
-                    if (row[3] && !isNaN(parseFloat(row[3])) && !cost) {
-                        total = parseFloat(row[3]).toFixed(2);
-                    } else if (row[4] && !isNaN(parseFloat(row[4]))) {
-                        total = parseFloat(row[4]).toFixed(2);
-                    }
-                    
-                    // If we have operation name or any meaningful data, add the operation
-                    if (operationName !== 'Operation' || smv || cost || total) {
-                        // Ensure operation name is meaningful - if it's a number, use a default name
-                        let finalOperationName = operationName;
-                        if (operationName === 'Operation' && (smv || cost || total)) {
-                            finalOperationName = `Operation ${result.operations.length + 1}`;
-                        }
-                        
+                if (currentSection === 'operations' && !firstCell.includes('OPERATIONS') && !firstCell.includes('TIME') && !firstCell.includes('COST') && !firstCell.includes('SUB TOTAL') && !firstCell.includes('TOTAL')) {
+                    console.log(`🔍 Checking OPERATIONS: "${firstCell}" - Row:`, row, 'SMV in col 2:', row[2], 'CostPerMin in col 3:', row[3], 'Total in col 4:', row[4]);
+                    // Check if this row has operations data (SMV in col 2, cost per min in col 3, total in col 4)
+                    if (row[2] && row[2].toString().trim() && (row[3] || row[4])) {
                         result.operations.push({
-                            operation: String(finalOperationName), // Ensure operation is always a string
-                            time: smv, // Map smv to time for HTML template compatibility
-                            smv: smv, // Keep smv for backwards compatibility
-                            cost: cost,
-                            total: total || (smv && cost ? (parseFloat(smv) * parseFloat(cost)).toFixed(2) : '')
+                            operation: firstCell || 'Operation',
+                            smv: String(row[2] || ''),
+                            costPerMin: String(row[3] || ''),
+                            total: String(row[4] || '')
                         });
-                        console.log('✅ OPERATION:', finalOperationName, 'SMV:', smv, 'Cost:', cost, 'Total:', total);
+                        console.log('✅ OPERATION:', firstCell, 'SMV:', row[2], 'CostPerMin:', row[3], 'Total:', row[4]);
                     }
                 }
                 
-                if (currentSection === 'packaging' && firstCell && 
-                    !firstCell.includes('PACKAGING') && 
-                    !firstCell.includes('Factory Notes') && 
-                    !firstCell.includes('COST') && 
-                    !firstCell.includes('TOTAL') && 
-                    !firstCell.includes('SUB TOTAL') &&
-                    firstCell.trim() !== '') {
-                    
-                    // Look for cost in different columns
-                    let cost = '';
-                    let notes = String(row[1] || '');
-                    
-                    // Try to find cost in col 2 or col 3
-                    if (row[2] !== undefined && row[2] !== null && !isNaN(parseFloat(row[2]))) {
-                        cost = parseFloat(row[2]).toFixed(2);
-                    } else if (row[3] !== undefined && row[3] !== null && !isNaN(parseFloat(row[3]))) {
-                        cost = parseFloat(row[3]).toFixed(2);
-                    }
-                    
-                    // Add the packaging item if we found a cost (including 0)
-                    if (cost !== '') {
+                if (currentSection === 'packaging' && firstCell && !firstCell.includes('PACKAGING') && !firstCell.includes('Factory Notes') && !firstCell.includes('TOTAL')) {
+                    if (row[3] !== undefined && !isNaN(parseFloat(row[3]))) {
                         result.packaging.push({
                             type: firstCell,
-                            notes: notes,
-                            cost: cost
+                            notes: String(row[1] || ''),
+                            cost: parseFloat(row[3]).toFixed(2)
                         });
-                        console.log('✅ PACKAGING:', firstCell, 'Notes:', notes, 'Cost:', cost);
+                        console.log('✅ PACKAGING:', firstCell, 'Cost:', row[3]);
                     }
                 }
                 
-                if (currentSection === 'overhead' && firstCell && 
-                    !firstCell.includes('Factory Notes') && 
-                    !firstCell.includes('COST') && 
-                    !firstCell.includes('TOTAL') && 
-                    !firstCell.includes('SUB TOTAL') &&
-                    firstCell.trim() !== '') {
-                    
-                    // Read exact values from Excel file for OVERHEAD and PROFIT
-                    if (firstCell === 'OVERHEAD' || firstCell === 'PROFIT') {
-                        console.log('🔍 Processing OVERHEAD/PROFIT from Excel:', firstCell, '| Row data:', row);
-                        
-                        // Look for cost in different columns (prioritize Excel values)
-                        let cost = '';
-                        let notes = String(row[1] || '');
-                        
-                        // Try to find cost in col 2 or col 3
-                        if (row[2] !== undefined && row[2] !== null && !isNaN(parseFloat(row[2]))) {
-                            cost = parseFloat(row[2]).toFixed(2);
-                            console.log('  Found cost in col 2:', cost);
-                        } else if (row[3] !== undefined && row[3] !== null && !isNaN(parseFloat(row[3]))) {
-                            cost = parseFloat(row[3]).toFixed(2);
-                            console.log('  Found cost in col 3:', cost);
-                        }
-                        
-                        // If no cost found in Excel, use default values
-                        if (cost === '') {
-                            if (firstCell === 'OVERHEAD') {
-                                cost = '0.20';
-                                console.log('  Using default OVERHEAD cost: 0.20');
-                            } else if (firstCell === 'PROFIT') {
-                                cost = '0.59';
-                                console.log('  Using default PROFIT cost: 0.59');
-                            }
-                        }
-                        
-                        // Add the overhead item with Excel or default cost
-                        if (cost !== '') {
-                            result.overhead.push({
-                                type: firstCell,
-                                notes: notes,
-                                cost: cost
-                            });
-                            console.log('✅ OVERHEAD/PROFIT:', firstCell, 'Notes:', notes, 'Cost:', cost);
-                        }
-                    } else if (firstCell.toLowerCase().includes('scripto')) {
-                        console.log('🔍 Converting Scripto to OVERHEAD:', firstCell);
+                if (currentSection === 'overhead' && firstCell && !firstCell.includes('OVERHEAD/ PROFIT') && !firstCell.includes('Factory Notes') && !firstCell.includes('TOTAL')) {
+                    console.log(`🔍 Checking OVERHEAD: "${firstCell}" - Row:`, row, 'Cost in col 3:', row[3], 'Is number:', !isNaN(parseFloat(row[3])));
+                    if (row[3] !== undefined && !isNaN(parseFloat(row[3]))) {
                         result.overhead.push({
-                            type: 'OVERHEAD',
-                            notes: '',
-                            cost: '0.59'
+                            type: firstCell,
+                            notes: String(row[1] || ''),
+                            cost: parseFloat(row[3]).toFixed(2)
                         });
-                        console.log('✅ Converted Scripto to OVERHEAD: Cost: 0.59');
-                    } else {
-                        // Look for cost in different columns for other items
-                        let cost = '';
-                        let notes = String(row[1] || '');
-                        
-                        // Try to find cost in col 2 or col 3
-                        if (row[2] !== undefined && row[2] !== null && !isNaN(parseFloat(row[2]))) {
-                            cost = parseFloat(row[2]).toFixed(2);
-                        } else if (row[3] !== undefined && row[3] !== null && !isNaN(parseFloat(row[3]))) {
-                            cost = parseFloat(row[3]).toFixed(2);
-                        }
-                        
-                        // If we found a cost, add the overhead item
-                        if (cost !== '') {
-                            result.overhead.push({
-                                type: firstCell,
-                                notes: notes,
-                                cost: cost
-                            });
-                            console.log('✅ OVERHEAD:', firstCell, 'Notes:', notes, 'Cost:', cost);
-                        }
+                        console.log('✅ OVERHEAD:', firstCell, 'Notes:', row[1], 'Cost:', row[3]);
                     }
                 }
                 
-                // Debug: Show all rows with "TOTAL" to find the correct ones
-                if (firstCell && firstCell.includes('TOTAL')) {
-                    console.log('🔍 Found TOTAL row', i, ':', firstCell, 'value in col 3:', row[3]);
-                }
-                
-                // Extract totals - enhanced pattern matching
-                if ((firstCell.includes('TOTAL MATERIAL') || firstCell.includes('TOTAL MATERIAL AND SUBMATERIALS COST')) && row[3]) {
+                // Extract totals
+                if (firstCell.includes('TOTAL MATERIAL') && row[3]) {
                     result.totalMaterialCost = parseFloat(row[3]).toFixed(2);
-                    console.log('✅ Material Total:', result.totalMaterialCost, 'from row', i, 'cell:', firstCell);
+                    console.log('✅ Material Total:', result.totalMaterialCost);
                 }
                 if (firstCell.includes('TOTAL FACTORY') && row[3]) {
                     result.totalFactoryCost = parseFloat(row[3]).toFixed(2);
-                    console.log('✅ Factory Total:', result.totalFactoryCost, 'from row', i, 'cell:', firstCell);
-                }
-
-                // Extract OVERHEAD SUB TOTAL from Excel file (read like other features)
-                if (currentSection === 'overhead' && firstCell && firstCell.includes('SUB TOTAL')) {
-                    console.log('🔍 Found SUB TOTAL row in Excel:', firstCell, '| Row data:', row);
-                    
-                    // Look for cost in different columns (same as OVERHEAD and PROFIT)
-                    let cost = '';
-                    let notes = String(row[1] || '');
-                    
-                    // Try to find cost in col 2 or col 3 (same logic as other items)
-                    if (row[2] !== undefined && row[2] !== null && !isNaN(parseFloat(row[2]))) {
-                        cost = parseFloat(row[2]).toFixed(2);
-                        console.log('  Found SUB TOTAL cost in col 2:', cost);
-                    } else if (row[3] !== undefined && row[3] !== null && !isNaN(parseFloat(row[3]))) {
-                        cost = parseFloat(row[3]).toFixed(2);
-                        console.log('  Found SUB TOTAL cost in col 3:', cost);
-                    } else if (row[4] !== undefined && row[4] !== null && !isNaN(parseFloat(row[4]))) {
-                        cost = parseFloat(row[4]).toFixed(2);
-                        console.log('  Found SUB TOTAL cost in col 4:', cost);
-                    }
-                    
-                    if (cost !== '') {
-                        result.overheadSubTotal = cost;
-                        console.log('✅ OVERHEAD SUB TOTAL from Excel:', result.overheadSubTotal, 'from row', i, 'cell:', firstCell);
-                    } else {
-                        console.log('❌ SUB TOTAL row found but no valid cost value');
-                    }
+                    console.log('✅ Factory Total:', result.totalFactoryCost);
                 }
             }
 
         } catch (error) {
             console.error('Error in flexible parsing:', error);
-            // Re-throw the error so it can be caught by the calling code
-            throw error;
         }
 
         console.log('=== FINAL RESULT ===');
@@ -542,15 +252,12 @@ class TNFBallCapsImporter {
         console.log('Season:', result.season);
         console.log('Style#:', result.styleNumber);
         console.log('Style Name:', result.styleName);
-        console.log('Costed Quantity:', result.costedQuantity);
-        console.log('Leadtime:', result.leadtime);
         console.log('FABRIC items:', result.fabric.length, result.fabric);
-        console.log('OTHER FABRIC/S - TRIM/S items:', result.embroidery.length, result.embroidery);
+        console.log('EMBROIDERY items:', result.embroidery.length, result.embroidery);
         console.log('TRIM items:', result.trim.length, result.trim);
         console.log('OPERATIONS items:', result.operations.length, result.operations);
         console.log('PACKAGING items:', result.packaging.length, result.packaging);
         console.log('OVERHEAD items:', result.overhead.length, result.overhead);
-        console.log('Notes:', result.notes ? result.notes.substring(0, 100) + '...' : 'None');
         console.log('Material Total:', result.totalMaterialCost);
         console.log('Factory Total:', result.totalFactoryCost);
         console.log('=== END RESULT ===');
@@ -560,273 +267,200 @@ class TNFBallCapsImporter {
     }
 
     /**
-     * Make existing UI text editable by converting table cells to input fields
-     * @param {Object} data - Parsed data to populate
+     * Extract basic product information from specific rows
      */
-    makeUIEditable(data) {
-        console.log('🎨 Making UI text editable...');
-        
-        // Make all table cells editable
-        this.makeTableCellsEditable();
-        
-        // Populate with data
-        this.populateEditableFields(data);
-        
-        console.log('✅ UI is now editable');
-    }
+    extractBasicInfo(result, row, rowIndex) {
+        // Extract from row 1
+        if (rowIndex === 1) {
+            result.customer = this.extractValue(row[4], 'Customer：') || result.customer;
+            result.season = this.extractValue(row[5], 'Season：') || result.season;
+        }
 
-    /**
-     * Convert table cells to editable input fields
-     */
-    makeTableCellsEditable() {
-        // Find all tables in the document
-        const tables = document.querySelectorAll('table');
-        
-        tables.forEach(table => {
-            const rows = table.querySelectorAll('tr');
-            
-            rows.forEach((row, rowIndex) => {
-                // Skip header rows
-                if (rowIndex === 0) return;
-                
-                const cells = row.querySelectorAll('td');
-                
-                cells.forEach((cell, cellIndex) => {
-                    // Skip if already editable
-                    if (cell.querySelector('input, textarea')) return;
-                    
-                    const originalText = cell.textContent.trim();
-                    
-                    // Create input field
-                    let input;
-                    if (cellIndex === 0) {
-                        // First column (material) - use textarea for longer text
-                        input = document.createElement('textarea');
-                        input.rows = 2;
-                        input.style.cssText = `
-                            width: 100%;
-                            border: none;
-                            padding: 4px;
-                            resize: vertical;
-                            min-height: 30px;
-                            font-family: inherit;
-                            font-size: inherit;
-                            background: transparent;
-                        `;
-                    } else {
-                        // Other columns - use input
-                        input = document.createElement('input');
-                        input.type = 'text';
-                        input.style.cssText = `
-                            width: 100%;
-                            border: none;
-                            padding: 4px;
-                            font-family: inherit;
-                            font-size: inherit;
-                            background: transparent;
-                        `;
-                    }
-                    
-                    // Set value and placeholder
-                    input.value = originalText;
-                    input.placeholder = originalText || 'Enter value...';
-                    
-                    // Add hover and focus effects
-                    input.addEventListener('mouseenter', () => {
-                        input.style.backgroundColor = '#f8f9fa';
-                        input.style.border = '1px solid #007bff';
-                        input.style.borderRadius = '3px';
-                    });
-                    
-                    input.addEventListener('mouseleave', () => {
-                        if (document.activeElement !== input) {
-                            input.style.backgroundColor = 'transparent';
-                            input.style.border = 'none';
-                            input.style.borderRadius = '0';
-                        }
-                    });
-                    
-                    input.addEventListener('focus', () => {
-                        input.style.backgroundColor = '#fff';
-                        input.style.border = '2px solid #007bff';
-                        input.style.borderRadius = '3px';
-                        input.style.boxShadow = '0 0 0 2px rgba(0, 123, 255, 0.25)';
-                    });
-                    
-                    input.addEventListener('blur', () => {
-                        input.style.backgroundColor = 'transparent';
-                        input.style.border = 'none';
-                        input.style.borderRadius = '0';
-                        input.style.boxShadow = 'none';
-                    });
-                    
-                    // Clear cell content and add input
-                    cell.innerHTML = '';
-                    cell.appendChild(input);
-                });
-            });
-        });
-    }
+        // Extract from row 2
+        if (rowIndex === 2) {
+            result.styleNumber = this.extractValue(row[4], 'Style#:') || result.styleNumber;
+            result.styleName = this.extractValue(row[7], 'Style Name:') || result.styleName;
+        }
 
-    /**
-     * Populate editable fields with data
-     * @param {Object} data - Data to populate
-     */
-    populateEditableFields(data) {
-        // Make header fields editable and populate them
-        this.makeHeaderFieldsEditable();
-        this.populateHeaderFields(data);
-        
-        // Populate material sections
-        this.populateMaterialSection('fabric', data.fabric);
-        this.populateMaterialSection('trim', data.trim);
-        this.populateMaterialSection('embroidery', data.embroidery);
-    }
+        // Extract from row 4
+        if (rowIndex === 4) {
+            result.costedQuantity = this.extractValue(row[4], 'Costed Quantity:') || result.costedQuantity;
+        }
 
-    /**
-     * Make header fields editable by converting them to input fields
-     */
-    makeHeaderFieldsEditable() {
-        // Find and make all info-value spans editable
-        const infoValues = document.querySelectorAll('.info-value');
-        infoValues.forEach(span => {
-            this.makeFieldEditable(span);
-        });
-    }
-
-    /**
-     * Make a specific field editable
-     * @param {string|Element} selector - CSS selector for the field or element
-     * @param {string} value - Value to set (optional)
-     */
-    makeFieldEditable(selector, value = null) {
-        const elements = typeof selector === 'string' ? document.querySelectorAll(selector) : [selector];
-        elements.forEach(element => {
-            // Skip if already editable
-            if (element.querySelector('input, textarea')) return;
-            
-            const originalText = element.textContent.trim();
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.value = value !== null ? value : originalText;
-            input.placeholder = originalText || 'Enter value...';
-            input.style.cssText = `
-                width: 100%;
-                border: none;
-                padding: 4px;
-                font-family: inherit;
-                font-size: inherit;
-                background: transparent;
-                text-align: inherit;
-            `;
-            
-            // Add hover and focus effects
-            input.addEventListener('mouseenter', () => {
-                input.style.backgroundColor = '#f8f9fa';
-                input.style.border = '1px solid #007bff';
-                input.style.borderRadius = '3px';
-            });
-            
-            input.addEventListener('mouseleave', () => {
-                if (document.activeElement !== input) {
-                    input.style.backgroundColor = 'transparent';
-                    input.style.border = 'none';
-                    input.style.borderRadius = '0';
-                }
-            });
-            
-            input.addEventListener('focus', () => {
-                input.style.backgroundColor = '#fff';
-                input.style.border = '2px solid #007bff';
-                input.style.borderRadius = '3px';
-                input.style.boxShadow = '0 0 0 2px rgba(0, 123, 255, 0.25)';
-            });
-            
-            input.addEventListener('blur', () => {
-                input.style.backgroundColor = 'transparent';
-                input.style.border = 'none';
-                input.style.borderRadius = '0';
-                input.style.boxShadow = 'none';
-            });
-            
-            // Clear element content and add input
-            element.innerHTML = '';
-            element.appendChild(input);
-        });
-    }
-
-    /**
-     * Populate header fields with data
-     * @param {Object} data - Data to populate
-     */
-    populateHeaderFields(data) {
-        this.setFieldValue('input[name="customer"]', data.customer);
-        this.setFieldValue('input[name="season"]', data.season);
-        this.setFieldValue('input[name="styleNumber"]', data.styleNumber);
-        this.setFieldValue('input[name="styleName"]', data.styleName);
-        this.setFieldValue('input[name="costedQuantity"]', data.costedQuantity);
-        this.setFieldValue('input[name="leadtime"]', data.leadtime);
-        this.setFieldValue('input[name="totalMaterialCost"]', data.totalMaterialCost);
-        this.setFieldValue('input[name="totalFactoryCost"]', data.totalFactoryCost);
-    }
-
-    /**
-     * Set field value by selector
-     * @param {string} selector - CSS selector
-     * @param {string} value - Value to set
-     */
-    setFieldValue(selector, value) {
-        const field = document.querySelector(selector);
-        if (field) {
-            field.value = value || '';
+        // Extract from row 5
+        if (rowIndex === 5) {
+            result.leadtime = this.extractValue(row[4], 'Leadtime:') || result.leadtime;
         }
     }
 
     /**
-     * Populate material section data
-     * @param {string} sectionName - Name of the section
-     * @param {Array} items - Array of items
+     * Extract value from cell, removing prefix if present
      */
-    populateMaterialSection(sectionName, items) {
-        // Find table rows that might contain this section
-        const tables = document.querySelectorAll('table');
-        
-        tables.forEach(table => {
-            const headers = Array.from(table.querySelectorAll('th')).map(th => th.textContent.toLowerCase());
-            
-            // Check if this table has material-related headers
-            if (headers.includes('material') && headers.includes('consumption')) {
-                const rows = table.querySelectorAll('tr');
-                
-                // Skip header row
-                for (let i = 1; i < rows.length && i - 1 < items.length; i++) {
-                    const cells = rows[i].querySelectorAll('td');
-                    const item = items[i - 1];
-                    
-                    if (cells.length >= 4 && item) {
-                        // Material
-                        const materialInput = cells[0].querySelector('input, textarea');
-                        if (materialInput) materialInput.value = item.material || '';
-                        
-                        // Consumption
-                        const consumptionInput = cells[1].querySelector('input');
-                        if (consumptionInput) consumptionInput.value = item.consumption || '';
-                        
-                        // Price
-                        const priceInput = cells[2].querySelector('input');
-                        if (priceInput) priceInput.value = item.price || '';
-                        
-                        // Cost
-                        const costInput = cells[3].querySelector('input');
-                        if (costInput) costInput.value = item.cost || '';
-                    }
+    extractValue(cell, prefix) {
+        if (!cell) return '';
+        return String(cell).replace(prefix, '').trim();
+    }
+
+    /**
+     * Parse section headers and return current section
+     */
+    parseSectionHeader(firstCell, currentSection) {
+        const sectionMap = {
+            'FABRIC': 'fabric',
+            'FABRIC/S': 'fabric',
+            'TRIM': 'trim',
+            'TRIM/S': 'trim',
+            'EMBROIDERY': 'embroidery',
+            'OPERATIONS': 'operations',
+            'PACKAGING': 'packaging',
+            'OVERHEAD/ PROFIT': 'overhead',
+            'OVERHEAD/PROFIT': 'overhead'
+        };
+
+        return sectionMap[firstCell] || currentSection;
+    }
+
+    /**
+     * Parse data for specific sections
+     */
+    parseSectionData(result, section, row, firstCell) {
+        let materialCost = 0;
+        let factoryCost = 0;
+
+        switch (section) {
+            case 'fabric':
+                if (this.hasFabricData(row)) {
+                    result.fabric.push({
+                        material: firstCell,
+                        consumption: String(row[1] || ''),
+                        price: String(row[2] || ''),
+                        cost: String(row[3] || '')
+                    });
+                    materialCost = parseFloat(row[3]) || 0;
                 }
-            }
-        });
+                break;
+
+            case 'trim':
+                if (this.hasTrimData(row)) {
+                    result.trim.push({
+                        material: firstCell,
+                        consumption: String(row[1] || ''),
+                        price: String(row[2] || ''),
+                        cost: String(row[3] || '')
+                    });
+                    materialCost = parseFloat(row[3]) || 0;
+                }
+                break;
+
+            case 'embroidery':
+                if (this.hasEmbroideryData(row)) {
+                    result.embroidery.push({
+                        design: firstCell,
+                        stitches: String(row[1] || ''),
+                        price: String(row[2] || ''),
+                        cost: String(row[3] || '')
+                    });
+                    factoryCost = parseFloat(row[3]) || 0;
+                }
+                break;
+
+            case 'operations':
+                if (this.hasOperationsData(row)) {
+                    result.operations.push({
+                        operation: firstCell,
+                        time: String(row[1] || ''),
+                        cost: String(row[2] || ''),
+                        total: String(row[3] || '')
+                    });
+                    factoryCost = parseFloat(row[3]) || 0;
+                }
+                break;
+
+            case 'packaging':
+                if (this.hasPackagingData(row)) {
+                    result.packaging.push({
+                        type: firstCell,
+                        notes: String(row[1] || ''),
+                        cost: String(row[3] || '')
+                    });
+                    factoryCost = parseFloat(row[3]) || 0;
+                }
+                break;
+
+            case 'overhead':
+                if (this.hasOverheadData(row)) {
+                    result.overhead.push({
+                        type: firstCell,
+                        notes: String(row[1] || ''),
+                        cost: String(row[3] || '')
+                    });
+                    factoryCost = parseFloat(row[3]) || 0;
+                }
+                break;
+        }
+
+        return { material: materialCost, factory: factoryCost };
+    }
+
+    /**
+     * Validation methods for each section
+     */
+    hasFabricData(row) {
+        return row[1] && row[2] && row[3] && !isNaN(parseFloat(row[3]));
+    }
+
+    hasTrimData(row) {
+        return row[3] && !isNaN(parseFloat(row[3]));
+    }
+
+    hasEmbroideryData(row) {
+        return row[1] && row[2] && row[3] && !isNaN(parseFloat(row[3]));
+    }
+
+    hasOperationsData(row) {
+        return row[3] && !isNaN(parseFloat(row[3]));
+    }
+
+    hasPackagingData(row) {
+        return row[3] && !isNaN(parseFloat(row[3]));
+    }
+
+    hasOverheadData(row) {
+        return row[3] && !isNaN(parseFloat(row[3]));
+    }
+
+    /**
+     * Extract total costs from specific rows
+     */
+    extractTotals(result, firstCell, row) {
+        if (firstCell === 'TOTAL MATERIAL AND SUBMATERIALS COST' && row[3]) {
+            result.totalMaterialCost = String(row[3] || '');
+        }
+        if (firstCell === 'TOTAL FACTORY COST' && row[3]) {
+            result.totalFactoryCost = String(row[3] || '');
+        }
+    }
+
+    /**
+     * Validate if file is supported format
+     */
+    isSupportedFile(fileName) {
+        const extension = fileName.toLowerCase().split('.').pop();
+        return this.supportedFormats.some(format => fileName.toLowerCase().endsWith(format));
+    }
+
+    /**
+     * Get file type for processing
+     */
+    getFileType(fileName) {
+        const extension = fileName.toLowerCase().split('.').pop();
+        return extension === 'csv' ? 'csv' : 'excel';
     }
 }
 
-// Export for use in other modules
+// Export for use in other files
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = TNFBallCapsImporter;
+} else {
+    window.TNFBallCapsImporter = TNFBallCapsImporter;
 }

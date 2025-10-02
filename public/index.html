@@ -3783,10 +3783,10 @@
                         <div class="section-header">OPERATIONS</div>
                         <div class="cost-table">
                             <div class="cost-row header-row">
-                                <div class="cost-cell">OPERATION</div>
-                                <div class="cost-cell">TIME (MINS)</div>
+                                <div class="cost-cell">OPERATIONS</div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell">SMV</div>
                                 <div class="cost-cell">COST (USD/MIN)</div>
-                                <div class="cost-cell">TOTAL</div>
                             </div>
                             <div class="cost-row">
                                 <div class="cost-cell"></div>
@@ -12783,20 +12783,20 @@
                         const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(5) .subtotal-row');
                         if (subtotalRow) {
                             const cells = subtotalRow.querySelectorAll('.cost-cell');
-                            if (cells[0]) cells[0].textContent = item.operation;
-                            if (cells[3]) cells[3].textContent = `$${item.total}`;
+                            if (cells[2]) cells[2].textContent = item.operation; // SUB TOTAL in column 3
+                            if (cells[3]) cells[3].textContent = `$${item.total || '0.00'}`; // Total in column 4
                             console.log('✅ Updated OPERATIONS subtotal:', item.operation, item.total);
                         }
                     } else {
-                        // Regular item
+                        // Regular item - 4 column structure: OPERATIONS, blank, SMV, COST (USD/MIN)
                         if (operationsRows[regularItemCount]) {
                             const cells = operationsRows[regularItemCount].querySelectorAll('.cost-cell');
-                        if (cells[0]) cells[0].textContent = item.operation || '';
-                        if (cells[1]) cells[1].textContent = item.time || '';
-                        if (cells[2]) cells[2].textContent = item.cost || '';
-                        if (cells[3]) cells[3].textContent = item.total || '';
+                            if (cells[0]) cells[0].textContent = item.smv || ''; // OPERATIONS column - show operation values (56, 55, 4854) from Excel col 2
+                            if (cells[1]) cells[1].textContent = ''; // Blank column
+                            if (cells[2]) cells[2].textContent = item.costPerMin || ''; // SMV column - show cost per minute ($0.02, $0.05) from Excel col 3
+                            if (cells[3]) cells[3].textContent = item.total || ''; // COST (USD/MIN) column - show total costs ($255.00, #REF!) from Excel col 4
                             
-                            // Add to total for calculation
+                            // Add to total for calculation - use total from Excel col 4
                             const cost = parseFloat(item.total) || 0;
                             operationsTotal += cost;
                             regularItemCount++;
@@ -12808,8 +12808,8 @@
                 const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(5) .subtotal-row');
                 if (subtotalRow && operationsTotal > 0) {
                     const cells = subtotalRow.querySelectorAll('.cost-cell');
-                    if (cells[0] && !cells[0].textContent.includes('TOTAL')) {
-                        cells[0].textContent = 'SUB TOTAL';
+                    if (cells[2] && !cells[2].textContent.includes('TOTAL')) {
+                        cells[2].textContent = 'SUB TOTAL';
                         cells[3].textContent = `$${operationsTotal.toFixed(2)}`;
                         console.log('✅ Calculated OPERATIONS subtotal:', operationsTotal.toFixed(2));
                     }
@@ -14232,6 +14232,42 @@
             
             return testData;
         }
+
+        // Test function to debug operations data
+        window.testOperationsData = function() {
+            console.log('🧪 TESTING OPERATIONS DATA PARSING');
+            console.log('==');
+            
+            if (!window.lastExcelData) {
+                console.log('❌ No Excel data available. Please upload an Excel file first.');
+                return;
+            }
+            
+            console.log('Raw Excel data:', window.lastExcelData);
+            
+            // Test BallCaps parsing
+            if (window.ballcapsImporter) {
+                try {
+                    const parsedData = window.ballcapsImporter.parseExcelData(window.lastExcelData.data || window.lastExcelData);
+                    console.log('✅ BallCaps parsing successful:');
+                    console.log('Operations data:', parsedData.operations);
+                    console.log('Operations count:', parsedData.operations.length);
+                    
+                    parsedData.operations.forEach((item, index) => {
+                        console.log(`Operation ${index + 1}:`, {
+                            operation: item.operation,
+                            smv: item.smv,
+                            costPerMin: item.costPerMin,
+                            total: item.total
+                        });
+                    });
+                } catch (error) {
+                    console.error('❌ BallCaps parsing failed:', error);
+                }
+            } else {
+                console.log('❌ BallCaps importer not available');
+            }
+        };
 
         // Make functions available globally for testing
         window.testExcelReading = testExcelReading;
