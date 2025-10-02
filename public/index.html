@@ -8693,21 +8693,19 @@
         function initializeUtilities() {
             console.log('🔧 Initializing utilities...');
             console.log('Available classes:', {
-                ExcelUtils: typeof ExcelUtils,
                 TNFBeanieImporter: typeof TNFBeanieImporter,
-                TNFBallCapsImporter: typeof TNFBallCapsImporter
+                TNFBallCapsImporter: typeof TNFBallCapsImporter,
+                XLSX: typeof XLSX
             });
             
             try {
-                if (typeof ExcelUtils !== 'undefined' && typeof TNFBeanieImporter !== 'undefined' && typeof TNFBallCapsImporter !== 'undefined') {
-                    excelUtils = new ExcelUtils();
+                if (typeof TNFBeanieImporter !== 'undefined' && typeof TNFBallCapsImporter !== 'undefined') {
                     beanieImporter = new TNFBeanieImporter();
                     ballcapsImporter = new TNFBallCapsImporter();
                     console.log('✅ Utilities initialized successfully');
                     return true;
                 } else {
                     console.error('❌ Required classes not available:', {
-                        ExcelUtils: typeof ExcelUtils,
                         TNFBeanieImporter: typeof TNFBeanieImporter,
                         TNFBallCapsImporter: typeof TNFBallCapsImporter
                     });
@@ -8728,7 +8726,7 @@
             }
 
             // Check if utilities are initialized
-            if (!excelUtils || !beanieImporter || !ballcapsImporter) {
+            if (!beanieImporter || !ballcapsImporter) {
                 console.log('🔄 Utilities not initialized, attempting to initialize...');
                 if (!initializeUtilities()) {
                     console.error('❌ Failed to initialize utilities');
@@ -8751,7 +8749,8 @@
                 console.log('File size:', uploadedFile.size);
                 console.log('File type:', uploadedFile.type);
                 
-                const rawData = await excelUtils.readFileContent(uploadedFile);
+                // Read Excel file directly using XLSX
+                const rawData = await readExcelFile(uploadedFile);
                 
                 // Store raw data globally for debugging
                 window.lastExcelData = rawData;
@@ -11786,6 +11785,75 @@
             }
         }
 
+        // Simple Excel Reading Function
+        async function readExcelFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        console.log('🔍 Reading Excel file with XLSX...');
+                        
+                        // Ensure XLSX is loaded
+                        if (typeof XLSX === 'undefined') {
+                            reject(new Error('XLSX library not loaded. Please refresh the page.'));
+                            return;
+                        }
+                        
+                        const data = new Uint8Array(e.target.result);
+                        console.log('📊 Excel file data length:', data.length);
+                        
+                        // Read Excel file with optimized settings
+                        const workbook = XLSX.read(data, { 
+                            type: 'array',
+                            raw: true,
+                            cellDates: false,
+                            cellNF: false,
+                            cellText: false,
+                            cellStyles: false,
+                            cellHTML: false,
+                            cellFormula: false,
+                            cellHyperlinks: false,
+                            cellComments: false,
+                            dense: true
+                        });
+                        
+                        console.log('📋 Workbook sheets found:', workbook.SheetNames);
+                        
+                        // Get the first sheet data
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+                            header: 1, 
+                            defval: '',
+                            raw: true
+                        });
+                        
+                        console.log('📊 Excel data rows:', jsonData.length);
+                        console.log('📊 First 5 rows:', jsonData.slice(0, 5));
+                        
+                        // Return data in expected format
+                        resolve({
+                            data: jsonData,
+                            images: [],
+                            sheetName: firstSheetName
+                        });
+                        
+                    } catch (error) {
+                        console.error('❌ Error reading Excel file:', error);
+                        reject(error);
+                    }
+                };
+                
+                reader.onerror = function(error) {
+                    console.error('❌ FileReader error:', error);
+                    reject(new Error('Failed to read file'));
+                };
+                
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
         // Optimized File Reading Functions
         async function readFileContent(file, fileType) {
             return new Promise((resolve, reject) => {
@@ -13965,6 +14033,165 @@
                 }
             }
         });
+
+        // Test function to test Excel reading
+        function testExcelReading() {
+            console.log('🧪 TESTING EXCEL READING...');
+            
+            if (typeof XLSX === 'undefined') {
+                console.error('❌ XLSX library not loaded');
+                return false;
+            }
+            
+            console.log('✅ XLSX library loaded');
+            console.log('XLSX version:', XLSX.version);
+            console.log('XLSX methods:', Object.keys(XLSX).slice(0, 10));
+            
+            return true;
+        }
+
+        // Test function to simulate ROSSIGNOL cap data
+        function testRossignolCapData() {
+            console.log('🧪 TESTING ROSSIGNOL CAP DATA...');
+            
+            const testData = {
+                customer: "ROSSIGNOL",
+                season: "SS26",
+                styleNumber: "RLOMH27",
+                styleName: "CORPORATE CAP FLAT BRIM Opt 2",
+                costedQuantity: "600 pcs-based on using HU available fabric",
+                leadtime: "100 days",
+                notes: "add fabric surcharge USD300 if under MOQ 400 yds.(3600 pcs.) for DTM color visor /sweatband-suggest to use HU available cotton twill",
+                
+                fabric: [
+                    {
+                        material: "58\" 65 polyester 35% Cotton Heather Grey Twill fabric (Crown)",
+                        consumption: "0.2",
+                        price: "4.8500",
+                        cost: "0.97"
+                    },
+                    {
+                        material: "58\" 100% BCI cotton twill (Brim/sweatband/ button)",
+                        consumption: "0.09",
+                        price: "3.7000",
+                        cost: "0.33"
+                    }
+                ],
+                
+                embroidery: [
+                    {
+                        material: "#089N 100% Recycled polyester seam tape",
+                        consumption: "0.03",
+                        price: "2.2000",
+                        cost: "0.07"
+                    },
+                    {
+                        material: "foam padding for sweatband",
+                        consumption: "0.03",
+                        price: "1.6000",
+                        cost: "0.05"
+                    },
+                    {
+                        material: "interlining for sweatband",
+                        consumption: "0.04",
+                        price: "0.6000",
+                        cost: "0.02"
+                    },
+                    {
+                        material: "#102N polyester buckram for front panel",
+                        consumption: "0.035",
+                        price: "3.6000",
+                        cost: "0.13"
+                    }
+                ],
+                
+                trim: [
+                    {
+                        material: "recycled plastic board",
+                        consumption: "1",
+                        price: "0.1000",
+                        cost: "0.10"
+                    },
+                    {
+                        material: "top button",
+                        consumption: "1",
+                        price: "0.0600",
+                        cost: "0.06"
+                    },
+                    {
+                        material: "Plastic snap",
+                        consumption: "1",
+                        price: "0.0500",
+                        cost: "0.05"
+                    },
+                    {
+                        material: "3D emby logo on front",
+                        consumption: "1",
+                        price: "0.7500",
+                        cost: "0.75"
+                    }
+                ],
+                
+                operations: [
+                    {
+                        operation: "Operation 1",
+                        smv: "56",
+                        cost: "0.02",
+                        total: "5.10"
+                    }
+                ],
+                
+                packaging: [
+                    {
+                        item: "Standard Packaging",
+                        notes: "",
+                        cost: "0.25"
+                    },
+                    {
+                        item: "Special Packaging",
+                        notes: "",
+                        cost: "0.00"
+                    }
+                ],
+                
+                overhead: [
+                    {
+                        item: "OVERHEAD",
+                        notes: "",
+                        cost: "53.00"
+                    },
+                    {
+                        item: "PROFIT",
+                        notes: "",
+                        cost: ""
+                    }
+                ],
+                
+                totalMaterialCost: "2.53",
+                totalFactoryCost: "60.88"
+            };
+            
+            console.log('✅ Test data created:', testData);
+            
+            // Test template detection
+            const templateType = detectTemplateType([testData]);
+            console.log('✅ Template type detected:', templateType);
+            
+            // Test population
+            if (templateType === 'ballcaps') {
+                console.log('🎯 Testing BallCaps template population...');
+                populateBallCapsTemplate(testData);
+                console.log('✅ BallCaps template populated successfully');
+            } else {
+                console.log('❌ Template type not detected as ballcaps');
+            }
+            
+            return testData;
+        }
+
+        // Make functions available globally for testing
+        window.testExcelReading = testExcelReading;
+        window.testRossignolCapData = testRossignolCapData;
 
     </script>
 
