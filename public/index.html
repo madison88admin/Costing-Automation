@@ -3858,8 +3858,8 @@
                         <div class="section-header">OVERHEAD/PROFIT</div>
                         <div class="cost-table">
                             <div class="cost-row header-row">
-                                <div class="cost-cell">TYPE</div>
-                                <div class="cost-cell">NOTES</div>
+                                <div class="cost-cell">OVERHEAD/PROFIT</div>
+                                <div class="cost-cell">Factory Notes</div>
                                 <div class="cost-cell">COST</div>
                             </div>
                             <div class="cost-row">
@@ -9137,6 +9137,7 @@
             fillCostSection('TRIM', data.trim, ['material', 'consumption', 'price', 'cost']);
             
             // Fill KNITTING section
+            console.log('🔍 KNITTING DATA FROM EXCEL:', data.knitting);
             fillCostSection('KNITTING', data.knitting, ['machine', 'time', 'sah', 'cost']);
             
             // Fill OPERATIONS section
@@ -9146,7 +9147,8 @@
             fillCostSection('PACKAGING', data.packaging, ['type', 'notes', 'cost']);
             
             // Fill OVERHEAD/PROFIT section
-            fillCostSection('OVERHEAD/ PROFIT', data.overhead, ['type', 'notes', 'cost']);
+            console.log('🔍 OVERHEAD DATA FROM EXCEL:', data.overhead);
+            fillCostSection('OVERHEAD/PROFIT', data.overhead, ['type', 'notes', 'cost']);
             
             // Let the calculation system handle totals instead of importing from Excel
             setTimeout(() => {
@@ -9223,14 +9225,18 @@
             
             if (targetSection) {
                 const rows = targetSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                console.log(`🔍 Found ${rows.length} data rows for ${sectionName}`);
                 
                 if (data && Array.isArray(data)) {
+                    console.log(`🔍 Processing ${data.length} data items for ${sectionName}:`, data);
                     data.forEach((item, index) => {
                         // Skip SUB TOTAL items - they will be handled separately
                         if (item.isSubtotal) {
+                            console.log('⏭️ Skipping subtotal item:', item);
                             return;
                         }
                         
+                        console.log(`🔍 Processing ${sectionName} item ${index}:`, item);
                         if (rows[index] && item) {
                             const cells = rows[index].querySelectorAll('.cost-cell');
                             // Fill only the cells that exist, up to the minimum of columns.length and cells.length
@@ -9239,8 +9245,11 @@
                                 const column = columns[cellIndex];
                                 if (cells[cellIndex] && item[column] !== undefined && item[column] !== null) {
                                     cells[cellIndex].textContent = String(item[column] || '');
+                                    console.log(`✅ Set ${sectionName} cell ${cellIndex} (${column}):`, item[column]);
                                 }
                             }
+                        } else {
+                            console.log(`❌ No row found for item ${index} in ${sectionName}`);
                         }
                     });
                 }
@@ -9455,15 +9464,27 @@
          * Update section subtotal
          */
         function updateSectionSubtotal(sectionSelector, total) {
+            console.log(`🔍 updateSectionSubtotal called with selector: ${sectionSelector}, total: ${total}`);
             const section = document.querySelector(sectionSelector);
-            if (!section) return;
+            if (!section) {
+                console.log('❌ No section found with selector:', sectionSelector);
+                return;
+            }
+
+            const sectionHeader = section.querySelector('.section-header');
+            console.log(`🔍 Found section: ${sectionHeader ? sectionHeader.textContent.trim() : 'Unknown'}`);
 
             const subtotalRow = section.querySelector('.subtotal-row');
             if (subtotalRow) {
                 const subtotalCell = subtotalRow.querySelector('.cost-cell:last-child');
                 if (subtotalCell) {
+                    console.log(`🔍 Updating subtotal from ${subtotalCell.textContent} to $${total}`);
                     subtotalCell.textContent = `$${total}`;
+                } else {
+                    console.log('❌ No subtotal cell found');
                 }
+            } else {
+                console.log('❌ No subtotal row found');
             }
         }
 
@@ -9472,6 +9493,7 @@
          */
         function calculateBeanieTemplate() {
             console.log('🧮 Calculating beanie template...');
+            console.log('🧮 Current time:', new Date().toISOString());
             
             // Find sections by their headers
             const sections = document.querySelectorAll('#costBreakdown .cost-section');
@@ -9493,7 +9515,7 @@
                     else if (headerText === 'KNITTING') knittingSection = section;
                     else if (headerText === 'OPERATIONS') operationsSection = section;
                     else if (headerText === 'PACKAGING') packagingSection = section;
-                    else if (headerText === 'OVERHEAD/ PROFIT' || headerText === 'OVERHEAD/PROFIT') overheadSection = section;
+                    else if (headerText === 'OVERHEAD/PROFIT') overheadSection = section;
                 }
             });
 
@@ -9591,54 +9613,76 @@
             if (knittingSection) {
                 const knittingRows = knittingSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
                 let knittingTotal = 0;
+                console.log('🔍 KNITTING: Found', knittingRows.length, 'rows');
                 
-                knittingRows.forEach(row => {
+                knittingRows.forEach((row, index) => {
                     const cells = row.querySelectorAll('.cost-cell');
+                    console.log(`🔍 KNITTING Row ${index}:`, Array.from(cells).map(c => c.textContent.trim()));
+                    
                     if (cells.length >= 4) {
                         const time = cells[1].textContent.trim();
                         const sah = cells[2].textContent.trim();
+                        const existingCost = cells[3].textContent.trim().replace('$', '');
                         
-                        if (time && sah && !isNaN(parseFloat(time)) && !isNaN(parseFloat(sah))) {
+                        console.log(`🔍 KNITTING Row ${index} - Time: ${time}, SAH: ${sah}, Existing Cost: ${existingCost}`);
+                        
+                        // Check if we have direct cost data (from Excel import), use that first
+                        if (existingCost && !isNaN(parseFloat(existingCost)) && parseFloat(existingCost) > 0) {
+                            console.log(`✅ KNITTING Row ${index} - Using existing cost: ${existingCost}`);
+                            knittingTotal += parseFloat(existingCost);
+                        }
+                        // Otherwise, calculate from time and rate
+                        else if (time && sah && !isNaN(parseFloat(time)) && !isNaN(parseFloat(sah))) {
                             const cost = calculateKnittingCost(time, sah);
                             cells[3].textContent = `$${cost}`;
                             knittingTotal += parseFloat(cost);
+                            console.log(`✅ KNITTING Row ${index} - Calculated cost: ${cost} (${time} × ${sah})`);
                         }
                     }
                 });
                 
-                // Update KNITTING subtotal
-                updateSectionSubtotal('.cost-section:nth-child(4)', knittingTotal.toFixed(2));
-                console.log('KNITTING Total:', knittingTotal);
+                // Update KNITTING subtotal - use more specific selector
+                const knittingSectionSelector = '#costBreakdown .cost-section:nth-child(5)';
+                updateSectionSubtotal(knittingSectionSelector, knittingTotal.toFixed(2));
+                console.log('🧮 KNITTING Total:', knittingTotal.toFixed(2));
+                console.log('🧮 KNITTING Section Selector:', knittingSectionSelector);
             }
 
             // Calculate OPERATIONS section
             if (operationsSection) {
                 const operationRows = operationsSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
                 let operationsTotal = 0;
+                console.log('🔍 OPERATIONS: Found', operationRows.length, 'rows');
                 
-                operationRows.forEach(row => {
+                operationRows.forEach((row, index) => {
                     const cells = row.querySelectorAll('.cost-cell');
+                    console.log(`🔍 OPERATIONS Row ${index}:`, Array.from(cells).map(c => c.textContent.trim()));
+                    
                     if (cells.length >= 4) {
                         const time = cells[1].textContent.trim();
                         const costPerMin = cells[2].textContent.trim();
                         const existingCost = cells[3].textContent.trim().replace('$', '');
                         
-                        // Check if we have time and rate data for calculation
-                        if (time && costPerMin && !isNaN(parseFloat(time)) && !isNaN(parseFloat(costPerMin))) {
+                        console.log(`🔍 OPERATIONS Row ${index} - Time: ${time}, CostPerMin: ${costPerMin}, Existing Cost: ${existingCost}`);
+                        
+                        // Check if we have direct cost data (from Excel import), use that first
+                        if (existingCost && !isNaN(parseFloat(existingCost)) && parseFloat(existingCost) > 0) {
+                            console.log(`✅ OPERATIONS Row ${index} - Using existing cost: ${existingCost}`);
+                            operationsTotal += parseFloat(existingCost);
+                        }
+                        // Otherwise, calculate from time and rate
+                        else if (time && costPerMin && !isNaN(parseFloat(time)) && !isNaN(parseFloat(costPerMin))) {
                             const cost = calculateOperationCost(time, costPerMin);
                             cells[3].textContent = `$${cost}`;
                             operationsTotal += parseFloat(cost);
-                        }
-                        // If we have direct cost data (from Excel import), use that
-                        else if (existingCost && !isNaN(parseFloat(existingCost)) && parseFloat(existingCost) > 0) {
-                            operationsTotal += parseFloat(existingCost);
+                            console.log(`✅ OPERATIONS Row ${index} - Calculated cost: ${cost} (${time} × ${costPerMin})`);
                         }
                     }
                 });
                 
                 // Update OPERATIONS subtotal
-                updateSectionSubtotal('.cost-section:nth-child(5)', operationsTotal.toFixed(2));
-                console.log('OPERATIONS Total:', operationsTotal);
+                updateSectionSubtotal('#costBreakdown .cost-section:nth-child(6)', operationsTotal.toFixed(2));
+                console.log('🧮 OPERATIONS Total:', operationsTotal.toFixed(2));
             }
 
             // Calculate PACKAGING section (direct costs)
@@ -9657,7 +9701,7 @@
                 });
                 
                 // Update PACKAGING subtotal
-                updateSectionSubtotal('.cost-section:nth-child(6)', packagingTotal.toFixed(2));
+                updateSectionSubtotal('#costBreakdown .cost-section:nth-child(7)', packagingTotal.toFixed(2));
                 console.log('PACKAGING Total:', packagingTotal);
             }
 
@@ -9677,7 +9721,7 @@
                 });
                 
                 // Update OVERHEAD subtotal
-                updateSectionSubtotal('.cost-section:nth-child(7)', overheadTotal.toFixed(2));
+                updateSectionSubtotal('#costBreakdown .cost-section:nth-child(8)', overheadTotal.toFixed(2));
                 console.log('OVERHEAD Total:', overheadTotal);
             }
 
