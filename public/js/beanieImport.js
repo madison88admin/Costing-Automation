@@ -488,48 +488,47 @@ var TNFBeanieImporter = class TNFBeanieImporter {
                 }
                 
                 if (currentSection === 'operations' && firstCell && 
+                    !firstCell.includes('OPERATION') && 
                     !firstCell.includes('OPERATIONS') && 
-                    !firstCell.includes('TIME') && 
+                    !firstCell.includes('SMV') && 
                     !firstCell.includes('COST') && 
+                    !firstCell.includes('USD/MIN') &&
                     !firstCell.includes('SUB TOTAL') && 
                     !firstCell.includes('TOTAL') &&
                     firstCell.trim() !== '') {
                     console.log(`🔍 Checking OPERATIONS: "${firstCell}" - Row:`, row);
                     
-                    // More flexible operations parsing - look for any row with operation name and some cost data
-                    let time = '';
-                    let cost = '';
+                    // Updated operations parsing to match new header structure:
+                    // OPERATION | BLANK | SMV | COST (USD/MIN)
+                    let smv = '';
+                    let costPerMin = '';
                     let total = '';
                     
-                    // Try to find time in col 1
-                    if (row[1] && !isNaN(parseFloat(row[1]))) {
-                        time = parseFloat(row[1]).toFixed(2);
-                    }
-                    
-                    // Try to find cost in col 2 or col 3
+                    // SMV is in col 2 (index 2)
                     if (row[2] && !isNaN(parseFloat(row[2]))) {
-                        cost = parseFloat(row[2]).toFixed(2);
-                    } else if (row[3] && !isNaN(parseFloat(row[3]))) {
-                        cost = parseFloat(row[3]).toFixed(2);
+                        smv = parseFloat(row[2]).toFixed(2);
                     }
                     
-                    // Try to find total in col 3 or col 4
-                    if (row[3] && !isNaN(parseFloat(row[3])) && !cost) {
-                        total = parseFloat(row[3]).toFixed(2);
-                    } else if (row[4] && !isNaN(parseFloat(row[4]))) {
-                        total = parseFloat(row[4]).toFixed(2);
+                    // COST (USD/MIN) is in col 3 (index 3)
+                    if (row[3] && !isNaN(parseFloat(row[3]))) {
+                        costPerMin = parseFloat(row[3]).toFixed(2);
+                    }
+                    
+                    // Calculate total: SMV * COST (USD/MIN)
+                    if (smv && costPerMin) {
+                        total = (parseFloat(smv) * parseFloat(costPerMin)).toFixed(2);
                     }
                     
                     // If we have any meaningful data, add the operation
-                    if (time || cost || total) {
-                        let operationName = firstCell || `Operation ${result.operations.length + 1}`;
+                    if (smv || costPerMin || total) {
+                        let operationName = `Operation ${result.operations.length + 1}`;
                         result.operations.push({
-                            operation: String(operationName), // Ensure operation is always a string
-                            time: time,
-                            cost: cost,
-                            total: total || (time && cost ? (parseFloat(time) * parseFloat(cost)).toFixed(2) : '')
+                            operation: String(operationName),
+                            smv: smv,
+                            costPerMin: costPerMin,
+                            total: total
                         });
-                        console.log('✅ OPERATION:', operationName, 'Time:', time, 'Cost:', cost, 'Total:', total);
+                        console.log('✅ OPERATION:', operationName, 'SMV:', smv, 'Cost/Min:', costPerMin, 'Total:', total);
                     }
                 }
                 
@@ -787,6 +786,76 @@ var TNFBeanieImporter = class TNFBeanieImporter {
             console.error('❌ Error in parsing:', error);
             // Re-throw the error so it can be caught by the calling code
             throw error;
+        }
+
+        // Calculate accurate totals from parsed data
+        console.log('🔍 Calculating accurate totals from parsed data...');
+        
+        // Calculate Material Total (YARN + FABRIC + TRIM)
+        let calculatedMaterialTotal = 0;
+        
+        // Sum YARN costs
+        result.yarn.forEach(item => {
+            const cost = parseFloat(item.cost) || 0;
+            calculatedMaterialTotal += cost;
+            console.log('  YARN cost:', item.material, '=', cost);
+        });
+        
+        // Sum FABRIC costs
+        result.fabric.forEach(item => {
+            const cost = parseFloat(item.cost) || 0;
+            calculatedMaterialTotal += cost;
+            console.log('  FABRIC cost:', item.material, '=', cost);
+        });
+        
+        // Sum TRIM costs
+        result.trim.forEach(item => {
+            const cost = parseFloat(item.cost) || 0;
+            calculatedMaterialTotal += cost;
+            console.log('  TRIM cost:', item.material, '=', cost);
+        });
+        
+        // Update material total with calculated value
+        if (calculatedMaterialTotal > 0) {
+            result.totalMaterialCost = calculatedMaterialTotal.toFixed(2);
+            console.log('✅ Calculated Material Total:', result.totalMaterialCost);
+        }
+        
+        // Calculate Factory Total (Material + KNITTING + OPERATIONS + PACKAGING + OVERHEAD)
+        let calculatedFactoryTotal = calculatedMaterialTotal;
+        
+        // Sum KNITTING costs
+        result.knitting.forEach(item => {
+            const cost = parseFloat(item.cost) || 0;
+            calculatedFactoryTotal += cost;
+            console.log('  KNITTING cost:', item.machine, '=', cost);
+        });
+        
+        // Sum OPERATIONS costs - Updated to use new structure
+        result.operations.forEach(item => {
+            const cost = parseFloat(item.total) || parseFloat(item.cost) || 0;
+            calculatedFactoryTotal += cost;
+            console.log('  OPERATIONS cost:', item.operation, '=', cost);
+        });
+        
+        // Sum PACKAGING costs
+        result.packaging.forEach(item => {
+            const cost = parseFloat(item.cost) || 0;
+            calculatedFactoryTotal += cost;
+            console.log('  PACKAGING cost:', item.type, '=', cost);
+        });
+        
+        // Sum OVERHEAD costs
+        result.overhead.forEach(item => {
+            const cost = parseFloat(item.cost) || 0;
+            calculatedFactoryTotal += cost;
+            console.log('  OVERHEAD cost:', item.type, '=', cost);
+        });
+        
+        // Update factory total with calculated value
+        if (calculatedFactoryTotal > 0) {
+            result.totalFactoryCost = calculatedFactoryTotal.toFixed(2);
+            console.log('✅ Calculated Factory Total:', result.totalFactoryCost);
         }
 
         console.log('=== FINAL RESULT ===');

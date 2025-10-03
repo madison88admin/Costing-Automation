@@ -3436,10 +3436,10 @@
                         <div class="section-header">OPERATIONS</div>
                         <div class="cost-table">
                             <div class="cost-row header-row">
-                                <div class="cost-cell">OPERATIONS</div>
-                                <div class="cost-cell">OPERATION TIME (MINS)</div>
-                                <div class="cost-cell">OPERATION COST (USD/MIN)</div>
-                                <div class="cost-cell">OPERATION COST</div>
+                                <div class="cost-cell">OPERATION</div>
+                                <div class="cost-cell" style="color: transparent; background-color: transparent;">BLANK</div>
+                                <div class="cost-cell">SMV</div>
+                                <div class="cost-cell">COST (USD/MIN)</div>
                             </div>
                             <div class="cost-row">
                                 <div class="cost-cell"></div>
@@ -3783,8 +3783,8 @@
                         <div class="section-header">OPERATIONS</div>
                         <div class="cost-table">
                             <div class="cost-row header-row">
-                                <div class="cost-cell">OPERATIONS</div>
-                                <div class="cost-cell"></div>
+                                <div class="cost-cell">OPERATION</div>
+                                <div class="cost-cell" style="color: transparent; background-color: transparent;">BLANK</div>
                                 <div class="cost-cell">SMV</div>
                                 <div class="cost-cell">COST (USD/MIN)</div>
                             </div>
@@ -9140,8 +9140,31 @@
             console.log('🔍 KNITTING DATA FROM EXCEL:', data.knitting);
             fillCostSection('KNITTING', data.knitting, ['machine', 'time', 'sah', 'cost']);
             
-            // Fill OPERATIONS section
-            fillCostSection('OPERATIONS', data.operations, ['operation', 'time', 'costPerMin', 'cost']);
+            // Fill OPERATIONS section - Updated to match new header structure
+            // Map: operation, blank, smv, total
+            
+            
+            if (data.operations && data.operations.length > 0) {
+                const visibleTemplate = document.querySelector('.cost-breakdown-container:not([style*="display: none"])');
+                if (visibleTemplate) {
+                    const operationsSection = visibleTemplate.querySelector('.cost-section .section-header');
+                    if (operationsSection && operationsSection.textContent.trim() === 'OPERATIONS') {
+                        const targetSection = operationsSection.parentElement;
+                        const rows = targetSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                        
+                        data.operations.forEach((item, index) => {
+                            if (rows[index]) {
+                                const cells = rows[index].querySelectorAll('.cost-cell');
+                                if (cells[0]) cells[0].textContent = item.operation || '';
+                                if (cells[1]) cells[1].textContent = item.smv || ''; // BLANK column shows SMV values
+                                if (cells[2]) cells[2].textContent = item.costPerMin || ''; // SMV column shows cost per minute
+                                if (cells[3]) cells[3].textContent = item.total || ''; // COST (USD/MIN) column shows total
+                                console.log(`✅ OPERATIONS item ${index}:`, item.operation, item.smv, item.costPerMin, item.total);
+                            }
+                        });
+                    }
+                }
+            }
             
             // Fill PACKAGING section
             fillCostSection('PACKAGING', data.packaging, ['type', 'notes', 'cost']);
@@ -12767,12 +12790,19 @@
             }
             
             // Populate operations section
+            console.log('🔍 OPERATIONS DEBUG - Starting operations population:');
+            console.log('- parsedData.operations exists:', !!parsedData.operations);
+            console.log('- parsedData.operations length:', parsedData.operations ? parsedData.operations.length : 'undefined');
+            console.log('- Full parsedData:', parsedData);
+            
+            
             if (parsedData.operations && parsedData.operations.length > 0) {
                 const operationsRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(5) .cost-row:not(.header-row):not(.subtotal-row)');
                 console.log('🔍 OPERATIONS DEBUG:');
                 console.log('- Found operations data:', parsedData.operations.length, 'items');
                 console.log('- Found DOM rows:', operationsRows.length);
                 console.log('- Operations data:', parsedData.operations);
+                console.log('- First operation item:', parsedData.operations[0]);
                 let regularItemCount = 0;
                 let operationsTotal = 0;
                 
@@ -12788,15 +12818,41 @@
                             console.log('✅ Updated OPERATIONS subtotal:', item.operation, item.total);
                         }
                     } else {
-                        // Regular item - 4 column structure: OPERATIONS, blank, SMV, COST (USD/MIN)
+                        // Regular item - 4 column structure: OPERATION | BLANK | SMV | COST (USD/MIN)
                         if (operationsRows[regularItemCount]) {
                             const cells = operationsRows[regularItemCount].querySelectorAll('.cost-cell');
-                            if (cells[0]) cells[0].textContent = item.smv || ''; // OPERATIONS column - show operation values (56, 55, 4854) from Excel col 2
-                            if (cells[1]) cells[1].textContent = ''; // Blank column
-                            if (cells[2]) cells[2].textContent = item.costPerMin || ''; // SMV column - show cost per minute ($0.02, $0.05) from Excel col 3
-                            if (cells[3]) cells[3].textContent = item.total || ''; // COST (USD/MIN) column - show total costs ($255.00, #REF!) from Excel col 4
+                            console.log(`🔍 Populating operation ${regularItemCount + 1}:`, {
+                                operation: item.operation,
+                                smv: item.smv,
+                                costPerMin: item.costPerMin,
+                                total: item.total
+                            });
                             
-                            // Add to total for calculation - use total from Excel col 4
+                            console.log(`🔍 Setting cells for operation ${regularItemCount + 1}:`, {
+                                operation: item.operation,
+                                smv: item.smv,
+                                total: item.total,
+                                cellsLength: cells.length
+                            });
+                            
+                            if (cells[0]) {
+                                cells[0].textContent = item.operation || '';
+                                console.log(`✅ Set cell 0 (OPERATION): "${item.operation}"`);
+                            }
+                            if (cells[1]) {
+                                cells[1].textContent = item.smv || ''; // BLANK column shows SMV values
+                                console.log(`✅ Set cell 1 (BLANK): "${item.smv}"`);
+                            }
+                            if (cells[2]) {
+                                cells[2].textContent = item.costPerMin || ''; // SMV column shows cost per minute
+                                console.log(`✅ Set cell 2 (SMV): "${item.costPerMin}"`);
+                            }
+                            if (cells[3]) {
+                                cells[3].textContent = item.total || ''; // COST (USD/MIN) column shows total
+                                console.log(`✅ Set cell 3 (COST USD/MIN): "${item.total}"`);
+                            }
+                            
+                            // Add to total for calculation - use total from calculated value
                             const cost = parseFloat(item.total) || 0;
                             operationsTotal += cost;
                             regularItemCount++;
@@ -14684,6 +14740,40 @@
 
     <!-- Help Panel Overlay -->
     <div class="help-overlay" id="help-overlay" onclick="toggleHelpTutorial()"></div>
+
+    <script>
+        // Debug function for operations data
+        window.debugOperationsData = function() {
+            console.log('🔍 DEBUGGING OPERATIONS DATA');
+            console.log('==');
+            if (!window.lastExcelData) {
+                console.log('❌ No Excel data available. Please upload an Excel file first.');
+                return;
+            }
+            
+            const data = window.lastExcelData.data || window.lastExcelData;
+            console.log('Searching for OPERATIONS-related rows...');
+            
+            for (let i = 0; i < data.length; i++) {
+                const row = data[i];
+                if (!row || row.length === 0) continue;
+                
+                const firstCell = String(row[0] || '').trim();
+                
+                // Look for rows that might be operations data
+                if ((row[2] && !isNaN(parseFloat(row[2]))) || (row[3] && !isNaN(parseFloat(row[3])))) {
+                    console.log(`Row ${i}:`, {
+                        firstCell: firstCell,
+                        row: row,
+                        col2: row[2],
+                        col3: row[3],
+                        hasSMV: row[2] && !isNaN(parseFloat(row[2])),
+                        hasCost: row[3] && !isNaN(parseFloat(row[3]))
+                    });
+                }
+            }
+        };
+    </script>
 
 </body>
 </html>

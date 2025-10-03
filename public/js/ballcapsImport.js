@@ -111,7 +111,7 @@ class TNFBallCapsImporter {
                     console.log('🔍 Found TRIM section');
                 } else if (firstCell === 'OPERATIONS') {
                     currentSection = 'operations';
-                    console.log('🔍 Found OPERATIONS section');
+                    console.log('🔍 Found OPERATIONS section - switching to operations parsing');
                 } else if (firstCell === 'PACKAGING') {
                     currentSection = 'packaging';
                     console.log('🔍 Found PACKAGING section');
@@ -125,6 +125,15 @@ class TNFBallCapsImporter {
                 // Debug: Log current section and row data for operations/overhead
                 if (currentSection === 'operations' || currentSection === 'overhead') {
                     console.log(`🔍 Current section: ${currentSection}, Row ${i}:`, firstCell, '|', row[1], '|', row[2], '|', row[3]);
+                    if (currentSection === 'operations') {
+                        console.log(`🔍 Operations row data:`, row);
+                        console.log(`🔍 Has operations data:`, this.hasOperationsData(row));
+                    }
+                }
+                
+                // Debug: Log all section detections
+                if (firstCell && (firstCell.includes('OPERATION') || firstCell.includes('SMV') || firstCell.includes('COST'))) {
+                    console.log(`🔍 Potential operations row ${i}:`, firstCell, '|', row[1], '|', row[2], '|', row[3]);
                 }
                 
                 // Detect header rows and set current section based on context
@@ -195,17 +204,38 @@ class TNFBallCapsImporter {
                     console.log('✅ TRIM:', firstCell, 'Cost:', row[3]);
                 }
                 
-                if (currentSection === 'operations' && !firstCell.includes('OPERATIONS') && !firstCell.includes('TIME') && !firstCell.includes('COST') && !firstCell.includes('SUB TOTAL') && !firstCell.includes('TOTAL')) {
-                    console.log(`🔍 Checking OPERATIONS: "${firstCell}" - Row:`, row, 'SMV in col 2:', row[2], 'CostPerMin in col 3:', row[3], 'Total in col 4:', row[4]);
-                    // Check if this row has operations data (SMV in col 2, cost per min in col 3, total in col 4)
-                    if (row[2] && row[2].toString().trim() && (row[3] || row[4])) {
-                        result.operations.push({
-                            operation: firstCell || 'Operation',
-                            smv: String(row[2] || ''),
-                            costPerMin: String(row[3] || ''),
-                            total: String(row[4] || '')
-                        });
-                        console.log('✅ OPERATION:', firstCell, 'SMV:', row[2], 'CostPerMin:', row[3], 'Total:', row[4]);
+                // Fallback operations detection - look for rows with SMV and cost data
+                // This runs for ALL rows, not just when no section is detected
+                if (firstCell && firstCell.trim() !== '' && 
+                    !firstCell.includes('FABRIC') && !firstCell.includes('TRIM') && 
+                    !firstCell.includes('PACKAGING') && !firstCell.includes('OVERHEAD') &&
+                    !firstCell.includes('TOTAL') && !firstCell.includes('SUB TOTAL') &&
+                    !firstCell.includes('YARN') && !firstCell.includes('KNITTING') &&
+                    !firstCell.includes('OPERATIONS') && !firstCell.includes('SMV') &&
+                    !firstCell.includes('COST') && !firstCell.includes('USD')) {
+                    
+                    // Check if this row has operations-like data (SMV in col 2, cost in col 3)
+                    if (row[2] && !isNaN(parseFloat(row[2])) && row[3] && !isNaN(parseFloat(row[3]))) {
+                        console.log(`🔍 Fallback operations detection - Row ${i}:`, firstCell, '|', row[1], '|', row[2], '|', row[3]);
+                        
+                        let smv = String(row[2] || '');
+                        let costPerMin = String(row[3] || '');
+                        let total = '';
+                        
+                        // Calculate total: SMV * COST (USD/MIN)
+                        if (smv && costPerMin && !isNaN(parseFloat(smv)) && !isNaN(parseFloat(costPerMin))) {
+                            total = (parseFloat(smv) * parseFloat(costPerMin)).toFixed(2);
+                        }
+                        
+                        const operationData = {
+                            operation: `Operation ${result.operations.length + 1}`,
+                            smv: smv,
+                            costPerMin: costPerMin,
+                            total: total
+                        };
+                        
+                        console.log('🔍 Adding fallback operation:', operationData);
+                        result.operations.push(operationData);
                     }
                 }
                 
@@ -247,15 +277,64 @@ class TNFBallCapsImporter {
             console.error('Error in flexible parsing:', error);
         }
 
+        // Extract Notes section - look for rows that contain notes information
+        console.log('🔍 Extracting Notes section...');
+        let notesContent = [];
+        let inNotesSection = false;
+        
+        for (let i = 0; i < data.length; i++) {
+            const row = data[i];
+            if (!row || row.length === 0) continue;
+            
+            const firstCell = String(row[0] || '').trim();
+            const allRowContent = row.filter(cell => cell && String(cell).trim() !== '').join(' ');
+            
+            // Look for Notes section header
+            if ((firstCell.toLowerCase() === 'notes' || firstCell.toLowerCase() === 'note') ||
+                (allRowContent.toLowerCase() === 'notes' || allRowContent.toLowerCase() === 'note')) {
+                inNotesSection = true;
+                console.log('✅ Found Notes section header at row', i, ':', firstCell);
+                continue;
+            }
+            
+            // If we're in notes section, collect content
+            if (inNotesSection) {
+                // Stop if we hit another major section
+                if (firstCell.includes('FABRIC') || firstCell.includes('TRIM') || 
+                    firstCell.includes('OPERATIONS') || firstCell.includes('PACKAGING') || 
+                    firstCell.includes('OVERHEAD') || firstCell.includes('TOTAL') || 
+                    firstCell.includes('SUBTOTAL')) {
+                    console.log('🛑 Stopping notes extraction at row', i, 'due to section:', firstCell);
+                    break;
+                }
+                
+                // Collect non-empty content
+                if (allRowContent.trim()) {
+                    notesContent.push(allRowContent.trim());
+                    console.log('📝 Added to notes:', allRowContent.trim());
+                }
+            }
+        }
+        
+        // Join all notes content
+        if (notesContent.length > 0) {
+            result.notes = notesContent.join('\n');
+            console.log('✅ Notes extracted (', notesContent.length, 'lines):', result.notes.substring(0, 200) + '...');
+        } else {
+            console.log('⚠️ No notes section found');
+        }
+
         console.log('=== FINAL RESULT ===');
         console.log('Customer:', result.customer);
         console.log('Season:', result.season);
         console.log('Style#:', result.styleNumber);
         console.log('Style Name:', result.styleName);
+        console.log('Notes:', result.notes ? result.notes.substring(0, 100) + '...' : 'None');
         console.log('FABRIC items:', result.fabric.length, result.fabric);
         console.log('EMBROIDERY items:', result.embroidery.length, result.embroidery);
         console.log('TRIM items:', result.trim.length, result.trim);
         console.log('OPERATIONS items:', result.operations.length, result.operations);
+        console.log('🔍 OPERATIONS DEBUG - Full operations data:', result.operations);
         console.log('PACKAGING items:', result.packaging.length, result.packaging);
         console.log('OVERHEAD items:', result.overhead.length, result.overhead);
         console.log('Material Total:', result.totalMaterialCost);
@@ -366,13 +445,30 @@ class TNFBallCapsImporter {
 
             case 'operations':
                 if (this.hasOperationsData(row)) {
-                    result.operations.push({
-                        operation: firstCell,
-                        time: String(row[1] || ''),
-                        cost: String(row[2] || ''),
-                        total: String(row[3] || '')
-                    });
-                    factoryCost = parseFloat(row[3]) || 0;
+                    console.log('🔍 Processing operations row:', row);
+                    // Updated to match new header structure: OPERATION | BLANK | SMV | COST (USD/MIN)
+                    let smv = String(row[2] || '');
+                    let costPerMin = String(row[3] || '');
+                    let total = '';
+                    
+                    console.log('🔍 Operations data - SMV:', smv, 'CostPerMin:', costPerMin);
+                    
+                    // Calculate total: SMV * COST (USD/MIN)
+                    if (smv && costPerMin && !isNaN(parseFloat(smv)) && !isNaN(parseFloat(costPerMin))) {
+                        total = (parseFloat(smv) * parseFloat(costPerMin)).toFixed(2);
+                        console.log('🔍 Calculated total:', total);
+                    }
+                    
+                    const operationData = {
+                        operation: `Operation ${result.operations.length + 1}`,
+                        smv: smv,
+                        costPerMin: costPerMin,
+                        total: total
+                    };
+                    
+                    console.log('🔍 Adding operation:', operationData);
+                    result.operations.push(operationData);
+                    factoryCost = parseFloat(total) || 0;
                 }
                 break;
 
@@ -418,7 +514,16 @@ class TNFBallCapsImporter {
     }
 
     hasOperationsData(row) {
-        return row[3] && !isNaN(parseFloat(row[3]));
+        // Check for SMV in column 2 and COST in column 3
+        const hasSMV = row[2] && !isNaN(parseFloat(row[2]));
+        const hasCost = row[3] && !isNaN(parseFloat(row[3]));
+        const result = hasSMV || hasCost;
+        
+        if (result) {
+            console.log('🔍 Found operations data in row:', row, 'SMV:', hasSMV, 'Cost:', hasCost);
+        }
+        
+        return result;
     }
 
     hasPackagingData(row) {
