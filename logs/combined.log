@@ -3138,3 +3138,191 @@
 {"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T03:17:35.190Z"}
 {"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T03:17:35.720Z"}
 {"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T03:17:35.720Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-10-03T03:20:49.887Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-10-03T03:20:57.816Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-10-03T03:21:24.384Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-10-03T03:21:36.653Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-10-03T03:22:30.168Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-10-03T03:22:42.912Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T03:22:46.385Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T03:22:46.929Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T03:22:47.199Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T03:22:47.340Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T03:22:47.341Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-10-03T03:24:54.260Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-10-03T03:25:00.410Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-10-03T03:25:05.326Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-10-03T03:25:09.799Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-10-03T03:25:37.391Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T03:25:40.707Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T03:25:41.301Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T03:25:41.606Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T03:25:41.820Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T03:25:41.821Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-10-03T03:28:17.810Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-10-03T03:28:20.954Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-10-03T03:28:25.635Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T03:28:29.369Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T03:28:29.953Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T03:28:30.294Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T03:28:30.534Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T03:28:30.535Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T03:30:47.271Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T03:30:47.857Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T03:30:48.172Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T03:30:48.320Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T03:30:48.321Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-10-03T03:32:10.868Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-10-03T03:32:18.163Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-10-03T03:32:22.658Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-10-03T03:32:24.472Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T03:32:27.648Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T03:32:28.180Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T03:32:29.152Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T03:32:29.519Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T03:32:29.519Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-10-03T03:34:26.610Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-10-03T03:34:33.416Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-10-03T03:34:39.386Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-10-03T03:34:44.749Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-10-03T03:34:46.606Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T03:34:49.485Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T03:34:50.392Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T03:34:50.642Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T03:34:50.783Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T03:34:50.784Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T03:36:13.208Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T03:36:13.725Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T03:36:14.052Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T03:36:14.209Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T03:36:14.209Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T03:37:24.346Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T03:37:24.686Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T03:37:24.991Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T03:37:25.195Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T03:37:25.196Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T03:41:59.884Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T03:42:00.429Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T03:42:00.778Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T03:42:00.978Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T03:42:00.978Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T03:43:11.107Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T03:43:11.467Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T03:43:11.664Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T03:43:11.877Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T03:43:11.877Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T03:45:01.772Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T03:45:02.331Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T03:45:02.523Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T03:45:02.666Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T03:45:02.666Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T03:46:47.384Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T03:46:47.913Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T03:46:48.087Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T03:46:48.219Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T03:46:48.219Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T03:48:20.722Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T03:48:21.020Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T03:48:21.188Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T03:48:21.323Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T03:48:21.323Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T03:48:33.506Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T03:48:33.818Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T03:48:33.995Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T03:48:34.132Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T03:48:34.133Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T03:51:19.863Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T03:51:20.366Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T03:51:20.613Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T03:51:20.745Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T03:51:20.746Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T05:29:51.051Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T05:29:51.984Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T05:29:52.238Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T05:29:52.425Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T05:29:52.425Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T05:30:05.938Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T05:30:06.374Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T05:30:06.596Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T05:30:06.783Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T05:30:06.784Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T05:38:19.621Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T05:38:20.018Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T05:38:20.676Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T05:38:20.849Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T05:38:20.849Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T05:39:34.428Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T05:39:34.804Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T05:39:35.149Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T05:39:35.331Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T05:39:35.331Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T05:43:02.790Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T05:43:03.186Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T05:43:03.837Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T05:43:04.054Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T05:43:04.054Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T05:46:54.003Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T05:46:54.540Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T05:46:54.793Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T05:46:54.934Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T05:46:54.934Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T05:48:33.504Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T05:48:33.858Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T05:48:34.082Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T05:48:34.254Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T05:48:34.255Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T05:51:19.418Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T05:51:19.932Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T05:51:20.182Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T05:51:20.331Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T05:51:20.331Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T05:54:07.379Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T05:54:07.972Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T05:54:09.576Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T05:54:09.791Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T05:54:09.792Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T05:58:32.236Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T05:58:32.834Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T05:58:33.211Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T05:58:33.368Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T05:58:33.368Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T06:00:45.923Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T06:00:46.508Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T06:00:46.854Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T06:00:47.042Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T06:00:47.042Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T06:02:21.186Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T06:02:21.545Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T06:02:21.910Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T06:02:22.057Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T06:02:22.057Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T06:04:49.319Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T06:04:49.656Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T06:04:49.874Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T06:04:50.031Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T06:04:50.031Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T06:06:31.673Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T06:06:33.166Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T06:06:33.635Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T06:06:33.880Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T06:06:33.880Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T06:08:56.614Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T06:08:57.339Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T06:08:57.632Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T06:08:57.803Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T06:08:57.803Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T06:12:17.508Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T06:12:18.086Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T06:12:18.411Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T06:12:18.585Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T06:12:18.585Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T06:12:33.937Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T06:12:34.269Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T06:12:34.506Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T06:12:34.636Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T06:12:34.636Z"}
+{"level":"info","message":"Total records in database: 2798","service":"costing-automation","timestamp":"2025-10-03T06:15:13.903Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-10-03T06:15:14.426Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T06:15:14.988Z"}
+{"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T06:15:15.133Z"}
+{"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T06:15:15.134Z"}

@@ -476,62 +476,168 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            position: relative;
         }
+
 
         .filter-dropdown {
             position: absolute;
             top: 100%;
             left: 0;
             right: 0;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            background: #2d2d2d;
+            border: 1px solid #555;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
             z-index: 1000;
-            max-height: 200px;
-            overflow-y: auto;
+            max-height: 300px;
+            overflow: hidden;
             display: none;
+            min-width: 200px;
+            width: 250px;
         }
 
         .filter-dropdown.show {
             display: block;
         }
 
+        .filter-header {
+            background: #2d2d2d;
+            color: white;
+            padding: 10px 12px;
+            font-weight: 600;
+            border-bottom: 1px solid #555;
+            font-size: 13px;
+            text-transform: uppercase;
+        }
+
+        .filter-search {
+            padding: 10px 12px;
+            border-bottom: 1px solid #555;
+        }
+
+        .filter-search input {
+            width: 100%;
+            padding: 8px 10px;
+            background: #404040;
+            border: 1px solid #666;
+            border-radius: 4px;
+            color: white;
+            font-size: 12px;
+            outline: none;
+        }
+
+        .filter-search input::placeholder {
+            color: #aaa;
+        }
+
+        .filter-search input:focus {
+            border-color: #007bff;
+        }
+
+        .filter-options {
+            max-height: 180px;
+            overflow-y: auto;
+            background: #2d2d2d;
+        }
+
         .filter-option {
             padding: 8px 12px;
             cursor: pointer;
-            border-bottom: 1px solid #f0f0f0;
-            transition: background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
             font-size: 12px;
+            border-bottom: 1px solid #404040;
+            transition: background-color 0.2s ease;
         }
 
         .filter-option:hover {
-            background-color: #f8f9fa;
+            background: #404040;
         }
 
         .filter-option:last-child {
             border-bottom: none;
         }
 
-        .filter-option.selected {
-            background-color: #e3f2fd;
-            color: #1976d2;
-            font-weight: 500;
+        .filter-option input[type="checkbox"] {
+            margin-right: 8px;
+            width: 16px;
+            height: 16px;
+            accent-color: #007bff;
+            cursor: pointer;
         }
 
-        .filter-clear {
-            background: #ff6b6b;
+        .filter-option label {
+            flex: 1;
+            cursor: pointer;
+            margin: 0;
+            text-align: right;
+        }
+
+        .filter-actions {
+            padding: 10px 12px;
+            border-top: 1px solid #555;
+            background: #2d2d2d;
+            display: flex;
+            gap: 8px;
+            justify-content: space-between;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 1px solid #666;
+            background: #404040;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .filter-btn:hover {
+            background: #555;
+            border-color: #777;
+        }
+
+        .filter-btn.primary {
+            background: #007bff;
+            border-color: #007bff;
+            box-shadow: 0 0 0 1px rgba(0, 123, 255, 0.3);
+        }
+
+        .filter-btn.primary:hover {
+            background: #0056b3;
+            border-color: #0056b3;
+        }
+
+        /* Filter button styles */
+        .filter-triangle {
+            background: #667eea;
             color: white;
             border: none;
-            padding: 2px 6px;
             border-radius: 3px;
+            padding: 4px 8px;
             cursor: pointer;
             font-size: 10px;
-            margin-left: 4px;
+            margin-left: 8px;
+            transition: all 0.2s ease;
         }
 
-        .filter-clear:hover {
-            background: #ff5252;
+        .filter-triangle:hover {
+            background: #5a6fd8;
+        }
+
+        .filter-triangle.active {
+            background: #28a745;
+        }
+
+        .header-with-filter {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
         /* Custom Season Filter Panel */
@@ -5298,6 +5404,9 @@
             
             try {
             
+            // First, process the data to determine what to show
+            let dataToShow = data;
+            
             // Create table with specific columns
             let html = `
                 <div style="border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 12px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); margin: 10px; box-shadow: 0 6px 20px rgba(31, 38, 135, 0.15);">
@@ -5307,60 +5416,24 @@
                                 <tr>
             `;
             
-            // Add column headers with display names and triangle filter buttons (only for specific columns)
-            const filterableColumns = ['Season', 'Customer', 'Style Number', 'Style Name', 'Main Material'];
-            
+            // Add column headers with display names and triangle filter buttons (all columns are filterable)
             columnHeaders.forEach((header, index) => {
                 const isMissing = mappedColumns[index] === null;
-                const hasFilter = filterableColumns.includes(header);
                 const headerStyle = isMissing ? 
                     'padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; background: #ffebee; color: #c62828; font-style: italic; font-weight: 600; position: relative;' :
                     'padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;';
                 
-                if (hasFilter) {
-                    if (header === 'Season') {
-                        // Special Season filter panel
-                        html += `
-                            <th style="${headerStyle}">
-                                <div class="header-with-filter">
-                                    <span>${header}${isMissing ? ' (Missing)' : ''}</span>
-                                    <button class="filter-triangle" onclick="toggleSeasonFilter(${index})" title="Filter ${header}">
-                                        ▼
-                                    </button>
-                                </div>
-                            </th>
-                        `;
-                    } else if (header === 'Customer') {
-                        // Special Customer filter popup
-                        html += `
-                            <th style="${headerStyle}">
-                                <div class="header-with-filter">
-                                    <span>${header}${isMissing ? ' (Missing)' : ''}</span>
-                                    <button class="filter-triangle" onclick="toggleCustomerFilter(${index})" title="Filter ${header}">
-                                        ▼
-                                    </button>
-                                </div>
-                            </th>
-                        `;
-                    } else {
-                        // Regular filter dropdown for other columns
-                        html += `
-                            <th style="${headerStyle}">
-                                <div class="header-with-filter">
-                                    <span>${header}${isMissing ? ' (Missing)' : ''}</span>
-                                    <button class="filter-triangle" onclick="toggleFilter('${header}', ${index})" title="Filter ${header}">
-                                        ▼
-                                    </button>
-                                </div>
-                                <div class="filter-dropdown" id="filter-${index}">
-                                    <!-- Filter options will be populated here -->
-                                </div>
-                            </th>
-                        `;
-                    }
-                } else {
-                    html += `<th style="${headerStyle}">${header}${isMissing ? ' (Missing)' : ''}</th>`;
-                }
+                // All columns get filter buttons
+                html += `
+                    <th style="${headerStyle}">
+                        <div class="header-with-filter">
+                            <span>${header}${isMissing ? ' (Missing)' : ''}</span>
+                            <button class="filter-triangle" onclick="toggleColumnFilter(${index}, '${header}')" title="Filter ${header}">
+                                ▼
+                            </button>
+                        </div>
+                    </th>
+                `;
             });
             
             html += `
@@ -5369,7 +5442,7 @@
                             <tbody>
             `;
             
-            // Add data rows (show first 20 rows with mapped columns)
+            // Add data rows (show all rows with mapped columns)
             console.log('First row data:', data[0]);
             console.log('Mapped columns for data:', mappedColumns);
             
@@ -5380,7 +5453,6 @@
             console.log('First row values:', firstRowValues);
             
             // More robust check for header row
-            let dataToShow = data;
             
             // Function to check if a row contains header-like data
             function isHeaderRow(row) {
@@ -5435,7 +5507,9 @@
             }
             
             console.log('Data to show (first 3 rows):', dataToShow.slice(0, 3));
+            console.log(`Showing all ${dataToShow.length} records`);
             
+            // Show all data (first 20 rows with mapped columns)
             dataToShow.slice(0, 20).forEach((row, rowIndex) => {
                 const rowStyle = `background: ${rowIndex % 2 === 0 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(248, 250, 252, 0.9)'}; transition: background-color 0.2s ease;`;
                 html += `<tr style="${rowStyle}" onmouseover="this.style.backgroundColor='rgba(102, 126, 234, 0.1)'" onmouseout="this.style.backgroundColor='${rowIndex % 2 === 0 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(248, 250, 252, 0.9)'}'">`;
@@ -5494,6 +5568,36 @@
             console.log('Filtered table set successfully');
             console.log('Table element after setting HTML:', tableElement);
             console.log('Table element innerHTML length:', tableElement.innerHTML.length);
+            
+            // Set currentTableData for filters to work
+            window.currentTableData = dataToShow;
+            
+            // Add unfilter button to the table
+            const unfilterButton = document.createElement('div');
+            unfilterButton.style.cssText = 'padding: 10px; text-align: center; background: #f8f9fa; border-bottom: 1px solid #ddd;';
+            unfilterButton.innerHTML = `
+                <button onclick="unfilterAll()" style="
+                    background: #dc3545; 
+                    color: white; 
+                    border: none; 
+                    padding: 8px 16px; 
+                    border-radius: 4px; 
+                    cursor: pointer; 
+                    font-size: 12px;
+                    margin-right: 10px;
+                ">🗑️ Clear All Filters</button>
+                <span id="filterStatus" style="color: #6c757d; font-size: 12px;">No filters applied</span>
+            `;
+            
+            // Insert unfilter button before the table
+            const tableContainer = tableElement.querySelector('div');
+            tableContainer.insertBefore(unfilterButton, tableContainer.firstChild);
+            
+            // Create filter dropdowns for all columns after table is built
+            columnHeaders.forEach((header, index) => {
+                const actualColumnName = getActualColumnName(header, index);
+                createFilterDropdown(index, actualColumnName, header);
+            });
             
             // Force the table to be visible
             tableElement.style.display = 'block';
@@ -5919,82 +6023,42 @@
                 console.log('Sample data:', filteredData[0]);
             }
 
-            // Apply each filter (only for allowed columns)
+            // Apply each filter for all columns
             Object.keys(currentFilters).forEach(columnName => {
                 const filterValue = currentFilters[columnName];
                 if (!filterValue) return;
 
-                // Only allow filtering for specific columns
-                const filterableColumns = ['Season', 'Customer', 'Style Number', 'Style Name', 'Main Material'];
-                if (!filterableColumns.includes(columnName)) return;
+                console.log(`Applying filter for ${columnName}:`, filterValue);
 
-                // Find the actual column name (case-insensitive)
-                const columnMapping = {
-                    'Season': ['season', 'Season', 'SEASON', 'seasons', 'SEASONS'],
-                    'Customer': ['customer', 'Customer', 'CUSTOMER', 'customers', 'CUSTOMERS'],
-                    'Style Number': ['style_number', 'styleNumber', 'Style Number', 'STYLE_NUMBER', 'style_no', 'styleNo', 'STYLE_NO'],
-                    'Style Name': ['style_name', 'styleName', 'Style Name', 'STYLE_NAME', 'style', 'STYLE'],
-                    'Main Material': ['main_material', 'mainMaterial', 'Main Material', 'MAIN_MATERIAL', 'material', 'MATERIAL', 'main_materials']
-                };
-
-                const possibleNames = columnMapping[columnName] || [columnName];
-                let actualColumnName = null;
+                // Find the actual column name using the same logic as getActualColumnName
+                const actualColumnName = getActualColumnName(columnName, 0);
                 
-                // First try exact match
-                for (const row of filteredData) {
-                    for (const key of Object.keys(row)) {
-                        if (possibleNames.includes(key)) {
-                            actualColumnName = key;
-                            break;
-                        }
-                    }
-                    if (actualColumnName) break;
-                }
-                
-                // If no exact match, try case-insensitive
                 if (!actualColumnName) {
-                    for (const row of filteredData) {
-                        for (const key of Object.keys(row)) {
-                            const keyLower = key.toLowerCase();
-                            const possibleLower = possibleNames.map(name => name.toLowerCase());
-                            if (possibleLower.includes(keyLower)) {
-                                actualColumnName = key;
-                                break;
-                            }
-                        }
-                        if (actualColumnName) break;
-                    }
-                }
-                
-                // If still no match, try partial matching
-                if (!actualColumnName) {
-                    for (const row of filteredData) {
-                        for (const key of Object.keys(row)) {
-                            const keyLower = key.toLowerCase();
-                            if (keyLower.includes(columnName.toLowerCase()) || columnName.toLowerCase().includes(keyLower)) {
-                                actualColumnName = key;
-                                break;
-                            }
-                        }
-                        if (actualColumnName) break;
-                    }
+                    console.log(`Could not find column for ${columnName}`);
+                    return;
                 }
 
-                if (actualColumnName) {
-                    const beforeCount = filteredData.length;
-                    console.log(`Found column "${actualColumnName}" for filter "${columnName}"`);
-                    console.log(`Looking for rows containing "${filterValue}" in column "${actualColumnName}"`);
-                    
+                const beforeCount = filteredData.length;
+                console.log(`Found column "${actualColumnName}" for filter "${columnName}"`);
+                console.log(`Looking for rows containing any of "${filterValue}" in column "${actualColumnName}"`);
+                
+                // Filter for array of values (multiple selections)
+                if (Array.isArray(filterValue)) {
+                    filteredData = filteredData.filter(row => {
+                        const value = String(row[actualColumnName] || '').trim();
+                        const matches = filterValue.some(fv => value === fv);
+                        return matches;
+                    });
+                } else {
+                    // Filter for single value
                     filteredData = filteredData.filter(row => {
                         const value = String(row[actualColumnName] || '').trim();
                         const matches = value.toLowerCase().includes(filterValue.toLowerCase());
-                        console.log(`Row value: "${value}" contains "${filterValue}": ${matches}`);
                         return matches;
                     });
-                    console.log(`Filtered ${columnName} from ${beforeCount} to ${filteredData.length} rows`);
-                } else {
-                    console.log(`Could not find column mapping for ${columnName}. Available keys:`, Object.keys(filteredData[0] || {}));
                 }
+                
+                console.log(`Filtered ${columnName} from ${beforeCount} to ${filteredData.length} rows`);
             });
 
             console.log('Final filtered data length:', filteredData.length);
@@ -6140,6 +6204,332 @@
             // Show all data
             if (window.currentTableData) {
                 updateTableWithFilteredData(window.currentTableData);
+            }
+        }
+
+        // Global variable to store column filter data
+        let columnFilterData = {};
+
+        // Comprehensive column filtering function
+        function toggleColumnFilter(columnIndex, columnName) {
+            console.log(`Toggling filter for column ${columnIndex}: ${columnName}`);
+            
+            // Close all other dropdowns
+            document.querySelectorAll('.filter-dropdown').forEach(dropdown => {
+                dropdown.classList.remove('show');
+            });
+            
+            // Find the actual database column name
+            const actualColumnName = getActualColumnName(columnName, columnIndex);
+            console.log(`Using actual column name: ${actualColumnName} for display name: ${columnName}`);
+            
+            // Find or create the dropdown for this column
+            let dropdown = document.getElementById(`filter-${columnIndex}`);
+            if (!dropdown) {
+                // Create the dropdown with the actual column name
+                dropdown = createFilterDropdown(columnIndex, actualColumnName, columnName);
+            }
+            
+            // Toggle the dropdown
+            if (dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+            } else {
+                dropdown.classList.add('show');
+            }
+        }
+
+        // Get the actual database column name from display name
+        function getActualColumnName(displayName, columnIndex) {
+            if (!window.currentTableData || window.currentTableData.length === 0) {
+                console.log('No table data available');
+                return displayName;
+            }
+            
+            const availableColumns = Object.keys(window.currentTableData[0]);
+            console.log('Available columns:', availableColumns);
+            console.log('Looking for display name:', displayName);
+            
+            // First try exact match
+            if (availableColumns.includes(displayName)) {
+                console.log(`Exact match found: ${displayName}`);
+                return displayName;
+            }
+            
+            // Try case variations
+            const variations = [
+                displayName.toLowerCase(),
+                displayName.toUpperCase(),
+                displayName.replace(/\s+/g, '_'),
+                displayName.replace(/\s+/g, ''),
+                displayName.replace(/\s+/g, '-'),
+                displayName.replace(/\s+/g, ''),
+                displayName.replace(/\s+/g, '_').toLowerCase(),
+                displayName.replace(/\s+/g, '_').toUpperCase()
+            ];
+            
+            for (const variation of variations) {
+                if (availableColumns.includes(variation)) {
+                    console.log(`Found column mapping: ${displayName} -> ${variation}`);
+                    return variation;
+                }
+            }
+            
+            // Try partial matching
+            for (const col of availableColumns) {
+                if (col.toLowerCase().includes(displayName.toLowerCase()) || 
+                    displayName.toLowerCase().includes(col.toLowerCase())) {
+                    console.log(`Partial match found: ${displayName} -> ${col}`);
+                    return col;
+                }
+            }
+            
+            console.log(`No mapping found for ${displayName}, using display name`);
+            return displayName;
+        }
+
+        // Create filter dropdown for a column
+        function createFilterDropdown(columnIndex, actualColumnName, displayName) {
+            const headerCell = document.querySelector(`th:nth-child(${columnIndex + 1})`);
+            if (!headerCell) return null;
+            
+            const dropdown = document.createElement('div');
+            dropdown.id = `filter-${columnIndex}`;
+            dropdown.className = 'filter-dropdown';
+            
+            // Get unique values for this column using the actual column name
+            const uniqueValues = getUniqueColumnValues(actualColumnName);
+            
+            console.log(`Creating dropdown for ${displayName} (${actualColumnName}) with ${uniqueValues.length} values`);
+            
+            // Create Excel-style filter structure
+            let filterHtml = `
+                <div class="filter-header">${displayName.toUpperCase()}</div>
+                <div class="filter-search">
+                    <input type="text" placeholder="Search" onkeyup="filterSearchOptions(${columnIndex}, this.value)">
+                </div>
+                <div class="filter-options" id="filter-options-${columnIndex}">
+            `;
+            
+            if (uniqueValues.length === 0) {
+                // Show debug info if no values found
+                const availableColumns = Object.keys(window.currentTableData[0] || {});
+                filterHtml += `
+                    <div class="filter-option">No data found for "${displayName}"</div>
+                    <div class="filter-option" style="font-size: 10px; color: #aaa;">
+                        Available columns: ${availableColumns.join(', ')}
+                    </div>
+                `;
+            } else {
+                // Add "Select All" option
+                const allSelected = !currentFilters[displayName] || currentFilters[displayName].length === uniqueValues.length;
+                filterHtml += `
+                    <div class="filter-option">
+                        <input type="checkbox" id="filter-${columnIndex}-selectall" ${allSelected ? 'checked' : ''} onchange="toggleSelectAll(${columnIndex}, this.checked)">
+                        <label for="filter-${columnIndex}-selectall">(Select All)</label>
+                    </div>
+                `;
+                
+                // Add individual options
+                uniqueValues.forEach(value => {
+                    const isSelected = currentFilters[displayName] && currentFilters[displayName].includes(value);
+                    const safeValue = value.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                    filterHtml += `
+                        <div class="filter-option">
+                            <input type="checkbox" id="filter-${columnIndex}-${safeValue}" value="${safeValue}" ${isSelected ? 'checked' : ''}>
+                            <label for="filter-${columnIndex}-${safeValue}">${value || '(Empty)'}</label>
+                        </div>
+                    `;
+                });
+            }
+            
+            // Close filter-options div and add actions
+            filterHtml += `
+                </div>
+                <div class="filter-actions">
+                    <button class="filter-btn" onclick="clearColumnFilter(${columnIndex}, '${displayName}')">Clear</button>
+                    <button class="filter-btn primary" onclick="applyColumnFilter(${columnIndex}, '${displayName}')">OK</button>
+                </div>
+            `;
+            
+            dropdown.innerHTML = filterHtml;
+            headerCell.appendChild(dropdown);
+            
+            return dropdown;
+        }
+
+        // Get unique values for a column
+        function getUniqueColumnValues(columnName) {
+            if (!window.currentTableData) {
+                console.log('No currentTableData available');
+                return [];
+            }
+            
+            console.log('Getting unique values for column:', columnName);
+            console.log('Sample row data:', window.currentTableData[0]);
+            console.log('Available columns:', Object.keys(window.currentTableData[0]));
+            
+            const values = new Set();
+            
+            // Try to find the column by checking all available columns
+            let foundColumn = null;
+            const availableColumns = Object.keys(window.currentTableData[0]);
+            
+            // First try exact match
+            if (availableColumns.includes(columnName)) {
+                foundColumn = columnName;
+            } else {
+                // Try to find a column that contains the display name
+                for (const col of availableColumns) {
+                    if (col.toLowerCase().includes(columnName.toLowerCase()) || 
+                        columnName.toLowerCase().includes(col.toLowerCase())) {
+                        foundColumn = col;
+                        break;
+                    }
+                }
+            }
+            
+            if (!foundColumn) {
+                console.log('No matching column found for:', columnName);
+                return [];
+            }
+            
+            console.log('Using column:', foundColumn);
+            
+            window.currentTableData.forEach((row, index) => {
+                const value = row[foundColumn];
+                if (value !== null && value !== undefined && value !== '') {
+                    const stringValue = String(value).trim();
+                    if (stringValue) {
+                        values.add(stringValue);
+                    }
+                }
+            });
+            
+            const uniqueValues = Array.from(values).sort();
+            console.log('Found unique values:', uniqueValues);
+            return uniqueValues;
+        }
+
+        // Apply column filter
+        function applyColumnFilter(columnIndex, columnName) {
+            console.log(`🔍 applyColumnFilter called for column ${columnIndex}: ${columnName}`);
+            
+            const dropdown = document.getElementById(`filter-${columnIndex}`);
+            if (!dropdown) {
+                console.log('❌ Dropdown not found');
+                return;
+            }
+            
+            const checkboxes = dropdown.querySelectorAll('input[type="checkbox"]:checked');
+            const selectedValues = Array.from(checkboxes).map(cb => cb.value);
+            
+            console.log(`📋 Selected values:`, selectedValues);
+            
+            if (selectedValues.length > 0) {
+                currentFilters[columnName] = selectedValues;
+                console.log(`✅ Added filter for ${columnName}:`, selectedValues);
+                
+                // Update filter button appearance
+                const filterButton = dropdown.previousElementSibling.querySelector('.filter-triangle');
+                if (filterButton) {
+                    filterButton.classList.add('active');
+                }
+            } else {
+                delete currentFilters[columnName];
+                console.log(`❌ Removed filter for ${columnName}`);
+                
+                // Update filter button appearance
+                const filterButton = dropdown.previousElementSibling.querySelector('.filter-triangle');
+                if (filterButton) {
+                    filterButton.classList.remove('active');
+                }
+            }
+            
+            console.log(`🔧 Current filters:`, currentFilters);
+            
+            // Apply filters
+            applyFilters();
+            
+            // Update filter status
+            updateFilterStatus();
+            
+            // Close dropdown
+            dropdown.classList.remove('show');
+        }
+
+        // Clear column filter
+        function clearColumnFilter(columnIndex, columnName) {
+            delete currentFilters[columnName];
+            
+            // Uncheck all checkboxes
+            const dropdown = document.getElementById(`filter-${columnIndex}`);
+            if (dropdown) {
+                const checkboxes = dropdown.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(cb => cb.checked = false);
+            }
+            
+            // Update filter button appearance
+            const filterButton = document.querySelector(`th:nth-child(${columnIndex + 1}) .filter-triangle`);
+            if (filterButton) {
+                filterButton.classList.remove('active');
+            }
+            
+            // Apply filters
+            applyFilters();
+            
+            // Update filter status
+            updateFilterStatus();
+            
+            // Close dropdown
+            if (dropdown) {
+                dropdown.classList.remove('show');
+            }
+        }
+
+        // Unfilter all - clear all filters and show all data
+        function unfilterAll() {
+            console.log('🗑️ Clearing all filters...');
+            
+            // Clear all current filters
+            currentFilters = {};
+            
+            // Uncheck all checkboxes in all filter dropdowns
+            document.querySelectorAll('.filter-dropdown').forEach(dropdown => {
+                const checkboxes = dropdown.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(cb => cb.checked = false);
+            });
+            
+            // Remove active state from all filter buttons
+            document.querySelectorAll('.filter-triangle').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Close all open dropdowns
+            document.querySelectorAll('.filter-dropdown').forEach(dropdown => {
+                dropdown.classList.remove('show');
+            });
+            
+            // Show all data
+            if (window.currentTableData) {
+                updateTableWithFilteredData(window.currentTableData);
+                updateFilterStatus();
+            }
+            
+            console.log('✅ All filters cleared');
+        }
+
+        // Update filter status display
+        function updateFilterStatus() {
+            const statusElement = document.getElementById('filterStatus');
+            if (!statusElement) return;
+            
+            const activeFilters = Object.keys(currentFilters).length;
+            if (activeFilters === 0) {
+                statusElement.textContent = 'No filters applied';
+                statusElement.style.color = '#6c757d';
+            } else {
+                statusElement.textContent = `${activeFilters} filter(s) active`;
+                statusElement.style.color = '#dc3545';
             }
         }
         
@@ -6369,6 +6759,13 @@
                         costBreakdown.classList.remove('hide');
                     }, 300);
                 }
+                // Enable calculations for ballcaps template
+                setTimeout(() => {
+                    addBallCapsCalculationEventListeners();
+                    calculateBallCapsTemplate();
+                    console.log('✅ Ballcaps template calculations enabled');
+                }, 100);
+                
                 console.log('✅ Ballcaps template shown');
             }
             
@@ -9858,6 +10255,35 @@
             });
         }
 
+        /**
+         * Add event listeners for ballcaps template real-time calculations
+         */
+        function addBallCapsCalculationEventListeners() {
+            // Add input event listeners to all cost cells in ballcaps template
+            const costSections = document.querySelectorAll('#ballcapsBreakdown .cost-section');
+            
+            costSections.forEach(section => {
+                const inputCells = section.querySelectorAll('.cost-cell:not(.header-row .cost-cell)');
+                
+                inputCells.forEach(cell => {
+                    // Make cells editable
+                    cell.contentEditable = true;
+                    cell.style.border = '1px solid #ddd';
+                    cell.style.padding = '4px';
+                    cell.style.minHeight = '20px';
+                    
+                    // Add event listener for input changes
+                    cell.addEventListener('input', function() {
+                        // Debounce the calculation
+                        clearTimeout(this.calculationTimeout);
+                        this.calculationTimeout = setTimeout(() => {
+                            calculateBallCapsTemplate();
+                        }, 500);
+                    });
+                });
+            });
+        }
+
         // Initialize drag & drop when page loads
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 DOM Content Loaded - Initializing drag & drop...');
@@ -13144,6 +13570,132 @@
             return total.toFixed(2);
         }
 
+        /**
+         * Calculate and update all ballcaps template calculations
+         */
+        function calculateBallCapsTemplate() {
+            console.log('🧮 Calculating ballcaps template...');
+            
+            // Find sections by their headers
+            const sections = document.querySelectorAll('#ballcapsBreakdown .cost-section');
+            let fabricSection = null;
+            let otherFabricSection = null;
+            let trimSection = null;
+            let operationsSection = null;
+            let packagingSection = null;
+            let overheadSection = null;
+            
+            sections.forEach(section => {
+                const header = section.querySelector('.section-header');
+                if (header) {
+                    const headerText = header.textContent.trim();
+                    if (headerText === 'FABRIC/S') {
+                        fabricSection = section;
+                    } else if (headerText === 'OTHER FABRIC/S - TRIM/S') {
+                        otherFabricSection = section;
+                    } else if (headerText === 'TRIM/S') {
+                        trimSection = section;
+                    } else if (headerText === 'OPERATIONS') {
+                        operationsSection = section;
+                    } else if (headerText === 'PACKAGING') {
+                        packagingSection = section;
+                    } else if (headerText === 'OVERHEAD/ PROFIT') {
+                        overheadSection = section;
+                    }
+                }
+            });
+            
+            // Calculate material costs
+            let totalMaterialCost = 0;
+            
+            if (fabricSection) {
+                const fabricTotal = calculateSectionTotal(fabricSection);
+                updateSubtotal(fabricSection, fabricTotal);
+                totalMaterialCost += fabricTotal;
+            }
+            
+            if (otherFabricSection) {
+                const otherFabricTotal = calculateSectionTotal(otherFabricSection);
+                updateSubtotal(otherFabricSection, otherFabricTotal);
+                totalMaterialCost += otherFabricTotal;
+            }
+            
+            if (trimSection) {
+                const trimTotal = calculateSectionTotal(trimSection);
+                updateSubtotal(trimSection, trimTotal);
+                totalMaterialCost += trimTotal;
+            }
+            
+            // Calculate factory costs
+            let totalFactoryCost = 0;
+            
+            if (operationsSection) {
+                const operationsTotal = calculateSectionTotal(operationsSection);
+                updateSubtotal(operationsSection, operationsTotal);
+                totalFactoryCost += operationsTotal;
+            }
+            
+            if (packagingSection) {
+                const packagingTotal = calculateSectionTotal(packagingSection);
+                updateSubtotal(packagingSection, packagingTotal);
+                totalFactoryCost += packagingTotal;
+            }
+            
+            if (overheadSection) {
+                const overheadTotal = calculateSectionTotal(overheadSection);
+                updateSubtotal(overheadSection, overheadTotal);
+                totalFactoryCost += overheadTotal;
+            }
+            
+            // Update grand totals
+            const materialTotalElement = document.querySelector('#ballcapsBreakdown .total-material-cost .total-value');
+            const factoryTotalElement = document.querySelector('#ballcapsBreakdown .total-factory-cost .total-value');
+            
+            if (materialTotalElement) {
+                materialTotalElement.textContent = '$' + totalMaterialCost.toFixed(2);
+            }
+            
+            if (factoryTotalElement) {
+                factoryTotalElement.textContent = '$' + totalFactoryCost.toFixed(2);
+            }
+            
+            console.log('✅ Ballcaps template calculations complete');
+            console.log('Material Total:', totalMaterialCost.toFixed(2));
+            console.log('Factory Total:', totalFactoryCost.toFixed(2));
+        }
+
+        /**
+         * Calculate total for a specific section
+         */
+        function calculateSectionTotal(section) {
+            let total = 0;
+            const rows = section.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+            
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('.cost-cell');
+                if (cells.length >= 4) {
+                    // For ballcaps: consumption, price, cost, total
+                    const cost = parseFloat(cells[2].textContent.replace('$', '')) || 0;
+                    total += cost;
+                }
+            });
+            
+            return total;
+        }
+
+        /**
+         * Update subtotal for a section
+         */
+        function updateSubtotal(section, total) {
+            const subtotalRow = section.querySelector('.subtotal-row');
+            if (subtotalRow) {
+                const totalCell = subtotalRow.querySelector('.cost-cell:last-child');
+                if (totalCell) {
+                    totalCell.textContent = '$' + total.toFixed(2);
+                }
+            }
+        }
+
         function showDataReview() {
             // Clear any previous status messages
             document.getElementById('importStatus').innerHTML = '';
@@ -14771,6 +15323,142 @@
                         hasCost: row[3] && !isNaN(parseFloat(row[3]))
                     });
                 }
+            }
+        };
+
+        // Debug function for table data and columns
+        window.debugTableData = function() {
+            console.log('🔍 DEBUGGING TABLE DATA');
+            console.log('==');
+            if (!window.currentTableData) {
+                console.log('❌ No currentTableData available');
+                return;
+            }
+            
+            console.log('Total records:', window.currentTableData.length);
+            console.log('First record:', window.currentTableData[0]);
+            console.log('Available columns:', Object.keys(window.currentTableData[0]));
+            
+            // Check each column for data
+            Object.keys(window.currentTableData[0]).forEach(column => {
+                const values = new Set();
+                window.currentTableData.slice(0, 10).forEach(row => {
+                    if (row[column] !== null && row[column] !== undefined) {
+                        values.add(String(row[column]).trim());
+                    }
+                });
+                console.log(`Column "${column}":`, Array.from(values).slice(0, 5));
+            });
+        };
+
+        // Test filter function
+        window.testFilter = function(columnName) {
+            console.log(`🧪 Testing filter for: ${columnName}`);
+            const actualName = getActualColumnName(columnName, 0);
+            console.log(`Actual column name: ${actualName}`);
+            const values = getUniqueColumnValues(actualName);
+            console.log(`Unique values:`, values);
+            return values;
+        };
+
+        // Filter search options in dropdown
+        function filterSearchOptions(columnIndex, searchTerm) {
+            const optionsContainer = document.getElementById(`filter-options-${columnIndex}`);
+            if (!optionsContainer) return;
+            
+            const options = optionsContainer.querySelectorAll('.filter-option');
+            const term = searchTerm.toLowerCase();
+            
+            options.forEach(option => {
+                const label = option.querySelector('label');
+                if (!label) return;
+                
+                const text = label.textContent.toLowerCase();
+                if (text.includes(term) || text === '(select all)') {
+                    option.style.display = 'flex';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+        }
+
+        // Toggle select all functionality
+        function toggleSelectAll(columnIndex, checked) {
+            const optionsContainer = document.getElementById(`filter-options-${columnIndex}`);
+            if (!optionsContainer) return;
+            
+            const checkboxes = optionsContainer.querySelectorAll('input[type="checkbox"]:not([id*="selectall"])');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = checked;
+            });
+        }
+
+
+
+        // Debug function for notes data
+        window.debugNotesData = function() {
+            console.log('🔍 DEBUGGING NOTES DATA');
+            console.log('==');
+            if (!window.lastExcelData) {
+                console.log('❌ No Excel data available. Please upload an Excel file first.');
+                return;
+            }
+            
+            const data = window.lastExcelData.data || window.lastExcelData;
+            console.log('Searching for NOTES-related rows...');
+            
+            let notesFound = [];
+            let overallNotesFound = false;
+            
+            for (let i = 0; i < data.length; i++) {
+                const row = data[i];
+                if (!row || row.length === 0) continue;
+                
+                const firstCell = String(row[0] || '').trim();
+                const allRowContent = row.filter(cell => cell && String(cell).trim() !== '').join(' ');
+                
+                // Check specifically for OVERALL NOTES header
+                if (firstCell.toLowerCase() === 'overall notes' || 
+                    firstCell.toLowerCase() === 'overall notes:' ||
+                    allRowContent.toLowerCase() === 'overall notes' ||
+                    allRowContent.toLowerCase() === 'overall notes:') {
+                    overallNotesFound = true;
+                    console.log('✅ Found OVERALL NOTES header at row', i, ':', firstCell);
+                }
+                
+                // Look for rows that might be notes
+                if (firstCell.toLowerCase().includes('notes') || 
+                    allRowContent.toLowerCase().includes('notes') ||
+                    allRowContent.toLowerCase().includes('surcharge') ||
+                    allRowContent.toLowerCase().includes('suggest') ||
+                    allRowContent.toLowerCase().includes('moq') ||
+                    allRowContent.toLowerCase().includes('fabric') ||
+                    allRowContent.toLowerCase().includes('visor')) {
+                    
+                    notesFound.push({
+                        row: i,
+                        firstCell: firstCell,
+                        allContent: allRowContent,
+                        fullRow: row
+                    });
+                }
+            }
+            
+            console.log(`Found ${notesFound.length} potential notes rows:`);
+            notesFound.forEach(item => {
+                console.log(`Row ${item.row}:`, item);
+            });
+            
+            console.log('OVERALL NOTES header found:', overallNotesFound);
+            
+            // Check current parsed data
+            if (window.currentParsedData) {
+                console.log('Current parsed notes:', window.currentParsedData.notes);
+                if (window.currentParsedData.notes) {
+                    console.log('Notes content preview:', window.currentParsedData.notes.substring(0, 200) + '...');
+                }
+            } else {
+                console.log('No current parsed data available');
             }
         };
     </script>

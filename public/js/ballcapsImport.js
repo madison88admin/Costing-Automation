@@ -118,6 +118,12 @@ class TNFBallCapsImporter {
                 } else if (firstCell === 'OVERHEAD/ PROFIT' || firstCell === 'OVERHEAD/PROFIT' || firstCell === 'OVERHEAD') {
                     currentSection = 'overhead';
                     console.log('🔍 Found OVERHEAD section');
+                } else if (firstCell === 'NOTES' || firstCell === 'Notes' || firstCell === 'NOTE' || firstCell === 'Note' || 
+                           firstCell === 'NOTES:' || firstCell === 'Notes:' || firstCell === 'NOTE:' || firstCell === 'Note:' ||
+                           firstCell === 'OVERALL NOTES' || firstCell === 'Overall Notes' || firstCell === 'overall notes' ||
+                           firstCell === 'OVERALL NOTES:' || firstCell === 'Overall Notes:' || firstCell === 'overall notes:') {
+                    currentSection = 'notes';
+                    console.log('🔍 Found NOTES section:', firstCell);
                 } else if (firstCell === 'TOTAL FACTORY COST') {
                     console.log('🔍 Found TOTAL FACTORY COST');
                 }
@@ -241,9 +247,9 @@ class TNFBallCapsImporter {
                 
                 if (currentSection === 'packaging' && firstCell && !firstCell.includes('PACKAGING') && !firstCell.includes('Factory Notes') && !firstCell.includes('TOTAL')) {
                     if (row[3] !== undefined && !isNaN(parseFloat(row[3]))) {
-                        result.packaging.push({
-                            type: firstCell,
-                            notes: String(row[1] || ''),
+                    result.packaging.push({
+                        type: firstCell,
+                        notes: String(row[1] || ''),
                             cost: parseFloat(row[3]).toFixed(2)
                         });
                         console.log('✅ PACKAGING:', firstCell, 'Cost:', row[3]);
@@ -253,12 +259,21 @@ class TNFBallCapsImporter {
                 if (currentSection === 'overhead' && firstCell && !firstCell.includes('OVERHEAD/ PROFIT') && !firstCell.includes('Factory Notes') && !firstCell.includes('TOTAL')) {
                     console.log(`🔍 Checking OVERHEAD: "${firstCell}" - Row:`, row, 'Cost in col 3:', row[3], 'Is number:', !isNaN(parseFloat(row[3])));
                     if (row[3] !== undefined && !isNaN(parseFloat(row[3]))) {
-                        result.overhead.push({
-                            type: firstCell,
-                            notes: String(row[1] || ''),
+                    result.overhead.push({
+                        type: firstCell,
+                        notes: String(row[1] || ''),
                             cost: parseFloat(row[3]).toFixed(2)
                         });
                         console.log('✅ OVERHEAD:', firstCell, 'Notes:', row[1], 'Cost:', row[3]);
+                    }
+                }
+                
+                // Parse notes in main loop
+                if (currentSection === 'notes' && firstCell && !firstCell.includes('NOTES') && !firstCell.includes('NOTE')) {
+                    if (firstCell.trim()) {
+                        if (!result.notes) result.notes = '';
+                        result.notes += (result.notes ? '\n' : '') + firstCell.trim();
+                        console.log('📝 Added note in main loop:', firstCell.trim());
                     }
                 }
                 
@@ -289,11 +304,28 @@ class TNFBallCapsImporter {
             const firstCell = String(row[0] || '').trim();
             const allRowContent = row.filter(cell => cell && String(cell).trim() !== '').join(' ');
             
-            // Look for Notes section header
-            if ((firstCell.toLowerCase() === 'notes' || firstCell.toLowerCase() === 'note') ||
-                (allRowContent.toLowerCase() === 'notes' || allRowContent.toLowerCase() === 'note')) {
+            // Look for Notes section header - enhanced detection
+            const isNotesHeader = (
+                firstCell.toLowerCase() === 'notes' || 
+                firstCell.toLowerCase() === 'note' ||
+                firstCell.toLowerCase() === 'notes:' ||
+                firstCell.toLowerCase() === 'note:' ||
+                firstCell.toLowerCase() === 'overall notes' ||
+                firstCell.toLowerCase() === 'overall notes:' ||
+                allRowContent.toLowerCase() === 'notes' || 
+                allRowContent.toLowerCase() === 'note' ||
+                allRowContent.toLowerCase() === 'notes:' ||
+                allRowContent.toLowerCase() === 'note:' ||
+                allRowContent.toLowerCase() === 'overall notes' ||
+                allRowContent.toLowerCase() === 'overall notes:' ||
+                firstCell.toLowerCase().includes('notes') ||
+                allRowContent.toLowerCase().includes('notes')
+            );
+            
+            if (isNotesHeader) {
                 inNotesSection = true;
                 console.log('✅ Found Notes section header at row', i, ':', firstCell);
+                console.log('🔍 Notes header detection - firstCell:', firstCell, 'allRowContent:', allRowContent);
                 continue;
             }
             
@@ -308,6 +340,12 @@ class TNFBallCapsImporter {
                     break;
                 }
                 
+                // Skip operations header mixed with notes content
+                if (allRowContent.includes('OPERATIONS BLANK SMV COST (USD/MIN)')) {
+                    console.log('⚠️ Skipped operations header mixed with notes:', allRowContent.trim());
+                    continue;
+                }
+                
                 // Collect non-empty content
                 if (allRowContent.trim()) {
                     notesContent.push(allRowContent.trim());
@@ -318,10 +356,55 @@ class TNFBallCapsImporter {
         
         // Join all notes content
         if (notesContent.length > 0) {
-            result.notes = notesContent.join('\n');
-            console.log('✅ Notes extracted (', notesContent.length, 'lines):', result.notes.substring(0, 200) + '...');
+            const newNotes = notesContent.join('\n');
+            if (result.notes) {
+                result.notes = result.notes + '\n' + newNotes;
+                console.log('✅ Notes extracted and appended (', notesContent.length, 'lines):', newNotes.substring(0, 200) + '...');
+            } else {
+                result.notes = newNotes;
+                console.log('✅ Notes extracted (', notesContent.length, 'lines):', result.notes.substring(0, 200) + '...');
+            }
         } else {
-            console.log('⚠️ No notes section found');
+            console.log('⚠️ No notes section found - trying fallback detection');
+            
+            // Fallback: Look for rows that might contain notes content
+            let fallbackNotes = [];
+            for (let i = 0; i < data.length; i++) {
+                const row = data[i];
+                if (!row || row.length === 0) continue;
+                
+                const firstCell = String(row[0] || '').trim();
+                const allRowContent = row.filter(cell => cell && String(cell).trim() !== '').join(' ');
+                
+                // Look for rows that might be notes (contain common note keywords)
+                if (allRowContent.toLowerCase().includes('surcharge') || 
+                    allRowContent.toLowerCase().includes('suggest') ||
+                    allRowContent.toLowerCase().includes('recommend') ||
+                    allRowContent.toLowerCase().includes('note') ||
+                    allRowContent.toLowerCase().includes('moq') ||
+                    allRowContent.toLowerCase().includes('minimum') ||
+                    allRowContent.toLowerCase().includes('fabric') ||
+                    allRowContent.toLowerCase().includes('color') ||
+                    allRowContent.toLowerCase().includes('visor') ||
+                    allRowContent.toLowerCase().includes('sweatband')) {
+                    
+                    // Skip if it looks like data rows (numbers, costs, etc.)
+                    if (!allRowContent.match(/^\d+\.?\d*$/) && 
+                        !allRowContent.match(/^\$?\d+\.?\d*$/) &&
+                        !allRowContent.match(/^\d+ \d+\.?\d* \d+\.?\d*$/)) {
+                        
+                        fallbackNotes.push(allRowContent.trim());
+                        console.log('🔍 Fallback notes found at row', i, ':', allRowContent.trim());
+                    }
+                }
+            }
+            
+            if (fallbackNotes.length > 0) {
+                result.notes = fallbackNotes.join('\n');
+                console.log('✅ Fallback notes extracted (', fallbackNotes.length, 'lines):', result.notes.substring(0, 200) + '...');
+            } else {
+                console.log('❌ No notes found with fallback detection either');
+            }
         }
 
         console.log('=== FINAL RESULT ===');
