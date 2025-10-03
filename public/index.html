@@ -640,6 +640,174 @@
             justify-content: space-between;
         }
 
+        /* Super Search Styles */
+        .super-search-input {
+            padding-right: 40px !important;
+            font-size: 16px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+            min-width: 600px;
+            width: 600px;
+        }
+
+        .super-search-input:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+            background: #ffffff;
+        }
+
+        .search-actions {
+            z-index: 10;
+        }
+
+        .search-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 4px 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .search-btn:hover {
+            background: #007bff;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .super-search-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #007bff;
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            max-height: 600px;
+            min-height: 400px;
+            width: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 12px 35px rgba(0,123,255,0.25);
+            backdrop-filter: blur(10px);
+            scrollbar-width: thin;
+            scrollbar-color: #007bff #f1f1f1;
+        }
+
+        /* Custom scrollbar for webkit browsers */
+        .super-search-suggestions::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .super-search-suggestions::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .super-search-suggestions::-webkit-scrollbar-thumb {
+            background: #007bff;
+            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+
+        .super-search-suggestions::-webkit-scrollbar-thumb:hover {
+            background: #0056b3;
+        }
+
+        .super-search-suggestions.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .suggestion-item {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e9ecef;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            min-height: 80px;
+            gap: 16px;
+        }
+
+        .suggestion-item:hover {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f8f9fa 100%);
+            transform: translateX(3px);
+            box-shadow: 0 2px 8px rgba(0,123,255,0.1);
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-icon {
+            font-size: 24px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .suggestion-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .suggestion-main {
+            color: #333;
+            font-weight: 500;
+            font-size: 16px;
+            line-height: 1.4;
+            margin-bottom: 4px;
+        }
+
+        .suggestion-description {
+            color: #6c757d;
+            font-size: 13px;
+            font-weight: 400;
+            line-height: 1.3;
+        }
+
+        .suggestion-count {
+            color: #6c757d;
+            font-size: 11px;
+            background: #f8f9fa;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+            flex-shrink: 0;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        .search-highlight {
+            background: #fff3cd;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
         /* Custom Season Filter Panel */
         .season-filter-overlay {
             position: fixed;
@@ -1004,7 +1172,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            min-width: 120px;
+            min-width: 70px;
             justify-content: center;
             letter-spacing: 0.5px;
             box-shadow: 0 4px 12px rgba(44, 62, 80, 0.3);
@@ -1541,12 +1709,37 @@
             box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
         }
 
-        .image-placeholder {
+        .image-upload-area {
             background: rgba(255, 255, 255, 0.4);
             backdrop-filter: blur(5px);
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            border: 2px dashed rgba(255, 255, 255, 0.3);
             border-radius: 8px;
             padding: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-upload-area:hover {
+            border-color: #007bff;
+            background: rgba(0, 123, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 123, 255, 0.2);
+        }
+
+        .image-upload-area.drag-over {
+            border-color: #28a745;
+            background: rgba(40, 167, 69, 0.1);
+            transform: scale(1.02);
+        }
+
+        .image-placeholder {
+            text-align: center;
+            pointer-events: none;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -1560,6 +1753,13 @@
         .image-text {
             font-weight: 600;
             color: #2c2c2c;
+            font-size: 16px;
+        }
+
+        .image-subtext {
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
         }
 
         .notes-section {
@@ -3248,36 +3448,14 @@
             
             <div class="search-container">
                 <div class="search-form">
-                    <div class="filter-group">
-                        <label for="filterType">Filter By</label>
-                        <select id="filterType" class="filter-select" onchange="updateSearchPlaceholder()">
-                            <option value="">Select filter type</option>
-                            <option value="season">Season</option>
-                            <option value="customer">Customer</option>
-                            <option value="style_number">Style Number</option>
-                            <option value="style_name">Style Name</option>
-                        </select>
-            </div>
-            
-                    <div class="filter-group">
-                        <label for="searchInput">Search Value</label>
+                    <div class="filter-group" style="flex: 1;">
+                        <label for="searchInput">🔍 Super Search</label>
                         <div style="position: relative;">
-                            <input type="text" id="searchInput" class="search-input" placeholder="Select filter type first..." onkeyup="handleSearchKeyup(event)" oninput="showLiveSuggestions()" onfocus="showLiveSuggestions()" onblur="hideLiveSuggestions()">
-                            <div id="liveSuggestions" style="
-                                position: absolute;
-                                top: 100%;
-                                left: 0;
-                                right: 0;
-                                background: white;
-                                border: 1px solid #ddd;
-                                border-top: none;
-                                border-radius: 0 0 8px 8px;
-                                max-height: 200px;
-                                overflow-y: auto;
-                                z-index: 1000;
-                                display: none;
-                                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                            "></div>
+                            <input type="text" id="searchInput" class="search-input super-search-input" placeholder="Search across all fields... (e.g., TNF, SS26, beanie, F22)" onkeyup="handleSuperSearchKeyup(event)" oninput="showSuperSearchSuggestions()" onfocus="showSuperSearchSuggestions()" onblur="hideSuperSearchSuggestions()">
+                            <div class="search-actions" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: flex; gap: 4px;">
+                                <button class="search-btn" onclick="clearSuperSearch()" title="Clear Search">❌</button>
+                            </div>
+                            <div id="superSearchSuggestions" class="super-search-suggestions"></div>
                         </div>
                     </div>
                     
@@ -3685,9 +3863,13 @@
                     </div>
 
                     <div class="product-image">
-                        <div class="image-placeholder">
-                            <div class="beanie-icon">📦</div>
-                            <div class="image-text">Product Image</div>
+                        <div class="image-upload-area" id="beanieImageUpload" ondrop="handleImageDrop(event, 'beanie')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" onclick="triggerImageInput('beanie')">
+                            <div class="image-placeholder">
+                                <div class="beanie-icon">📦</div>
+                                <div class="image-text">Drag & Drop Image Here</div>
+                                <div class="image-subtext">or click to select</div>
+                            </div>
+                            <input type="file" id="beanieImageInput" accept="image/*" style="display: none;" onchange="handleImageSelect(event, 'beanie')">
                         </div>
                     </div>
 
@@ -4030,9 +4212,13 @@
                     </div>
 
                     <div class="product-image">
-                        <div class="image-placeholder">
-                            <div class="beanie-icon">🧢</div>
-                            <div class="image-text">Product Image</div>
+                        <div class="image-upload-area" id="ballcapsImageUpload" ondrop="handleImageDrop(event, 'ballcaps')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" onclick="triggerImageInput('ballcaps')">
+                            <div class="image-placeholder">
+                                <div class="beanie-icon">🧢</div>
+                                <div class="image-text">Drag & Drop Image Here</div>
+                                <div class="image-subtext">or click to select</div>
+                            </div>
+                            <input type="file" id="ballcapsImageInput" accept="image/*" style="display: none;" onchange="handleImageSelect(event, 'ballcaps')">
                         </div>
                     </div>
 
@@ -5404,13 +5590,16 @@
             
             try {
             
+            // Reset visible rows counter
+            currentVisibleRows = 5;
+            
             // First, process the data to determine what to show
             let dataToShow = data;
             
             // Create table with specific columns
             let html = `
                 <div style="border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 12px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); margin: 10px; box-shadow: 0 6px 20px rgba(31, 38, 135, 0.15);">
-                    <div style="max-height: 500px; overflow-y: auto; overflow-x: auto;">
+                    <div style="max-height: 400px; overflow-y: auto; overflow-x: auto;">
                         <table class="table" style="width: 100%; border-collapse: collapse; min-width: ${columnHeaders.length * 150}px; margin: 0;">
                             <thead style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; position: sticky; top: 0; z-index: 10;">
                                 <tr>
@@ -5509,8 +5698,8 @@
             console.log('Data to show (first 3 rows):', dataToShow.slice(0, 3));
             console.log(`Showing all ${dataToShow.length} records`);
             
-            // Show all data (first 20 rows with mapped columns)
-            dataToShow.slice(0, 20).forEach((row, rowIndex) => {
+            // Show first 5 rows initially, then scrollable
+            dataToShow.slice(0, 5).forEach((row, rowIndex) => {
                 const rowStyle = `background: ${rowIndex % 2 === 0 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(248, 250, 252, 0.9)'}; transition: background-color 0.2s ease;`;
                 html += `<tr style="${rowStyle}" onmouseover="this.style.backgroundColor='rgba(102, 126, 234, 0.1)'" onmouseout="this.style.backgroundColor='${rowIndex % 2 === 0 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(248, 250, 252, 0.9)'}'">`;
                 
@@ -5552,6 +5741,25 @@
                         </table>
                     </div>
                     <div style="padding: 15px; background: #f8f9fa; text-align: center; border-top: 1px solid #ddd; border-radius: 0 0 8px 8px;">
+                        <div style="margin-bottom: 10px;">
+                            <button id="loadMoreBtn" onclick="loadMoreRows()" style="
+                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                color: white;
+                                border: none;
+                                padding: 10px 20px;
+                                border-radius: 6px;
+                                cursor: pointer;
+                                font-size: 14px;
+                                font-weight: 600;
+                                transition: all 0.3s ease;
+                                box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+                            " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(102, 126, 234, 0.3)'">
+                                📄 Load More Rows
+                            </button>
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <span id="rowCount" style="color: #495057; font-weight: 600;">Showing 5 of ${dataToShow.length} rows</span>
+                        </div>
                         <small style="color: #6c757d;">
                             <span style="color: #c62828;">●</span> Columns in red are missing from database
                             ${data.length !== dataToShow.length ? `<br><span style="color: #28a745;">✓</span> Filtered out ${data.length - dataToShow.length} header row(s)` : ''}
@@ -6106,10 +6314,13 @@
 
             // Clear existing rows
             tbody.innerHTML = '';
-            console.log('Cleared tbody, adding', filteredData.length, 'rows');
+            console.log('Cleared tbody, adding first 5 of', filteredData.length, 'rows');
 
-            // Add filtered rows
-            filteredData.forEach((row, rowIndex) => {
+            // Reset visible rows counter for search results
+            currentVisibleRows = 5;
+
+            // Add only first 5 filtered rows initially
+            filteredData.slice(0, 5).forEach((row, rowIndex) => {
                 const tr = document.createElement('tr');
                 tr.style.backgroundColor = rowIndex % 2 === 0 ? '#f8f9fa' : 'white';
                 
@@ -6172,6 +6383,23 @@
             
             // Update table stats
             updateTableStats(filteredData.length);
+            
+            // Update row count display
+            const rowCountSpan = document.getElementById('rowCount');
+            if (rowCountSpan) {
+                const visibleRows = Math.min(5, filteredData.length);
+                rowCountSpan.textContent = `Showing ${visibleRows} of ${filteredData.length} rows`;
+            }
+            
+            // Show/hide load more button based on results
+            const loadMoreBtn = document.getElementById('loadMoreBtn');
+            if (loadMoreBtn) {
+                if (filteredData.length > 5) {
+                    loadMoreBtn.style.display = 'block';
+                } else {
+                    loadMoreBtn.style.display = 'none';
+                }
+            }
             
             // Force table to be visible
             table.style.display = 'table';
@@ -6535,6 +6763,516 @@
                 statusElement.textContent = `${activeFilters} filter(s) active`;
                 statusElement.style.color = '#dc3545';
             }
+        }
+
+        // Super Search functionality
+        let superSearchTimeout;
+
+        // Handle super search keyup events
+        function handleSuperSearchKeyup(event) {
+            clearTimeout(superSearchTimeout);
+            
+            if (event.key === 'Enter') {
+                performSuperSearch();
+                hideSuperSearchSuggestions();
+            } else if (event.key === 'Escape') {
+                hideSuperSearchSuggestions();
+            } else {
+                // Debounced search suggestions
+                superSearchTimeout = setTimeout(() => {
+                    showSuperSearchSuggestions();
+                }, 300);
+            }
+        }
+
+        // Show super search suggestions
+        function showSuperSearchSuggestions() {
+            const searchInput = document.getElementById('searchInput');
+            const suggestionsDiv = document.getElementById('superSearchSuggestions');
+            const query = searchInput.value.trim().toLowerCase();
+            
+            if (!query || query.length < 2) {
+                hideSuperSearchSuggestions();
+                return;
+            }
+            
+            if (!window.currentTableData) {
+                return;
+            }
+            
+            const suggestions = getSuperSearchSuggestions(query);
+            displaySuperSearchSuggestions(suggestions);
+        }
+
+        // Get super search suggestions
+        function getSuperSearchSuggestions(query) {
+            const suggestions = [];
+            const searchFields = [
+                'season', 'customer', 'style_number', 'style_name', 'main_material',
+                'material_consumption', 'material_price', 'trim_cost', 'total_material_cost',
+                'knitting_machine', 'knitting_time', 'knitting_cpm', 'knitting_cost',
+                'ops_cost', 'packaging', 'oh', 'profit', 'fty_adjustment', 'ttl_fty_cost'
+            ];
+            
+            const fieldCounts = {};
+            
+            window.currentTableData.forEach(row => {
+                searchFields.forEach(field => {
+                    const value = row[field];
+                    if (value && String(value).toLowerCase().includes(query)) {
+                        const stringValue = String(value).trim();
+                        const key = `${field}:${stringValue}`;
+                        
+                        if (!fieldCounts[key]) {
+                            fieldCounts[key] = {
+                                field: field,
+                                value: stringValue,
+                                count: 0
+                            };
+                        }
+                        fieldCounts[key].count++;
+                    }
+                });
+            });
+            
+            // Convert to array and sort by count
+            Object.values(fieldCounts).forEach(item => {
+                suggestions.push(item);
+            });
+            
+            return suggestions.sort((a, b) => b.count - a.count).slice(0, 10);
+        }
+
+        // Display super search suggestions
+        function displaySuperSearchSuggestions(suggestions) {
+            const suggestionsDiv = document.getElementById('superSearchSuggestions');
+            
+            if (suggestions.length === 0) {
+                suggestionsDiv.innerHTML = '<div class="suggestion-item">No matches found</div>';
+            } else {
+                // Show more suggestions initially to fill the larger box
+                const visibleSuggestions = suggestions.slice(0, 10);
+                const hasMore = suggestions.length > 10;
+                
+                let html = '';
+                visibleSuggestions.forEach(suggestion => {
+                    const highlightedValue = highlightSearchTerm(suggestion.value, document.getElementById('searchInput').value);
+                    const fieldIcon = getFieldIcon(suggestion.field);
+                    const fieldDescription = getFieldDescription(suggestion.field);
+                    
+                    html += `
+                        <div class="suggestion-item" onclick="selectSuperSearchSuggestion('${suggestion.field}', '${suggestion.value}')">
+                            <div class="suggestion-icon">${fieldIcon}</div>
+                            <div class="suggestion-content">
+                                <div class="suggestion-main">${highlightedValue}</div>
+                                <div class="suggestion-description">${fieldDescription}</div>
+                            </div>
+                            <div class="suggestion-count">${suggestion.count}</div>
+                        </div>
+                    `;
+                });
+                
+                // Add "Show More" button if there are more suggestions
+                if (hasMore) {
+                    html += `
+                        <div class="suggestion-item" onclick="showMoreSuggestions()" style="
+                            background: #f8f9fa; 
+                            border-top: 1px solid #dee2e6; 
+                            font-weight: 600; 
+                            color: #007bff;
+                            justify-content: center;
+                        ">
+                            <div class="suggestion-icon">📄</div>
+                            <div class="suggestion-content">
+                                <div class="suggestion-main">Show ${suggestions.length - 10} more suggestions</div>
+                                <div class="suggestion-description">Click to see all results</div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                suggestionsDiv.innerHTML = html;
+                
+                // Store all suggestions for "Show More" functionality
+                suggestionsDiv.dataset.allSuggestions = JSON.stringify(suggestions);
+            }
+            
+            suggestionsDiv.classList.add('show');
+        }
+
+        // Get field icon based on field type
+        function getFieldIcon(field) {
+            const iconMap = {
+                'season': '📅',
+                'customer': '🏢',
+                'style_number': '🔢',
+                'style_name': '👕',
+                'main_material': '🧵',
+                'material_consumption': '📏',
+                'material_price': '💰',
+                'trim_cost': '✂️',
+                'total_material_cost': '💵',
+                'knitting_machine': '⚙️',
+                'knitting_time': '⏱️',
+                'knitting_cpm': '⚡',
+                'knitting_cost': '💸',
+                'ops_cost': '👷',
+                'packaging': '📦',
+                'oh': '📊',
+                'profit': '📈',
+                'fty_adjustment': '🔧',
+                'ttl_fty_cost': '💼'
+            };
+            return iconMap[field] || '🔍';
+        }
+
+        // Get field description
+        function getFieldDescription(field) {
+            const descriptionMap = {
+                'season': 'Product season',
+                'customer': 'Customer name',
+                'style_number': 'Style identifier',
+                'style_name': 'Product name',
+                'main_material': 'Primary material',
+                'material_consumption': 'Material usage',
+                'material_price': 'Material cost per unit',
+                'trim_cost': 'Trim accessories cost',
+                'total_material_cost': 'Total material expenses',
+                'knitting_machine': 'Machine type',
+                'knitting_time': 'Production time',
+                'knitting_cpm': 'Cost per minute',
+                'knitting_cost': 'Knitting expenses',
+                'ops_cost': 'Operations cost',
+                'packaging': 'Packaging expenses',
+                'oh': 'Overhead costs',
+                'profit': 'Profit margin',
+                'fty_adjustment': 'Factory adjustment',
+                'ttl_fty_cost': 'Total factory cost'
+            };
+            return descriptionMap[field] || 'Database field';
+        }
+
+        // Highlight search term in suggestions
+        function highlightSearchTerm(text, searchTerm) {
+            if (!searchTerm) return text;
+            const regex = new RegExp(`(${searchTerm})`, 'gi');
+            return text.replace(regex, '<strong class="search-highlight">$1</strong>');
+        }
+
+        // Select super search suggestion
+        function selectSuperSearchSuggestion(field, value) {
+            document.getElementById('searchInput').value = value;
+            hideSuperSearchSuggestions();
+            performSuperSearch();
+        }
+
+        // Hide super search suggestions
+        function hideSuperSearchSuggestions() {
+            const suggestionsDiv = document.getElementById('superSearchSuggestions');
+            suggestionsDiv.classList.remove('show');
+        }
+
+        // Show more suggestions
+        function showMoreSuggestions() {
+            const suggestionsDiv = document.getElementById('superSearchSuggestions');
+            const allSuggestions = JSON.parse(suggestionsDiv.dataset.allSuggestions || '[]');
+            
+            if (allSuggestions.length === 0) return;
+            
+            let html = '';
+            allSuggestions.forEach(suggestion => {
+                const highlightedValue = highlightSearchTerm(suggestion.value, document.getElementById('searchInput').value);
+                html += `
+                    <div class="suggestion-item" onclick="selectSuperSearchSuggestion('${suggestion.field}', '${suggestion.value}')">
+                        <div class="suggestion-field">${suggestion.field.replace(/_/g, ' ').toUpperCase()}</div>
+                        <div class="suggestion-value">${highlightedValue}</div>
+                        <div class="suggestion-count">${suggestion.count} matches</div>
+                    </div>
+                `;
+            });
+            
+            // Add "Show Less" button
+            html += `
+                <div class="suggestion-item" onclick="showLessSuggestions()" style="
+                    background: #f8f9fa; 
+                    border-top: 1px solid #dee2e6; 
+                    font-weight: 600; 
+                    color: #6c757d;
+                    justify-content: center;
+                ">
+                    <div class="suggestion-icon">▲</div>
+                    <div class="suggestion-content">
+                        <div class="suggestion-main">Show Less</div>
+                        <div class="suggestion-description">Collapse to first 5 results</div>
+                    </div>
+                </div>
+            `;
+            
+            suggestionsDiv.innerHTML = html;
+        }
+
+        // Show less suggestions (back to first 5)
+        function showLessSuggestions() {
+            const suggestionsDiv = document.getElementById('superSearchSuggestions');
+            const allSuggestions = JSON.parse(suggestionsDiv.dataset.allSuggestions || '[]');
+            
+            if (allSuggestions.length === 0) return;
+            
+            // Show only first 10 suggestions
+            const visibleSuggestions = allSuggestions.slice(0, 10);
+            const hasMore = allSuggestions.length > 10;
+            
+            let html = '';
+            visibleSuggestions.forEach(suggestion => {
+                const highlightedValue = highlightSearchTerm(suggestion.value, document.getElementById('searchInput').value);
+                html += `
+                    <div class="suggestion-item" onclick="selectSuperSearchSuggestion('${suggestion.field}', '${suggestion.value}')">
+                        <div class="suggestion-field">${suggestion.field.replace(/_/g, ' ').toUpperCase()}</div>
+                        <div class="suggestion-value">${highlightedValue}</div>
+                        <div class="suggestion-count">${suggestion.count} matches</div>
+                    </div>
+                `;
+            });
+            
+            // Add "Show More" button if there are more suggestions
+            if (hasMore) {
+                html += `
+                    <div class="suggestion-item" onclick="showMoreSuggestions()" style="
+                        background: #f8f9fa; 
+                        border-top: 1px solid #dee2e6; 
+                        font-weight: 600; 
+                        color: #007bff;
+                        justify-content: center;
+                    ">
+                        <div class="suggestion-icon">📄</div>
+                        <div class="suggestion-content">
+                            <div class="suggestion-main">Show ${allSuggestions.length - 10} more suggestions</div>
+                            <div class="suggestion-description">Click to see all results</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            suggestionsDiv.innerHTML = html;
+        }
+
+        // Perform super search
+        function performSuperSearch() {
+            const searchInput = document.getElementById('searchInput');
+            const query = searchInput.value.trim();
+            
+            if (!query) {
+                clearSuperSearch();
+                return;
+            }
+            
+            console.log('🔍 Performing super search for:', query);
+            
+            if (!window.currentTableData) {
+                console.log('No table data available');
+                return;
+            }
+            
+            const results = window.currentTableData.filter(row => {
+                return Object.values(row).some(value => {
+                    return value && String(value).toLowerCase().includes(query.toLowerCase());
+                });
+            });
+            
+            console.log(`Found ${results.length} results for "${query}"`);
+            
+            // Update the table with filtered results
+            filteredData = results;
+            updateTableWithFilteredData(results);
+            
+            // Update status
+            showStatus('tableData', `🔍 Super search found ${results.length} results for "${query}"`, 'success');
+        }
+
+        // Clear super search
+        function clearSuperSearch() {
+            document.getElementById('searchInput').value = '';
+            hideSuperSearchSuggestions();
+            
+            // Reset to show all data
+            filteredData = null;
+            if (window.currentTableData) {
+                updateTableWithFilteredData(window.currentTableData);
+            }
+            
+            showStatus('tableData', 'Search cleared - showing all data', 'info');
+        }
+
+        // Image drag and drop functionality
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDragLeave(event) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('drag-over');
+        }
+
+        function handleImageDrop(event, productType) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('drag-over');
+            
+            const files = event.dataTransfer.files;
+            if (files.length > 0) {
+                handleImageFile(files[0], productType);
+            }
+        }
+
+        function triggerImageInput(productType) {
+            const inputId = productType === 'beanie' ? 'beanieImageInput' : 'ballcapsImageInput';
+            document.getElementById(inputId).click();
+        }
+
+        function handleImageSelect(event, productType) {
+            const file = event.target.files[0];
+            if (file) {
+                handleImageFile(file, productType);
+            }
+        }
+
+        function handleImageFile(file, productType) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('Please select a valid image file.');
+                return;
+            }
+
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Image size must be less than 5MB.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                displayUploadedImage(e.target.result, productType);
+                console.log(`✅ Image uploaded for ${productType}:`, file.name, file.size, 'bytes');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function displayUploadedImage(imageDataUrl, productType) {
+            const uploadAreaId = productType === 'beanie' ? 'beanieImageUpload' : 'ballcapsImageUpload';
+            const uploadArea = document.getElementById(uploadAreaId);
+            
+            if (uploadArea) {
+                // Create image element
+                const img = document.createElement('img');
+                img.src = imageDataUrl;
+                img.alt = 'Product Image';
+                img.style.cssText = 'max-width: 100%; max-height: 300px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);';
+                
+                // Replace placeholder with image
+                uploadArea.innerHTML = '';
+                uploadArea.appendChild(img);
+                
+                // Add remove button
+                const removeBtn = document.createElement('button');
+                removeBtn.innerHTML = '✕';
+                removeBtn.style.cssText = 'position: absolute; top: 10px; right: 10px; background: rgba(220, 53, 69, 0.8); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;';
+                removeBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    resetImageUpload(productType);
+                };
+                uploadArea.appendChild(removeBtn);
+            }
+        }
+
+        function resetImageUpload(productType) {
+            const uploadAreaId = productType === 'beanie' ? 'beanieImageUpload' : 'ballcapsImageUpload';
+            const uploadArea = document.getElementById(uploadAreaId);
+            
+            if (uploadArea) {
+                uploadArea.innerHTML = `
+                    <div class="image-placeholder">
+                        <div class="beanie-icon">${productType === 'beanie' ? '📦' : '🧢'}</div>
+                        <div class="image-text">Drag & Drop Image Here</div>
+                        <div class="image-subtext">or click to select</div>
+                    </div>
+                    <input type="file" id="${productType}ImageInput" accept="image/*" style="display: none;" onchange="handleImageSelect(event, '${productType}')">
+                `;
+                
+                // Re-attach event listeners
+                uploadArea.setAttribute('ondrop', `handleImageDrop(event, '${productType}')`);
+                uploadArea.setAttribute('ondragover', 'handleDragOver(event)');
+                uploadArea.setAttribute('ondragleave', 'handleDragLeave(event)');
+                uploadArea.setAttribute('onclick', `triggerImageInput('${productType}')`);
+            }
+        }
+
+        // Load more rows functionality
+        let currentVisibleRows = 5;
+        let allTableRows = [];
+
+        function loadMoreRows() {
+            const tbody = document.querySelector('#tableData tbody');
+            if (!tbody) return;
+
+            const loadMoreBtn = document.getElementById('loadMoreBtn');
+            const rowCountSpan = document.getElementById('rowCount');
+            
+            // Use filtered data if available, otherwise use current table data
+            const dataSource = filteredData || window.currentTableData;
+            if (!dataSource) return;
+
+            const totalRows = dataSource.length;
+            const nextBatch = Math.min(10, totalRows - currentVisibleRows);
+            
+            if (nextBatch <= 0) {
+                loadMoreBtn.style.display = 'none';
+                return;
+            }
+
+            // Add next batch of rows
+            for (let i = currentVisibleRows; i < currentVisibleRows + nextBatch; i++) {
+                const row = dataSource[i];
+                if (!row) break;
+
+                const tr = document.createElement('tr');
+                tr.style.backgroundColor = i % 2 === 0 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(248, 250, 252, 0.9)';
+                tr.style.transition = 'background-color 0.2s ease';
+                
+                tr.onmouseover = () => tr.style.backgroundColor = 'rgba(102, 126, 234, 0.1)';
+                tr.onmouseout = () => tr.style.backgroundColor = i % 2 === 0 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(248, 250, 252, 0.9)';
+
+                // Get the column mapping from the original table creation
+                const displayColumns = [
+                    'Season', 'Customer', 'Style Number', 'Style Name', 'Main Material',
+                    'Material Consumption', 'Material Price', 'Trim Cost', 'Total Material Cost',
+                    'Knitting Machine', 'Knitting Time', 'Knitting CPM', 'Knitting Cost',
+                    'Ops Cost', 'Packaging', 'OH', 'Profit', 'Fty Adjustment', 'Ttl Fty Cost'
+                ];
+
+                displayColumns.forEach(displayCol => {
+                    const actualCol = getActualColumnName(displayCol, 0);
+                    const value = actualCol ? row[actualCol] : '';
+                    const displayValue = value !== null && value !== undefined ? String(value) : '';
+                    
+                    tr.innerHTML += `<td style="padding: 10px 8px; border: 1px solid #ddd; font-size: 13px; vertical-align: middle;">${displayValue}</td>`;
+                });
+
+                tbody.appendChild(tr);
+            }
+
+            currentVisibleRows += nextBatch;
+            
+            // Update row count
+            if (rowCountSpan) {
+                rowCountSpan.textContent = `Showing ${currentVisibleRows} of ${totalRows} rows`;
+            }
+
+            // Hide button if all rows are shown
+            if (currentVisibleRows >= totalRows) {
+                loadMoreBtn.style.display = 'none';
+            }
+
+            console.log(`Loaded ${nextBatch} more rows. Total visible: ${currentVisibleRows}/${totalRows}`);
         }
         
         // Test function for debugging
