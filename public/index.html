@@ -14269,6 +14269,189 @@
             }
         };
 
+        // Debug function to test beanie material cost parsing
+        window.testBeanieMaterialCosts = function() {
+            console.log('🧪 TESTING BEANIE MATERIAL COSTS PARSING');
+            console.log('==');
+            if (!window.lastExcelData) {
+                console.log('❌ No Excel data available. Please upload an Excel file first.');
+                return;
+            }
+            console.log('Raw Excel data:', window.lastExcelData);
+            if (window.beanieImporter) {
+                try {
+                    const parsedData = window.beanieImporter.parseExcelData(window.lastExcelData);
+                    console.log('✅ Beanie parsing successful:');
+                    console.log('YARN items:', parsedData.yarn);
+                    console.log('FABRIC items:', parsedData.fabric);
+                    console.log('TRIM items:', parsedData.trim);
+                    console.log('YARN count:', parsedData.yarn.length);
+                    console.log('FABRIC count:', parsedData.fabric.length);
+                    console.log('TRIM count:', parsedData.trim.length);
+                    
+                    parsedData.yarn.forEach((item, index) => {
+                        console.log(`YARN ${index + 1}:`, {
+                            material: item.material,
+                            consumption: item.consumption,
+                            price: item.price,
+                            cost: item.cost
+                        });
+                    });
+                    
+                    parsedData.fabric.forEach((item, index) => {
+                        console.log(`FABRIC ${index + 1}:`, {
+                            material: item.material,
+                            consumption: item.consumption,
+                            price: item.price,
+                            cost: item.cost
+                        });
+                    });
+                    
+                    parsedData.trim.forEach((item, index) => {
+                        console.log(`TRIM ${index + 1}:`, {
+                            material: item.material,
+                            consumption: item.consumption,
+                            price: item.price,
+                            cost: item.cost
+                        });
+                    });
+                } catch (error) {
+                    console.error('❌ Beanie parsing failed:', error);
+                }
+            } else {
+                console.log('❌ Beanie importer not available');
+            }
+        };
+
+        // Debug function to specifically test YARN section detection
+        window.debugYarnSection = function() {
+            console.log('🔍 DEBUGGING YARN SECTION DETECTION');
+            console.log('==');
+            if (!window.lastExcelData) {
+                console.log('❌ No Excel data available. Please upload an Excel file first.');
+                return;
+            }
+            
+            const data = window.lastExcelData.data || window.lastExcelData;
+            console.log('Searching for YARN section in Excel data...');
+            
+            let foundYarnSection = false;
+            let currentSection = '';
+            
+            for (let i = 0; i < data.length; i++) {
+                const row = data[i];
+                if (!row || row.length === 0) continue;
+                
+                const firstCell = String(row[0] || '').trim();
+                
+                // Check for YARN section markers
+                if (firstCell === 'YARN' || firstCell === 'MATERIAL' || firstCell.includes('YARN')) {
+                    currentSection = 'yarn';
+                    foundYarnSection = true;
+                    console.log(`✅ Found YARN section at row ${i}:`, firstCell);
+                    console.log('  Row data:', row);
+                } else if (firstCell.includes('(Name/Code/Description)') && row[1] && row[1].includes('CONSUMPTION')) {
+                    if (row[1].includes('G') && row[2] && row[2].includes('USD/KG')) {
+                        currentSection = 'yarn';
+                        foundYarnSection = true;
+                        console.log(`✅ Found YARN header row at row ${i}:`, firstCell);
+                        console.log('  Row data:', row);
+                    }
+                }
+                
+                // If we're in YARN section, show the next few rows
+                if (currentSection === 'yarn' && foundYarnSection) {
+                    console.log(`🔍 YARN section row ${i}:`, firstCell, '|', row[1], '|', row[2], '|', row[3]);
+                    
+                    // Show next 5 rows to see data
+                    if (i < data.length - 1) {
+                        for (let j = 1; j <= 5 && i + j < data.length; j++) {
+                            const nextRow = data[i + j];
+                            if (nextRow && nextRow.length > 0) {
+                                const nextFirstCell = String(nextRow[0] || '').trim();
+                                console.log(`  Next row ${i + j}:`, nextFirstCell, '|', nextRow[1], '|', nextRow[2], '|', nextRow[3]);
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+            
+            if (!foundYarnSection) {
+                console.log('❌ No YARN section found in Excel data');
+                console.log('Searching for any rows containing "yarn" or "material"...');
+                
+                for (let i = 0; i < Math.min(50, data.length); i++) {
+                    const row = data[i];
+                    if (row && row.length > 0) {
+                        const rowString = row.join(' | ').toLowerCase();
+                        if (rowString.includes('yarn') || rowString.includes('material')) {
+                            console.log(`Row ${i} contains yarn/material:`, row);
+                        }
+                    }
+                }
+            }
+        };
+
+        // Simple test function to force YARN parsing
+        window.testYarnParsing = function() {
+            console.log('🧪 FORCING YARN PARSING TEST');
+            console.log('==');
+            if (!window.lastExcelData) {
+                console.log('❌ No Excel data available. Please upload an Excel file first.');
+                return;
+            }
+            
+            const data = window.lastExcelData.data || window.lastExcelData;
+            console.log('Raw Excel data length:', data.length);
+            
+            // Look for any rows that might be YARN data
+            let yarnItems = [];
+            
+            for (let i = 0; i < data.length; i++) {
+                const row = data[i];
+                if (!row || row.length === 0) continue;
+                
+                const firstCell = String(row[0] || '').trim();
+                
+                // Skip header rows and empty cells
+                if (!firstCell || firstCell.includes('YARN') || firstCell.includes('(Name/Code/Description)') || 
+                    firstCell.includes('CONSUMPTION') || firstCell.includes('MATERIAL PRICE') || 
+                    firstCell.includes('MATERIAL COST') || firstCell.includes('TOTAL') || 
+                    firstCell.includes('SUB TOTAL')) {
+                    continue;
+                }
+                
+                // Check if this looks like YARN data
+                if (row[1] && row[2] && row[3] && 
+                    !isNaN(parseFloat(row[1])) && !isNaN(parseFloat(row[2])) && 
+                    (!isNaN(parseFloat(row[3])) || row[3].toString().includes('$'))) {
+                    
+                    const consumption = String(row[1] || '');
+                    const price = String(row[2] || '');
+                    const cost = String(row[3] || '');
+                    
+                    yarnItems.push({
+                        material: firstCell,
+                        consumption: consumption,
+                        price: price,
+                        cost: cost,
+                        row: i
+                    });
+                    
+                    console.log(`✅ Found potential YARN item at row ${i}:`, {
+                        material: firstCell,
+                        consumption: consumption,
+                        price: price,
+                        cost: cost
+                    });
+                }
+            }
+            
+            console.log(`Found ${yarnItems.length} potential YARN items:`, yarnItems);
+            return yarnItems;
+        };
+
         // Make functions available globally for testing
         window.testExcelReading = testExcelReading;
         window.testRossignolCapData = testRossignolCapData;

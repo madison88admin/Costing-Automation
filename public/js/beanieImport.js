@@ -237,31 +237,74 @@ var TNFBeanieImporter = class TNFBeanieImporter {
                 // Detect sections with flexible matching (like ballcaps)
                 if (firstCell === 'YARN' || firstCell === 'MATERIAL' || firstCell.includes('YARN')) {
                     currentSection = 'yarn';
-                    console.log('🔍 Found YARN section');
+                    console.log('🔍 Found YARN section at row', i, ':', firstCell);
                 } else if (firstCell === 'FABRIC' || firstCell === 'FABRIC/S' || firstCell.includes('FABRIC')) {
                     currentSection = 'fabric';
-                    console.log('🔍 Found FABRIC section');
+                    console.log('🔍 Found FABRIC section at row', i, ':', firstCell);
                 } else if (firstCell === 'TRIM' || firstCell === 'TRIM/S' || firstCell.includes('TRIM')) {
                     currentSection = 'trim';
-                    console.log('🔍 Found TRIM section');
+                    console.log('🔍 Found TRIM section at row', i, ':', firstCell);
                 } else if (firstCell === 'KNITTING' || firstCell.includes('KNITTING')) {
                     currentSection = 'knitting';
-                    console.log('🔍 Found KNITTING section');
+                    console.log('🔍 Found KNITTING section at row', i, ':', firstCell);
                 } else if (firstCell === 'OPERATIONS' || firstCell.includes('OPERATIONS')) {
                     currentSection = 'operations';
-                    console.log('🔍 Found OPERATIONS section');
+                    console.log('🔍 Found OPERATIONS section at row', i, ':', firstCell);
                 } else if (firstCell === 'PACKAGING' || firstCell.includes('PACKAGING')) {
                     currentSection = 'packaging';
-                    console.log('🔍 Found PACKAGING section');
+                    console.log('🔍 Found PACKAGING section at row', i, ':', firstCell);
                 } else if (firstCell === 'OVERHEAD/ PROFIT' || firstCell === 'OVERHEAD/PROFIT' || firstCell === 'OVERHEAD' || firstCell.includes('OVERHEAD')) {
                     currentSection = 'overhead';
-                    console.log('🔍 Found OVERHEAD section');
+                    console.log('🔍 Found OVERHEAD section at row', i, ':', firstCell);
                 } else if (firstCell === 'TOTAL FACTORY COST' || firstCell.includes('TOTAL FACTORY')) {
-                    console.log('🔍 Found TOTAL FACTORY COST');
+                    console.log('🔍 Found TOTAL FACTORY COST at row', i, ':', firstCell);
+                }
+                
+                // Additional YARN section detection - look for rows that might be YARN data
+                if (!currentSection && firstCell && firstCell.trim() !== '' && 
+                    !firstCell.includes('FABRIC') && !firstCell.includes('TRIM') && 
+                    !firstCell.includes('OPERATIONS') && !firstCell.includes('PACKAGING') && 
+                    !firstCell.includes('OVERHEAD') && !firstCell.includes('TOTAL') &&
+                    !firstCell.includes('(Name/Code/Description)') && !firstCell.includes('CONSUMPTION') &&
+                    !firstCell.includes('MATERIAL PRICE') && !firstCell.includes('MATERIAL COST')) {
+                    
+                    // Check if this looks like YARN data (has consumption in grams and price per kg)
+                    if (row[1] && row[2] && row[3] && 
+                        (row[1].toString().includes('G') || !isNaN(parseFloat(row[1]))) &&
+                        (row[2].toString().includes('USD/KG') || !isNaN(parseFloat(row[2]))) &&
+                        (!isNaN(parseFloat(row[3])) || row[3].toString().includes('$'))) {
+                        
+                        // Check if we're in a context that suggests this is YARN
+                        let isYarnContext = false;
+                        
+                        // Look back a few rows to see if we recently saw YARN section
+                        for (let j = Math.max(0, i - 10); j < i; j++) {
+                            const prevRow = data[j];
+                            if (prevRow && prevRow[0]) {
+                                const prevFirstCell = String(prevRow[0] || '').trim();
+                                if (prevFirstCell === 'YARN' || prevFirstCell.includes('YARN') || 
+                                    (prevFirstCell.includes('(Name/Code/Description)') && prevRow[1] && prevRow[1].includes('CONSUMPTION') && 
+                                     prevRow[1].includes('G') && prevRow[2] && prevRow[2].includes('USD/KG'))) {
+                                    isYarnContext = true;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        if (isYarnContext) {
+                            currentSection = 'yarn';
+                            console.log('🔍 Detected YARN data by context at row', i, ':', firstCell);
+                        }
+                    }
                 }
                 
                 // Debug: Log current section and row data for operations/overhead
                 if (currentSection === 'operations' || currentSection === 'overhead') {
+                    console.log(`🔍 Current section: ${currentSection}, Row ${i}:`, firstCell, '|', row[1], '|', row[2], '|', row[3]);
+                }
+                
+                // Debug: Log current section and row data for material sections
+                if (currentSection === 'yarn' || currentSection === 'fabric' || currentSection === 'trim') {
                     console.log(`🔍 Current section: ${currentSection}, Row ${i}:`, firstCell, '|', row[1], '|', row[2], '|', row[3]);
                 }
                 
@@ -302,26 +345,39 @@ var TNFBeanieImporter = class TNFBeanieImporter {
                     !firstCell.includes('TOTAL') && 
                     !firstCell.includes('SUB TOTAL') &&
                     firstCell.trim() !== '') {
+                    
+                    console.log(`🔍 Processing YARN row: "${firstCell}" - Row data:`, row);
+                    console.log(`🔍 YARN section active, processing row ${i}:`, firstCell);
+                    
                     // Calculate cost if not provided or if consumption and price are available
                     let cost = '';
+                    let consumption = String(row[1] || '');
+                    let price = String(row[2] || '');
+                    
+                    console.log(`🔍 YARN data - Material: "${firstCell}", Consumption: "${consumption}", Price: "${price}"`);
+                    
+                    // First try to get cost directly from column 3 (D)
                     if (row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) > 0) {
                         cost = parseFloat(row[3]).toFixed(2);
+                        console.log('  ✅ Found cost in col 3:', cost);
                     } else if (row[1] && row[2] && !isNaN(parseFloat(row[1])) && !isNaN(parseFloat(row[2]))) {
                         // Calculate: (consumption in grams / 1000) * price per kg
                         const consumptionKg = parseFloat(row[1]) / 1000;
                         const pricePerKg = parseFloat(row[2]);
                         cost = (consumptionKg * pricePerKg).toFixed(2);
+                        console.log('  ✅ Calculated cost:', cost, 'from consumption:', row[1], 'and price:', row[2]);
+                    } else {
+                        console.log('  ⚠️ No valid cost found - consumption:', row[1], 'price:', row[2], 'cost:', row[3]);
                     }
                     
-                    if (cost) {
+                    // Always add the item, even if cost is empty (for debugging)
                     result.yarn.push({
                         material: firstCell,
-                        consumption: String(row[1] || ''),
-                        price: parseFloat(row[2] || 0).toFixed(2),
-                            cost: cost
-                        });
-                        console.log('✅ YARN:', firstCell, 'Cost:', cost);
-                    }
+                        consumption: consumption,
+                        price: price,
+                        cost: cost || '0.00'
+                    });
+                    console.log('✅ YARN added:', firstCell, 'Consumption:', consumption, 'Price:', price, 'Cost:', cost || '0.00');
                 }
                 
                 if (currentSection === 'fabric' && firstCell && 
@@ -333,26 +389,33 @@ var TNFBeanieImporter = class TNFBeanieImporter {
                     !firstCell.includes('SUB TOTAL') &&
                     firstCell.trim() !== '') {
                     
+                    console.log(`🔍 Processing FABRIC row: "${firstCell}" - Row data:`, row);
+                    
                     // Calculate cost if not provided or if consumption and price are available
                     let cost = '';
+                    let consumption = String(row[1] || '');
+                    let price = String(row[2] || '');
+                    
+                    // First try to get cost directly from column 3 (D)
                     if (row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) > 0) {
                         cost = parseFloat(row[3]).toFixed(2);
+                        console.log('  Found cost in col 3:', cost);
                     } else if (row[1] && row[2] && !isNaN(parseFloat(row[1])) && !isNaN(parseFloat(row[2]))) {
                         // Calculate: consumption * price
-                        const consumption = parseFloat(row[1]);
-                        const price = parseFloat(row[2]);
-                        cost = (consumption * price).toFixed(2);
+                        const consumptionVal = parseFloat(row[1]);
+                        const priceVal = parseFloat(row[2]);
+                        cost = (consumptionVal * priceVal).toFixed(2);
+                        console.log('  Calculated cost:', cost, 'from consumption:', row[1], 'and price:', row[2]);
                     }
                     
-                    if (cost) {
+                    // Always add the item, even if cost is empty (for debugging)
                     result.fabric.push({
                         material: firstCell,
-                        consumption: String(row[1] || ''),
-                        price: parseFloat(row[2] || 0).toFixed(2),
-                            cost: cost
-                        });
-                        console.log('✅ FABRIC:', firstCell, 'Cost:', cost);
-                    }
+                        consumption: consumption,
+                        price: price,
+                        cost: cost || '0.00'
+                    });
+                    console.log('✅ FABRIC added:', firstCell, 'Consumption:', consumption, 'Price:', price, 'Cost:', cost || '0.00');
                 }
                 
                 if (currentSection === 'trim' && firstCell && 
@@ -364,26 +427,33 @@ var TNFBeanieImporter = class TNFBeanieImporter {
                     !firstCell.includes('SUB TOTAL') &&
                     firstCell.trim() !== '') {
                     
+                    console.log(`🔍 Processing TRIM row: "${firstCell}" - Row data:`, row);
+                    
                     // Calculate cost if not provided or if consumption and price are available
                     let cost = '';
+                    let consumption = String(row[1] || '');
+                    let price = String(row[2] || '');
+                    
+                    // First try to get cost directly from column 3 (D)
                     if (row[3] && !isNaN(parseFloat(row[3])) && parseFloat(row[3]) > 0) {
                         cost = parseFloat(row[3]).toFixed(2);
+                        console.log('  Found cost in col 3:', cost);
                     } else if (row[1] && row[2] && !isNaN(parseFloat(row[1])) && !isNaN(parseFloat(row[2]))) {
                         // Calculate: consumption * price
-                        const consumption = parseFloat(row[1]);
-                        const price = parseFloat(row[2]);
-                        cost = (consumption * price).toFixed(2);
+                        const consumptionVal = parseFloat(row[1]);
+                        const priceVal = parseFloat(row[2]);
+                        cost = (consumptionVal * priceVal).toFixed(2);
+                        console.log('  Calculated cost:', cost, 'from consumption:', row[1], 'and price:', row[2]);
                     }
                     
-                    if (cost) {
+                    // Always add the item, even if cost is empty (for debugging)
                     result.trim.push({
                         material: firstCell,
-                        consumption: String(row[1] || ''),
-                        price: parseFloat(row[2] || 0).toFixed(2),
-                            cost: cost
-                        });
-                        console.log('✅ TRIM:', firstCell, 'Cost:', cost);
-                    }
+                        consumption: consumption,
+                        price: price,
+                        cost: cost || '0.00'
+                    });
+                    console.log('✅ TRIM added:', firstCell, 'Consumption:', consumption, 'Price:', price, 'Cost:', cost || '0.00');
                 }
                 
                 if (currentSection === 'knitting' && firstCell && 
