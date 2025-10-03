@@ -6214,27 +6214,31 @@
         function toggleColumnFilter(columnIndex, columnName) {
             console.log(`Toggling filter for column ${columnIndex}: ${columnName}`);
             
-            // Close all other dropdowns
-            document.querySelectorAll('.filter-dropdown').forEach(dropdown => {
-                dropdown.classList.remove('show');
-            });
-            
-            // Find the actual database column name
-            const actualColumnName = getActualColumnName(columnName, columnIndex);
-            console.log(`Using actual column name: ${actualColumnName} for display name: ${columnName}`);
-            
-            // Find or create the dropdown for this column
+            // Find or create the dropdown for this column first
             let dropdown = document.getElementById(`filter-${columnIndex}`);
             if (!dropdown) {
+                // Find the actual database column name
+                const actualColumnName = getActualColumnName(columnName, columnIndex);
+                console.log(`Using actual column name: ${actualColumnName} for display name: ${columnName}`);
+                
                 // Create the dropdown with the actual column name
                 dropdown = createFilterDropdown(columnIndex, actualColumnName, columnName);
             }
             
-            // Toggle the dropdown
-            if (dropdown.classList.contains('show')) {
-                dropdown.classList.remove('show');
-            } else {
+            // Check if this dropdown is currently shown
+            const isCurrentlyShown = dropdown.classList.contains('show');
+            
+            // Close all dropdowns first
+            document.querySelectorAll('.filter-dropdown').forEach(dd => {
+                dd.classList.remove('show');
+            });
+            
+            // If the clicked dropdown was not shown, show it now
+            if (!isCurrentlyShown) {
                 dropdown.classList.add('show');
+                console.log(`✅ Showing filter dropdown for ${columnName}`);
+            } else {
+                console.log(`❌ Hiding filter dropdown for ${columnName}`);
             }
         }
 
