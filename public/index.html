@@ -837,13 +837,14 @@
             padding: 24px;
             max-width: 480px;
             width: 90%;
-            max-height: 75vh;
-            overflow: hidden;
+            max-height: 80vh;
+            overflow: visible;
             display: none;
+            flex-direction: column;
         }
 
         .season-filter-panel.show {
-            display: block;
+            display: flex;
         }
 
         /* Customer Filter Panel - Same styles as Season */
@@ -875,13 +876,14 @@
             padding: 24px;
             max-width: 480px;
             width: 90%;
-            max-height: 75vh;
-            overflow: hidden;
+            max-height: 80vh;
+            overflow: visible;
             display: none;
+            flex-direction: column;
         }
 
         .customer-filter-panel.show {
-            display: block;
+            display: flex;
         }
 
         .customer-filter-header {
@@ -900,10 +902,11 @@
             display: flex;
             flex-direction: column;
             gap: 2px;
-            max-height: 320px;
+            max-height: 280px;
             overflow-y: auto;
             padding: 8px 0;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
+            flex: 1;
         }
 
         .customer-option {
@@ -957,10 +960,11 @@
             display: flex;
             flex-direction: column;
             gap: 2px;
-            max-height: 320px;
+            max-height: 280px;
             overflow-y: auto;
             padding: 8px 0;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
+            flex: 1;
         }
 
         .season-option {
@@ -999,12 +1003,13 @@
         }
 
         .filter-panel-actions {
-            margin-top: 20px;
+            margin-top: 16px;
             padding-top: 16px;
             border-top: 1px solid #f0f0f0;
             display: flex;
             gap: 12px;
             justify-content: center;
+            flex-shrink: 0;
         }
 
         .filter-apply-btn, .filter-clear-btn {
@@ -1690,6 +1695,38 @@
             font-size: 14px;
         }
 
+        .product-info {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .product-info .info-row {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-bottom: 0;
+            width: 100%;
+        }
+
+        .product-info .info-label {
+            font-size: 14px;
+            margin-bottom: 4px;
+            color: #333;
+        }
+
+        .product-info .info-input {
+            width: 200px;
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-size: 12px;
+            background-color: #fff;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            height: 28px;
+        }
+
         .info-label {
             font-weight: 600;
             color: #2c2c2c;
@@ -1698,6 +1735,94 @@
         .info-value {
             color: #666;
         }
+
+        .info-value.editable {
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+        }
+
+        .info-value.editable:hover {
+            background-color: #f0f0f0;
+        }
+
+        .info-value.editing {
+            background-color: #fff;
+            border: 2px solid #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .info-input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            color: #666;
+            font-size: 14px;
+            outline: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .info-input:focus {
+            background-color: #fff;
+            border: 2px solid #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .edit-controls {
+            display: none;
+            margin-top: 10px;
+            text-align: right;
+        }
+
+        .edit-controls.show {
+            display: block;
+        }
+
+        .edit-btn, .save-btn, .cancel-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 5px;
+            transition: background-color 0.2s ease;
+        }
+
+        .edit-btn:hover, .save-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .cancel-btn {
+            background: #6c757d;
+        }
+
+        .cancel-btn:hover {
+            background: #5a6268;
+        }
+
+        .product-info.editing .info-value {
+            display: none;
+        }
+
+        .product-info.editing .info-input {
+            display: block;
+        }
+
+
+        .product-info .info-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .product-info .info-value {
+            display: none;
+        }
+
 
         .product-image {
             text-align: center;
@@ -3838,27 +3963,27 @@
                     <div class="product-info">
                         <div class="info-row">
                             <span class="info-label">Customer:</span>
-                            <span class="info-value"></span>
+                            <input type="text" class="info-input" data-field="customer" placeholder="Enter customer name" onchange="updateProductData(this)">
                         </div>
                         <div class="info-row">
                             <span class="info-label">Season:</span>
-                            <span class="info-value"></span>
+                            <input type="text" class="info-input" data-field="season" placeholder="Enter season" onchange="updateProductData(this)">
                         </div>
                         <div class="info-row">
                             <span class="info-label">Style#:</span>
-                            <span class="info-value"></span>
+                            <input type="text" class="info-input" data-field="styleNumber" placeholder="Enter style number" onchange="updateProductData(this)">
                         </div>
                         <div class="info-row">
                             <span class="info-label">Style Name:</span>
-                            <span class="info-value"></span>
+                            <input type="text" class="info-input" data-field="styleName" placeholder="Enter style name" onchange="updateProductData(this)">
                         </div>
                         <div class="info-row">
                             <span class="info-label">Costed Quantity:</span>
-                            <span class="info-value"></span>
+                            <input type="text" class="info-input" data-field="costedQuantity" placeholder="Enter quantity" onchange="updateProductData(this)">
                         </div>
                         <div class="info-row">
                             <span class="info-label">Leadtime:</span>
-                            <span class="info-value"></span>
+                            <input type="text" class="info-input" data-field="leadtime" placeholder="Enter leadtime" onchange="updateProductData(this)">
                         </div>
                     </div>
 
@@ -4187,27 +4312,27 @@
                     <div class="product-info">
                         <div class="info-row">
                             <span class="info-label">Customer:</span>
-                            <span class="info-value"></span>
+                            <input type="text" class="info-input" data-field="customer" placeholder="Enter customer name" onchange="updateProductData(this)">
                         </div>
                         <div class="info-row">
                             <span class="info-label">Season:</span>
-                            <span class="info-value"></span>
+                            <input type="text" class="info-input" data-field="season" placeholder="Enter season" onchange="updateProductData(this)">
                         </div>
                         <div class="info-row">
                             <span class="info-label">Style#:</span>
-                            <span class="info-value"></span>
+                            <input type="text" class="info-input" data-field="styleNumber" placeholder="Enter style number" onchange="updateProductData(this)">
                         </div>
                         <div class="info-row">
                             <span class="info-label">Style Name:</span>
-                            <span class="info-value"></span>
+                            <input type="text" class="info-input" data-field="styleName" placeholder="Enter style name" onchange="updateProductData(this)">
                         </div>
                         <div class="info-row">
                             <span class="info-label">MOQ:</span>
-                            <span class="info-value"></span>
+                            <input type="text" class="info-input" data-field="moq" placeholder="Enter MOQ" onchange="updateProductData(this)">
                         </div>
                         <div class="info-row">
                             <span class="info-label">Leadtime:</span>
-                            <span class="info-value"></span>
+                            <input type="text" class="info-input" data-field="leadtime" placeholder="Enter leadtime" onchange="updateProductData(this)">
                         </div>
                     </div>
 
@@ -4867,9 +4992,9 @@
         let connectionId = null;
         let totalRecords = 0;
         
-        // Pagination variables
+        // Pagination variables - Modified for single page display
         let currentPage = 1;
-        let recordsPerPage = 20;
+        let recordsPerPage = 999999; // Set to very large number to show all records
         let totalPages = 1;
         let allTableData = [];
         let filteredData = null;
@@ -4933,10 +5058,9 @@
             
             console.log('updatePagination called - totalPages:', totalPages, 'totalRecords:', totalRecords, 'recordsPerPage:', recordsPerPage);
             
-            if (totalPages <= 1) {
-                pagination.style.display = 'none';
-                return;
-            }
+            // Always hide pagination for single page display
+            pagination.style.display = 'none';
+            return;
             
             pagination.style.display = 'flex';
             
@@ -5698,8 +5822,8 @@
             console.log('Data to show (first 3 rows):', dataToShow.slice(0, 3));
             console.log(`Showing all ${dataToShow.length} records`);
             
-            // Show first 5 rows initially, then scrollable
-            dataToShow.slice(0, 5).forEach((row, rowIndex) => {
+            // Show all rows at once for single page display
+            dataToShow.forEach((row, rowIndex) => {
                 const rowStyle = `background: ${rowIndex % 2 === 0 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(248, 250, 252, 0.9)'}; transition: background-color 0.2s ease;`;
                 html += `<tr style="${rowStyle}" onmouseover="this.style.backgroundColor='rgba(102, 126, 234, 0.1)'" onmouseout="this.style.backgroundColor='${rowIndex % 2 === 0 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(248, 250, 252, 0.9)'}'">`;
                 
@@ -5740,16 +5864,16 @@
                             </tbody>
                         </table>
                     </div>
-                    <div style="padding: 15px; background: #f8f9fa; text-align: center; border-top: 1px solid #ddd; border-radius: 0 0 8px 8px;">
-                        <div style="margin-bottom: 10px;">
+                    <div style="padding: 8px; background: #f8f9fa; text-align: center; border-top: 1px solid #ddd; border-radius: 0 0 8px 8px;">
+                        <div style="margin-bottom: 5px;">
                             <button id="loadMoreBtn" onclick="loadMoreRows()" style="
                                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                                 color: white;
                                 border: none;
-                                padding: 10px 20px;
+                                padding: 6px 16px;
                                 border-radius: 6px;
                                 cursor: pointer;
-                                font-size: 14px;
+                                font-size: 12px;
                                 font-weight: 600;
                                 transition: all 0.3s ease;
                                 box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
@@ -5757,10 +5881,10 @@
                                 📄 Load More Rows
                             </button>
                         </div>
-                        <div style="margin-bottom: 8px;">
-                            <span id="rowCount" style="color: #495057; font-weight: 600;">Showing 5 of ${dataToShow.length} rows</span>
+                        <div style="margin-bottom: 4px;">
+                            <span id="rowCount" style="color: #495057; font-weight: 600; font-size: 12px;">Showing 5 of ${dataToShow.length} rows</span>
                         </div>
-                        <small style="color: #6c757d;">
+                        <small style="color: #6c757d; font-size: 11px;">
                             <span style="color: #c62828;">●</span> Columns in red are missing from database
                             ${data.length !== dataToShow.length ? `<br><span style="color: #28a745;">✓</span> Filtered out ${data.length - dataToShow.length} header row(s)` : ''}
                         </small>
@@ -6387,18 +6511,15 @@
             // Update row count display
             const rowCountSpan = document.getElementById('rowCount');
             if (rowCountSpan) {
-                const visibleRows = Math.min(5, filteredData.length);
-                rowCountSpan.textContent = `Showing ${visibleRows} of ${filteredData.length} rows`;
+                // Show all records for single page display
+                rowCountSpan.textContent = `Showing all ${filteredData.length} rows`;
             }
             
             // Show/hide load more button based on results
             const loadMoreBtn = document.getElementById('loadMoreBtn');
             if (loadMoreBtn) {
-                if (filteredData.length > 5) {
-                    loadMoreBtn.style.display = 'block';
-                } else {
-                    loadMoreBtn.style.display = 'none';
-                }
+                // Always hide load more button for single page display
+                loadMoreBtn.style.display = 'none';
             }
             
             // Force table to be visible
@@ -7264,7 +7385,7 @@
             
             // Update row count
             if (rowCountSpan) {
-                rowCountSpan.textContent = `Showing ${currentVisibleRows} of ${totalRows} rows`;
+                rowCountSpan.textContent = `Showing all ${totalRows} rows`;
             }
 
             // Hide button if all rows are shown
@@ -9730,9 +9851,9 @@
             
             if (costBreakdown) {
                 // Clear beanie template data
-                const infoValues = costBreakdown.querySelectorAll('.info-value');
-                infoValues.forEach(element => {
-                    element.textContent = '';
+                const infoInputs = costBreakdown.querySelectorAll('.info-input');
+                infoInputs.forEach(element => {
+                    element.value = '';
                 });
                 
                 // Clear all cost sections
@@ -9750,9 +9871,9 @@
             
             if (ballcapsBreakdown) {
                 // Clear ballcaps template data
-                const infoValues = ballcapsBreakdown.querySelectorAll('.info-value');
-                infoValues.forEach(element => {
-                    element.textContent = '';
+                const infoInputs = ballcapsBreakdown.querySelectorAll('.info-input');
+                infoInputs.forEach(element => {
+                    element.value = '';
                 });
                 
                 // Clear all cost sections
@@ -10071,9 +10192,9 @@
             // Clear product information
             const productInfo = document.querySelector('.product-info');
             if (productInfo) {
-                const infoValues = productInfo.querySelectorAll('.info-value');
-                infoValues.forEach(value => {
-                    value.textContent = '';
+                const infoInputs = productInfo.querySelectorAll('.info-input');
+                infoInputs.forEach(input => {
+                    input.value = '';
                 });
             }
             
@@ -10209,17 +10330,18 @@
             console.log('- values:', values);
             
             infoRows.forEach((row, index) => {
-                const valueSpan = row.querySelector('.info-value');
+                const inputField = row.querySelector('.info-input');
                 const label = labels[index];
                 const value = values[index];
                 console.log(`- Processing ${label}:`, value);
-                if (valueSpan && value) {
-                    valueSpan.textContent = value;
+                if (inputField && value) {
+                    inputField.value = value;
                     console.log(`✅ Set ${label} to:`, value);
                 } else {
                     console.log(`❌ Skipped ${label} - no value or element`);
                 }
             });
+
             
             // Fill Notes section
             if (data.notes) {
@@ -13872,10 +13994,10 @@
                 const value = parsedData[label];
                 console.log(`- Processing ${label}:`, value);
                 if (label && value) {
-                    // Find the info-value span within this row
-                    const valueElement = element.querySelector('.info-value');
-                    if (valueElement) {
-                        valueElement.textContent = value;
+                    // Find the input field within this row
+                    const inputField = element.querySelector('.info-input');
+                    if (inputField) {
+                        inputField.value = value;
                         console.log(`✅ Set ${label} to:`, value);
                     }
                 } else {
@@ -14985,17 +15107,29 @@
             });
             
             try {
-                // Check if we have parsed data
+                // Check if we have parsed data or manually entered data
                 if (!window.currentParsedData) {
-                    alert('No data to save. Please upload and parse an Excel file first.');
-                    return;
+                    // Initialize with empty data structure for manual entry
+                    window.currentParsedData = {
+                        customer: '',
+                        season: '',
+                        styleNumber: '',
+                        styleName: '',
+                        costedQuantity: '',
+                        leadtime: '',
+                        moq: ''
+                    };
                 }
+
+                // Merge any manually entered data before saving
+                mergeManualData();
 
                 // Database connection is handled by the server
 
                 // Disable button and show loading
                 saveBtn.disabled = true;
                 saveBtn.innerHTML = 'Saving...';
+
 
                 // Prepare data for saving
                 const excelData = {
@@ -15105,17 +15239,29 @@
             });
             
             try {
-                // Check if we have parsed data
+                // Check if we have parsed data or manually entered data
                 if (!window.currentParsedData) {
-                    alert('No data to save. Please upload and parse an Excel file first.');
-                    return;
+                    // Initialize with empty data structure for manual entry
+                    window.currentParsedData = {
+                        customer: '',
+                        season: '',
+                        styleNumber: '',
+                        styleName: '',
+                        costedQuantity: '',
+                        leadtime: '',
+                        moq: ''
+                    };
                 }
+
+                // Merge any manually entered data before saving
+                mergeManualData();
 
                 // Database connection is handled by the server
 
                 // Disable button and show loading
                 saveBtn.disabled = true;
                 saveBtn.innerHTML = 'Saving...';
+
 
                 // Prepare data for saving
                 const excelData = {
@@ -15806,6 +15952,138 @@
         window.testExcelReading = testExcelReading;
         window.testRossignolCapData = testRossignolCapData;
 
+        // Data card editing functionality
+        let editingField = null;
+        let originalValue = '';
+
+        function startEdit(element) {
+            if (editingField) {
+                cancelEdit();
+            }
+            
+            editingField = element;
+            originalValue = element.textContent;
+            
+            // Find the corresponding input field
+            const fieldName = element.getAttribute('data-field');
+            const input = element.parentElement.querySelector(`input[data-field="${fieldName}"]`);
+            
+            if (input) {
+                input.value = originalValue;
+                input.style.display = 'block';
+                element.style.display = 'none';
+                input.focus();
+                input.select();
+            }
+        }
+
+        function saveEdit(input) {
+            if (!editingField) return;
+            
+            const newValue = input.value.trim();
+            const fieldName = input.getAttribute('data-field');
+            
+            // Update the display value
+            editingField.textContent = newValue;
+            
+            // Show the value, hide the input
+            editingField.style.display = 'block';
+            input.style.display = 'none';
+            
+            // Update the data in the current parsed data if available
+            if (window.currentParsedData) {
+                window.currentParsedData[fieldName] = newValue;
+                console.log(`Updated ${fieldName} to:`, newValue);
+            }
+            
+            // Clear editing state
+            editingField = null;
+            originalValue = '';
+        }
+
+        function cancelEdit() {
+            if (!editingField) return;
+            
+            const fieldName = editingField.getAttribute('data-field');
+            const input = editingField.parentElement.querySelector(`input[data-field="${fieldName}"]`);
+            
+            if (input) {
+                input.value = originalValue;
+                input.style.display = 'none';
+                editingField.style.display = 'block';
+            }
+            
+            editingField = null;
+            originalValue = '';
+        }
+
+        function handleKeyPress(event, input) {
+            if (event.key === 'Enter') {
+                saveEdit(input);
+            } else if (event.key === 'Escape') {
+                cancelEdit();
+            }
+        }
+
+        // Function to update product data when input fields change
+        function updateProductData(input) {
+            const fieldName = input.getAttribute('data-field');
+            const value = input.value.trim();
+            
+            // Update the data in the current parsed data if available
+            if (window.currentParsedData) {
+                window.currentParsedData[fieldName] = value;
+                console.log(`Updated ${fieldName} to:`, value);
+            } else {
+                // Initialize currentParsedData if it doesn't exist
+                window.currentParsedData = {};
+                window.currentParsedData[fieldName] = value;
+                console.log(`Initialized currentParsedData with ${fieldName}:`, value);
+            }
+        }
+
+        // Function to collect all manually entered data from input fields
+        function collectManualData() {
+            const inputFields = document.querySelectorAll('.product-info .info-input');
+            const manualData = {};
+            
+            inputFields.forEach(input => {
+                const fieldName = input.getAttribute('data-field');
+                const value = input.value.trim();
+                if (fieldName && value) {
+                    manualData[fieldName] = value;
+                }
+            });
+            
+            console.log('Collected manual data:', manualData);
+            return manualData;
+        }
+
+        // Function to merge manual data with currentParsedData
+        function mergeManualData() {
+            const manualData = collectManualData();
+            
+            if (window.currentParsedData) {
+                // Merge manual data with existing data
+                Object.assign(window.currentParsedData, manualData);
+            } else {
+                // Initialize with manual data
+                window.currentParsedData = manualData;
+            }
+            
+            console.log('Merged data for saving:', window.currentParsedData);
+        }
+
+        // Make editing functions globally available
+        window.startEdit = startEdit;
+        window.saveEdit = saveEdit;
+        window.cancelEdit = cancelEdit;
+        window.handleKeyPress = handleKeyPress;
+        window.updateProductData = updateProductData;
+        window.collectManualData = collectManualData;
+        window.mergeManualData = mergeManualData;
+
+
     </script>
 
     <!-- Floating Emergency Recovery Button -->
@@ -15929,8 +16207,8 @@
             <!-- Season options will be populated here -->
         </div>
         <div class="filter-panel-actions">
-            <button class="filter-clear-btn" onclick="clearSeasonFilterPopup()">Clear</button>
-            <button class="filter-apply-btn" onclick="applySeasonFilterPopup()">Apply</button>
+            <button class="filter-clear-btn" onclick="clearSeasonFilterPopup()">Cancel</button>
+            <button class="filter-apply-btn" onclick="applySeasonFilterPopup()">OK</button>
         </div>
     </div>
 
@@ -15942,8 +16220,8 @@
             <!-- Customer options will be populated here -->
         </div>
         <div class="filter-panel-actions">
-            <button class="filter-clear-btn" onclick="clearCustomerFilterPopup()">Clear</button>
-            <button class="filter-apply-btn" onclick="applyCustomerFilterPopup()">Apply</button>
+            <button class="filter-clear-btn" onclick="clearCustomerFilterPopup()">Cancel</button>
+            <button class="filter-apply-btn" onclick="applyCustomerFilterPopup()">OK</button>
         </div>
     </div>
 
