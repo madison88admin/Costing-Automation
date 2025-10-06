@@ -651,6 +651,26 @@
             width: 600px;
         }
 
+        /* Custom scrollbar styles */
+        .table-container::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #5a6fd8;
+        }
+
         .super-search-input:focus {
             border-color: #007bff;
             box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
@@ -837,7 +857,7 @@
             padding: 24px;
             max-width: 480px;
             width: 90%;
-            max-height: 80vh;
+            max-height: 75vh;
             overflow: visible;
             display: none;
             flex-direction: column;
@@ -876,7 +896,7 @@
             padding: 24px;
             max-width: 480px;
             width: 90%;
-            max-height: 80vh;
+            max-height: 75vh;
             overflow: visible;
             display: none;
             flex-direction: column;
@@ -902,11 +922,11 @@
             display: flex;
             flex-direction: column;
             gap: 2px;
-            max-height: 280px;
+            max-height: 200px;
             overflow-y: auto;
             padding: 8px 0;
             margin-bottom: 16px;
-            flex: 1;
+            flex: 0 0 auto;
         }
 
         .customer-option {
@@ -960,11 +980,11 @@
             display: flex;
             flex-direction: column;
             gap: 2px;
-            max-height: 280px;
+            max-height: 200px;
             overflow-y: auto;
             padding: 8px 0;
             margin-bottom: 16px;
-            flex: 1;
+            flex: 0 0 auto;
         }
 
         .season-option {
@@ -1004,12 +1024,16 @@
 
         .filter-panel-actions {
             margin-top: 16px;
-            padding-top: 16px;
+            padding: 20px 0;
             border-top: 1px solid #f0f0f0;
             display: flex;
             gap: 12px;
             justify-content: center;
             flex-shrink: 0;
+            min-height: 80px;
+            align-items: center;
+            background: #f8f9fa;
+            border-radius: 0 0 16px 16px;
         }
 
         .filter-apply-btn, .filter-clear-btn {
@@ -3584,10 +3608,10 @@
                         </div>
                     </div>
                     
-                    <button class="search-button" onclick="searchData()" id="searchButton">
+                    <button class="search-button" onclick="performSuperSearch()" id="searchButton">
                         Search
                     </button>
-                    <button class="clear-button" onclick="clearSearch()" id="clearButton">
+                    <button class="clear-button" onclick="clearSuperSearch()" id="clearButton">
                         Clear
                     </button>
                     <button class="import-button" onclick="exportToExcel()" id="exportButton">
@@ -3661,7 +3685,7 @@
                 <div class="cost-sections">
 
                     <!-- YARN Section -->
-                    <div class="cost-section scroll-slide-left scroll-stagger-1">
+                    <div class="cost-section scroll-slide-left scroll-stagger-1" data-section="YARN">
                         <div class="section-header">YARN</div>
                         <div class="cost-table">
                             <div class="cost-row header-row">
@@ -3704,7 +3728,7 @@
                     </div>
 
                     <!-- FABRIC Section -->
-                    <div class="cost-section scroll-slide-right scroll-stagger-2">
+                    <div class="cost-section scroll-slide-right scroll-stagger-2" data-section="FABRIC">
                         <div class="section-header">FABRIC</div>
                         <div class="cost-table">
                             <div class="cost-row header-row">
@@ -3747,7 +3771,7 @@
                     </div>
 
                     <!-- TRIM Section -->
-                    <div class="cost-section scroll-slide-left scroll-stagger-3">
+                    <div class="cost-section scroll-slide-left scroll-stagger-3" data-section="TRIM">
                         <div class="section-header">TRIM</div>
                         <div class="cost-table">
                             <div class="cost-row header-row">
@@ -5471,8 +5495,8 @@
                     // Clear any cached data
                     window.currentTableData = null;
                     
-                    // Display first page of data
-                    displayCurrentPageData();
+                    // Display all data directly (no pagination for initial load)
+                    displayTableData(result.data);
                     updatePagination();
                     
                     // Update button counts with actual data
@@ -5714,8 +5738,8 @@
             
             try {
             
-            // Reset visible rows counter
-            currentVisibleRows = 5;
+            // Reset visible rows counter to show all data
+            currentVisibleRows = data.length;
             
             // First, process the data to determine what to show
             let dataToShow = data;
@@ -5723,7 +5747,7 @@
             // Create table with specific columns
             let html = `
                 <div style="border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 12px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); margin: 10px; box-shadow: 0 6px 20px rgba(31, 38, 135, 0.15);">
-                    <div style="max-height: 400px; overflow-y: auto; overflow-x: auto;">
+                    <div class="table-container" style="max-height: 500px; overflow-y: auto; overflow-x: auto; scrollbar-width: thin; scrollbar-color: #667eea #f1f1f1;">
                         <table class="table" style="width: 100%; border-collapse: collapse; min-width: ${columnHeaders.length * 150}px; margin: 0;">
                             <thead style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; position: sticky; top: 0; z-index: 10;">
                                 <tr>
@@ -5863,31 +5887,6 @@
             html += `
                             </tbody>
                         </table>
-                    </div>
-                    <div style="padding: 8px; background: #f8f9fa; text-align: center; border-top: 1px solid #ddd; border-radius: 0 0 8px 8px;">
-                        <div style="margin-bottom: 5px;">
-                            <button id="loadMoreBtn" onclick="loadMoreRows()" style="
-                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                                color: white;
-                                border: none;
-                                padding: 6px 16px;
-                                border-radius: 6px;
-                                cursor: pointer;
-                                font-size: 12px;
-                                font-weight: 600;
-                                transition: all 0.3s ease;
-                                box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-                            " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(102, 126, 234, 0.3)'">
-                                📄 Load More Rows
-                            </button>
-                        </div>
-                        <div style="margin-bottom: 4px;">
-                            <span id="rowCount" style="color: #495057; font-weight: 600; font-size: 12px;">Showing 5 of ${dataToShow.length} rows</span>
-                        </div>
-                        <small style="color: #6c757d; font-size: 11px;">
-                            <span style="color: #c62828;">●</span> Columns in red are missing from database
-                            ${data.length !== dataToShow.length ? `<br><span style="color: #28a745;">✓</span> Filtered out ${data.length - dataToShow.length} header row(s)` : ''}
-                        </small>
                     </div>
                 </div>
             `;
@@ -6412,21 +6411,30 @@
             console.log('updateTableWithFilteredData called with', filteredData.length, 'rows');
             const tableElement = document.getElementById('tableData');
             if (!tableElement) {
-                console.log('tableElement not found');
+                console.log('❌ tableElement not found');
+                console.log('Available elements with "table" in ID:', document.querySelectorAll('[id*="table"]'));
                 return;
             }
+
+            console.log('✅ tableElement found:', tableElement);
 
             // Get the current table structure
             let table = tableElement.querySelector('.table');
             if (!table) {
-                console.log('table not found, trying to find any table');
+                console.log('table with .table class not found, trying to find any table');
                 table = tableElement.querySelector('table');
             }
             
             if (!table) {
-                console.log('No table found, cannot update');
+                console.log('❌ No table found, cannot update');
+                console.log('tableElement innerHTML:', tableElement.innerHTML.substring(0, 200));
+                // Try to create a new table if none exists
+                console.log('Creating new table structure...');
+                displayTableData(filteredData);
                 return;
             }
+            
+            console.log('✅ table found:', table);
 
             // Get or create tbody
             let tbody = table.querySelector('tbody');
@@ -6438,13 +6446,13 @@
 
             // Clear existing rows
             tbody.innerHTML = '';
-            console.log('Cleared tbody, adding first 5 of', filteredData.length, 'rows');
+            console.log('Cleared tbody, adding all', filteredData.length, 'rows');
 
             // Reset visible rows counter for search results
-            currentVisibleRows = 5;
+            currentVisibleRows = filteredData.length;
 
-            // Add only first 5 filtered rows initially
-            filteredData.slice(0, 5).forEach((row, rowIndex) => {
+            // Add all filtered rows
+            filteredData.forEach((row, rowIndex) => {
                 const tr = document.createElement('tr');
                 tr.style.backgroundColor = rowIndex % 2 === 0 ? '#f8f9fa' : 'white';
                 
@@ -6508,25 +6516,31 @@
             // Update table stats
             updateTableStats(filteredData.length);
             
-            // Update row count display
-            const rowCountSpan = document.getElementById('rowCount');
-            if (rowCountSpan) {
-                // Show all records for single page display
-                rowCountSpan.textContent = `Showing all ${filteredData.length} rows`;
-            }
+            // Row count display removed - control panel no longer exists
             
-            // Show/hide load more button based on results
-            const loadMoreBtn = document.getElementById('loadMoreBtn');
-            if (loadMoreBtn) {
-                // Always hide load more button for single page display
-                loadMoreBtn.style.display = 'none';
-            }
+            // Load more button removed - control panel no longer exists
             
             // Force table to be visible
             table.style.display = 'table';
             tableElement.style.display = 'block';
             
-            console.log('Table updated successfully with', filteredData.length, 'rows');
+            // CRITICAL: Ensure table container maintains exact same size
+            const tableContainer = tableElement.querySelector('.table-container');
+            if (tableContainer) {
+                // Force exact same dimensions as original
+                tableContainer.style.maxHeight = '500px';
+                tableContainer.style.height = '500px';
+                tableContainer.style.overflowY = 'auto';
+                tableContainer.style.overflowX = 'auto';
+                tableContainer.style.width = '100%';
+                console.log('✅ Table container size locked at 500px height');
+            }
+            
+            console.log('✅ Table updated successfully with', filteredData.length, 'rows');
+            console.log('✅ Table visibility:', table.style.display);
+            console.log('✅ TableElement visibility:', tableElement.style.display);
+            console.log('✅ TableElement display style:', window.getComputedStyle(tableElement).display);
+            console.log('✅ Number of rows in tbody:', tbody.children.length);
         }
         
         function updateTableStats(filteredCount) {
@@ -7191,23 +7205,52 @@
             
             if (!window.currentTableData) {
                 console.log('No table data available');
+                showStatus('tableData', 'No data available for search', 'error');
                 return;
             }
             
+            console.log('Searching through', window.currentTableData.length, 'total rows');
+            
             const results = window.currentTableData.filter(row => {
                 return Object.values(row).some(value => {
-                    return value && String(value).toLowerCase().includes(query.toLowerCase());
+                    if (value && String(value).toLowerCase().includes(query.toLowerCase())) {
+                        console.log('Found match:', value, 'contains', query);
+                        return true;
+                    }
+                    return false;
                 });
             });
             
             console.log(`Found ${results.length} results for "${query}"`);
+            console.log('Sample results:', results.slice(0, 3));
             
             // Update the table with filtered results
             filteredData = results;
+            
+            // Always try to update the existing table first to maintain size
             updateTableWithFilteredData(results);
             
+            // CRITICAL: Ensure table container maintains exact same size
+            const tableElement = document.getElementById('tableData');
+            if (tableElement) {
+                const tableContainer = tableElement.querySelector('.table-container');
+                if (tableContainer) {
+                    // Force exact same dimensions as original - NO SIZE CHANGES
+                    tableContainer.style.maxHeight = '500px';
+                    tableContainer.style.height = '500px';
+                    tableContainer.style.overflowY = 'auto';
+                    tableContainer.style.overflowX = 'auto';
+                    tableContainer.style.width = '100%';
+                    console.log('✅ Super search: Table container size locked at 500px height');
+                }
+            }
+            
             // Update status
-            showStatus('tableData', `🔍 Super search found ${results.length} results for "${query}"`, 'success');
+            if (results.length === 0) {
+                showStatus('tableData', `🔍 No results found for "${query}"`, 'warning');
+            } else {
+                showStatus('tableData', `🔍 Super search found ${results.length} results for "${query}"`, 'success');
+            }
         }
 
         // Clear super search
@@ -7217,8 +7260,38 @@
             
             // Reset to show all data
             filteredData = null;
+            console.log('🔄 Clearing search - resetting to show all data');
+            
             if (window.currentTableData) {
+                console.log('✅ Restoring original table with', window.currentTableData.length, 'rows');
+                // Try to update existing table first to maintain size
                 updateTableWithFilteredData(window.currentTableData);
+                
+                // CRITICAL: Ensure table container maintains exact same size
+                const tableElement = document.getElementById('tableData');
+                if (tableElement) {
+                    const tableContainer = tableElement.querySelector('.table-container');
+                    if (tableContainer) {
+                        // Force exact same dimensions as original - NO SIZE CHANGES
+                        tableContainer.style.maxHeight = '500px';
+                        tableContainer.style.height = '500px';
+                        tableContainer.style.overflowY = 'auto';
+                        tableContainer.style.overflowX = 'auto';
+                        tableContainer.style.width = '100%';
+                        console.log('✅ Clear search: Table container size locked at 500px height');
+                    }
+                }
+                
+                // Update table stats to show all data
+                updateTableStats(window.currentTableData.length);
+            } else {
+                // If no data is loaded, try to load it
+                console.log('No current table data found, attempting to load data...');
+                if (connectionId) {
+                    loadDatabankData();
+                } else {
+                    showStatus('tableData', 'No data loaded. Please connect to database first.', 'error');
+                }
             }
             
             showStatus('tableData', 'Search cleared - showing all data', 'info');
@@ -7331,70 +7404,7 @@
         let currentVisibleRows = 5;
         let allTableRows = [];
 
-        function loadMoreRows() {
-            const tbody = document.querySelector('#tableData tbody');
-            if (!tbody) return;
-
-            const loadMoreBtn = document.getElementById('loadMoreBtn');
-            const rowCountSpan = document.getElementById('rowCount');
-            
-            // Use filtered data if available, otherwise use current table data
-            const dataSource = filteredData || window.currentTableData;
-            if (!dataSource) return;
-
-            const totalRows = dataSource.length;
-            const nextBatch = Math.min(10, totalRows - currentVisibleRows);
-            
-            if (nextBatch <= 0) {
-                loadMoreBtn.style.display = 'none';
-                return;
-            }
-
-            // Add next batch of rows
-            for (let i = currentVisibleRows; i < currentVisibleRows + nextBatch; i++) {
-                const row = dataSource[i];
-                if (!row) break;
-
-                const tr = document.createElement('tr');
-                tr.style.backgroundColor = i % 2 === 0 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(248, 250, 252, 0.9)';
-                tr.style.transition = 'background-color 0.2s ease';
-                
-                tr.onmouseover = () => tr.style.backgroundColor = 'rgba(102, 126, 234, 0.1)';
-                tr.onmouseout = () => tr.style.backgroundColor = i % 2 === 0 ? 'rgba(255, 255, 255, 0.9)' : 'rgba(248, 250, 252, 0.9)';
-
-                // Get the column mapping from the original table creation
-                const displayColumns = [
-                    'Season', 'Customer', 'Style Number', 'Style Name', 'Main Material',
-                    'Material Consumption', 'Material Price', 'Trim Cost', 'Total Material Cost',
-                    'Knitting Machine', 'Knitting Time', 'Knitting CPM', 'Knitting Cost',
-                    'Ops Cost', 'Packaging', 'OH', 'Profit', 'Fty Adjustment', 'Ttl Fty Cost'
-                ];
-
-                displayColumns.forEach(displayCol => {
-                    const actualCol = getActualColumnName(displayCol, 0);
-                    const value = actualCol ? row[actualCol] : '';
-                    const displayValue = value !== null && value !== undefined ? String(value) : '';
-                    
-                    tr.innerHTML += `<td style="padding: 10px 8px; border: 1px solid #ddd; font-size: 13px; vertical-align: middle;">${displayValue}</td>`;
-                });
-
-                tbody.appendChild(tr);
-            }
-
-            currentVisibleRows += nextBatch;
-            
-            // Update row count
-            if (rowCountSpan) {
-                rowCountSpan.textContent = `Showing all ${totalRows} rows`;
-            }
-
-            // Hide button if all rows are shown
-            if (currentVisibleRows >= totalRows) {
-                loadMoreBtn.style.display = 'none';
-            }
-
-            console.log(`Loaded ${nextBatch} more rows. Total visible: ${currentVisibleRows}/${totalRows}`);
-        }
+        // loadMoreRows function removed - control panel no longer exists
         
         // Test function for debugging
         function testFilter(columnName, value) {
@@ -7406,6 +7416,98 @@
         // Make test function globally available
         window.testFilter = testFilter;
         window.clearAllFilters = clearAllFilters;
+        
+        // Manual data loading function for debugging
+        window.forceLoadData = function() {
+            console.log('🔄 Force loading data...');
+            if (connectionId) {
+                loadDatabankData();
+            } else {
+                console.log('No connection ID available, trying to auto-connect...');
+                autoConnectToSupabase();
+            }
+        };
+        
+        // Debug function to check what data is available
+        window.debugSearchData = function() {
+            console.log('🔍 Debug Search Data:');
+            console.log('- Current table data length:', window.currentTableData ? window.currentTableData.length : 'null');
+            console.log('- Filtered data length:', filteredData ? filteredData.length : 'null');
+            console.log('- Sample data (first 3 rows):', window.currentTableData ? window.currentTableData.slice(0, 3) : 'null');
+            
+            if (window.currentTableData && window.currentTableData.length > 0) {
+                console.log('- Available columns:', Object.keys(window.currentTableData[0]));
+                console.log('- Sample values from first row:', Object.values(window.currentTableData[0]));
+            }
+        };
+        
+        // Force display search results
+        window.forceShowSearchResults = function() {
+            console.log('🔄 Force showing search results...');
+            if (filteredData && filteredData.length > 0) {
+                console.log('Using filtered data:', filteredData.length, 'rows');
+                displayTableData(filteredData);
+            } else if (window.currentTableData && window.currentTableData.length > 0) {
+                console.log('Using current table data:', window.currentTableData.length, 'rows');
+                displayTableData(window.currentTableData);
+            } else {
+                console.log('No data available to display');
+            }
+        };
+        
+        // Force show all data (debug function)
+        window.forceShowAllData = function() {
+            console.log('🔄 Force showing ALL data...');
+            console.log('Current table data length:', window.currentTableData ? window.currentTableData.length : 'null');
+            console.log('All table data length:', allTableData ? allTableData.length : 'null');
+            console.log('Filtered data length:', filteredData ? filteredData.length : 'null');
+            
+            if (allTableData && allTableData.length > 0) {
+                console.log('Using allTableData:', allTableData.length, 'rows');
+                displayTableData(allTableData);
+            } else if (window.currentTableData && window.currentTableData.length > 0) {
+                console.log('Using currentTableData:', window.currentTableData.length, 'rows');
+                displayTableData(window.currentTableData);
+            } else {
+                console.log('No data available, trying to reload...');
+                if (connectionId) {
+                    loadDatabankData();
+                }
+            }
+        };
+        
+        // Function to ensure table maintains consistent size - NO CHANGES ALLOWED
+        function maintainTableSize() {
+            const tableElement = document.getElementById('tableData');
+            if (tableElement) {
+                const tableContainer = tableElement.querySelector('.table-container');
+                if (tableContainer) {
+                    // Force exact same dimensions - NO SIZE CHANGES EVER
+                    tableContainer.style.maxHeight = '500px';
+                    tableContainer.style.height = '500px';
+                    tableContainer.style.overflowY = 'auto';
+                    tableContainer.style.overflowX = 'auto';
+                    tableContainer.style.width = '100%';
+                    tableContainer.style.minHeight = '500px';
+                    console.log('✅ Table size LOCKED at 500px height - NO CHANGES');
+                }
+            }
+        }
+        
+        // Function to ensure Excel tables maintain consistent size - NO CHANGES ALLOWED
+        function maintainExcelTableSize() {
+            const excelContainers = document.querySelectorAll('#filePreview .table-container');
+            excelContainers.forEach((container, index) => {
+                // Force exact same dimensions - NO SIZE CHANGES EVER
+                container.style.maxHeight = '500px';
+                container.style.height = '500px';
+                container.style.overflowY = 'auto';
+                container.style.overflowX = 'auto';
+                container.style.width = '100%';
+                container.style.minHeight = '500px';
+                console.log(`✅ Excel table ${index + 1} size LOCKED at 500px height - NO CHANGES`);
+            });
+        }
 
         // Close dropdowns when clicking outside
         document.addEventListener('click', function(e) {
@@ -8090,7 +8192,7 @@
                 
             // Try to get Supabase data via API
             const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-            const apiUrl = isLocalhost ? `/api/datatable/data/${connectionId}?table=databank&limit=5` : `/.netlify/functions/datatable-data?table=databank&limit=5`;
+            const apiUrl = isLocalhost ? `/api/datatable/data/${connectionId}?table=databank` : `/.netlify/functions/datatable-data?table=databank`;
             
             console.log(`🌐 Attempting to fetch data from: ${apiUrl}`);
             
@@ -8729,6 +8831,121 @@
         // Make permission test function available globally
         window.testSupabaseWritePermissions = testSupabaseWritePermissions;
 
+        // Add new row function
+        async function addNewRow() {
+            console.log('➕ Adding new row...');
+            
+            // Check if we have data structure to work with
+            if (!window.currentTableData || window.currentTableData.length === 0) {
+                showNotification('❌ No data loaded. Please load data first.', 'error');
+                return;
+            }
+            
+            // Get the column structure from existing data
+            const firstRow = window.currentTableData[0];
+            const columns = Object.keys(firstRow);
+            
+            // Create a new empty row with the same structure
+            const newRow = {};
+            columns.forEach(column => {
+                newRow[column] = ''; // Empty values for new row
+            });
+            
+            // Add the new row to the data
+            window.currentTableData.push(newRow);
+            editedTableData = [...window.currentTableData];
+            
+            // Refresh the table to show the new row
+            displayTableData(window.currentTableData);
+            
+            // Show success message
+            showNotification('✅ New row added! Click on cells to edit and save to database.', 'success');
+            
+            // Scroll to the new row (last row)
+            setTimeout(() => {
+                const table = document.querySelector('.table');
+                if (table) {
+                    const rows = table.querySelectorAll('tbody tr');
+                    if (rows.length > 0) {
+                        rows[rows.length - 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        // Highlight the new row
+                        rows[rows.length - 1].style.backgroundColor = 'rgba(40, 167, 69, 0.1)';
+                        rows[rows.length - 1].style.border = '2px solid #28a745';
+                    }
+                }
+            }, 500);
+        }
+
+        // Save new row to database
+        async function saveNewRowToDatabase(rowIndex) {
+            console.log(`💾 Saving new row ${rowIndex} to database...`);
+            
+            const rowData = editedTableData[rowIndex];
+            if (!rowData) {
+                throw new Error(`Row data not found at index ${rowIndex}`);
+            }
+            
+            // Remove empty ID fields if they exist
+            const dataToInsert = { ...rowData };
+            delete dataToInsert.id;
+            delete dataToInsert.ID;
+            delete dataToInsert.Id;
+            
+            // Remove completely empty fields
+            Object.keys(dataToInsert).forEach(key => {
+                if (dataToInsert[key] === '' || dataToInsert[key] === null || dataToInsert[key] === undefined) {
+                    delete dataToInsert[key];
+                }
+            });
+            
+            // Only insert if there's actual data
+            if (Object.keys(dataToInsert).length === 0) {
+                console.log('⚠️ No data to insert, skipping...');
+                return;
+            }
+            
+            try {
+                const supabaseUrl = 'https://icavnpspgmcrrqmsprze.supabase.co';
+                const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljYXZucHNwZ21jcnJxbXNwcnplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0NzEyMzMsImV4cCI6MjA3MzA0NzIzM30.5_-LPYwj5ks_KyCXwCae2mcbI-T7em48RsMiv4Oaurk';
+                
+                const response = await fetch(`${supabaseUrl}/rest/v1/databank`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': supabaseKey,
+                        'Authorization': `Bearer ${supabaseKey}`,
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify(dataToInsert)
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+                
+                const result = await response.json();
+                console.log('✅ New row saved to database:', result);
+                
+                // Update the local data with the new ID from database
+                if (result && result.length > 0 && result[0].id) {
+                    editedTableData[rowIndex].id = result[0].id;
+                    window.currentTableData[rowIndex].id = result[0].id;
+                    console.log(`✅ Row ${rowIndex} now has ID: ${result[0].id}`);
+                }
+                
+                // Show success notification
+                showNotification('✅ New row saved to database successfully!', 'success');
+                
+                return result;
+                
+            } catch (error) {
+                console.error('❌ Failed to save new row to database:', error);
+                showNotification(`❌ Failed to save new row: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+
         // Toggle edit mode
         async function toggleEditMode() {
             const editBtn = document.getElementById('editTableBtn');
@@ -8933,7 +9150,19 @@
                     // Re-enabled updates with safe content matching
                     const timeoutId = setTimeout(async () => {
                         try {
-                            await safeUpdateSupabase(storedRowIndex, columnName, newValue);
+                            // Check if this is a new row (no ID) or existing row
+                            const rowData = editedTableData[storedRowIndex];
+                            const hasId = rowData && (rowData.id || rowData.ID || rowData.Id);
+                            
+                            if (hasId) {
+                                // Existing row - update in database
+                                await safeUpdateSupabase(storedRowIndex, columnName, newValue);
+                                console.log(`✅ Cell ${columnName} updated in database`);
+                            } else {
+                                // New row - save entire row to database
+                                await saveNewRowToDatabase(storedRowIndex);
+                                console.log(`✅ New row ${storedRowIndex} saved to database`);
+                            }
                             
                             // Change indicator to success
                             indicator.innerHTML = '✅';
@@ -8941,7 +9170,7 @@
                             cell.style.backgroundColor = 'rgba(40, 167, 69, 0.1)';
                             cell.style.borderLeft = '3px solid #28a745';
                         } catch (error) {
-                            console.error(`❌ Failed to update ${columnName}:`, error.message);
+                            console.error(`❌ Failed to save ${columnName}:`, error.message);
                             
                             // Check if it's a network error
                             if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
@@ -11094,6 +11323,9 @@
          * Add event listeners for real-time calculations
          */
         function addCalculationEventListeners() {
+            // Add our new calculation listeners
+            addCalculationListeners();
+            
             // Add input event listeners to all cost cells
             const costSections = document.querySelectorAll('#costBreakdown .cost-section');
             
@@ -12356,7 +12588,7 @@
                     `;
                 } else if (sheet.data && sheet.data.length > 0) {
                     html += `
-                        <div style="max-height: 400px; overflow-y: auto; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; background: rgba(255, 255, 255, 0.05);">
+                        <div class="table-container" style="max-height: 500px; height: 500px; overflow-y: auto; overflow-x: auto; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; background: rgba(255, 255, 255, 0.05);">
                             <table style="width: 100%; border-collapse: collapse; font-family: monospace; font-size: 12px;">
                     `;
 
@@ -12410,6 +12642,11 @@
 
             previewDiv.innerHTML = html;
             previewDiv.style.display = 'block';
+
+            // Ensure Excel tables maintain consistent size
+            setTimeout(() => {
+                maintainExcelTableSize();
+            }, 100);
 
             const endTime = performance.now();
             const displayTime = ((endTime - startTime) / 1000).toFixed(3);
@@ -12691,7 +12928,7 @@
                     `;
                 } else if (sheet.data && sheet.data.length > 0) {
                     html += `
-                        <div style="max-height: 400px; overflow-y: auto; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; background: rgba(255, 255, 255, 0.05);">
+                        <div class="table-container" style="max-height: 500px; height: 500px; overflow-y: auto; overflow-x: auto; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; background: rgba(255, 255, 255, 0.05);">
                             <table style="width: 100%; border-collapse: collapse; font-family: monospace; font-size: 12px;">
                     `;
 
@@ -12745,6 +12982,11 @@
 
             previewDiv.innerHTML = html;
             previewDiv.style.display = 'block';
+
+            // Ensure Excel tables maintain consistent size
+            setTimeout(() => {
+                maintainExcelTableSize();
+            }, 100);
 
             const endTime = performance.now();
             const displayTime = ((endTime - startTime) / 1000).toFixed(2);
@@ -12904,7 +13146,7 @@
                     `;
                 } else if (sheet.data && sheet.data.length > 0) {
                     html += `
-                        <div style="max-height: 400px; overflow-y: auto; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; background: rgba(255, 255, 255, 0.05);">
+                        <div class="table-container" style="max-height: 500px; height: 500px; overflow-y: auto; overflow-x: auto; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; background: rgba(255, 255, 255, 0.05);">
                             <table style="width: 100%; border-collapse: collapse; font-family: monospace; font-size: 12px;">
                     `;
 
@@ -12958,6 +13200,11 @@
 
             previewDiv.innerHTML = html;
             previewDiv.style.display = 'block';
+
+            // Ensure Excel tables maintain consistent size
+            setTimeout(() => {
+                maintainExcelTableSize();
+            }, 100);
         }
 
         // Function to show full file contents in a modal
@@ -15095,18 +15342,218 @@
             });
         }
 
+        // Add real-time calculation listeners to cost breakdown form
+        function addCalculationListeners() {
+            // Add listeners to YARN section
+            const yarnRows = document.querySelectorAll('#costBreakdown .cost-section[data-section="YARN"] .cost-row:not(.header-row):not(.subtotal-row)');
+            yarnRows.forEach(row => {
+                const cells = row.querySelectorAll('.cost-cell');
+                if (cells.length >= 4) {
+                    // Consumption input (index 1)
+                    cells[1].addEventListener('input', () => calculateRowCost(row, 'yarn'));
+                    // Price input (index 2)
+                    cells[2].addEventListener('input', () => calculateRowCost(row, 'yarn'));
+                }
+            });
+
+            // Add listeners to FABRIC section
+            const fabricRows = document.querySelectorAll('#costBreakdown .cost-section[data-section="FABRIC"] .cost-row:not(.header-row):not(.subtotal-row)');
+            fabricRows.forEach(row => {
+                const cells = row.querySelectorAll('.cost-cell');
+                if (cells.length >= 4) {
+                    // Consumption input (index 1)
+                    cells[1].addEventListener('input', () => calculateRowCost(row, 'fabric'));
+                    // Price input (index 2)
+                    cells[2].addEventListener('input', () => calculateRowCost(row, 'fabric'));
+                }
+            });
+
+            // Add listeners to TRIM section
+            const trimRows = document.querySelectorAll('#costBreakdown .cost-section[data-section="TRIM"] .cost-row:not(.header-row):not(.subtotal-row)');
+            trimRows.forEach(row => {
+                const cells = row.querySelectorAll('.cost-cell');
+                if (cells.length >= 4) {
+                    // Consumption input (index 1)
+                    cells[1].addEventListener('input', () => calculateRowCost(row, 'trim'));
+                    // Price input (index 2)
+                    cells[2].addEventListener('input', () => calculateRowCost(row, 'trim'));
+                }
+            });
+        }
+
+        // Calculate cost for a single row
+        function calculateRowCost(row, sectionType) {
+            const cells = row.querySelectorAll('.cost-cell');
+            if (cells.length < 4) return;
+
+            const consumption = parseFloat(cells[1].textContent.trim()) || 0;
+            const price = parseFloat(cells[2].textContent.trim()) || 0;
+            let cost = 0;
+
+            if (sectionType === 'yarn') {
+                // YARN: (CONSUMPTION (G) ÷ 1000) × MATERIAL PRICE (USD/KG)
+                cost = (consumption / 1000) * price;
+            } else if (sectionType === 'fabric') {
+                // FABRIC: CONSUMPTION (YARDS) × MATERIAL PRICE (USD/YD)
+                cost = consumption * price;
+            } else if (sectionType === 'trim') {
+                // TRIM: CONSUMPTION (PIECE) × MATERIAL PRICE (USD/PC)
+                cost = consumption * price;
+            }
+
+            // Update the cost cell
+            cells[3].textContent = cost.toFixed(2);
+            
+            // Update subtotals
+            updateSubtotals();
+        }
+
+        // Update subtotals for all sections
+        function updateSubtotals() {
+            // Update YARN subtotal
+            updateSectionSubtotal('YARN');
+            // Update FABRIC subtotal
+            updateSectionSubtotal('FABRIC');
+            // Update TRIM subtotal
+            updateSectionSubtotal('TRIM');
+            // Update total material cost
+            updateTotalMaterialCost();
+        }
+
+        // Update subtotal for a specific section
+        function updateSectionSubtotal(sectionName) {
+            const section = document.querySelector(`#costBreakdown .cost-section[data-section="${sectionName}"]`);
+            if (!section) return;
+
+            const rows = section.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+            let subtotal = 0;
+
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('.cost-cell');
+                if (cells.length >= 4) {
+                    const cost = parseFloat(cells[3].textContent.trim()) || 0;
+                    subtotal += cost;
+                }
+            });
+
+            // Update subtotal row
+            const subtotalRow = section.querySelector('.subtotal-row');
+            if (subtotalRow) {
+                const subtotalCell = subtotalRow.querySelector('.cost-cell:last-child');
+                if (subtotalCell) {
+                    subtotalCell.textContent = `$${subtotal.toFixed(2)}`;
+                }
+            }
+        }
+
+        // Update total material cost
+        function updateTotalMaterialCost() {
+            const sections = ['YARN', 'FABRIC', 'TRIM'];
+            let totalCost = 0;
+
+            sections.forEach(sectionName => {
+                const section = document.querySelector(`#costBreakdown .cost-section[data-section="${sectionName}"]`);
+                if (section) {
+                    const subtotalRow = section.querySelector('.subtotal-row');
+                    if (subtotalRow) {
+                        const subtotalCell = subtotalRow.querySelector('.cost-cell:last-child');
+                        if (subtotalCell) {
+                            const subtotalText = subtotalCell.textContent.replace('$', '');
+                            totalCost += parseFloat(subtotalText) || 0;
+                        }
+                    }
+                }
+            });
+
+            // Update total material cost display
+            const totalCostElement = document.querySelector('#costBreakdown .total-material-cost .total-value');
+            if (totalCostElement) {
+                totalCostElement.textContent = `$${totalCost.toFixed(2)}`;
+            }
+        }
+
+        // Collect all form data with calculations
+        function collectFormDataWithCalculations() {
+            const formData = {
+                // Basic info
+                customer: document.querySelector('#costBreakdown input[placeholder*="customer"]')?.value || '',
+                season: document.querySelector('#costBreakdown input[placeholder*="season"]')?.value || '',
+                styleNumber: document.querySelector('#costBreakdown input[placeholder*="style number"]')?.value || '',
+                styleName: document.querySelector('#costBreakdown input[placeholder*="style name"]')?.value || '',
+                costedQuantity: document.querySelector('#costBreakdown input[placeholder*="quantity"]')?.value || '',
+                leadtime: document.querySelector('#costBreakdown input[placeholder*="leadtime"]')?.value || '',
+                
+                // YARN data with calculations
+                yarn: collectSectionData('YARN'),
+                
+                // FABRIC data with calculations
+                fabric: collectSectionData('FABRIC'),
+                
+                // TRIM data with calculations
+                trim: collectSectionData('TRIM'),
+                
+                // Total material cost
+                totalMaterialCost: getTotalMaterialCost()
+            };
+            
+            return formData;
+        }
+
+        // Collect data from a specific section
+        function collectSectionData(sectionName) {
+            const section = document.querySelector(`#costBreakdown .cost-section[data-section="${sectionName}"]`);
+            if (!section) return [];
+
+            const rows = section.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+            const data = [];
+
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('.cost-cell');
+                if (cells.length >= 4) {
+                    const material = cells[0].textContent.trim();
+                    const consumption = cells[1].textContent.trim();
+                    const price = cells[2].textContent.trim();
+                    const cost = cells[3].textContent.trim();
+
+                    // Only include rows with actual data
+                    if (material || consumption || price) {
+                        data.push({
+                            material: material,
+                            consumption: consumption,
+                            price: price,
+                            cost: cost
+                        });
+                    }
+                }
+            });
+
+            return data;
+        }
+
+        // Get total material cost
+        function getTotalMaterialCost() {
+            const totalCostElement = document.querySelector('#costBreakdown .total-material-cost .total-value');
+            if (totalCostElement) {
+                return totalCostElement.textContent.replace('$', '');
+            }
+            return '0.00';
+        }
+
         // Save beanie data to database
         async function saveBeanieToDatabase() {
             const saveBtn = document.getElementById('saveBeanieBtn');
             const originalText = saveBtn.innerHTML;
             
             // Show loading notification
-            const loadingId = showLoadingNotification('Uploading beanie data to Supabase...', {
+            const loadingId = showLoadingNotification('Calculating costs and uploading to database...', {
                 title: 'Database Upload',
                 showProgress: true
             });
             
             try {
+                // First, calculate all costs before saving
+                updateSubtotals();
+                
                 // Check if we have parsed data or manually entered data
                 if (!window.currentParsedData) {
                     // Initialize with empty data structure for manual entry
@@ -15123,6 +15570,12 @@
 
                 // Merge any manually entered data before saving
                 mergeManualData();
+                
+                // Collect all form data with calculations
+                const formData = collectFormDataWithCalculations();
+                
+                // Merge form data with existing parsed data
+                window.currentParsedData = { ...window.currentParsedData, ...formData };
 
                 // Database connection is handled by the server
 
