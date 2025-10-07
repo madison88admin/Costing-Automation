@@ -12,6 +12,7 @@
         // Using API-only approach for database sync (no external CDN dependencies)
     </script>
     <!-- Application scripts -->
+    <script src="js/auth.js"></script>
     <script src="js/excelUtils.js"></script>
     <script src="js/beanieImport.js"></script>
     <script src="js/ballcapsImport.js"></script>
@@ -88,10 +89,38 @@
             margin-bottom: 45px;
             display: flex;
             align-items: center;
+            justify-content: space-between;
             gap: 35px;
             border: 1px solid rgba(255, 255, 255, 0.18);
             position: relative;
             overflow: hidden;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .logout-button {
+            background: rgba(220, 53, 69, 0.8);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .logout-button:hover {
+            background: rgba(220, 53, 69, 1);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
         }
         
         .header::before {
@@ -3434,6 +3463,10 @@
         <div class="header scroll-fade-in">
             <img src="MadisonWhiteLogo.png" alt="Madison Logo" class="nav-logo scroll-scale-up scroll-stagger-1">
             <h1 class="header-title scroll-bounce-in scroll-stagger-2">Costing Department</h1>
+            <div class="user-info" id="userInfo" style="display: none;">
+                <span id="welcomeText">Welcome, <span id="userName"></span></span>
+                <button class="logout-button" onclick="logout()">Logout</button>
+            </div>
         </div>
 
         <!-- Database Connection Section - Hidden -->
@@ -5195,9 +5228,79 @@
         }
 
 
+        // Authentication functions
+        function checkAuthentication() {
+            if (window.authService && window.authService.isUserAuthenticated()) {
+                const user = window.authService.getCurrentUser();
+                document.getElementById('userName').textContent = user.username;
+                document.getElementById('userInfo').style.display = 'flex';
+                
+                // Check if session is expired
+                if (window.authService.isSessionExpired()) {
+                    window.authService.logout();
+                    return false;
+                }
+                
+                // Apply role-based UI visibility
+                applyRoleBasedVisibility();
+                
+                return true;
+            } else {
+                // Redirect to login page
+                window.location.href = 'login.html';
+                return false;
+            }
+        }
+
+        // Apply role-based visibility controls
+        function applyRoleBasedVisibility() {
+            if (!window.authService) return;
+            
+            const user = window.authService.getCurrentUser();
+            if (!user) return;
+            
+            // Hide databank table for Factory users
+            const dataTableSection = document.getElementById('dataTableSection');
+            if (dataTableSection) {
+                if (window.authService.canViewDatabank()) {
+                    // Madison users can see databank
+                    dataTableSection.style.display = 'block';
+                } else {
+                    // Factory users cannot see databank
+                    dataTableSection.style.display = 'none';
+                }
+            }
+            
+            // Update user display name to show role
+            const userNameElement = document.getElementById('userName');
+            if (userNameElement) {
+                userNameElement.textContent = `${user.username} (${user.role})`;
+            }
+            
+            console.log(`🔐 Applied role-based visibility for ${user.role} user`);
+        }
+
+        function logout() {
+            if (window.authService) {
+                window.authService.logout();
+            } else {
+                // Fallback logout
+                localStorage.removeItem('isAuthenticated');
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            }
+        }
+
         // Auto-connect to Supabase when page loads
         window.addEventListener('load', function() {
-            console.log('Page loaded, starting intro animation...');
+            console.log('Page loaded, checking authentication...');
+            
+            // Check authentication first
+            if (!checkAuthentication()) {
+                return; // Stop execution if not authenticated
+            }
+            
+            console.log('Authentication successful, starting intro animation...');
             
             // Start connecting to Supabase immediately but don't hide intro yet
             console.log('Auto-connecting to Supabase...');
@@ -5284,14 +5387,22 @@
                     clearTimeout(timeoutId); // Clear the timeout since connection succeeded
                     connectionId = result.connectionId;
                     showStatus('connectionStatus', '✅ Auto-connected to Supabase successfully!', 'success');
-                    document.getElementById('dataTableSection').style.display = 'block';
+                    
+                    // Only show databank table if user has permission
+                    if (window.authService && window.authService.canViewDatabank()) {
+                        document.getElementById('dataTableSection').style.display = 'block';
+                    } else {
+                        document.getElementById('dataTableSection').style.display = 'none';
+                    }
+                    
                     document.getElementById('autoConnectStatus').style.display = 'none';
                     document.getElementById('welcomeMessage').style.display = 'none';
                     
-                    // Auto-load databank table data immediately
-                    setTimeout(() => {
-                        loadDatabankData().then(() => {
-                        // Also get the total count for button updates
+                    // Auto-load databank table data immediately (only if user has permission)
+                    if (window.authService && window.authService.canViewDatabank()) {
+                        setTimeout(() => {
+                            loadDatabankData().then(() => {
+                            // Also get the total count for button updates
                             getTotalRecordCount().then(() => {
                                 // Everything is loaded, now hide the intro overlay
                                 setTimeout(() => {
@@ -5300,6 +5411,12 @@
                             });
                         });
                     }, 500);
+                    } else {
+                        // Factory users don't need databank data, just hide intro overlay
+                        setTimeout(() => {
+                            hideIntroOverlay();
+                        }, 1000);
+                    }
                 } else {
                     clearTimeout(timeoutId); // Clear the timeout since we got a response
                     showStatus('connectionStatus', '❌ Auto-connection failed: ' + (result.message || 'Unknown error'), 'error');
@@ -8874,6 +8991,72 @@
                     }
                 }
             }, 500);
+        }
+
+        // Add Beanie data to main table
+        function addBeanieDataToMainTable(formData) {
+            console.log('📊 Adding Beanie data to main table...');
+            
+            if (!window.currentTableData) {
+                window.currentTableData = [];
+            }
+            
+            // Create a new row for the main databank table
+            const newRow = {
+                Season: formData.season || '',
+                Customer: formData.customer || '',
+                'Style Number': formData.styleNumber || '',
+                'Style Name': formData.styleName || '',
+                'Main Material': formData.yarn && formData.yarn.length > 0 ? formData.yarn[0].material : '',
+                'Material Consumption': formData.yarn && formData.yarn.length > 0 ? formData.yarn[0].consumption : '',
+                'Material Price': formData.yarn && formData.yarn.length > 0 ? formData.yarn[0].price : '',
+                'Total Material Cost': formData.totalMaterialCost || '0.00',
+                'Product Type': 'Beanie',
+                'Costed Quantity': formData.costedQuantity || '',
+                'Leadtime': formData.leadtime || ''
+            };
+            
+            // Add to current table data
+            window.currentTableData.push(newRow);
+            editedTableData = [...window.currentTableData];
+            
+            // Refresh the table display
+            displayTableData(window.currentTableData);
+            
+            console.log('✅ Beanie data added to main table');
+        }
+
+        // Add BallCaps data to main table
+        function addBallCapsDataToMainTable(formData) {
+            console.log('📊 Adding BallCaps data to main table...');
+            
+            if (!window.currentTableData) {
+                window.currentTableData = [];
+            }
+            
+            // Create a new row for the main databank table
+            const newRow = {
+                Season: formData.season || '',
+                Customer: formData.customer || '',
+                'Style Number': formData.styleNumber || '',
+                'Style Name': formData.styleName || '',
+                'Main Material': formData.fabric && formData.fabric.length > 0 ? formData.fabric[0].material : '',
+                'Material Consumption': formData.fabric && formData.fabric.length > 0 ? formData.fabric[0].consumption : '',
+                'Material Price': formData.fabric && formData.fabric.length > 0 ? formData.fabric[0].price : '',
+                'Total Material Cost': formData.totalMaterialCost || '0.00',
+                'Product Type': 'BallCaps',
+                'Costed Quantity': formData.costedQuantity || '',
+                'Leadtime': formData.leadtime || ''
+            };
+            
+            // Add to current table data
+            window.currentTableData.push(newRow);
+            editedTableData = [...window.currentTableData];
+            
+            // Refresh the table display
+            displayTableData(window.currentTableData);
+            
+            console.log('✅ BallCaps data added to main table');
         }
 
         // Save new row to database
@@ -15499,6 +15682,30 @@
             return formData;
         }
 
+        // Collect all BallCaps form data with calculations
+        function collectBallCapsFormDataWithCalculations() {
+            const formData = {
+                // Basic info
+                customer: document.querySelector('#ballcapsBreakdown input[placeholder*="customer"]')?.value || '',
+                season: document.querySelector('#ballcapsBreakdown input[placeholder*="season"]')?.value || '',
+                styleNumber: document.querySelector('#ballcapsBreakdown input[placeholder*="style number"]')?.value || '',
+                styleName: document.querySelector('#ballcapsBreakdown input[placeholder*="style name"]')?.value || '',
+                costedQuantity: document.querySelector('#ballcapsBreakdown input[placeholder*="quantity"]')?.value || '',
+                leadtime: document.querySelector('#ballcapsBreakdown input[placeholder*="leadtime"]')?.value || '',
+                
+                // FABRIC data with calculations (BallCaps uses fabric instead of yarn)
+                fabric: collectBallCapsSectionData('FABRIC'),
+                
+                // TRIM data with calculations
+                trim: collectBallCapsSectionData('TRIM'),
+                
+                // Total material cost
+                totalMaterialCost: getBallCapsTotalMaterialCost()
+            };
+            
+            return formData;
+        }
+
         // Collect data from a specific section
         function collectSectionData(sectionName) {
             const section = document.querySelector(`#costBreakdown .cost-section[data-section="${sectionName}"]`);
@@ -15528,6 +15735,46 @@
             });
 
             return data;
+        }
+
+        // Collect data from a specific BallCaps section
+        function collectBallCapsSectionData(sectionName) {
+            const section = document.querySelector(`#ballcapsBreakdown .cost-section[data-section="${sectionName}"]`);
+            if (!section) return [];
+
+            const rows = section.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+            const data = [];
+
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('.cost-cell');
+                if (cells.length >= 4) {
+                    const material = cells[0].textContent.trim();
+                    const consumption = cells[1].textContent.trim();
+                    const price = cells[2].textContent.trim();
+                    const cost = cells[3].textContent.trim();
+
+                    // Only include rows with actual data
+                    if (material || consumption || price) {
+                        data.push({
+                            material: material,
+                            consumption: consumption,
+                            price: price,
+                            cost: cost
+                        });
+                    }
+                }
+            });
+
+            return data;
+        }
+
+        // Get total material cost for BallCaps
+        function getBallCapsTotalMaterialCost() {
+            const totalCostElement = document.querySelector('#ballcapsBreakdown .total-material-cost .total-value');
+            if (totalCostElement) {
+                return totalCostElement.textContent.replace('$', '');
+            }
+            return '0.00';
         }
 
         // Get total material cost
@@ -15619,6 +15866,9 @@
                             showSuccessNotification('🔄 Existing beanie data updated successfully! Duplicate prevented.', {
                                 duration: 6000
                             });
+                            
+                            // Add data to main table
+                            addBeanieDataToMainTable(formData);
                         }, 1000);
                     } else {
                         notificationManager.updateMessage(loadingId, 'Upload Complete', 'New beanie data saved successfully to Supabase!');
@@ -15630,6 +15880,9 @@
                             showSuccessNotification('✅ New beanie data saved successfully to database!', {
                                 duration: 5000
                             });
+                            
+                            // Add data to main table
+                            addBeanieDataToMainTable(formData);
                         }, 1000);
                     }
                     
@@ -15708,6 +15961,12 @@
 
                 // Merge any manually entered data before saving
                 mergeManualData();
+                
+                // Collect all form data with calculations for BallCaps
+                const formData = collectBallCapsFormDataWithCalculations();
+                
+                // Merge form data with existing parsed data
+                window.currentParsedData = { ...window.currentParsedData, ...formData };
 
                 // Database connection is handled by the server
 
@@ -15751,6 +16010,9 @@
                             showSuccessNotification('🔄 Existing ballcaps data updated successfully! Duplicate prevented.', {
                                 duration: 6000
                             });
+                            
+                            // Add data to main table
+                            addBallCapsDataToMainTable(formData);
                         }, 1000);
                     } else {
                         notificationManager.updateMessage(loadingId, 'Upload Complete', 'New ballcaps data saved successfully to Supabase!');
@@ -15762,6 +16024,9 @@
                             showSuccessNotification('✅ New ballcaps data saved successfully to database!', {
                                 duration: 5000
                             });
+                            
+                            // Add data to main table
+                            addBallCapsDataToMainTable(formData);
                         }, 1000);
                     }
                     
