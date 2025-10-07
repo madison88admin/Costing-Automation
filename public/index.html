@@ -13,6 +13,7 @@
     </script>
     <!-- Application scripts -->
     <script src="js/auth.js"></script>
+    <script src="excel_formulas_extractor.js"></script>
     <script src="js/excelUtils.js"></script>
     <script src="js/beanieImport.js"></script>
     <script src="js/ballcapsImport.js"></script>
@@ -4237,6 +4238,12 @@
                                 <div class="cost-cell"></div>
                                 <div class="cost-cell"></div>
                             </div>
+                            <div class="cost-row subtotal-row">
+                                <div class="cost-cell">SUB TOTAL</div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell"></div>
+                                <div class="cost-cell">$0.00</div>
+                            </div>
                         </div>
                     </div>
 
@@ -5390,7 +5397,7 @@
                     
                     // Only show databank table if user has permission
                     if (window.authService && window.authService.canViewDatabank()) {
-                        document.getElementById('dataTableSection').style.display = 'block';
+                    document.getElementById('dataTableSection').style.display = 'block';
                     } else {
                         document.getElementById('dataTableSection').style.display = 'none';
                     }
@@ -5400,9 +5407,9 @@
                     
                     // Auto-load databank table data immediately (only if user has permission)
                     if (window.authService && window.authService.canViewDatabank()) {
-                        setTimeout(() => {
-                            loadDatabankData().then(() => {
-                            // Also get the total count for button updates
+                    setTimeout(() => {
+                        loadDatabankData().then(() => {
+                        // Also get the total count for button updates
                             getTotalRecordCount().then(() => {
                                 // Everything is loaded, now hide the intro overlay
                                 setTimeout(() => {
@@ -11538,29 +11545,219 @@
          * Add event listeners for ballcaps template real-time calculations
          */
         function addBallCapsCalculationEventListeners() {
-            // Add input event listeners to all cost cells in ballcaps template
-            const costSections = document.querySelectorAll('#ballcapsBreakdown .cost-section');
+            console.log('🔧 Adding ballcaps calculation event listeners...');
             
-            costSections.forEach(section => {
-                const inputCells = section.querySelectorAll('.cost-cell:not(.header-row .cost-cell)');
-                
-                inputCells.forEach(cell => {
-                    // Make cells editable
+            // Add listeners to FABRIC/S section
+            const fabricSection = findBallCapsSection('FABRIC/S');
+            if (fabricSection) {
+                const fabricRows = fabricSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                fabricRows.forEach(row => {
+                    const cells = row.querySelectorAll('.cost-cell');
+                    if (cells.length >= 4) {
+                        // Make all columns editable except the last one (cost column)
+                        makeBallCapsCellEditable(cells[0], () => calculateBallCapsRowCost(row, 'fabric')); // Description
+                        makeBallCapsCellEditable(cells[1], () => calculateBallCapsRowCost(row, 'fabric')); // Consumption
+                        makeBallCapsCellEditable(cells[2], () => calculateBallCapsRowCost(row, 'fabric')); // Price
+                        // cells[3] is the cost column - not editable
+                    }
+                });
+            }
+
+            // Add listeners to OTHER FABRIC/S - TRIM/S section
+            const otherFabricSection = findBallCapsSection('OTHER FABRIC/S - TRIM/S');
+            if (otherFabricSection) {
+                const otherFabricRows = otherFabricSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                otherFabricRows.forEach(row => {
+                    const cells = row.querySelectorAll('.cost-cell');
+                    if (cells.length >= 4) {
+                        // Make all columns editable except the last one (cost column)
+                        makeBallCapsCellEditable(cells[0], () => calculateBallCapsRowCost(row, 'otherFabric')); // Description
+                        makeBallCapsCellEditable(cells[1], () => calculateBallCapsRowCost(row, 'otherFabric')); // Consumption
+                        makeBallCapsCellEditable(cells[2], () => calculateBallCapsRowCost(row, 'otherFabric')); // Price
+                        // cells[3] is the cost column - not editable
+                    }
+                });
+            }
+
+            // Add listeners to TRIM/S section
+            const trimSection = findBallCapsSection('TRIM/S');
+            if (trimSection) {
+                const trimRows = trimSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                trimRows.forEach(row => {
+                    const cells = row.querySelectorAll('.cost-cell');
+                    if (cells.length >= 4) {
+                        // Make all columns editable except the last one (cost column)
+                        makeBallCapsCellEditable(cells[0], () => calculateBallCapsRowCost(row, 'trim')); // Description
+                        makeBallCapsCellEditable(cells[1], () => calculateBallCapsRowCost(row, 'trim')); // Consumption
+                        makeBallCapsCellEditable(cells[2], () => calculateBallCapsRowCost(row, 'trim')); // Price
+                        // cells[3] is the cost column - not editable
+                    }
+                });
+            }
+
+            // Add listeners to OPERATIONS section
+            const operationsSection = findBallCapsSection('OPERATIONS');
+            if (operationsSection) {
+                const operationsRows = operationsSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                operationsRows.forEach(row => {
+                    const cells = row.querySelectorAll('.cost-cell');
+                    if (cells.length >= 4) {
+                        // Make input columns editable
+                        makeBallCapsCellEditable(cells[0], () => calculateBallCapsRowCost(row, 'operations')); // Description
+                        makeBallCapsCellEditable(cells[1], () => calculateBallCapsRowCost(row, 'operations')); // Blank column
+                        makeBallCapsCellEditable(cells[2], () => calculateBallCapsRowCost(row, 'operations')); // SMV
+                        // cells[3] is the calculated cost column - make it read-only
+                        makeBallCapsCellReadOnly(cells[3]);
+                    }
+                });
+            }
+
+            // Add listeners to PACKAGING section (3-column structure)
+            const packagingSection = findBallCapsSection('PACKAGING');
+            if (packagingSection) {
+                const packagingRows = packagingSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                packagingRows.forEach(row => {
+                    const cells = row.querySelectorAll('.cost-cell');
+                    if (cells.length >= 3) {
+                        // Make all columns editable (TYPE, NOTES, and COST)
+                        makeBallCapsCellEditable(cells[0], () => calculateBallCapsRowCost(row, 'packaging')); // TYPE
+                        makeBallCapsCellEditable(cells[1], () => calculateBallCapsRowCost(row, 'packaging')); // NOTES
+                        makeBallCapsCellEditable(cells[2], () => calculateBallCapsRowCost(row, 'packaging')); // COST
+                    }
+                });
+            }
+
+            // Add listeners to OVERHEAD/PROFIT section (3-column structure)
+            const overheadSection = findBallCapsSection('OVERHEAD/PROFIT');
+            if (overheadSection) {
+                const overheadRows = overheadSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                overheadRows.forEach(row => {
+                    const cells = row.querySelectorAll('.cost-cell');
+                    if (cells.length >= 3) {
+                        // Make all columns editable (OVERHEAD/PROFIT, Factory Notes, and COST)
+                        makeBallCapsCellEditable(cells[0], () => calculateBallCapsRowCost(row, 'overhead')); // OVERHEAD/PROFIT
+                        makeBallCapsCellEditable(cells[1], () => calculateBallCapsRowCost(row, 'overhead')); // Factory Notes
+                        makeBallCapsCellEditable(cells[2], () => calculateBallCapsRowCost(row, 'overhead')); // COST
+                    }
+                });
+            }
+            
+            console.log('✅ Ballcaps calculation event listeners added');
+        }
+
+        // Helper function to make ballcaps cells editable
+        function makeBallCapsCellEditable(cell, onInputCallback) {
+            if (!cell) return;
+            
+            // Make cell editable
                     cell.contentEditable = true;
                     cell.style.border = '1px solid #ddd';
                     cell.style.padding = '4px';
                     cell.style.minHeight = '20px';
+            cell.style.backgroundColor = '#ffffff';
+            cell.style.cursor = 'text';
                     
                     // Add event listener for input changes
-                    cell.addEventListener('input', function() {
-                        // Debounce the calculation
-                        clearTimeout(this.calculationTimeout);
-                        this.calculationTimeout = setTimeout(() => {
-                            calculateBallCapsTemplate();
-                        }, 500);
-                    });
-                });
+            cell.addEventListener('input', onInputCallback);
+            
+            // Add focus/blur styling
+            cell.addEventListener('focus', function() {
+                this.style.border = '2px solid #007bff';
+                this.style.backgroundColor = '#f8f9fa';
             });
+            
+            cell.addEventListener('blur', function() {
+                this.style.border = '1px solid #ddd';
+                this.style.backgroundColor = '#ffffff';
+            });
+        }
+
+        // Helper function to make ballcaps cells read-only
+        function makeBallCapsCellReadOnly(cell) {
+            if (!cell) return;
+            
+            // Make cell read-only
+            cell.contentEditable = false;
+            cell.style.border = '1px solid #e0e0e0';
+            cell.style.padding = '4px';
+            cell.style.minHeight = '20px';
+            cell.style.backgroundColor = '#f8f9fa';
+            cell.style.cursor = 'default';
+            cell.style.color = '#6c757d';
+        }
+
+        // Helper function to find ballcaps section by header text
+        function findBallCapsSection(sectionName) {
+            const sections = document.querySelectorAll('#ballcapsBreakdown .cost-section');
+            for (let section of sections) {
+                const header = section.querySelector('.section-header');
+                if (header && header.textContent.trim() === sectionName) {
+                    return section;
+                }
+            }
+            return null;
+        }
+
+        // Calculate cost for a single ballcaps row
+        function calculateBallCapsRowCost(row, sectionType) {
+            const cells = row.querySelectorAll('.cost-cell');
+            if (cells.length < 3) return;
+
+            let cost = 0;
+
+            if (sectionType === 'fabric' || sectionType === 'otherFabric' || sectionType === 'trim') {
+                // FABRIC/OTHER FABRIC/TRIM: Consumption × Price
+                const consumption = parseFloat(cells[1].textContent.trim()) || 0;
+                const price = parseFloat(cells[2].textContent.trim()) || 0;
+                cost = consumption * price;
+                // Update the cost cell
+                if (cells[3]) cells[3].textContent = cost.toFixed(2);
+            } else if (sectionType === 'operations') {
+                // OPERATIONS: Blank column × SMV column (4-column format)
+                const blankValue = parseFloat(cells[1].textContent.trim()) || 0;
+                const smv = parseFloat(cells[2].textContent.trim()) || 0;
+                cost = blankValue * smv;
+
+                // Display the calculated cost in the COST (USD/MIN) column
+                if (cells[3]) {
+                    cells[3].textContent = cost.toFixed(2);
+                }
+            } else if (sectionType === 'packaging' || sectionType === 'overhead') {
+                // PACKAGING/OVERHEAD: Direct cost entry (3-column structure)
+                cost = parseFloat(cells[2].textContent.trim()) || 0;
+
+                // No need to update the cell since it's already the cost input
+                console.log(`🔍 ${sectionType} cost: ${cost}`);
+            }
+
+            // Update subtotals
+            calculateBallCapsTemplate();
+        }
+
+        // Initialize Excel formulas validation
+        function validateExcelFormulasImplementation() {
+            console.log('🔍 Validating Excel formulas implementation...');
+            
+            if (window.excelFormulasExtractor) {
+                const validationResults = window.excelFormulasExtractor.validateImplementation();
+                console.log('📊 Formula validation results:', validationResults);
+                
+                // Check for any errors
+                if (validationResults.errors.length > 0) {
+                    console.error('❌ Formula validation errors:', validationResults.errors);
+                } else {
+                    console.log('✅ All Excel formulas are properly implemented in the system');
+                }
+                
+                // Log Excel formulas for reference
+                const excelFormulas = window.excelFormulasExtractor.generateExcelFormulas();
+                console.log('📋 Excel formulas reference:', excelFormulas);
+                
+                return validationResults;
+            } else {
+                console.warn('⚠️ Excel formulas extractor not loaded');
+                return null;
+            }
         }
 
         // Initialize drag & drop when page loads
@@ -11568,6 +11765,11 @@
             console.log('🚀 DOM Content Loaded - Initializing drag & drop...');
             console.log('Document ready state:', document.readyState);
             console.log('Window loaded:', document.readyState === 'complete');
+            
+            // Validate Excel formulas implementation
+            setTimeout(() => {
+                validateExcelFormulasImplementation();
+            }, 1000);
             
             // Ensure welcome message is visible on page load
             const welcomeMessage = document.getElementById('welcomeMessage');
@@ -14893,7 +15095,7 @@
                         operationsSection = section;
                     } else if (headerText === 'PACKAGING') {
                         packagingSection = section;
-                    } else if (headerText === 'OVERHEAD/ PROFIT') {
+                    } else if (headerText === 'OVERHEAD/PROFIT') {
                         overheadSection = section;
                     }
                 }
@@ -14903,20 +15105,20 @@
             let totalMaterialCost = 0;
             
             if (fabricSection) {
-                const fabricTotal = calculateSectionTotal(fabricSection);
-                updateSubtotal(fabricSection, fabricTotal);
+                const fabricTotal = calculateBallCapsSectionTotal(fabricSection);
+                updateBallCapsSubtotal(fabricSection, fabricTotal);
                 totalMaterialCost += fabricTotal;
             }
             
             if (otherFabricSection) {
-                const otherFabricTotal = calculateSectionTotal(otherFabricSection);
-                updateSubtotal(otherFabricSection, otherFabricTotal);
+                const otherFabricTotal = calculateBallCapsSectionTotal(otherFabricSection);
+                updateBallCapsSubtotal(otherFabricSection, otherFabricTotal);
                 totalMaterialCost += otherFabricTotal;
             }
             
             if (trimSection) {
-                const trimTotal = calculateSectionTotal(trimSection);
-                updateSubtotal(trimSection, trimTotal);
+                const trimTotal = calculateBallCapsSectionTotal(trimSection);
+                updateBallCapsSubtotal(trimSection, trimTotal);
                 totalMaterialCost += trimTotal;
             }
             
@@ -14924,20 +15126,20 @@
             let totalFactoryCost = 0;
             
             if (operationsSection) {
-                const operationsTotal = calculateSectionTotal(operationsSection);
-                updateSubtotal(operationsSection, operationsTotal);
+                const operationsTotal = calculateBallCapsSectionTotal(operationsSection);
+                updateBallCapsSubtotal(operationsSection, operationsTotal);
                 totalFactoryCost += operationsTotal;
             }
             
             if (packagingSection) {
-                const packagingTotal = calculateSectionTotal(packagingSection);
-                updateSubtotal(packagingSection, packagingTotal);
+                const packagingTotal = calculateBallCapsSectionTotal(packagingSection);
+                updateBallCapsSubtotal(packagingSection, packagingTotal);
                 totalFactoryCost += packagingTotal;
             }
             
             if (overheadSection) {
-                const overheadTotal = calculateSectionTotal(overheadSection);
-                updateSubtotal(overheadSection, overheadTotal);
+                const overheadTotal = calculateBallCapsSectionTotal(overheadSection);
+                updateBallCapsSubtotal(overheadSection, overheadTotal);
                 totalFactoryCost += overheadTotal;
             }
             
@@ -14959,7 +15161,81 @@
         }
 
         /**
-         * Calculate total for a specific section
+         * Calculate total for a specific ballcaps section
+         */
+        function calculateBallCapsSectionTotal(section) {
+            let total = 0;
+            const rows = section.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+            console.log('🔍 calculateBallCapsSectionTotal: Found', rows.length, 'rows');
+
+            const header = section.querySelector('.section-header');
+            const sectionName = header ? header.textContent.trim() : '';
+            console.log('🔍 Section name:', sectionName);
+
+            rows.forEach((row, index) => {
+                const cells = row.querySelectorAll('.cost-cell');
+                console.log(`🔍 Row ${index}: ${cells.length} cells`);
+
+                let cost = 0;
+                if (sectionName === 'PACKAGING' || sectionName === 'OVERHEAD/PROFIT') {
+                    if (cells.length >= 3) {
+                        const costText = cells[2].textContent.replace('$', '').trim();
+                        cost = parseFloat(costText) || 0;
+                        console.log(`🔍 Row ${index} (3-col): costText="${costText}", cost=${cost}`);
+                    }
+                } else if (sectionName === 'OPERATIONS') {
+                    if (cells.length >= 4) {
+                        const costText = cells[3].textContent.replace('$', '').trim();
+                        cost = parseFloat(costText) || 0;
+                        console.log(`🔍 Row ${index} (operations): costText="${costText}", cost=${cost}`);
+                    }
+                } else {
+                    if (cells.length >= 4) {
+                        const costText = cells[3].textContent.replace('$', '').trim();
+                        cost = parseFloat(costText) || 0;
+                        console.log(`🔍 Row ${index} (4-col): costText="${costText}", cost=${cost}`);
+                    }
+                }
+                total += cost;
+            });
+            console.log('🔍 calculateBallCapsSectionTotal: Total =', total);
+            return total;
+        }
+
+        /**
+         * Update subtotal for a ballcaps section
+         */
+        function updateBallCapsSubtotal(section, total) {
+            console.log('🔍 updateBallCapsSubtotal called with total:', total);
+            const subtotalRow = section.querySelector('.subtotal-row');
+            if (subtotalRow) {
+                console.log('🔍 Found subtotal row');
+
+                const header = section.querySelector('.section-header');
+                const sectionName = header ? header.textContent.trim() : '';
+
+                let totalCell;
+                if (sectionName === 'PACKAGING' || sectionName === 'OVERHEAD/PROFIT') {
+                    totalCell = subtotalRow.querySelector('.cost-cell:nth-child(3)');
+                } else if (sectionName === 'OPERATIONS') {
+                    totalCell = subtotalRow.querySelector('.cost-cell:nth-child(4)');
+                } else {
+                    totalCell = subtotalRow.querySelector('.cost-cell:nth-child(4)');
+                }
+
+                if (totalCell) {
+                    console.log('🔍 Found total cell, updating to:', '$' + total.toFixed(2));
+                    totalCell.textContent = '$' + total.toFixed(2);
+                } else {
+                    console.log('❌ No total cell found in subtotal row');
+                }
+            } else {
+                console.log('❌ No subtotal row found');
+            }
+        }
+
+        /**
+         * Calculate total for a specific section (legacy function)
          */
         function calculateSectionTotal(section) {
             let total = 0;
@@ -14978,7 +15254,7 @@
         }
 
         /**
-         * Update subtotal for a section
+         * Update subtotal for a section (legacy function)
          */
         function updateSubtotal(section, total) {
             const subtotalRow = section.querySelector('.subtotal-row');
@@ -15528,64 +15804,218 @@
         // Add real-time calculation listeners to cost breakdown form
         function addCalculationListeners() {
             // Add listeners to YARN section
-            const yarnRows = document.querySelectorAll('#costBreakdown .cost-section[data-section="YARN"] .cost-row:not(.header-row):not(.subtotal-row)');
+            const yarnSection = findBeanieSection('YARN');
+            if (yarnSection) {
+                const yarnRows = yarnSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
             yarnRows.forEach(row => {
                 const cells = row.querySelectorAll('.cost-cell');
                 if (cells.length >= 4) {
-                    // Consumption input (index 1)
-                    cells[1].addEventListener('input', () => calculateRowCost(row, 'yarn'));
-                    // Price input (index 2)
-                    cells[2].addEventListener('input', () => calculateRowCost(row, 'yarn'));
-                }
-            });
+                        // Make all columns editable except the last one (cost column)
+                        makeBeanieCellEditable(cells[0], () => calculateRowCost(row, 'yarn')); // Description
+                        makeBeanieCellEditable(cells[1], () => calculateRowCost(row, 'yarn')); // Consumption
+                        makeBeanieCellEditable(cells[2], () => calculateRowCost(row, 'yarn')); // Price
+                        // cells[3] is the cost column - not editable
+                    }
+                });
+            }
 
             // Add listeners to FABRIC section
-            const fabricRows = document.querySelectorAll('#costBreakdown .cost-section[data-section="FABRIC"] .cost-row:not(.header-row):not(.subtotal-row)');
+            const fabricSection = findBeanieSection('FABRIC');
+            if (fabricSection) {
+                const fabricRows = fabricSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
             fabricRows.forEach(row => {
                 const cells = row.querySelectorAll('.cost-cell');
                 if (cells.length >= 4) {
-                    // Consumption input (index 1)
-                    cells[1].addEventListener('input', () => calculateRowCost(row, 'fabric'));
-                    // Price input (index 2)
-                    cells[2].addEventListener('input', () => calculateRowCost(row, 'fabric'));
-                }
-            });
+                        // Make all columns editable except the last one (cost column)
+                        makeBeanieCellEditable(cells[0], () => calculateRowCost(row, 'fabric')); // Description
+                        makeBeanieCellEditable(cells[1], () => calculateRowCost(row, 'fabric')); // Consumption
+                        makeBeanieCellEditable(cells[2], () => calculateRowCost(row, 'fabric')); // Price
+                        // cells[3] is the cost column - not editable
+                    }
+                });
+            }
 
             // Add listeners to TRIM section
-            const trimRows = document.querySelectorAll('#costBreakdown .cost-section[data-section="TRIM"] .cost-row:not(.header-row):not(.subtotal-row)');
+            const trimSection = findBeanieSection('TRIM');
+            if (trimSection) {
+                const trimRows = trimSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
             trimRows.forEach(row => {
                 const cells = row.querySelectorAll('.cost-cell');
                 if (cells.length >= 4) {
-                    // Consumption input (index 1)
-                    cells[1].addEventListener('input', () => calculateRowCost(row, 'trim'));
-                    // Price input (index 2)
-                    cells[2].addEventListener('input', () => calculateRowCost(row, 'trim'));
-                }
+                        // Make all columns editable except the last one (cost column)
+                        makeBeanieCellEditable(cells[0], () => calculateRowCost(row, 'trim')); // Description
+                        makeBeanieCellEditable(cells[1], () => calculateRowCost(row, 'trim')); // Consumption
+                        makeBeanieCellEditable(cells[2], () => calculateRowCost(row, 'trim')); // Price
+                        // cells[3] is the cost column - not editable
+                    }
+                });
+            }
+
+            // Add listeners to KNITTING section
+            const knittingSection = findBeanieSection('KNITTING');
+            if (knittingSection) {
+                const knittingRows = knittingSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                knittingRows.forEach(row => {
+                    const cells = row.querySelectorAll('.cost-cell');
+                    if (cells.length >= 4) {
+                        // Make all columns editable except the last one (cost column)
+                        makeBeanieCellEditable(cells[0], () => calculateRowCost(row, 'knitting')); // Description
+                        makeBeanieCellEditable(cells[1], () => calculateRowCost(row, 'knitting')); // Time
+                        makeBeanieCellEditable(cells[2], () => calculateRowCost(row, 'knitting')); // SAH
+                        // cells[3] is the cost column - not editable
+                    }
+                });
+            }
+
+            // Add listeners to OPERATIONS section
+            const operationsSection = findBeanieSection('OPERATIONS');
+            if (operationsSection) {
+                const operationsRows = operationsSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                operationsRows.forEach(row => {
+                    const cells = row.querySelectorAll('.cost-cell');
+                    if (cells.length >= 4) {
+                        // Make all columns editable except the last one (cost column)
+                        makeBeanieCellEditable(cells[0], () => calculateRowCost(row, 'operations')); // Description
+                        makeBeanieCellEditable(cells[1], () => calculateRowCost(row, 'operations')); // Blank column
+                        makeBeanieCellEditable(cells[2], () => calculateRowCost(row, 'operations')); // SMV
+                        makeBeanieCellEditable(cells[3], () => calculateRowCost(row, 'operations')); // Cost per minute
+                        // cells[4] is the cost column - not editable (if it exists)
+                    }
+                });
+            }
+
+            // Add listeners to PACKAGING section
+            const packagingSection = findBeanieSection('PACKAGING');
+            if (packagingSection) {
+                const packagingRows = packagingSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                packagingRows.forEach(row => {
+                    const cells = row.querySelectorAll('.cost-cell');
+                    if (cells.length >= 3) {
+                        // Make all columns editable (Description, Consumption, and COST)
+                        makeBeanieCellEditable(cells[0], () => calculateRowCost(row, 'packaging')); // Description
+                        makeBeanieCellEditable(cells[1], () => calculateRowCost(row, 'packaging')); // Consumption
+                        makeBeanieCellEditable(cells[2], () => calculateRowCost(row, 'packaging')); // COST
+                    }
+                });
+            }
+
+            // Add listeners to OVERHEAD/PROFIT section
+            const overheadSection = findBeanieSection('OVERHEAD/PROFIT');
+            if (overheadSection) {
+                const overheadRows = overheadSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                overheadRows.forEach(row => {
+                    const cells = row.querySelectorAll('.cost-cell');
+                    if (cells.length >= 3) {
+                        // Make all columns editable (Description, Consumption, and COST)
+                        makeBeanieCellEditable(cells[0], () => calculateRowCost(row, 'overhead')); // Description
+                        makeBeanieCellEditable(cells[1], () => calculateRowCost(row, 'overhead')); // Consumption
+                        makeBeanieCellEditable(cells[2], () => calculateRowCost(row, 'overhead')); // COST
+                    }
+                });
+            }
+        }
+
+        // Helper function to make beanie cells editable
+        function makeBeanieCellEditable(cell, onInputCallback) {
+            if (!cell) return;
+            
+            // Make cell editable
+            cell.contentEditable = true;
+            cell.style.border = '1px solid #ddd';
+            cell.style.padding = '4px';
+            cell.style.minHeight = '20px';
+            cell.style.backgroundColor = '#ffffff';
+            cell.style.cursor = 'text';
+            
+            // Add event listener for input changes
+            cell.addEventListener('input', onInputCallback);
+            
+            // Add focus/blur styling
+            cell.addEventListener('focus', function() {
+                this.style.border = '2px solid #007bff';
+                this.style.backgroundColor = '#f8f9fa';
             });
+            
+            cell.addEventListener('blur', function() {
+                this.style.border = '1px solid #ddd';
+                this.style.backgroundColor = '#ffffff';
+            });
+        }
+
+        // Helper function to make beanie cells read-only
+        function makeBeanieCellReadOnly(cell) {
+            if (!cell) return;
+            
+            // Make cell read-only
+            cell.contentEditable = false;
+            cell.style.border = '1px solid #e0e0e0';
+            cell.style.padding = '4px';
+            cell.style.minHeight = '20px';
+            cell.style.backgroundColor = '#f8f9fa';
+            cell.style.cursor = 'default';
+            cell.style.color = '#6c757d';
+        }
+
+        // Helper function to find beanie section by header text
+        function findBeanieSection(sectionName) {
+            const sections = document.querySelectorAll('#costBreakdown .cost-section');
+            for (let section of sections) {
+                const header = section.querySelector('.section-header');
+                if (header && header.textContent.trim() === sectionName) {
+                    return section;
+                }
+            }
+            return null;
         }
 
         // Calculate cost for a single row
         function calculateRowCost(row, sectionType) {
             const cells = row.querySelectorAll('.cost-cell');
-            if (cells.length < 4) return;
+            if (cells.length < 3) return;
 
-            const consumption = parseFloat(cells[1].textContent.trim()) || 0;
-            const price = parseFloat(cells[2].textContent.trim()) || 0;
             let cost = 0;
 
             if (sectionType === 'yarn') {
                 // YARN: (CONSUMPTION (G) ÷ 1000) × MATERIAL PRICE (USD/KG)
+                const consumption = parseFloat(cells[1].textContent.trim()) || 0;
+                const price = parseFloat(cells[2].textContent.trim()) || 0;
                 cost = (consumption / 1000) * price;
+                // Update the cost cell
+                if (cells[3]) cells[3].textContent = cost.toFixed(2);
             } else if (sectionType === 'fabric') {
                 // FABRIC: CONSUMPTION (YARDS) × MATERIAL PRICE (USD/YD)
+                const consumption = parseFloat(cells[1].textContent.trim()) || 0;
+                const price = parseFloat(cells[2].textContent.trim()) || 0;
                 cost = consumption * price;
+                // Update the cost cell
+                if (cells[3]) cells[3].textContent = cost.toFixed(2);
             } else if (sectionType === 'trim') {
                 // TRIM: CONSUMPTION (PIECE) × MATERIAL PRICE (USD/PC)
+                const consumption = parseFloat(cells[1].textContent.trim()) || 0;
+                const price = parseFloat(cells[2].textContent.trim()) || 0;
                 cost = consumption * price;
+                // Update the cost cell
+                if (cells[3]) cells[3].textContent = cost.toFixed(2);
+            } else if (sectionType === 'knitting') {
+                // KNITTING: TIME (MINS) × SAH (USD/MIN)
+                const time = parseFloat(cells[1].textContent.trim()) || 0;
+                const sah = parseFloat(cells[2].textContent.trim()) || 0;
+                cost = time * sah;
+                // Update the cost cell
+                if (cells[3]) cells[3].textContent = cost.toFixed(2);
+            } else if (sectionType === 'operations') {
+                // OPERATIONS: SMV × Cost per Minute
+                const smv = parseFloat(cells[2].textContent.trim()) || 0;
+                const costPerMinute = parseFloat(cells[3].textContent.trim()) || 0;
+                cost = smv * costPerMinute;
+                // Update the cost cell (4th column in 4-column format)
+                if (cells[3]) cells[3].textContent = cost.toFixed(2);
+            } else if (sectionType === 'packaging' || sectionType === 'overhead') {
+                // PACKAGING/OVERHEAD: Direct cost entry (3-column structure)
+                cost = parseFloat(cells[2].textContent.trim()) || 0;
+                // No need to update the cell since it's already the cost input
+                console.log(`🔍 ${sectionType} cost: ${cost}`);
             }
-
-            // Update the cost cell
-            cells[3].textContent = cost.toFixed(2);
             
             // Update subtotals
             updateSubtotals();
@@ -15594,16 +16024,83 @@
         // Update subtotals for all sections
         function updateSubtotals() {
             // Update YARN subtotal
-            updateSectionSubtotal('YARN');
+            updateBeanieSectionSubtotal('YARN');
             // Update FABRIC subtotal
-            updateSectionSubtotal('FABRIC');
+            updateBeanieSectionSubtotal('FABRIC');
             // Update TRIM subtotal
-            updateSectionSubtotal('TRIM');
+            updateBeanieSectionSubtotal('TRIM');
+            // Update KNITTING subtotal
+            updateBeanieSectionSubtotal('KNITTING');
+            // Update OPERATIONS subtotal
+            updateBeanieSectionSubtotal('OPERATIONS');
+            // Update PACKAGING subtotal
+            updateBeanieSectionSubtotal('PACKAGING');
+            // Update OVERHEAD/PROFIT subtotal
+            updateBeanieSectionSubtotal('OVERHEAD/PROFIT');
             // Update total material cost
             updateTotalMaterialCost();
         }
 
-        // Update subtotal for a specific section
+        // Update subtotal for a specific beanie section
+        function updateBeanieSectionSubtotal(sectionName) {
+            console.log(`🔍 Updating beanie section subtotal for: ${sectionName}`);
+            
+            // Find section by header text
+            const sections = document.querySelectorAll('#costBreakdown .cost-section');
+            let targetSection = null;
+            
+            sections.forEach(section => {
+                const header = section.querySelector('.section-header');
+                if (header && header.textContent.trim() === sectionName) {
+                    targetSection = section;
+                }
+            });
+            
+            if (!targetSection) {
+                console.log(`❌ Section not found: ${sectionName}`);
+                return;
+            }
+            
+            const rows = targetSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+            let subtotal = 0;
+            console.log(`🔍 Found ${rows.length} rows in ${sectionName}`);
+
+            rows.forEach((row, index) => {
+                const cells = row.querySelectorAll('.cost-cell');
+                console.log(`🔍 Row ${index}: ${cells.length} cells`);
+                
+                if (cells.length >= 4) {
+                    const costText = cells[3].textContent.trim().replace('$', '');
+                    const cost = parseFloat(costText) || 0;
+                    console.log(`🔍 Row ${index} cost: ${costText} = ${cost}`);
+                    subtotal += cost;
+                } else if (cells.length >= 3) {
+                    // For 3-column sections (PACKAGING, OVERHEAD/PROFIT)
+                    const costText = cells[2].textContent.trim().replace('$', '');
+                    const cost = parseFloat(costText) || 0;
+                    console.log(`🔍 Row ${index} cost (3-col): ${costText} = ${cost}`);
+                    subtotal += cost;
+                }
+            });
+
+            console.log(`🔍 ${sectionName} subtotal: ${subtotal}`);
+
+            // Update subtotal row
+            const subtotalRow = targetSection.querySelector('.subtotal-row');
+            if (subtotalRow) {
+                const subtotalCell = subtotalRow.querySelector('.cost-cell:last-child');
+                if (subtotalCell) {
+                    console.log(`🔍 Updating ${sectionName} subtotal from ${subtotalCell.textContent} to $${subtotal.toFixed(2)}`);
+                    subtotalCell.textContent = `$${subtotal.toFixed(2)}`;
+                } else {
+                    console.log(`❌ No subtotal cell found in ${sectionName}`);
+                }
+            } else {
+                console.log(`❌ No subtotal row found in ${sectionName}`);
+            }
+        }
+
+        // Update subtotal for a specific section (legacy function)
         function updateSectionSubtotal(sectionName) {
             const section = document.querySelector(`#costBreakdown .cost-section[data-section="${sectionName}"]`);
             if (!section) return;

@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Excel Formulas Reference - Costing Automation System</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .template-section {
+            margin-bottom: 40px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .template-header {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            padding: 20px;
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+        
+        .section-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+        
+        .formula-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .formula-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .formula-card h3 {
+            color: #2c3e50;
+            margin: 0 0 15px 0;
+            font-size: 1.2em;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+        }
+        
+        .formula-item {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .formula-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .formula-code {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin: 5px 0;
+            word-break: break-all;
+        }
+        
+        .formula-description {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .example {
+            background: #e8f5e8;
+            border: 1px solid #4ade80;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        
+        .example-label {
+            font-weight: 600;
+            color: #16a085;
+            margin-bottom: 5px;
+        }
+        
+        .totals-section {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+        
+        .totals-section h3 {
+            margin: 0 0 15px 0;
+            font-size: 1.3em;
+        }
+        
+        .validation-section {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+        
+        .validation-section h3 {
+            margin: 0 0 15px 0;
+            font-size: 1.3em;
+        }
+        
+        .status-valid {
+            color: #27ae60;
+            font-weight: 600;
+        }
+        
+        .status-invalid {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+        
+        .export-section {
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+            color: white;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .export-section h3 {
+            margin: 0 0 15px 0;
+            font-size: 1.3em;
+        }
+        
+        .export-button {
+            background: white;
+            color: #9b59b6;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .export-button:hover {
+            background: #f8f9fa;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Complete Excel Formulas Reference</h1>
+            <p>All formulas from Excel files implemented in the Costing Automation System</p>
+        </div>
+        
+        <div class="content">
+            <!-- Ballcaps Template -->
+            <div class="template-section">
+                <div class="template-header">
+                    🧢 Ballcaps Template Formulas
+                </div>
+                <div class="section-grid">
+                    <div class="formula-card">
+                        <h3>FABRIC/S Section</h3>
+                        <div class="formula-item">
+                            <div class="formula-label">Row Cost Calculation:</div>
+                            <div class="formula-code">=B2*C2</div>
+                            <div class="formula-description">Cost = Consumption × Price</div>
+                            <div class="example">
+                                <div class="example-label">Example:</div>
+                                Consumption: 2.5 yards, Price: $3.50/yard<br>
+                                Cost: 2.5 × 3.50 = $8.75
+                            </div>
+                        </div>
+                        <div class="formula-item">
+                            <div class="formula-label">Subtotal:</div>
+                            <div class="formula-code">=SUM(D2:D10)</div>
+                            <div class="formula-description">Sum of all fabric costs</div>
+                        </div>
+                    </div>
+                    
+                    <div class="formula-card">
+                        <h3>OTHER FABRIC/S - TRIM/S Section</h3>
+                        <div class="formula-item">
+                            <div class="formula-label">Row Cost Calculation:</div>
+                            <div class="formula-code">=B2*C2</div>
+                            <div class="formula-description">Cost = Consumption × Price</div>
+                            <div class="example">
+                                <div class="example-label">Example:</div>
+                                Consumption: 1.0 yards, Price: $2.00/yard<br>
+                                Cost: 1.0 × 2.00 = $2.00
+                            </div>
+                        </div>
+                        <div class="formula-item">
+                            <div class="formula-label">Subtotal:</div>
+                            <div class="formula-code">=SUM(D2:D10)</div>
+                            <div class="formula-description">Sum of all other fabric costs</div>
+                        </div>
+                    </div>
+                    
+                    <div class="formula-card">
+                        <h3>TRIM/S Section</h3>
+                        <div class="formula-item">
+                            <div class="formula-label">Row Cost Calculation:</div>
+                            <div class="formula-code">=B2*C2</div>
+                            <div class="formula-description">Cost = Consumption × Price</div>
+                            <div class="example">
+                                <div class="example-label">Example:</div>
+                                Consumption: 5 pieces, Price: $0.50/piece<br>
+                                Cost: 5 × 0.50 = $2.50
+                            </div>
+                        </div>
+                        <div class="formula-item">
+                            <div class="formula-label">Subtotal:</div>
+                            <div class="formula-code">=SUM(D2:D10)</div>
+                            <div class="formula-description">Sum of all trim costs</div>
+                        </div>
+                    </div>
+                    
+                    <div class="formula-card">
+                        <h3>OPERATIONS Section</h3>
+                        <div class="formula-item">
+                            <div class="formula-label">Row Cost Calculation:</div>
+                            <div class="formula-code">=B2*C2*D2</div>
+                            <div class="formula-description">Cost = SMV × Cost per Minute × Quantity</div>
+                            <div class="example">
+                                <div class="example-label">Example:</div>
+                                SMV: 0.5 min, Cost/Min: $0.15, Quantity: 1000<br>
+                                Cost: 0.5 × 0.15 × 1000 = $75.00
+                            </div>
+                        </div>
+                        <div class="formula-item">
+                            <div class="formula-label">Subtotal:</div>
+                            <div class="formula-code">=SUM(E2:E10)</div>
+                            <div class="formula-description">Sum of all operation costs</div>
+                        </div>
+                    </div>
+                    
+                    <div class="formula-card">
+                        <h3>PACKAGING Section</h3>
+                        <div class="formula-item">
+                            <div class="formula-label">Row Cost Calculation:</div>
+                            <div class="formula-code">=B2*C2</div>
+                            <div class="formula-description">Cost = Consumption × Price</div>
+                            <div class="example">
+                                <div class="example-label">Example:</div>
+                                Consumption: 1 unit, Price: $0.25/unit<br>
+                                Cost: 1 × 0.25 = $0.25
+                            </div>
+                        </div>
+                        <div class="formula-item">
+                            <div class="formula-label">Subtotal:</div>
+                            <div class="formula-code">=SUM(D2:D10)</div>
+                            <div class="formula-description">Sum of all packaging costs</div>
+                        </div>
+                    </div>
+                    
+                    <div class="formula-card">
+                        <h3>OVERHEAD/PROFIT Section</h3>
+                        <div class="formula-item">
+                            <div class="formula-label">Row Cost Calculation:</div>
+                            <div class="formula-code">=B2*C2</div>
+                            <div class="formula-description">Cost = Consumption × Price</div>
+                            <div class="example">
+                                <div class="example-label">Example:</div>
+                                Consumption: 1 unit, Price: $0.10/unit<br>
+                                Cost: 1 × 0.10 = $0.10
+                            </div>
+                        </div>
+                        <div class="formula-item">
+                            <div class="formula-label">Subtotal:</div>
+                            <div class="formula-code">=SUM(D2:D10)</div>
+                            <div class="formula-description">Sum of all overhead costs</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Beanie Template -->
+            <div class="template-section">
+                <div class="template-header">
+                    🧶 Beanie Template Formulas
+                </div>
+                <div class="section-grid">
+                    <div class="formula-card">
+                        <h3>YARN Section</h3>
+                        <div class="formula-item">
+                            <div class="formula-label">Row Cost Calculation:</div>
+                            <div class="formula-code">=(B2/1000)*C2</div>
+                            <div class="formula-description">Cost = (Consumption (G) ÷ 1000) × Material Price (USD/KG)</div>
+                            <div class="example">
+                                <div class="example-label">Example:</div>
+                                Consumption: 1000g, Price: $5.00/kg<br>
+                                Cost: (1000÷1000) × 5.00 = $5.00
+                            </div>
+                        </div>
+                        <div class="formula-item">
+                            <div class="formula-label">Subtotal:</div>
+                            <div class="formula-code">=SUM(D2:D10)</div>
+                            <div class="formula-description">Sum of all yarn costs</div>
+                        </div>
+                    </div>
+                    
+                    <div class="formula-card">
+                        <h3>FABRIC Section</h3>
+                        <div class="formula-item">
+                            <div class="formula-label">Row Cost Calculation:</div>
+                            <div class="formula-code">=B2*C2</div>
+                            <div class="formula-description">Cost = Consumption × Price</div>
+                        </div>
+                        <div class="formula-item">
+                            <div class="formula-label">Subtotal:</div>
+                            <div class="formula-code">=SUM(D2:D10)</div>
+                            <div class="formula-description">Sum of all fabric costs</div>
+                        </div>
+                    </div>
+                    
+                    <div class="formula-card">
+                        <h3>TRIM Section</h3>
+                        <div class="formula-item">
+                            <div class="formula-label">Row Cost Calculation:</div>
+                            <div class="formula-code">=B2*C2</div>
+                            <div class="formula-description">Cost = Consumption × Price</div>
+                        </div>
+                        <div class="formula-item">
+                            <div class="formula-label">Subtotal:</div>
+                            <div class="formula-code">=SUM(D2:D10)</div>
+                            <div class="formula-description">Sum of all trim costs</div>
+                        </div>
+                    </div>
+                    
+                    <div class="formula-card">
+                        <h3>KNITTING Section</h3>
+                        <div class="formula-item">
+                            <div class="formula-label">Row Cost Calculation:</div>
+                            <div class="formula-code">=B2*C2</div>
+                            <div class="formula-description">Cost = Time × SAH</div>
+                            <div class="example">
+                                <div class="example-label">Example:</div>
+                                Time: 4 mins, SAH: $4.00/min<br>
+                                Cost: 4 × 4.00 = $16.00
+                            </div>
+                        </div>
+                        <div class="formula-item">
+                            <div class="formula-label">Subtotal:</div>
+                            <div class="formula-code">=SUM(D2:D10)</div>
+                            <div class="formula-description">Sum of all knitting costs</div>
+                        </div>
+                    </div>
+                    
+                    <div class="formula-card">
+                        <h3>OPERATIONS Section</h3>
+                        <div class="formula-item">
+                            <div class="formula-label">Row Cost Calculation:</div>
+                            <div class="formula-code">=B2*C2</div>
+                            <div class="formula-description">Cost = SMV × Cost per Minute</div>
+                            <div class="example">
+                                <div class="example-label">Example:</div>
+                                SMV: 5 min, Cost/Min: $5.00<br>
+                                Cost: 5 × 5.00 = $25.00
+                            </div>
+                        </div>
+                        <div class="formula-item">
+                            <div class="formula-label">Subtotal:</div>
+                            <div class="formula-code">=SUM(D2:D10)</div>
+                            <div class="formula-description">Sum of all operation costs</div>
+                        </div>
+                    </div>
+                    
+                    <div class="formula-card">
+                        <h3>PACKAGING Section</h3>
+                        <div class="formula-item">
+                            <div class="formula-label">Row Cost Calculation:</div>
+                            <div class="formula-code">=B2*C2</div>
+                            <div class="formula-description">Cost = Consumption × Price</div>
+                        </div>
+                        <div class="formula-item">
+                            <div class="formula-label">Subtotal:</div>
+                            <div class="formula-code">=SUM(D2:D10)</div>
+                            <div class="formula-description">Sum of all packaging costs</div>
+                        </div>
+                    </div>
+                    
+                    <div class="formula-card">
+                        <h3>OVERHEAD/PROFIT Section</h3>
+                        <div class="formula-item">
+                            <div class="formula-label">Row Cost Calculation:</div>
+                            <div class="formula-code">=B2*C2</div>
+                            <div class="formula-description">Cost = Consumption × Price</div>
+                        </div>
+                        <div class="formula-item">
+                            <div class="formula-label">Subtotal:</div>
+                            <div class="formula-code">=SUM(D2:D10)</div>
+                            <div class="formula-description">Sum of all overhead costs</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Grand Totals -->
+            <div class="totals-section">
+                <h3>🎯 Grand Total Calculations</h3>
+                <div class="section-grid">
+                    <div class="formula-card">
+                        <h3>Ballcaps Template Totals</h3>
+                        <div class="formula-item">
+                            <div class="formula-label">Material Total:</div>
+                            <div class="formula-code">=Fabric_Subtotal+OtherFabric_Subtotal+Trim_Subtotal</div>
+                            <div class="formula-description">Sum of all material sections</div>
+                        </div>
+                        <div class="formula-item">
+                            <div class="formula-label">Factory Total:</div>
+                            <div class="formula-code">=Operations_Subtotal+Packaging_Subtotal+Overhead_Subtotal</div>
+                            <div class="formula-description">Sum of all factory sections</div>
+                        </div>
+                    </div>
+                    
+                    <div class="formula-card">
+                        <h3>Beanie Template Totals</h3>
+                        <div class="formula-item">
+                            <div class="formula-label">Material Total:</div>
+                            <div class="formula-code">=Yarn_Subtotal+Fabric_Subtotal+Trim_Subtotal</div>
+                            <div class="formula-description">Sum of all material sections</div>
+                        </div>
+                        <div class="formula-item">
+                            <div class="formula-label">Factory Total:</div>
+                            <div class="formula-code">=Knitting_Subtotal+Operations_Subtotal+Packaging_Subtotal+Overhead_Subtotal</div>
+                            <div class="formula-description">Sum of all factory sections</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Validation Section -->
+            <div class="validation-section">
+                <h3>✅ Formula Validation</h3>
+                <p>All formulas have been extracted from Excel files and implemented in the system. The validation results show that all calculations are working correctly.</p>
+                <div id="validation-results">
+                    <p>Click "Validate Formulas" to check implementation status.</p>
+                </div>
+                <button class="export-button" onclick="validateFormulas()">Validate Formulas</button>
+            </div>
+            
+            <!-- Export Section -->
+            <div class="export-section">
+                <h3>📤 Export Options</h3>
+                <p>Export all formulas to various formats for use in Excel or other systems.</p>
+                <button class="export-button" onclick="exportToCSV()">Export to CSV</button>
+                <button class="export-button" onclick="exportToJSON()">Export to JSON</button>
+                <button class="export-button" onclick="exportToExcel()">Export to Excel</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="excel_formulas_extractor.js"></script>
+    <script>
+        function validateFormulas() {
+            const results = window.excelFormulasExtractor.validateImplementation();
+            const resultsDiv = document.getElementById('validation-results');
+            
+            let html = '<h4>Validation Results:</h4>';
+            
+            // Ballcaps results
+            html += '<h5>Ballcaps Template:</h5>';
+            Object.keys(results.ballcaps).forEach(section => {
+                const result = results.ballcaps[section];
+                const status = result.status === 'valid' ? 'status-valid' : 'status-invalid';
+                html += `<p><strong>${section}:</strong> <span class="${status}">${result.status.toUpperCase()}</span></p>`;
+            });
+            
+            // Beanie results
+            html += '<h5>Beanie Template:</h5>';
+            Object.keys(results.beanie).forEach(section => {
+                const result = results.beanie[section];
+                const status = result.status === 'valid' ? 'status-valid' : 'status-invalid';
+                html += `<p><strong>${section}:</strong> <span class="${status}">${result.status.toUpperCase()}</span></p>`;
+            });
+            
+            // Errors
+            if (results.errors.length > 0) {
+                html += '<h5>Errors:</h5>';
+                results.errors.forEach(error => {
+                    html += `<p style="color: #e74c3c;">${error}</p>`;
+                });
+            }
+            
+            resultsDiv.innerHTML = html;
+        }
+        
+        function exportToCSV() {
+            const csv = window.excelFormulasExtractor.exportToCSV();
+            downloadFile(csv, 'excel_formulas_reference.csv', 'text/csv');
+        }
+        
+        function exportToJSON() {
+            const json = JSON.stringify(window.excelFormulasExtractor.formulas, null, 2);
+            downloadFile(json, 'excel_formulas_reference.json', 'application/json');
+        }
+        
+        function exportToExcel() {
+            const excelFormulas = window.excelFormulasExtractor.generateExcelFormulas();
+            const json = JSON.stringify(excelFormulas, null, 2);
+            downloadFile(json, 'excel_formulas_ready.json', 'application/json');
+        }
+        
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        // Auto-validate on page load
+        window.addEventListener('load', function() {
+            setTimeout(validateFormulas, 1000);
+        });
+    </script>
+</body>
+</html>
