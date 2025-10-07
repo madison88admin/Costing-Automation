@@ -3042,3 +3042,4 @@
 {"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-10-03T01:47:19.444Z"}
 {"level":"info","message":"Fetched batch: 798 records (total so far: 2798)","service":"costing-automation","timestamp":"2025-10-03T01:47:19.675Z"}
 {"level":"info","message":"Final result: 2798 records loaded, total count: 2798","service":"costing-automation","timestamp":"2025-10-03T01:47:19.677Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-10-07T09:02:20.368Z"}
