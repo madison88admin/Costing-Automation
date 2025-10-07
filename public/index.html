@@ -5284,6 +5284,20 @@
                 userNameElement.textContent = `${user.username} (${user.role})`;
             }
             
+            // Update save button text based on user role
+            const saveBeanieBtn = document.getElementById('saveBeanieBtn');
+            const saveBallCapsBtn = document.getElementById('saveBallCapsBtn');
+            
+            if (user.role === 'factory') {
+                // Factory users see "SAVE" button (saves to local storage)
+                if (saveBeanieBtn) saveBeanieBtn.textContent = 'SAVE';
+                if (saveBallCapsBtn) saveBallCapsBtn.textContent = 'SAVE';
+            } else {
+                // Madison users see "Save to Database" button
+                if (saveBeanieBtn) saveBeanieBtn.textContent = 'Save to Database';
+                if (saveBallCapsBtn) saveBallCapsBtn.textContent = 'Save to Database';
+            }
+            
             console.log(`🔐 Applied role-based visibility for ${user.role} user`);
         }
 
@@ -16283,11 +16297,22 @@
             return '0.00';
         }
 
-        // Save beanie data to database
+        // Save beanie data to database or local storage
         async function saveBeanieToDatabase() {
             const saveBtn = document.getElementById('saveBeanieBtn');
             const originalText = saveBtn.innerHTML;
             
+            // Check user role
+            const user = window.authService ? window.authService.getCurrentUser() : null;
+            const isFactoryUser = user && user.role === 'factory';
+            
+            if (isFactoryUser) {
+                // Factory users save to local storage
+                saveBeanieToLocalStorage();
+                return;
+            }
+            
+            // Madison users save to database
             // Show loading notification
             const loadingId = showLoadingNotification('Calculating costs and uploading to database...', {
                 title: 'Database Upload',
@@ -16429,12 +16454,203 @@
             }
         }
 
+        // Save beanie data to local storage (for Factory users)
+        function saveBeanieToLocalStorage() {
+            try {
+                console.log('🔄 Starting beanie data save to local storage...');
+                
+                // Calculate all costs first
+                calculateBeanieTemplate();
+                
+                // Get all the data from the beanie template
+                const beanieData = {
+                    template: 'beanie',
+                    timestamp: new Date().toISOString(),
+                    customer: document.querySelector('#costBreakdown input[placeholder*="Customer"]')?.value || '',
+                    season: document.querySelector('#costBreakdown input[placeholder*="Season"]')?.value || '',
+                    styleNumber: document.querySelector('#costBreakdown input[placeholder*="Style Number"]')?.value || '',
+                    styleName: document.querySelector('#costBreakdown input[placeholder*="Style Name"]')?.value || '',
+                    yarn: extractSectionData('YARN'),
+                    fabric: extractSectionData('FABRIC'),
+                    trim: extractSectionData('TRIM'),
+                    knitting: extractSectionData('KNITTING'),
+                    operations: extractSectionData('OPERATIONS'),
+                    packaging: extractSectionData('PACKAGING'),
+                    overhead: extractSectionData('OVERHEAD/PROFIT'),
+                    totalMaterialCost: getTotalMaterialCost(),
+                    totalFactoryCost: getTotalFactoryCost()
+                };
+                
+                // Save to local storage
+                const existingData = JSON.parse(localStorage.getItem('factoryData') || '[]');
+                existingData.push(beanieData);
+                localStorage.setItem('factoryData', JSON.stringify(existingData));
+                
+                // Show success notification
+                showNotification('Beanie data saved successfully!', 'success');
+                
+                // Update Factory data table if visible
+                if (typeof updateFactoryDataTable === 'function') {
+                    updateFactoryDataTable();
+                }
+                
+                console.log('✅ Beanie data saved to local storage:', beanieData);
+                
+            } catch (error) {
+                console.error('❌ Error saving beanie data to local storage:', error);
+                showNotification('Error saving data. Please try again.', 'error');
+            }
+        }
 
-        // Save ballcaps data to database
+        // Save ballcaps data to local storage (for Factory users)
+        function saveBallCapsToLocalStorage() {
+            try {
+                console.log('🔄 Starting ballcaps data save to local storage...');
+                
+                // Calculate all costs first
+                calculateBallCapsTemplate();
+                
+                // Get all the data from the ballcaps template
+                const ballcapsData = {
+                    template: 'ballcaps',
+                    timestamp: new Date().toISOString(),
+                    customer: document.querySelector('#ballcapsBreakdown input[placeholder*="Customer"]')?.value || '',
+                    season: document.querySelector('#ballcapsBreakdown input[placeholder*="Season"]')?.value || '',
+                    styleNumber: document.querySelector('#ballcapsBreakdown input[placeholder*="Style Number"]')?.value || '',
+                    styleName: document.querySelector('#ballcapsBreakdown input[placeholder*="Style Name"]')?.value || '',
+                    fabric: extractBallCapsSectionData('FABRIC/S'),
+                    otherFabric: extractBallCapsSectionData('OTHER FABRIC/S - TRIM/S'),
+                    trim: extractBallCapsSectionData('TRIM/S'),
+                    operations: extractBallCapsSectionData('OPERATIONS'),
+                    packaging: extractBallCapsSectionData('PACKAGING'),
+                    overhead: extractBallCapsSectionData('OVERHEAD/PROFIT'),
+                    totalMaterialCost: getBallCapsTotalMaterialCost(),
+                    totalFactoryCost: getBallCapsTotalFactoryCost()
+                };
+                
+                // Save to local storage
+                const existingData = JSON.parse(localStorage.getItem('factoryData') || '[]');
+                existingData.push(ballcapsData);
+                localStorage.setItem('factoryData', JSON.stringify(existingData));
+                
+                // Show success notification
+                showNotification('Ballcaps data saved successfully!', 'success');
+                
+                // Update Factory data table if visible
+                if (typeof updateFactoryDataTable === 'function') {
+                    updateFactoryDataTable();
+                }
+                
+                console.log('✅ Ballcaps data saved to local storage:', ballcapsData);
+                
+            } catch (error) {
+                console.error('❌ Error saving ballcaps data to local storage:', error);
+                showNotification('Error saving data. Please try again.', 'error');
+            }
+        }
+
+        // Helper function to extract section data for beanie template
+        function extractSectionData(sectionName) {
+            const sections = document.querySelectorAll('#costBreakdown .cost-section');
+            let targetSection = null;
+            
+            for (let section of sections) {
+                const header = section.querySelector('.section-header');
+                if (header && header.textContent.trim() === sectionName) {
+                    targetSection = section;
+                    break;
+                }
+            }
+            
+            if (!targetSection) return [];
+            
+            const sectionElement = targetSection;
+            const rows = sectionElement.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+            const data = [];
+            
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('.cost-cell');
+                if (cells.length >= 3) {
+                    const rowData = {
+                        description: cells[0].textContent.trim(),
+                        consumption: cells[1].textContent.trim(),
+                        price: cells[2].textContent.trim(),
+                        cost: cells[3] ? cells[3].textContent.trim() : ''
+                    };
+                    if (rowData.description || rowData.consumption || rowData.price) {
+                        data.push(rowData);
+                    }
+                }
+            });
+            
+            return data;
+        }
+
+        // Helper function to extract section data for ballcaps template
+        function extractBallCapsSectionData(sectionName) {
+            const sections = document.querySelectorAll('#ballcapsBreakdown .cost-section');
+            let targetSection = null;
+            
+            for (let section of sections) {
+                const header = section.querySelector('.section-header');
+                if (header && header.textContent.trim() === sectionName) {
+                    targetSection = section;
+                    break;
+                }
+            }
+            
+            if (!targetSection) return [];
+            
+            const rows = targetSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+            const data = [];
+            
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('.cost-cell');
+                if (cells.length >= 3) {
+                    const rowData = {
+                        description: cells[0].textContent.trim(),
+                        consumption: cells[1].textContent.trim(),
+                        price: cells[2].textContent.trim(),
+                        cost: cells[3] ? cells[3].textContent.trim() : ''
+                    };
+                    if (rowData.description || rowData.consumption || rowData.price) {
+                        data.push(rowData);
+                    }
+                }
+            });
+            
+            return data;
+        }
+
+        // Helper function to get ballcaps total material cost
+        function getBallCapsTotalMaterialCost() {
+            const totalElement = document.querySelector('#ballcapsBreakdown .total-material-cost .total-value');
+            return totalElement ? totalElement.textContent.replace('$', '') : '0.00';
+        }
+
+        // Helper function to get ballcaps total factory cost
+        function getBallCapsTotalFactoryCost() {
+            const totalElement = document.querySelector('#ballcapsBreakdown .total-factory-cost .total-value');
+            return totalElement ? totalElement.textContent.replace('$', '') : '0.00';
+        }
+
+
+        // Save ballcaps data to database or local storage
         async function saveBallCapsToDatabase() {
             const saveBtn = document.getElementById('saveBallCapsBtn');
             const originalText = saveBtn.innerHTML;
             
+            // Check user role
+            const user = window.authService ? window.authService.getCurrentUser() : null;
+            const isFactoryUser = user && user.role === 'factory';
+            
+            if (isFactoryUser) {
+                // Factory users save to local storage
+                saveBallCapsToLocalStorage();
+                return;
+            }
+            
+            // Madison users save to database
             // Show loading notification
             const loadingId = showLoadingNotification('Uploading ballcaps data to Supabase...', {
                 title: 'Database Upload',
