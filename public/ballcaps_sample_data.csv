@@ -1,0 +1,19 @@
+Section,Description,Consumption,Price,Quantity,Cost,Formula
+FABRIC/S,Main Fabric,2.5,3.50,,8.75,=B2*C2
+FABRIC/S,Lining Fabric,1.0,2.00,,2.00,=B3*C3
+FABRIC/S,Subtotal,,,,10.75,=SUM(E2:E3)
+OTHER FABRIC/S - TRIM/S,Embroidery Thread,0.1,15.00,,1.50,=B5*C5
+OTHER FABRIC/S - TRIM/S,Subtotal,,,,1.50,=SUM(E5:E5)
+TRIM/S,Button,5,0.50,,2.50,=B7*C7
+TRIM/S,Label,1,0.25,,0.25,=B8*C8
+TRIM/S,Subtotal,,,,2.75,=SUM(E7:E8)
+OPERATIONS,Cutting,0.5,0.15,1000,75.00,=B10*C10*D10
+OPERATIONS,Sewing,2.0,0.15,1000,300.00,=B11*C11*D11
+OPERATIONS,Finishing,0.3,0.15,1000,45.00,=B12*C12*D12
+OPERATIONS,Subtotal,,,,420.00,=SUM(E10:E12)
+PACKAGING,Poly Bag,1,0.25,,0.25,=B14*C14
+PACKAGING,Subtotal,,,,0.25,=SUM(E14:E14)
+OVERHEAD/PROFIT,Overhead,1,0.10,,0.10,=B16*C16
+OVERHEAD/PROFIT,Subtotal,,,,0.10,=SUM(E16:E16)
+TOTALS,Material Total,,,,15.00,=E4+E6+E9
+TOTALS,Factory Total,,,,420.35,=E13+E15+E17

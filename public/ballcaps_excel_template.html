@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ballcaps Costing Template - Excel Formulas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 30px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .section-header {
+            background: #34495e;
+            color: white;
+            padding: 10px 15px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .formula-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .formula-table th,
+        .formula-table td {
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        .formula-table th {
+            background: #ecf0f1;
+            font-weight: bold;
+        }
+        .formula-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        .formula {
+            font-family: 'Courier New', monospace;
+            background: #e8f4f8;
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #2c3e50;
+        }
+        .description {
+            font-style: italic;
+            color: #7f8c8d;
+        }
+        .example {
+            background: #f0f8f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .note {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .note strong {
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧢 Ballcaps Costing Template - Excel Formulas & Calculations</h1>
+        
+        <div class="note">
+            <strong>📋 Instructions:</strong> Copy these formulas into your Excel spreadsheet. Replace cell references (like B2, C2) with your actual data ranges. All formulas assume data starts from row 2.
+        </div>
+
+        <!-- FABRIC/S Section -->
+        <div class="section">
+            <div class="section-header">FABRIC/S</div>
+            <table class="formula-table">
+                <thead>
+                    <tr>
+                        <th>Column</th>
+                        <th>Formula</th>
+                        <th>Description</th>
+                        <th>Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Cost (Column D)</td>
+                        <td><span class="formula">=B2*C2</span></td>
+                        <td class="description">Cost = Consumption × Price</td>
+                        <td class="example">If B2=2.5 and C2=3.50, then Cost=8.75</td>
+                    </tr>
+                    <tr>
+                        <td>Subtotal</td>
+                        <td><span class="formula">=SUM(D2:D10)</span></td>
+                        <td class="description">Sum of all fabric costs</td>
+                        <td class="example">Sum of all fabric rows</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- OTHER FABRIC/S - TRIM/S Section -->
+        <div class="section">
+            <div class="section-header">OTHER FABRIC/S - TRIM/S</div>
+            <table class="formula-table">
+                <thead>
+                    <tr>
+                        <th>Column</th>
+                        <th>Formula</th>
+                        <th>Description</th>
+                        <th>Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Cost (Column D)</td>
+                        <td><span class="formula">=B2*C2</span></td>
+                        <td class="description">Cost = Consumption × Price</td>
+                        <td class="example">If B2=1.0 and C2=2.00, then Cost=2.00</td>
+                    </tr>
+                    <tr>
+                        <td>Subtotal</td>
+                        <td><span class="formula">=SUM(D2:D10)</span></td>
+                        <td class="description">Sum of all other fabric costs</td>
+                        <td class="example">Sum of all other fabric rows</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- TRIM/S Section -->
+        <div class="section">
+            <div class="section-header">TRIM/S</div>
+            <table class="formula-table">
+                <thead>
+                    <tr>
+                        <th>Column</th>
+                        <th>Formula</th>
+                        <th>Description</th>
+                        <th>Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Cost (Column D)</td>
+                        <td><span class="formula">=B2*C2</span></td>
+                        <td class="description">Cost = Consumption × Price</td>
+                        <td class="example">If B2=5 and C2=0.50, then Cost=2.50</td>
+                    </tr>
+                    <tr>
+                        <td>Subtotal</td>
+                        <td><span class="formula">=SUM(D2:D10)</span></td>
+                        <td class="description">Sum of all trim costs</td>
+                        <td class="example">Sum of all trim rows</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- OPERATIONS Section -->
+        <div class="section">
+            <div class="section-header">OPERATIONS</div>
+            <table class="formula-table">
+                <thead>
+                    <tr>
+                        <th>Column</th>
+                        <th>Formula</th>
+                        <th>Description</th>
+                        <th>Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Cost (Column E)</td>
+                        <td><span class="formula">=B2*C2*D2</span></td>
+                        <td class="description">Cost = SMV × Cost per Minute × Quantity</td>
+                        <td class="example">If B2=0.5, C2=0.15, D2=1000, then Cost=75.00</td>
+                    </tr>
+                    <tr>
+                        <td>Subtotal</td>
+                        <td><span class="formula">=SUM(E2:E10)</span></td>
+                        <td class="description">Sum of all operation costs</td>
+                        <td class="example">Sum of all operation rows</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- PACKAGING Section -->
+        <div class="section">
+            <div class="section-header">PACKAGING</div>
+            <table class="formula-table">
+                <thead>
+                    <tr>
+                        <th>Column</th>
+                        <th>Formula</th>
+                        <th>Description</th>
+                        <th>Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Cost (Column D)</td>
+                        <td><span class="formula">=B2*C2</span></td>
+                        <td class="description">Cost = Consumption × Price</td>
+                        <td class="example">If B2=1 and C2=0.25, then Cost=0.25</td>
+                    </tr>
+                    <tr>
+                        <td>Subtotal</td>
+                        <td><span class="formula">=SUM(D2:D10)</span></td>
+                        <td class="description">Sum of all packaging costs</td>
+                        <td class="example">Sum of all packaging rows</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- OVERHEAD/PROFIT Section -->
+        <div class="section">
+            <div class="section-header">OVERHEAD/PROFIT</div>
+            <table class="formula-table">
+                <thead>
+                    <tr>
+                        <th>Column</th>
+                        <th>Formula</th>
+                        <th>Description</th>
+                        <th>Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Cost (Column D)</td>
+                        <td><span class="formula">=B2*C2</span></td>
+                        <td class="description">Cost = Consumption × Price</td>
+                        <td class="example">If B2=1 and C2=0.10, then Cost=0.10</td>
+                    </tr>
+                    <tr>
+                        <td>Subtotal</td>
+                        <td><span class="formula">=SUM(D2:D10)</span></td>
+                        <td class="description">Sum of all overhead costs</td>
+                        <td class="example">Sum of all overhead rows</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- TOTALS Section -->
+        <div class="section">
+            <div class="section-header">TOTALS</div>
+            <table class="formula-table">
+                <thead>
+                    <tr>
+                        <th>Total Type</th>
+                        <th>Formula</th>
+                        <th>Description</th>
+                        <th>Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Material Total</td>
+                        <td><span class="formula">=Fabric_Subtotal+OtherFabric_Subtotal+Trim_Subtotal</span></td>
+                        <td class="description">Sum of all material sections</td>
+                        <td class="example">=SUM(Fabric!D11,OtherFabric!D11,Trim!D11)</td>
+                    </tr>
+                    <tr>
+                        <td>Factory Total</td>
+                        <td><span class="formula">=Operations_Subtotal+Packaging_Subtotal+Overhead_Subtotal</span></td>
+                        <td class="description">Sum of all factory sections</td>
+                        <td class="example">=SUM(Operations!E11,Packaging!D11,Overhead!D11)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Column Structure -->
+        <div class="section">
+            <div class="section-header">📊 Column Structure Reference</div>
+            <table class="formula-table">
+                <thead>
+                    <tr>
+                        <th>Section</th>
+                        <th>Column A</th>
+                        <th>Column B</th>
+                        <th>Column C</th>
+                        <th>Column D</th>
+                        <th>Column E</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>FABRIC/S</td>
+                        <td>Description</td>
+                        <td>Consumption (Yards)</td>
+                        <td>Price (USD/YD)</td>
+                        <td>Cost</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>OTHER FABRIC/S - TRIM/S</td>
+                        <td>Description</td>
+                        <td>Consumption (Yards)</td>
+                        <td>Price (USD/YD)</td>
+                        <td>Cost</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>TRIM/S</td>
+                        <td>Description</td>
+                        <td>Consumption (Piece)</td>
+                        <td>Price (USD/PC)</td>
+                        <td>Cost</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>OPERATIONS</td>
+                        <td>Description</td>
+                        <td>SMV</td>
+                        <td>Cost per Minute</td>
+                        <td>Quantity</td>
+                        <td>Cost</td>
+                    </tr>
+                    <tr>
+                        <td>PACKAGING</td>
+                        <td>Description</td>
+                        <td>Consumption</td>
+                        <td>Price</td>
+                        <td>Cost</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>OVERHEAD/PROFIT</td>
+                        <td>Description</td>
+                        <td>Consumption</td>
+                        <td>Price</td>
+                        <td>Cost</td>
+                        <td>-</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Implementation Notes -->
+        <div class="section">
+            <div class="section-header">💡 Implementation Notes</div>
+            <div style="padding: 15px;">
+                <h3>Key Formulas:</h3>
+                <ul>
+                    <li><strong>Basic Cost Calculation:</strong> <span class="formula">=B2*C2</span> (Consumption × Price)</li>
+                    <li><strong>Operations Cost:</strong> <span class="formula">=B2*C2*D2</span> (SMV × Cost per Minute × Quantity)</li>
+                    <li><strong>Section Subtotals:</strong> <span class="formula">=SUM(D2:D10)</span> (Sum of cost column)</li>
+                    <li><strong>Grand Totals:</strong> <span class="formula">=SUM(Subtotal1,Subtotal2,Subtotal3)</span></li>
+                </ul>
+                
+                <h3>Excel Setup Tips:</h3>
+                <ul>
+                    <li>Start data from row 2 (row 1 for headers)</li>
+                    <li>Use named ranges for better formula readability</li>
+                    <li>Format cost columns as currency ($0.00)</li>
+                    <li>Use data validation for consistent input formats</li>
+                    <li>Protect formula cells to prevent accidental changes</li>
+                </ul>
+
+                <h3>Real-time Calculations:</h3>
+                <ul>
+                    <li>Formulas update automatically when input values change</li>
+                    <li>Use conditional formatting to highlight errors or warnings</li>
+                    <li>Add data validation to ensure positive numbers only</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

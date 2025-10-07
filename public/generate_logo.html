@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Madison88 Logo PNG</title>
+    <style>
+        body {
+            background: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        
+        .preview {
+            margin: 20px;
+            border: 1px solid #ccc;
+            background: white;
+        }
+        
+        .download-btn {
+            margin-top: 20px;
+            padding: 15px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .download-btn:hover {
+            background: #5a6fd8;
+        }
+    </style>
+</head>
+<body>
+    <h2>Madison88 Logo Generator</h2>
+    
+    <canvas id="logoCanvas" width="300" height="120" class="preview"></canvas>
+    
+    <button class="download-btn" onclick="generateAndDownload()">Download PNG Logo</button>
+
+    <script>
+        function generateLogo() {
+            const canvas = document.getElementById('logoCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw black background with rounded corners
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.roundRect(0, 0, canvas.width, canvas.height, 12);
+            ctx.fill();
+            
+            // Draw white border
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.roundRect(1, 1, canvas.width - 2, canvas.height - 2, 12);
+            ctx.stroke();
+            
+            // Set text properties
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Draw "madison" text (thin, lowercase)
+            ctx.font = '300 24px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif';
+            ctx.fillText('madison', 120, 45);
+            
+            // Draw "88" text (bold, larger)
+            ctx.font = '700 28px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif';
+            ctx.fillText('88', 180, 45);
+            
+            // Draw subtitle
+            ctx.font = '300 12px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif';
+            ctx.fillText('Business Solutions Asia, Inc', 150, 75);
+        }
+        
+        function generateAndDownload() {
+            generateLogo();
+            
+            const canvas = document.getElementById('logoCanvas');
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'madison88-logo.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 'image/png');
+        }
+        
+        // Generate logo on page load
+        window.onload = function() {
+            generateLogo();
+        };
+    </script>
+</body>
+</html>

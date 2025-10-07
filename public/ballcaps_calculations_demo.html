@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ballcaps Calculations Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .section {
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .section-header {
+            background: #34495e;
+            color: white;
+            padding: 10px 15px;
+            font-weight: bold;
+        }
+        .cost-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .cost-row {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+        }
+        .cost-cell {
+            flex: 1;
+            padding: 8px;
+            border-right: 1px solid #ddd;
+            min-height: 20px;
+        }
+        .cost-cell:last-child {
+            border-right: none;
+        }
+        .header-row {
+            background: #ecf0f1;
+            font-weight: bold;
+        }
+        .subtotal-row {
+            background: #e8f4f8;
+            font-weight: bold;
+        }
+        .editable {
+            border: 1px solid #ddd;
+            padding: 4px;
+            background: white;
+        }
+        .editable:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        .button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background: #2980b9;
+        }
+        .totals {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .totals h3 {
+            margin: 0 0 10px 0;
+        }
+        .total-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧢 Ballcaps Calculations Demo</h1>
+        
+        <div class="section">
+            <div class="section-header">FABRIC/S</div>
+            <div class="cost-table">
+                <div class="cost-row header-row">
+                    <div class="cost-cell">Description</div>
+                    <div class="cost-cell">Consumption (Yards)</div>
+                    <div class="cost-cell">Price (USD/YD)</div>
+                    <div class="cost-cell">Cost</div>
+                </div>
+                <div class="cost-row">
+                    <div class="cost-cell editable" contenteditable="true">Main Fabric</div>
+                    <div class="cost-cell editable" contenteditable="true">2.5</div>
+                    <div class="cost-cell editable" contenteditable="true">3.50</div>
+                    <div class="cost-cell">$8.75</div>
+                </div>
+                <div class="cost-row">
+                    <div class="cost-cell editable" contenteditable="true">Lining Fabric</div>
+                    <div class="cost-cell editable" contenteditable="true">1.0</div>
+                    <div class="cost-cell editable" contenteditable="true">2.00</div>
+                    <div class="cost-cell">$2.00</div>
+                </div>
+                <div class="cost-row subtotal-row">
+                    <div class="cost-cell">SUB TOTAL</div>
+                    <div class="cost-cell"></div>
+                    <div class="cost-cell"></div>
+                    <div class="cost-cell">$10.75</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">TRIM/S</div>
+            <div class="cost-table">
+                <div class="cost-row header-row">
+                    <div class="cost-cell">Description</div>
+                    <div class="cost-cell">Consumption (Piece)</div>
+                    <div class="cost-cell">Price (USD/PC)</div>
+                    <div class="cost-cell">Cost</div>
+                </div>
+                <div class="cost-row">
+                    <div class="cost-cell editable" contenteditable="true">Button</div>
+                    <div class="cost-cell editable" contenteditable="true">5</div>
+                    <div class="cost-cell editable" contenteditable="true">0.50</div>
+                    <div class="cost-cell">$2.50</div>
+                </div>
+                <div class="cost-row">
+                    <div class="cost-cell editable" contenteditable="true">Label</div>
+                    <div class="cost-cell editable" contenteditable="true">1</div>
+                    <div class="cost-cell editable" contenteditable="true">0.25</div>
+                    <div class="cost-cell">$0.25</div>
+                </div>
+                <div class="cost-row subtotal-row">
+                    <div class="cost-cell">SUB TOTAL</div>
+                    <div class="cost-cell"></div>
+                    <div class="cost-cell"></div>
+                    <div class="cost-cell">$2.75</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">OPERATIONS</div>
+            <div class="cost-table">
+                <div class="cost-row header-row">
+                    <div class="cost-cell">Description</div>
+                    <div class="cost-cell">SMV</div>
+                    <div class="cost-cell">Cost per Minute</div>
+                    <div class="cost-cell">Quantity</div>
+                    <div class="cost-cell">Cost</div>
+                </div>
+                <div class="cost-row">
+                    <div class="cost-cell editable" contenteditable="true">Cutting</div>
+                    <div class="cost-cell editable" contenteditable="true">0.5</div>
+                    <div class="cost-cell editable" contenteditable="true">0.15</div>
+                    <div class="cost-cell editable" contenteditable="true">1000</div>
+                    <div class="cost-cell">$75.00</div>
+                </div>
+                <div class="cost-row">
+                    <div class="cost-cell editable" contenteditable="true">Sewing</div>
+                    <div class="cost-cell editable" contenteditable="true">2.0</div>
+                    <div class="cost-cell editable" contenteditable="true">0.15</div>
+                    <div class="cost-cell editable" contenteditable="true">1000</div>
+                    <div class="cost-cell">$300.00</div>
+                </div>
+                <div class="cost-row subtotal-row">
+                    <div class="cost-cell">SUB TOTAL</div>
+                    <div class="cost-cell"></div>
+                    <div class="cost-cell"></div>
+                    <div class="cost-cell"></div>
+                    <div class="cost-cell">$375.00</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="totals">
+            <h3>📊 Totals</h3>
+            <div class="total-item">
+                <span>Material Total:</span>
+                <span id="materialTotal">$13.50</span>
+            </div>
+            <div class="total-item">
+                <span>Factory Total:</span>
+                <span id="factoryTotal">$375.00</span>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin: 20px 0;">
+            <button class="button" onclick="calculateAll()">Calculate All</button>
+            <button class="button" onclick="clearAll()">Clear All</button>
+            <button class="button" onclick="toggleDebug()">Toggle Debug</button>
+        </div>
+
+        <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+            <h3>📝 Instructions:</h3>
+            <ul>
+                <li>Click on any editable cell to modify values</li>
+                <li>Costs are automatically calculated when you enter consumption and price</li>
+                <li>Operations cost = SMV × Cost per Minute × Quantity</li>
+                <li>Other costs = Consumption × Price</li>
+                <li>Click "Calculate All" to recalculate all totals</li>
+                <li>Open browser console (F12) to see debug output</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="ballcaps_calculations.js"></script>
+    <script>
+        // Initialize calculator
+        const calculator = new BallcapsCalculator();
+        
+        // Add event listeners to all editable cells
+        function initializeCalculations() {
+            const editableCells = document.querySelectorAll('.editable[contenteditable="true"]');
+            
+            editableCells.forEach(cell => {
+                cell.addEventListener('input', function() {
+                    calculateRowCost(this);
+                });
+            });
+        }
+        
+        // Calculate cost for a single row
+        function calculateRowCost(cell) {
+            const row = cell.closest('.cost-row');
+            if (!row || row.classList.contains('header-row') || row.classList.contains('subtotal-row')) {
+                return;
+            }
+            
+            const cells = row.querySelectorAll('.cost-cell');
+            
+            if (cells.length >= 4) {
+                // For 4-column sections: description, consumption, price, cost
+                const consumption = parseFloat(cells[1].textContent) || 0;
+                const price = parseFloat(cells[2].textContent) || 0;
+                const cost = consumption * price;
+                
+                if (consumption > 0 && price > 0) {
+                    cells[3].textContent = '$' + cost.toFixed(2);
+                }
+            } else if (cells.length === 5) {
+                // For operations: description, smv, cost per minute, quantity, cost
+                const smv = parseFloat(cells[1].textContent) || 0;
+                const costPerMinute = parseFloat(cells[2].textContent) || 0;
+                const quantity = parseFloat(cells[3].textContent) || 0;
+                const cost = smv * costPerMinute * quantity;
+                
+                if (smv > 0 && costPerMinute > 0 && quantity > 0) {
+                    cells[4].textContent = '$' + cost.toFixed(2);
+                }
+            }
+            
+            // Recalculate section totals
+            calculateSectionTotals();
+        }
+        
+        // Calculate section totals
+        function calculateSectionTotals() {
+            const sections = document.querySelectorAll('.section');
+            
+            sections.forEach(section => {
+                const rows = section.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                let total = 0;
+                
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('.cost-cell');
+                    if (cells.length >= 4) {
+                        const costText = cells[cells.length - 1].textContent.replace('$', '').trim();
+                        const cost = parseFloat(costText) || 0;
+                        total += cost;
+                    }
+                });
+                
+                // Update subtotal
+                const subtotalRow = section.querySelector('.subtotal-row');
+                if (subtotalRow) {
+                    const costCell = subtotalRow.querySelector('.cost-cell:last-child');
+                    if (costCell) {
+                        costCell.textContent = '$' + total.toFixed(2);
+                    }
+                }
+            });
+            
+            // Calculate grand totals
+            calculateGrandTotals();
+        }
+        
+        // Calculate grand totals
+        function calculateGrandTotals() {
+            let materialTotal = 0;
+            let factoryTotal = 0;
+            
+            // Material sections (FABRIC/S, TRIM/S)
+            const materialSections = document.querySelectorAll('.section:nth-child(1), .section:nth-child(2)');
+            materialSections.forEach(section => {
+                const subtotalRow = section.querySelector('.subtotal-row');
+                if (subtotalRow) {
+                    const costText = subtotalRow.querySelector('.cost-cell:last-child').textContent.replace('$', '').trim();
+                    materialTotal += parseFloat(costText) || 0;
+                }
+            });
+            
+            // Factory sections (OPERATIONS)
+            const factorySections = document.querySelectorAll('.section:nth-child(3)');
+            factorySections.forEach(section => {
+                const subtotalRow = section.querySelector('.subtotal-row');
+                if (subtotalRow) {
+                    const costText = subtotalRow.querySelector('.cost-cell:last-child').textContent.replace('$', '').trim();
+                    factoryTotal += parseFloat(costText) || 0;
+                }
+            });
+            
+            // Update display
+            document.getElementById('materialTotal').textContent = '$' + materialTotal.toFixed(2);
+            document.getElementById('factoryTotal').textContent = '$' + factoryTotal.toFixed(2);
+        }
+        
+        // Calculate all
+        function calculateAll() {
+            calculateSectionTotals();
+            console.log('✅ All calculations completed');
+        }
+        
+        // Clear all
+        function clearAll() {
+            const editableCells = document.querySelectorAll('.editable[contenteditable="true"]');
+            editableCells.forEach(cell => {
+                if (!cell.textContent.includes('Fabric') && !cell.textContent.includes('Button') && 
+                    !cell.textContent.includes('Label') && !cell.textContent.includes('Cutting') && 
+                    !cell.textContent.includes('Sewing')) {
+                    cell.textContent = '';
+                }
+            });
+            
+            // Clear cost cells
+            const costCells = document.querySelectorAll('.cost-cell:not(.editable)');
+            costCells.forEach(cell => {
+                if (cell.textContent.startsWith('$') && !cell.textContent.includes('SUB TOTAL')) {
+                    cell.textContent = '$0.00';
+                }
+            });
+            
+            calculateAll();
+        }
+        
+        // Toggle debug mode
+        function toggleDebug() {
+            calculator.setDebugMode(!calculator.debugMode);
+            console.log('Debug mode:', calculator.debugMode ? 'ON' : 'OFF');
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCalculations();
+            calculateAll();
+            console.log('🚀 Ballcaps Calculations Demo initialized');
+        });
+    </script>
+</body>
+</html>
