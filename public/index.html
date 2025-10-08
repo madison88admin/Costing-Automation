@@ -17242,20 +17242,14 @@
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
                                             <div class="header-with-filter">
-                                                Remarks
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(25, 'Remarks')" title="Filter Remarks">▼</button>
-                                            </div>
-                                        </th>
-                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
-                                            <div class="header-with-filter">
                                                 Review Status
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(26, 'Review Status')" title="Filter Review Status">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(25, 'Review Status')" title="Filter Review Status">▼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
                                             <div class="header-with-filter">
                                                 Date
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(27, 'Date')" title="Filter Date">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(26, 'Date')" title="Filter Date">▼</button>
                                             </div>
                                         </th>
                                     </tr>
@@ -17264,8 +17258,20 @@
                 `;
                 
                 factoryData.forEach((item, index) => {
-                    const date = new Date(item.timestamp).toLocaleDateString();
-                    const time = new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    // Handle date formatting with error checking
+                    let date = '-';
+                    let time = '-';
+                    if (item.timestamp) {
+                        try {
+                            const dateObj = new Date(item.timestamp);
+                            if (!isNaN(dateObj.getTime())) {
+                                date = dateObj.toLocaleDateString();
+                                time = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                            }
+                        } catch (error) {
+                            console.warn('Invalid timestamp for item:', item.timestamp, error);
+                        }
+                    }
                     
                     // Extract data from saved sections
                     const mainMaterial = item.yarn && item.yarn.length > 0 ? item.yarn[0].material || item.yarn[0].description : 
@@ -17324,7 +17330,7 @@
                                       '<span style="background: #6c757d; color: #fff; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">UNKNOWN</span>'}
                                 </div>
                             </td>
-                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;" title="${date} ${time}">${date}</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;" title="${date} ${time}">${date || 'Invalid Date'}</td>
                         </tr>
                     `;
                 });
@@ -17563,9 +17569,8 @@
                     case 21: value = '-'; break; // SMV
                     case 22: value = '-'; break; // Total FOB
                     case 23: value = '-'; break; // Sample Weight
-                    case 24: value = '-'; break; // Remarks
-                    case 25: value = (item.status || 'pending').toUpperCase(); break; // Review Status
-                    case 26: value = new Date(item.timestamp).toLocaleDateString(); break; // Date
+                    case 24: value = (item.status || 'pending').toUpperCase(); break; // Review Status
+                    case 25: value = new Date(item.timestamp).toLocaleDateString(); break; // Date
                 }
                 
                 if (value && value !== '-') {
