@@ -1556,6 +1556,220 @@
             letter-spacing: 0.01em;
         }
 
+        /* Factory Data Badge Styles */
+        .factory-data-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .factory-data-badge.beanie {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            color: #1976d2;
+            border: 1px solid rgba(25, 118, 210, 0.2);
+        }
+
+        .factory-data-badge.ballcaps {
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+            color: #7b1fa2;
+            border: 1px solid rgba(123, 31, 162, 0.2);
+        }
+
+        /* Factory Data Empty State */
+        .factory-data-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+            font-style: italic;
+            background: rgba(248, 250, 252, 0.9);
+            border-radius: 12px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 6px 20px rgba(31, 38, 135, 0.15);
+        }
+
+        .factory-data-empty h3 {
+            color: #6c757d;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .factory-data-empty p {
+            color: #adb5bd;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        /* Factory Data Filter Dropdown Styles */
+        #factoryDataTableContent .filter-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            min-width: 200px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            padding: 10px;
+        }
+
+        #factoryDataTableContent .filter-dropdown.show {
+            display: block;
+        }
+
+        #factoryDataTableContent .filter-dropdown input[type="text"] {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        #factoryDataTableContent .filter-dropdown label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            margin: 0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin: 2px 0;
+            transition: background-color 0.2s;
+            font-size: 12px;
+        }
+
+        #factoryDataTableContent .filter-dropdown label:hover {
+            background-color: #f8f9fa;
+        }
+
+        #factoryDataTableContent .filter-dropdown input[type="checkbox"] {
+            margin-right: 6px;
+        }
+
+        #factoryDataTableContent .filter-dropdown button {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        #factoryDataTableContent .filter-dropdown button:hover {
+            background: #c82333;
+        }
+
+        /* Highlight Knitting Time column in yellow with white text for header in factory table */
+        #factoryDataTableContent th:nth-child(12) { /* Knitting Time header */
+            background-color: #ffff00 !important;
+            color: #ffffff !important;
+        }
+
+        /* Make Knitting Time data cells have black text on yellow background in factory table */
+        #factoryDataTableContent td:nth-child(12) { /* Knitting Time data cells */
+            background-color: #ffff00 !important;
+            color: #000000 !important;
+        }
+
+        /* Databank Filter Dropdown Styles */
+        #tableData .filter-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            min-width: 200px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            padding: 10px;
+        }
+
+        #tableData .filter-dropdown.show {
+            display: block;
+        }
+
+        #tableData .filter-dropdown input[type="text"] {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        #tableData .filter-dropdown label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            margin: 0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin: 2px 0;
+            transition: background-color 0.2s;
+            font-size: 12px;
+        }
+
+        #tableData .filter-dropdown label:hover {
+            background-color: #f8f9fa;
+        }
+
+        #tableData .filter-dropdown input[type="checkbox"] {
+            margin-right: 6px;
+        }
+
+        #tableData .filter-dropdown button {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        #tableData .filter-dropdown button:hover {
+            background: #c82333;
+        }
+
+        /* Highlight cost columns in orange like the image */
+        #tableData th:nth-child(9),  /* Total Material Cost */
+        #tableData th:nth-child(13), /* Knitting Cost */
+        #tableData th:nth-child(15), /* Knitting + Ops Cost */
+        #tableData th:nth-child(18), /* PROFIT */
+        #tableData th:nth-child(19), /* FTY Adjustment */
+        #tableData th:nth-child(20), /* TTL FTY COST */
+        #tableData th:nth-child(22), /* Total FOB */
+        #tableData th:nth-child(23) { /* Sample Wt. With Tag (QC Check Form) GRAMS */
+            color: #ff8c00 !important;
+        }
+
+        /* Highlight Knitting Time column in yellow like the image */
+        #tableData th:nth-child(11) { /* Knitting Time header */
+            background-color: #ffff00 !important;
+            color: #ffffff !important;
+        }
+
+        /* Make Knitting Time data cells have black text on yellow background */
+        #tableData td:nth-child(11) { /* Knitting Time data cells */
+            background-color: #ffff00 !important;
+            color: #000000 !important;
+        }
+
         .back-button {
             background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
             color: white;
@@ -3559,12 +3773,23 @@
             <div id="tablesList"></div>
         </div>
 
+        <!-- Madison Review Interface - Shows pending factory data for review -->
+        <div id="madisonReviewTable" class="data-table-container" style="display: none;">
+            <div class="table-header scroll-fade-in">
+                <h2 class="table-title scroll-slide-left scroll-stagger-1">Factory Data Review</h2>
+                <p style="color: #666; margin: 10px 0;">Review and approve factory data submissions</p>
+            </div>
+            <div id="madisonReviewTableContent">
+                <!-- Pending factory data will be populated here -->
+            </div>
+        </div>
+
         <!-- Data Table Section -->
         <div class="data-table-container" id="dataTableSection" style="display: none;">
             <div class="table-header scroll-fade-in">
                 <h2 class="table-title scroll-slide-left scroll-stagger-1">Databank Management</h2>
                 
-                <!-- Edit Table Button - Top Right -->
+                <!-- Edit Table Button and Clear Filters - Top Right -->
                 <div style="
                     position: absolute; 
                     top: 20px; 
@@ -3575,6 +3800,20 @@
                     flex-wrap: wrap;
                     justify-content: flex-end;
                 ">
+                    <button id="reviewFactoryBtn" class="review-factory-button" onclick="showMadisonReviewInterface()" style="
+                        background: linear-gradient(135deg, #ffc107 0%, #ff8c00 100%);
+                        color: white;
+                        border: none;
+                        padding: 12px 20px;
+                        border-radius: 25px;
+                        font-size: 14px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(255, 193, 7, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(255, 193, 7, 0.3)'">
+                        📋 Review Factory Data
+                    </button>
                     <button id="editTableBtn" class="edit-table-button" onclick="toggleEditMode()" style="
                         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                         color: white;
@@ -3694,6 +3933,103 @@
                 </button>
             </div>
         </div>
+
+        <!-- Factory Data Table - Shows saved factory data -->
+        <div id="factoryDataTable" class="data-table-container" style="display: none;">
+            <div class="table-header scroll-fade-in">
+                <h2 class="table-title scroll-slide-left scroll-stagger-1">Factory Data Management</h2>
+                
+                <!-- Notification Bell -->
+                <div style="position: absolute; top: 20px; right: 20px; z-index: 10;">
+                    <button id="notificationBell" onclick="showFactoryNotifications()" style="
+                        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+                        color: white;
+                        border: none;
+                        padding: 12px;
+                        border-radius: 50%;
+                        cursor: pointer;
+                        font-size: 16px;
+                        width: 45px;
+                        height: 45px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+                        transition: all 0.3s ease;
+                        position: relative;
+                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(255, 107, 107, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(255, 107, 107, 0.3)'">
+                        🔔
+                        <span id="notificationBadge" style="
+                            position: absolute;
+                            top: -5px;
+                            right: -5px;
+                            background: #ff4757;
+                            color: white;
+                            border-radius: 50%;
+                            width: 20px;
+                            height: 20px;
+                            font-size: 12px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-weight: bold;
+                            display: none;
+                        ">0</span>
+                    </button>
+                </div>
+            </div>
+            <div id="factoryDataTableContent">
+                <!-- Factory data will be populated here -->
+            </div>
+        </div>
+
+        <!-- Factory Notifications Panel -->
+        <div id="factoryNotificationsPanel" style="
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+            z-index: 1000;
+            max-width: 500px;
+            width: 90%;
+            max-height: 70vh;
+            overflow-y: auto;
+            display: none;
+        ">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin: 0; color: #333;">🔔 Madison Notifications</h3>
+                <button onclick="closeFactoryNotifications()" style="
+                    background: #dc3545;
+                    color: white;
+                    border: none;
+                    padding: 8px 12px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 14px;
+                ">✕ Close</button>
+            </div>
+            <div id="notificationsList">
+                <!-- Notifications will be populated here -->
+            </div>
+            <div style="margin-top: 20px; text-align: center;">
+                <button onclick="clearAllFactoryNotifications(); closeFactoryNotifications();" style="
+                    background: #6c757d;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 14px;
+                ">Clear All Notifications</button>
+            </div>
+        </div>
+
 
         <!-- TEMPLATE 1: Factory Cost Breakdown Table - Bottom of Page -->
         <div id="costBreakdown" class="cost-breakdown-container" style="display: none;">
@@ -5727,10 +6063,16 @@
         }
 
         function displayTableData(data) {
-            // Displaying table data with', data ? data.length : 'undefined', 'rows');
-            
-            // Store current data globally for pagination
-            window.currentTableData = data;
+            // Use filtered data if available, otherwise use provided data
+            let displayData = data;
+            if (window.databankFilteredData) {
+                displayData = window.databankFilteredData;
+                console.log('📊 Using filtered databank data:', displayData.length, 'entries');
+            } else {
+                console.log('📊 Using provided databank data:', displayData ? displayData.length : 'undefined', 'entries');
+                // Store current data globally for pagination
+                window.currentTableData = data;
+            }
             
             // Check if tableData element exists
             const tableElement = document.getElementById('tableData');
@@ -5743,7 +6085,7 @@
                 return;
             }
             
-            if (!data || data.length === 0) {
+            if (!displayData || displayData.length === 0) {
                 console.log('📭 No data to display');
                 tableElement.innerHTML = `
                     <div style="text-align: center; padding: 40px; color: #6c757d;">
@@ -5757,7 +6099,7 @@
                 return;
             }
 
-            // Define the specific columns we want to display in order
+            // Define the specific columns we want to display in order (matching the image format)
             const displayColumns = [
                 'Season',
                 'Customer', 
@@ -5776,9 +6118,13 @@
                 'Knitting + Ops Cost',
                 'Packaging',
                 'OH',
-                'Profit',
+                'PROFIT',
                 'FTY Adjustment',
-                'TTL FTY Cost'
+                'TTL FTY COST',
+                'SMV',
+                'Total FOB',
+                'Sample Wt. With Tag (QC Check Form) GRAMS',
+                'Remarks'
             ];
 
             // Map display names to potential database column names
@@ -5800,13 +6146,17 @@
                 'Knitting + Ops Cost': ['knitting_ops_cost', 'knittingOpsCost', 'Knitting + Ops Cost', 'KNITTING_OPS_COST', 'total_ops', 'totalOps'],
                 'Packaging': ['packaging', 'Packaging', 'PACKAGING', 'package', 'PACKAGE'],
                 'OH': ['oh', 'OH', 'overhead', 'Overhead', 'OVERHEAD', 'overheads', 'OVERHEADS'],
-                'Profit': ['profit', 'Profit', 'PROFIT', 'profits', 'PROFITS'],
+                'PROFIT': ['profit', 'Profit', 'PROFIT', 'profits', 'PROFITS'],
                 'FTY Adjustment': ['fty_adjustment', 'ftyAdjustment', 'FTY Adjustment', 'FTY_ADJUSTMENT', 'fty', 'FTY', 'adjustment', 'ADJUSTMENT'],
-                'TTL FTY Cost': ['ttl_fty_cost', 'ttlFtyCost', 'TTL FTY Cost', 'TTL_FTY_COST', 'total_fty', 'totalFty', 'ttl_cost', 'ttlCost']
+                'TTL FTY COST': ['ttl_fty_cost', 'ttlFtyCost', 'TTL FTY Cost', 'TTL_FTY_COST', 'total_fty', 'totalFty', 'ttl_cost', 'ttlCost'],
+                'SMV': ['smv', 'SMV', 'standard_minute_value', 'standardMinuteValue'],
+                'Total FOB': ['total_fob', 'totalFob', 'Total FOB', 'TOTAL_FOB', 'fob', 'FOB'],
+                'Sample Wt. With Tag (QC Check Form) GRAMS': ['sample_weight', 'sampleWeight', 'Sample Weight', 'SAMPLE_WEIGHT', 'sample_wt', 'sampleWt'],
+                'Remarks': ['remarks', 'Remarks', 'REMARKS', 'notes', 'Notes', 'NOTES']
             };
 
             // Find actual database columns that match our display columns
-            const availableColumns = Object.keys(data[0]);
+            const availableColumns = Object.keys(displayData[0]);
             const mappedColumns = [];
             const columnHeaders = [];
 
@@ -5826,15 +6176,19 @@
 
             console.log('Mapped columns:', mappedColumns);
             console.log('Column headers:', columnHeaders);
+            
+            // Store column mapping globally for filtering
+            window.currentColumnMapping = mappedColumns;
+            window.currentColumnHeaders = columnHeaders;
 
             // Always show the table with the desired column headers
             // Even if database columns don't match, we'll show the structure
             console.log('Showing table with desired column structure');
-            console.log('Available database columns:', Object.keys(data[0]));
+            console.log('Available database columns:', Object.keys(displayData[0]));
             console.log('Desired display columns:', displayColumns);
             
             // Show the table with your specific column headers
-            console.log('About to show table with data:', data.length, 'rows');
+            console.log('About to show table with data:', displayData.length, 'rows');
             console.log('Mapped columns:', mappedColumns);
             console.log('Column headers:', columnHeaders);
             
@@ -5847,13 +6201,13 @@
             tableElement.innerHTML = `
                     <div style="padding: 20px; background: #e8f5e8; border: 2px solid #28a745; border-radius: 8px; margin: 10px;">
                         <h3>🔄 Loading Table...</h3>
-                        <p>Processing ${data.length} records with ${mappedColumns.filter(c => c !== null).length} mapped columns</p>
+                        <p>Processing ${displayData.length} records with ${mappedColumns.filter(c => c !== null).length} mapped columns</p>
                 </div>
             `;
             
                 // Then call showActualTable
             setTimeout(() => {
-                    showActualTable(data, mappedColumns, columnHeaders, tableElement, displayColumns);
+                    showActualTable(displayData, mappedColumns, columnHeaders, tableElement, displayColumns);
                 }, 500);
                 
             } catch (error) {
@@ -5903,7 +6257,7 @@
                     <th style="${headerStyle}">
                         <div class="header-with-filter">
                             <span>${header}${isMissing ? ' (Missing)' : ''}</span>
-                            <button class="filter-triangle" onclick="toggleColumnFilter(${index}, '${header}')" title="Filter ${header}">
+                            <button class="filter-triangle" onclick="toggleDatabankColumnFilter(${index}, '${header}')" title="Filter ${header}">
                                 ▼
                             </button>
                         </div>
@@ -7845,6 +8199,11 @@
                 costBreakdown.style.display = 'block';
                 costBreakdown.classList.remove('hide');
                 
+                // Show factory data table for factory users
+                if (window.authService && window.authService.isFactory()) {
+                    updateFactoryDataTable();
+                }
+                
                 // Enable calculations for beanie template
                 setTimeout(() => {
                     addCalculationEventListeners();
@@ -7862,6 +8221,16 @@
                         costBreakdown.classList.remove('hide');
                     }, 300);
                 }
+                
+                // Show ballcaps template
+                ballcapsBreakdown.style.display = 'block';
+                ballcapsBreakdown.classList.remove('hide');
+                
+                // Show factory data table for factory users
+                if (window.authService && window.authService.isFactory()) {
+                    updateFactoryDataTable();
+                }
+                
                 // Enable calculations for ballcaps template
                 setTimeout(() => {
                     addBallCapsCalculationEventListeners();
@@ -7905,6 +8274,12 @@
                     ballcapsBreakdown.style.display = 'none';
                     ballcapsBreakdown.classList.remove('hide');
                 }, 600);
+            }
+            
+            // Hide factory data table
+            const factoryDataTable = document.getElementById('factoryDataTable');
+            if (factoryDataTable) {
+                factoryDataTable.style.display = 'none';
             }
             
             productSelection.style.display = 'block';
@@ -11791,6 +12166,12 @@
                 welcomeMessage.style.display = 'block';
             }
             
+            // Initialize factory data table for factory users
+            if (window.authService && window.authService.isFactory()) {
+                updateFactoryDataTable();
+                updateNotificationBadge();
+            }
+            
             // Check which containers are visible
             const costBreakdown = document.getElementById('costBreakdown');
             const ballcapsBreakdown = document.getElementById('ballcapsBreakdown');
@@ -15216,37 +15597,6 @@
             return total;
         }
 
-        /**
-         * Update subtotal for a ballcaps section
-         */
-        function updateBallCapsSubtotal(section, total) {
-            console.log('🔍 updateBallCapsSubtotal called with total:', total);
-            const subtotalRow = section.querySelector('.subtotal-row');
-            if (subtotalRow) {
-                console.log('🔍 Found subtotal row');
-
-                const header = section.querySelector('.section-header');
-                const sectionName = header ? header.textContent.trim() : '';
-
-                let totalCell;
-                if (sectionName === 'PACKAGING' || sectionName === 'OVERHEAD/PROFIT') {
-                    totalCell = subtotalRow.querySelector('.cost-cell:nth-child(3)');
-                } else if (sectionName === 'OPERATIONS') {
-                    totalCell = subtotalRow.querySelector('.cost-cell:nth-child(4)');
-                } else {
-                    totalCell = subtotalRow.querySelector('.cost-cell:nth-child(4)');
-                }
-
-                if (totalCell) {
-                    console.log('🔍 Found total cell, updating to:', '$' + total.toFixed(2));
-                    totalCell.textContent = '$' + total.toFixed(2);
-                } else {
-                    console.log('❌ No total cell found in subtotal row');
-                }
-            } else {
-                console.log('❌ No subtotal row found');
-            }
-        }
 
         /**
          * Calculate total for a specific section (legacy function)
@@ -16297,6 +16647,1465 @@
             return '0.00';
         }
 
+        // Helper function to get beanie total factory cost
+        function getTotalFactoryCost() {
+            const totalElement = document.querySelector('#costBreakdown .total-factory-cost .total-value');
+            return totalElement ? totalElement.textContent.replace('$', '') : '0.00';
+        }
+
+        // Show Madison review interface for pending factory data
+        function showMadisonReviewInterface() {
+            const user = window.authService ? window.authService.getCurrentUser() : null;
+            if (!user || user.role !== 'madison') {
+                console.log('❌ Only Madison users can access review interface');
+                return;
+            }
+
+            const reviewTable = document.getElementById('madisonReviewTable');
+            if (reviewTable) {
+                reviewTable.style.display = 'block';
+                reviewTable.classList.add('show');
+                updateMadisonReviewTable();
+            }
+        }
+
+        // Update Madison review table with pending factory data
+        function updateMadisonReviewTable() {
+            try {
+                console.log('🔄 Updating Madison review table...');
+                const factoryData = JSON.parse(localStorage.getItem('factoryData') || '[]');
+                const pendingData = factoryData.filter(item => item.status === 'pending');
+                const tableContainer = document.getElementById('madisonReviewTableContent');
+                
+                if (!tableContainer) {
+                    console.log('❌ Madison review table container not found');
+                    return;
+                }
+
+                if (pendingData.length === 0) {
+                    tableContainer.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #666;">
+                            <h3>No pending submissions</h3>
+                            <p>All factory data has been reviewed.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let tableHTML = `
+                    <div style="border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 12px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); margin: 10px; box-shadow: 0 6px 20px rgba(31, 38, 135, 0.15);">
+                        <div class="table-container" style="max-height: 500px; overflow-y: auto; overflow-x: auto; scrollbar-width: thin; scrollbar-color: #667eea #f1f1f1;">
+                            <table class="table" style="width: 100%; border-collapse: collapse; min-width: 3000px; margin: 0;">
+                                <thead style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; position: sticky; top: 0; z-index: 10;">
+                                    <tr>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">Type</th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">Status</th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">Customer</th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">Season</th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">Style Number</th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">Style Name</th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">Total Material Cost</th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">Total Factory Cost</th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">Submitted Date</th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 200px; white-space: nowrap; font-weight: 600; position: relative;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                `;
+
+                pendingData.forEach((item, index) => {
+                    const submittedDate = new Date(item.timestamp).toLocaleDateString();
+                    tableHTML += `
+                        <tr>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">
+                                <div style="display: flex; justify-content: flex-start; align-items: center;">
+                                    <span class="factory-data-badge ${item.template}">
+                                        ${item.template}
+                                    </span>
+                                </div>
+                            </td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">
+                                <span style="background: #ffc107; color: #000; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                                    PENDING
+                                </span>
+                            </td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">${item.customer || '-'}</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">${item.season || '-'}</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">${item.styleNumber || '-'}</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">${item.styleName || '-'}</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">
+                                <div style="display: flex; justify-content: flex-start; align-items: center;">
+                                    ${item.status === 'pending' ? '<span style="background: #ffc107; color: #000; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">PENDING</span>' : 
+                                      item.status === 'approved' ? '<span style="background: #28a745; color: #fff; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">APPROVED</span>' :
+                                      item.status === 'declined' ? '<span style="background: #dc3545; color: #fff; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">DECLINED</span>' :
+                                      '<span style="background: #6c757d; color: #fff; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">UNKNOWN</span>'}
+                                </div>
+                            </td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">
+                                <div style="display: flex; justify-content: flex-start; align-items: center;">
+                                    <span class="factory-data-cost">$${item.totalMaterialCost || '0.00'}</span>
+                                </div>
+                            </td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">
+                                <div style="display: flex; justify-content: flex-start; align-items: center;">
+                                    <span class="factory-data-cost">$${item.totalFactoryCost || '0.00'}</span>
+                                </div>
+                            </td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">${submittedDate}</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 200px; white-space: nowrap;">
+                                <button onclick="approveFactoryData(${index})" style="
+                                    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+                                    color: white;
+                                    border: none;
+                                    padding: 6px 12px;
+                                    border-radius: 6px;
+                                    cursor: pointer;
+                                    font-size: 12px;
+                                    font-weight: 600;
+                                    margin-right: 8px;
+                                    transition: all 0.3s ease;
+                                " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(40, 167, 69, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                                    ✅ Approve
+                                </button>
+                                <button onclick="declineFactoryData(${index})" style="
+                                    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+                                    color: white;
+                                    border: none;
+                                    padding: 6px 12px;
+                                    border-radius: 6px;
+                                    cursor: pointer;
+                                    font-size: 12px;
+                                    font-weight: 600;
+                                    transition: all 0.3s ease;
+                                " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(220, 53, 69, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                                    ❌ Decline
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                tableHTML += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+
+                tableContainer.innerHTML = tableHTML;
+                console.log('✅ Madison review table updated with', pendingData.length, 'pending entries');
+            } catch (error) {
+                console.error('❌ Error updating Madison review table:', error);
+            }
+        }
+
+        // Approve factory data and add to databank
+        function approveFactoryData(index) {
+            try {
+                const factoryData = JSON.parse(localStorage.getItem('factoryData') || '[]');
+                const item = factoryData[index];
+                
+                if (!item) {
+                    showNotification('Data not found!', 'error');
+                    return;
+                }
+
+                // Update status to approved
+                item.status = 'approved';
+                item.approvedBy = 'madison';
+                item.approvedDate = new Date().toISOString();
+                
+                // Add to databank (Madison's main data)
+                const databankData = JSON.parse(localStorage.getItem('databankData') || '[]');
+                databankData.push(item);
+                localStorage.setItem('databankData', JSON.stringify(databankData));
+                
+                // Update factory data
+                localStorage.setItem('factoryData', JSON.stringify(factoryData));
+                
+                // Create notification for factory user
+                createFactoryNotification({
+                    type: 'approval',
+                    title: '✅ Data Approved by Madison',
+                    message: `Your ${item.template} data (${item.customer || 'Unknown Customer'}) has been approved and added to the databank.`,
+                    timestamp: new Date().toISOString(),
+                    dataId: item.timestamp,
+                    status: 'approved'
+                });
+                
+                // Show success notification
+                showNotification(`✅ ${item.template} data approved and added to databank!`, 'success');
+                
+                // Update review table
+                updateMadisonReviewTable();
+                
+                // Update databank table if visible
+                if (typeof displayTableData === 'function') {
+                    displayTableData(databankData);
+                }
+                
+                console.log('✅ Factory data approved:', item);
+            } catch (error) {
+                console.error('❌ Error approving factory data:', error);
+                showNotification('Error approving data!', 'error');
+            }
+        }
+
+        // Decline factory data and notify factory
+        function declineFactoryData(index) {
+            try {
+                const reason = prompt('Please provide a reason for declining this data:');
+                if (!reason) {
+                    showNotification('Decline cancelled - no reason provided', 'info');
+                    return;
+                }
+
+                const factoryData = JSON.parse(localStorage.getItem('factoryData') || '[]');
+                const item = factoryData[index];
+                
+                if (!item) {
+                    showNotification('Data not found!', 'error');
+                    return;
+                }
+
+                // Update status to declined
+                item.status = 'declined';
+                item.declinedBy = 'madison';
+                item.declinedDate = new Date().toISOString();
+                item.declineReason = reason;
+                
+                // Update factory data
+                localStorage.setItem('factoryData', JSON.stringify(factoryData));
+                
+                // Create notification for factory user
+                createFactoryNotification({
+                    type: 'decline',
+                    title: '❌ Data Declined by Madison',
+                    message: `Your ${item.template} data (${item.customer || 'Unknown Customer'}) has been declined. Reason: ${reason}`,
+                    timestamp: new Date().toISOString(),
+                    dataId: item.timestamp,
+                    status: 'declined',
+                    reason: reason
+                });
+                
+                // Show success notification
+                showNotification(`❌ ${item.template} data declined. Factory has been notified.`, 'success');
+                
+                // Update review table
+                updateMadisonReviewTable();
+                
+                console.log('✅ Factory data declined:', item);
+            } catch (error) {
+                console.error('❌ Error declining factory data:', error);
+                showNotification('Error declining data!', 'error');
+            }
+        }
+
+        // Create notification for factory users
+        function createFactoryNotification(notification) {
+            try {
+                const notifications = JSON.parse(localStorage.getItem('factoryNotifications') || '[]');
+                notifications.unshift(notification); // Add to beginning of array
+                
+                // Keep only last 50 notifications
+                if (notifications.length > 50) {
+                    notifications.splice(50);
+                }
+                
+                localStorage.setItem('factoryNotifications', JSON.stringify(notifications));
+                console.log('✅ Factory notification created:', notification);
+                
+                // Show notification if factory user is currently logged in
+                const user = window.authService ? window.authService.getCurrentUser() : null;
+                if (user && user.role === 'factory') {
+                    showNotification(notification.message, notification.type === 'approval' ? 'success' : 'error');
+                }
+            } catch (error) {
+                console.error('❌ Error creating factory notification:', error);
+            }
+        }
+
+        // Get factory notifications
+        function getFactoryNotifications() {
+            try {
+                return JSON.parse(localStorage.getItem('factoryNotifications') || '[]');
+            } catch (error) {
+                console.error('❌ Error getting factory notifications:', error);
+                return [];
+            }
+        }
+
+        // Mark notification as read
+        function markNotificationAsRead(notificationId) {
+            try {
+                const notifications = getFactoryNotifications();
+                const notification = notifications.find(n => n.timestamp === notificationId);
+                if (notification) {
+                    notification.read = true;
+                    localStorage.setItem('factoryNotifications', JSON.stringify(notifications));
+                }
+            } catch (error) {
+                console.error('❌ Error marking notification as read:', error);
+            }
+        }
+
+        // Clear all notifications
+        function clearAllFactoryNotifications() {
+            try {
+                localStorage.setItem('factoryNotifications', JSON.stringify([]));
+                updateNotificationBadge();
+                console.log('✅ All factory notifications cleared');
+            } catch (error) {
+                console.error('❌ Error clearing notifications:', error);
+            }
+        }
+
+        // Show factory notifications panel
+        function showFactoryNotifications() {
+            const panel = document.getElementById('factoryNotificationsPanel');
+            if (panel) {
+                panel.style.display = 'block';
+                populateNotificationsList();
+            }
+        }
+
+        // Close factory notifications panel
+        function closeFactoryNotifications() {
+            const panel = document.getElementById('factoryNotificationsPanel');
+            if (panel) {
+                panel.style.display = 'none';
+            }
+        }
+
+        // Populate notifications list
+        function populateNotificationsList() {
+            const notificationsList = document.getElementById('notificationsList');
+            if (!notificationsList) return;
+
+            const notifications = getFactoryNotifications();
+            
+            if (notifications.length === 0) {
+                notificationsList.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        <h4>No notifications yet</h4>
+                        <p>You'll receive notifications when Madison reviews your data submissions.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            notifications.forEach(notification => {
+                const date = new Date(notification.timestamp).toLocaleString();
+                const isRead = notification.read ? 'opacity: 0.7;' : '';
+                const bgColor = notification.type === 'approval' ? '#d4edda' : '#f8d7da';
+                const borderColor = notification.type === 'approval' ? '#c3e6cb' : '#f5c6cb';
+                
+                html += `
+                    <div style="
+                        background: ${bgColor};
+                        border: 1px solid ${borderColor};
+                        border-radius: 8px;
+                        padding: 15px;
+                        margin-bottom: 10px;
+                        ${isRead}
+                    " onclick="markNotificationAsRead('${notification.timestamp}')">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div style="flex: 1;">
+                                <h4 style="margin: 0 0 8px 0; color: #333; font-size: 16px;">
+                                    ${notification.title}
+                                </h4>
+                                <p style="margin: 0 0 8px 0; color: #666; font-size: 14px;">
+                                    ${notification.message}
+                                </p>
+                                <small style="color: #999; font-size: 12px;">
+                                    ${date}
+                                </small>
+                            </div>
+                            <div style="margin-left: 10px;">
+                                ${notification.type === 'approval' ? '✅' : '❌'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            notificationsList.innerHTML = html;
+        }
+
+        // Update notification badge count
+        function updateNotificationBadge() {
+            const badge = document.getElementById('notificationBadge');
+            if (!badge) return;
+
+            const notifications = getFactoryNotifications();
+            const unreadCount = notifications.filter(n => !n.read).length;
+            
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        // Update factory data table display
+        function updateFactoryDataTable() {
+            try {
+                console.log('🔄 Updating factory data table...');
+                
+                // Use filtered data if available, otherwise get all data
+                let factoryData;
+                if (window.factoryFilteredData) {
+                    factoryData = window.factoryFilteredData;
+                    console.log('📊 Using filtered factory data:', factoryData.length, 'entries');
+                } else {
+                    factoryData = JSON.parse(localStorage.getItem('factoryData') || '[]');
+                    console.log('📊 Using all factory data:', factoryData.length, 'entries');
+                }
+                
+                const tableContainer = document.getElementById('factoryDataTableContent');
+                
+                if (!tableContainer) {
+                    console.log('❌ Factory data table container not found');
+                    return;
+                }
+                
+                if (factoryData.length === 0) {
+                    tableContainer.innerHTML = `
+                        <div class="factory-data-empty">
+                            <h3>📝 No Saved Data Yet</h3>
+                            <p>Fill out a template and click SAVE to see your data here</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Sort by timestamp (newest first)
+                factoryData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                
+                let tableHTML = `
+                    <div style="border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 12px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); margin: 10px; box-shadow: 0 6px 20px rgba(31, 38, 135, 0.15);">
+                        <div class="table-container" style="max-height: 500px; overflow-y: auto; overflow-x: auto; scrollbar-width: thin; scrollbar-color: #667eea #f1f1f1;">
+                            <table class="table" style="width: 100%; border-collapse: collapse; min-width: 3000px; margin: 0;">
+                                <thead style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; position: sticky; top: 0; z-index: 10;">
+                                    <tr>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
+                                            <div class="header-with-filter">
+                                                Season
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(0, 'Season')" title="Filter Season">▼</button>
+                                            </div>
+                                        </th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
+                                            <div class="header-with-filter">
+                                                Type
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(1, 'Type')" title="Filter Type">▼</button>
+                                            </div>
+                                        </th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
+                                            <div class="header-with-filter">
+                                                Customer
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(2, 'Customer')" title="Filter Customer">▼</button>
+                                            </div>
+                                        </th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
+                                            <div class="header-with-filter">
+                                                Style Number
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(3, 'Style Number')" title="Filter Style Number">▼</button>
+                                            </div>
+                                        </th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
+                                            <div class="header-with-filter">
+                                                Style Name
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(4, 'Style Name')" title="Filter Style Name">▼</button>
+                                            </div>
+                                        </th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
+                                            <div class="header-with-filter">
+                                                Status
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(5, 'Status')" title="Filter Status">▼</button>
+                                            </div>
+                                        </th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
+                                            <div class="header-with-filter">
+                                                Main Material
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(6, 'Main Material')" title="Filter Main Material">▼</button>
+                                            </div>
+                                        </th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
+                                            <div class="header-with-filter">
+                                                Material Consumption
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(7, 'Material Consumption')" title="Filter Material Consumption">▼</button>
+                                            </div>
+                                        </th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
+                                            <div class="header-with-filter">
+                                                Material Price
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(8, 'Material Price')" title="Filter Material Price">▼</button>
+                                            </div>
+                                        </th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
+                                            <div class="header-with-filter">
+                                                Trim Cost
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(9, 'Trim Cost')" title="Filter Trim Cost">▼</button>
+                                            </div>
+                                        </th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative; color: #ff8c00;">
+                                            <div class="header-with-filter">
+                                                Total Material Cost
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(10, 'Total Material Cost')" title="Filter Total Material Cost">▼</button>
+                                            </div>
+                                        </th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
+                                            <div class="header-with-filter">
+                                                Knitting Machine
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(11, 'Knitting Machine')" title="Filter Knitting Machine">▼</button>
+                                            </div>
+                                        </th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative; background-color: #ffff00; color: #000;">
+                                            <div class="header-with-filter">
+                                                Knitting Time
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(12, 'Knitting Time')" title="Filter Knitting Time">▼</button>
+                                            </div>
+                                        </th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
+                                            <div class="header-with-filter">
+                                                Knitting CPM
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(13, 'Knitting CPM')" title="Filter Knitting CPM">▼</button>
+                                            </div>
+                                        </th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative; color: #ff8c00;">
+                                            <div class="header-with-filter">
+                                                Knitting Cost
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(14, 'Knitting Cost')" title="Filter Knitting Cost">▼</button>
+                                            </div>
+                                        </th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative; color: #ff8c00;">
+                                            <div class="header-with-filter">
+                                                Ops Cost
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(15, 'Ops Cost')" title="Filter Ops Cost">▼</button>
+                                            </div>
+                                        </th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative; color: #ff8c00;">
+                                            <div class="header-with-filter">
+                                                Knitting + Ops Cost
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(16, 'Knitting + Ops Cost')" title="Filter Knitting + Ops Cost">▼</button>
+                                            </div>
+                                        </th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
+                                            <div class="header-with-filter">
+                                                Packaging
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(17, 'Packaging')" title="Filter Packaging">▼</button>
+                                            </div>
+                                        </th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative; color: #ff8c00;">
+                                            <div class="header-with-filter">
+                                                OH
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(18, 'OH')" title="Filter OH">▼</button>
+                                            </div>
+                                        </th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative; color: #ff8c00;">
+                                            <div class="header-with-filter">
+                                                PROFIT
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(19, 'PROFIT')" title="Filter PROFIT">▼</button>
+                                            </div>
+                                        </th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative; color: #ff8c00;">
+                                            <div class="header-with-filter">
+                                                FTY Adjustment
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(20, 'FTY Adjustment')" title="Filter FTY Adjustment">▼</button>
+                                            </div>
+                                        </th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative; color: #ff8c00;">
+                                            <div class="header-with-filter">
+                                                TTL FTY COST
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(21, 'TTL FTY COST')" title="Filter TTL FTY COST">▼</button>
+                                            </div>
+                                        </th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
+                                            <div class="header-with-filter">
+                                                SMV
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(22, 'SMV')" title="Filter SMV">▼</button>
+                                            </div>
+                                        </th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative; color: #ff8c00;">
+                                            <div class="header-with-filter">
+                                                Total FOB
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(23, 'Total FOB')" title="Filter Total FOB">▼</button>
+                                            </div>
+                                        </th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
+                                            <div class="header-with-filter">
+                                                Sample Wt. With Tag (QC Check Form) GRAMS
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(24, 'Sample Wt. With Tag (QC Check Form) GRAMS')" title="Filter Sample Wt. With Tag (QC Check Form) GRAMS">▼</button>
+                                            </div>
+                                        </th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
+                                            <div class="header-with-filter">
+                                                Remarks
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(25, 'Remarks')" title="Filter Remarks">▼</button>
+                                            </div>
+                                        </th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
+                                            <div class="header-with-filter">
+                                                Review Status
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(26, 'Review Status')" title="Filter Review Status">▼</button>
+                                            </div>
+                                        </th>
+                                        <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
+                                            <div class="header-with-filter">
+                                                Date
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(27, 'Date')" title="Filter Date">▼</button>
+                                            </div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                `;
+                
+                factoryData.forEach((item, index) => {
+                    const date = new Date(item.timestamp).toLocaleDateString();
+                    const time = new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    
+                    // Extract data from saved sections
+                    const mainMaterial = item.yarn && item.yarn.length > 0 ? item.yarn[0].material || item.yarn[0].description : 
+                                       item.fabric && item.fabric.length > 0 ? item.fabric[0].material || item.fabric[0].description : '-';
+                    const materialConsumption = item.yarn && item.yarn.length > 0 ? item.yarn[0].consumption : 
+                                              item.fabric && item.fabric.length > 0 ? item.fabric[0].consumption : '-';
+                    const materialPrice = item.yarn && item.yarn.length > 0 ? item.yarn[0].price : 
+                                        item.fabric && item.fabric.length > 0 ? item.fabric[0].price : '-';
+                    const trimCost = item.trim && item.trim.length > 0 ? item.trim[0].cost : '-';
+                    const knittingMachine = item.knitting && item.knitting.length > 0 ? item.knitting[0].machine || item.knitting[0].description : '-';
+                    const knittingTime = item.knitting && item.knitting.length > 0 ? item.knitting[0].time || item.knitting[0].consumption : '-';
+                    const knittingCPM = item.knitting && item.knitting.length > 0 ? item.knitting[0].cpm || item.knitting[0].price : '-';
+                    const knittingCost = item.knitting && item.knitting.length > 0 ? item.knitting[0].cost : '-';
+                    const opsCost = item.operations && item.operations.length > 0 ? item.operations[0].cost : '-';
+                    const packaging = item.packaging && item.packaging.length > 0 ? item.packaging[0].cost : '-';
+                    const overhead = item.overhead && item.overhead.length > 0 ? item.overhead[0].cost : '-';
+                    
+                    tableHTML += `
+                        <tr>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">${item.season || '-'}</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">
+                                <div style="display: flex; justify-content: flex-start; align-items: center;">
+                                    <span class="factory-data-badge ${item.template}">
+                                        ${item.template}
+                                    </span>
+                                </div>
+                            </td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">${item.customer || '-'}</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">${item.styleNumber || '-'}</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">${item.styleName || '-'}</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">${mainMaterial}</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">${materialConsumption}</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">${materialPrice}</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">${trimCost}</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; color: #ff8c00;">$${item.totalMaterialCost || '0.00'}</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">${knittingMachine}</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; background-color: #ffff00;">${knittingTime}</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">${knittingCPM}</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; color: #ff8c00;">${knittingCost}</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; color: #ff8c00;">${opsCost}</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; color: #ff8c00;">-</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">${packaging}</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; color: #ff8c00;">-</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; color: #ff8c00;">-</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; color: #ff8c00;">-</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; color: #ff8c00;">$${item.totalFactoryCost || '0.00'}</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">-</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; color: #ff8c00;">-</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">-</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">-</td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">
+                                <div style="display: flex; justify-content: flex-start; align-items: center;">
+                                    ${item.status === 'pending' ? '<span style="background: #ffc107; color: #000; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">PENDING</span>' : 
+                                      item.status === 'approved' ? '<span style="background: #28a745; color: #fff; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">APPROVED</span>' :
+                                      item.status === 'declined' ? '<span style="background: #dc3545; color: #fff; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">DECLINED</span>' :
+                                      '<span style="background: #6c757d; color: #fff; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">UNKNOWN</span>'}
+                                </div>
+                            </td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;" title="${date} ${time}">${date}</td>
+                        </tr>
+                    `;
+                });
+                
+                tableHTML += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+                
+                tableContainer.innerHTML = tableHTML;
+                
+                // Show the factory data table
+                const factoryTable = document.getElementById('factoryDataTable');
+                if (factoryTable) {
+                    factoryTable.style.display = 'block';
+                }
+                
+                console.log('✅ Factory data table updated with', factoryData.length, 'entries');
+                console.log('🔍 Factory data sample:', factoryData[0]);
+                
+            } catch (error) {
+                console.error('❌ Error updating factory data table:', error);
+            }
+        }
+
+        // Factory Data Table Filtering Functions
+        let factoryCurrentFilters = {};
+        let factoryOriginalData = [];
+
+        function toggleFactoryColumnFilter(columnIndex, columnName) {
+            console.log(`🔍 Toggling factory filter for column ${columnIndex}: ${columnName}`);
+            
+            // Close all other dropdowns first
+            document.querySelectorAll('#factoryDataTableContent .filter-dropdown').forEach(dd => {
+                if (dd.id !== `factory-filter-${columnIndex}`) {
+                    dd.classList.remove('show');
+                }
+            });
+            
+            // Check if dropdown already exists
+            let dropdown = document.getElementById(`factory-filter-${columnIndex}`);
+            
+            if (!dropdown) {
+                // Find the correct header cell and create dropdown
+                const table = document.querySelector('#factoryDataTableContent table');
+                console.log('🔍 Looking for table:', table);
+                if (!table) {
+                    console.error('❌ Factory data table not found');
+                    return;
+                }
+                
+                const headerRow = table.querySelector('thead tr');
+                console.log('🔍 Looking for header row:', headerRow);
+                if (!headerRow) {
+                    console.error('❌ Header row not found');
+                    return;
+                }
+                
+                const headerCell = headerRow.children[columnIndex];
+                console.log(`🔍 Looking for header cell ${columnIndex}:`, headerCell);
+                if (!headerCell) {
+                    console.error(`❌ Header cell ${columnIndex} not found`);
+                    return;
+                }
+                
+                // Create dropdown
+                dropdown = createFactoryFilterDropdown(columnIndex, columnName);
+                headerCell.appendChild(dropdown);
+                console.log('✅ Created and appended dropdown:', dropdown);
+            }
+            
+            // Toggle dropdown
+            if (dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+                console.log('🔽 Closed dropdown');
+            } else {
+                dropdown.classList.add('show');
+                console.log('🔼 Opened dropdown');
+                
+                // Populate dropdown with unique values
+                populateFactoryFilterDropdown(columnIndex, columnName);
+            }
+        }
+
+        function createFactoryFilterDropdown(columnIndex, columnName) {
+            const dropdown = document.createElement('div');
+            dropdown.id = `factory-filter-${columnIndex}`;
+            dropdown.className = 'filter-dropdown';
+            dropdown.style.cssText = `
+                position: absolute;
+                top: 100%;
+                left: 0;
+                background: white;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 1000;
+                min-width: 200px;
+                max-height: 300px;
+                overflow-y: auto;
+                display: none;
+                padding: 10px;
+            `;
+            
+            dropdown.innerHTML = `
+                <div style="margin-bottom: 10px;">
+                    <input type="text" id="factory-search-${columnIndex}" placeholder="Search ${columnName}..." 
+                           style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;"
+                           onkeyup="filterFactoryDropdownOptions(${columnIndex})">
+                </div>
+                <div id="factory-options-${columnIndex}">
+                    <!-- Options will be populated here -->
+                </div>
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee;">
+                    <button onclick="clearFactoryColumnFilter(${columnIndex}, '${columnName}')" 
+                            style="background: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">
+                        Clear Filter
+                    </button>
+                </div>
+            `;
+            
+            return dropdown;
+        }
+
+        function populateFactoryFilterDropdown(columnIndex, columnName) {
+            const optionsContainer = document.getElementById(`factory-options-${columnIndex}`);
+            console.log(`🔍 Populating dropdown for column ${columnIndex}, container:`, optionsContainer);
+            if (!optionsContainer) return;
+            
+            // Get unique values for this column
+            const uniqueValues = getFactoryUniqueValues(columnIndex);
+            console.log(`🔍 Unique values for column ${columnIndex}:`, uniqueValues);
+            
+            optionsContainer.innerHTML = '';
+            
+            if (uniqueValues.length === 0) {
+                optionsContainer.innerHTML = '<div style="padding: 8px; color: #666; font-style: italic;">No data available</div>';
+                return;
+            }
+            
+            uniqueValues.forEach(value => {
+                const option = document.createElement('div');
+                option.style.cssText = `
+                    padding: 4px 8px;
+                    cursor: pointer;
+                    font-size: 12px;
+                    border-radius: 4px;
+                    margin: 2px 0;
+                    transition: background-color 0.2s;
+                `;
+                option.innerHTML = `
+                    <label style="display: flex; align-items: center; cursor: pointer; margin: 0;">
+                        <input type="checkbox" value="${value}" style="margin-right: 6px;" 
+                               onchange="applyFactoryColumnFilter(${columnIndex}, '${columnName}')">
+                        <span>${value}</span>
+                    </label>
+                `;
+                option.onmouseover = () => option.style.backgroundColor = '#f8f9fa';
+                option.onmouseout = () => option.style.backgroundColor = 'transparent';
+                
+                optionsContainer.appendChild(option);
+            });
+            
+            console.log(`✅ Populated dropdown with ${uniqueValues.length} options`);
+        }
+
+        function getFactoryUniqueValues(columnIndex) {
+            if (!factoryOriginalData || factoryOriginalData.length === 0) {
+                // Get data from localStorage
+                const factoryData = JSON.parse(localStorage.getItem('factoryData') || '[]');
+                factoryOriginalData = factoryData;
+                console.log('🔍 Loaded factory data from localStorage:', factoryData.length, 'items');
+            }
+            
+            const values = new Set();
+            console.log(`🔍 Getting unique values for column ${columnIndex} from ${factoryOriginalData.length} items`);
+            const columnNames = [
+                'template', 'season', 'customer', 'styleNumber', 'styleName', 'mainMaterial',
+                'materialConsumption', 'materialPrice', 'trimCost', 'totalMaterialCost',
+                'knittingMachine', 'knittingTime', 'knittingCPM', 'knittingCost', 'opsCost',
+                'knittingOpsCost', 'packaging', 'overhead', 'profit', 'ftyAdjustment',
+                'totalFactoryCost', 'smv', 'totalFOB', 'sampleWeight', 'remarks', 'date'
+            ];
+            
+            factoryOriginalData.forEach(item => {
+                let value = '';
+                
+                switch (columnIndex) {
+                    case 0: value = item.template || ''; break;
+                    case 1: value = item.season || ''; break;
+                    case 2: value = item.customer || ''; break;
+                    case 3: value = item.styleNumber || ''; break;
+                    case 4: value = item.styleName || ''; break;
+                    case 5: 
+                        if (item.yarn && item.yarn.length > 0) value = item.yarn[0].material || item.yarn[0].description || '';
+                        else if (item.fabric && item.fabric.length > 0) value = item.fabric[0].material || item.fabric[0].description || '';
+                        break;
+                    case 6:
+                        if (item.yarn && item.yarn.length > 0) value = item.yarn[0].consumption || '';
+                        else if (item.fabric && item.fabric.length > 0) value = item.fabric[0].consumption || '';
+                        break;
+                    case 7:
+                        if (item.yarn && item.yarn.length > 0) value = item.yarn[0].price || '';
+                        else if (item.fabric && item.fabric.length > 0) value = item.fabric[0].price || '';
+                        break;
+                    case 8:
+                        if (item.yarn && item.yarn.length > 0) value = item.yarn[0].trimCost || '';
+                        else if (item.fabric && item.fabric.length > 0) value = item.fabric[0].trimCost || '';
+                        break;
+                    case 9: value = item.totalMaterialCost || ''; break;
+                    case 10:
+                        if (item.knitting && item.knitting.length > 0) value = item.knitting[0].machine || item.knitting[0].description || '';
+                        break;
+                    case 11:
+                        if (item.knitting && item.knitting.length > 0) value = item.knitting[0].time || item.knitting[0].consumption || '';
+                        break;
+                    case 12:
+                        if (item.knitting && item.knitting.length > 0) value = item.knitting[0].cpm || item.knitting[0].price || '';
+                        break;
+                    case 13:
+                        if (item.knitting && item.knitting.length > 0) value = item.knitting[0].cost || '';
+                        break;
+                    case 14:
+                        if (item.operations && item.operations.length > 0) value = item.operations[0].cost || '';
+                        break;
+                    case 15: value = '-'; break; // Knitting + Ops Cost
+                    case 16:
+                        if (item.packaging && item.packaging.length > 0) value = item.packaging[0].cost || '';
+                        break;
+                    case 17: value = '-'; break; // OH
+                    case 18: value = '-'; break; // PROFIT
+                    case 19: value = '-'; break; // FTY Adjustment
+                    case 20: value = item.totalFactoryCost || ''; break;
+                    case 21: value = '-'; break; // SMV
+                    case 22: value = '-'; break; // Total FOB
+                    case 23: value = '-'; break; // Sample Weight
+                    case 24: value = '-'; break; // Remarks
+                    case 25: value = (item.status || 'pending').toUpperCase(); break; // Review Status
+                    case 26: value = new Date(item.timestamp).toLocaleDateString(); break; // Date
+                }
+                
+                if (value && value !== '-') {
+                    values.add(String(value));
+                }
+            });
+            
+            return Array.from(values).sort();
+        }
+
+        function applyFactoryColumnFilter(columnIndex, columnName) {
+            const dropdown = document.getElementById(`factory-filter-${columnIndex}`);
+            const checkboxes = dropdown.querySelectorAll('input[type="checkbox"]');
+            const selectedValues = Array.from(checkboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+            
+            if (selectedValues.length > 0) {
+                factoryCurrentFilters[columnName] = selectedValues;
+                console.log(`✅ Applied factory filter for ${columnName}:`, selectedValues);
+                
+                // Update filter button appearance
+                const dropdown = document.getElementById(`factory-filter-${columnIndex}`);
+                if (dropdown) {
+                    const filterButton = dropdown.parentElement.querySelector('.filter-triangle');
+                    if (filterButton) {
+                        filterButton.classList.add('active');
+                    }
+                }
+            } else {
+                delete factoryCurrentFilters[columnName];
+                console.log(`❌ Removed factory filter for ${columnName}`);
+                
+                // Update filter button appearance
+                const dropdown = document.getElementById(`factory-filter-${columnIndex}`);
+                if (dropdown) {
+                    const filterButton = dropdown.parentElement.querySelector('.filter-triangle');
+                    if (filterButton) {
+                        filterButton.classList.remove('active');
+                    }
+                }
+            }
+            
+            console.log(`🔧 Current factory filters:`, factoryCurrentFilters);
+            
+            // Apply filters
+            applyFactoryFilters();
+            
+            // Close dropdown
+            dropdown.classList.remove('show');
+        }
+
+        function clearFactoryColumnFilter(columnIndex, columnName) {
+            delete factoryCurrentFilters[columnName];
+            console.log(`🧹 Cleared factory filter for ${columnName}`);
+            
+            // Update filter button appearance
+            const dropdown = document.getElementById(`factory-filter-${columnIndex}`);
+            if (dropdown) {
+                const filterButton = dropdown.parentElement.querySelector('.filter-triangle');
+                if (filterButton) {
+                    filterButton.classList.remove('active');
+                }
+            }
+            
+            // Uncheck all checkboxes
+            const checkboxes = document.querySelectorAll(`#factory-filter-${columnIndex} input[type="checkbox"]`);
+            checkboxes.forEach(cb => cb.checked = false);
+            
+            // Apply filters
+            applyFactoryFilters();
+            
+            // Close dropdown
+            document.getElementById(`factory-filter-${columnIndex}`).classList.remove('show');
+        }
+
+        function applyFactoryFilters() {
+            console.log('🔍 Applying factory filters:', factoryCurrentFilters);
+            
+            if (!factoryOriginalData || factoryOriginalData.length === 0) {
+                const factoryData = JSON.parse(localStorage.getItem('factoryData') || '[]');
+                factoryOriginalData = factoryData;
+            }
+            
+            let filteredData = factoryOriginalData;
+            console.log('Starting with', filteredData.length, 'factory rows');
+            
+            // Apply each filter
+            Object.keys(factoryCurrentFilters).forEach(columnName => {
+                const filterValue = factoryCurrentFilters[columnName];
+                if (!filterValue || filterValue.length === 0) return;
+                
+                console.log(`Applying factory filter for ${columnName}:`, filterValue);
+                
+                const beforeCount = filteredData.length;
+                
+                // Filter for array of values (multiple selections)
+                filteredData = filteredData.filter(item => {
+                    let value = '';
+                    
+                    switch (columnName) {
+                        case 'Type': value = item.template || ''; break;
+                        case 'Season': value = item.season || ''; break;
+                        case 'Customer': value = item.customer || ''; break;
+                        case 'Style Number': value = item.styleNumber || ''; break;
+                        case 'Style Name': value = item.styleName || ''; break;
+                        case 'Main Material': 
+                            if (item.yarn && item.yarn.length > 0) value = item.yarn[0].material || item.yarn[0].description || '';
+                            else if (item.fabric && item.fabric.length > 0) value = item.fabric[0].material || item.fabric[0].description || '';
+                            break;
+                        case 'Material Consumption':
+                            if (item.yarn && item.yarn.length > 0) value = item.yarn[0].consumption || '';
+                            else if (item.fabric && item.fabric.length > 0) value = item.fabric[0].consumption || '';
+                            break;
+                        case 'Material Price':
+                            if (item.yarn && item.yarn.length > 0) value = item.yarn[0].price || '';
+                            else if (item.fabric && item.fabric.length > 0) value = item.fabric[0].price || '';
+                            break;
+                        case 'Trim Cost':
+                            if (item.yarn && item.yarn.length > 0) value = item.yarn[0].trimCost || '';
+                            else if (item.fabric && item.fabric.length > 0) value = item.fabric[0].trimCost || '';
+                            break;
+                        case 'Total Material Cost': value = item.totalMaterialCost || ''; break;
+                        case 'Knitting Machine':
+                            if (item.knitting && item.knitting.length > 0) value = item.knitting[0].machine || item.knitting[0].description || '';
+                            break;
+                        case 'Knitting Time':
+                            if (item.knitting && item.knitting.length > 0) value = item.knitting[0].time || item.knitting[0].consumption || '';
+                            break;
+                        case 'Knitting CPM':
+                            if (item.knitting && item.knitting.length > 0) value = item.knitting[0].cpm || item.knitting[0].price || '';
+                            break;
+                        case 'Knitting Cost':
+                            if (item.knitting && item.knitting.length > 0) value = item.knitting[0].cost || '';
+                            break;
+                        case 'Ops Cost':
+                            if (item.operations && item.operations.length > 0) value = item.operations[0].cost || '';
+                            break;
+                        case 'Packaging':
+                            if (item.packaging && item.packaging.length > 0) value = item.packaging[0].cost || '';
+                            break;
+                        case 'TTL FTY COST': value = item.totalFactoryCost || ''; break;
+                        case 'Review Status': value = (item.status || 'pending').toUpperCase(); break;
+                        case 'Date': value = new Date(item.timestamp).toLocaleDateString(); break;
+                    }
+                    
+                    const matches = filterValue.some(fv => String(value).toLowerCase().includes(fv.toLowerCase()));
+                    return matches;
+                });
+                
+                console.log(`Filtered ${columnName} from ${beforeCount} to ${filteredData.length} factory rows`);
+            });
+            
+            console.log('Final filtered factory data length:', filteredData.length);
+            
+            // Update the table with filtered data
+            updateFactoryTableWithFilteredData(filteredData);
+        }
+
+        function updateFactoryTableWithFilteredData(filteredData) {
+            // Store filtered data for table generation
+            window.factoryFilteredData = filteredData;
+            
+            // Regenerate the table with filtered data
+            updateFactoryDataTable();
+        }
+
+        function clearAllFactoryFilters() {
+            factoryCurrentFilters = {};
+            console.log('🧹 Cleared all factory filters');
+            
+            // Update all filter buttons
+            document.querySelectorAll('#factoryDataTableContent .filter-triangle').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Close all open dropdowns
+            document.querySelectorAll('#factoryDataTableContent .filter-dropdown').forEach(dropdown => {
+                dropdown.classList.remove('show');
+            });
+            
+            // Show all data
+            window.factoryFilteredData = null;
+            updateFactoryDataTable();
+        }
+
+        function filterFactoryDropdownOptions(columnIndex) {
+            const searchInput = document.getElementById(`factory-search-${columnIndex}`);
+            const optionsContainer = document.getElementById(`factory-options-${columnIndex}`);
+            
+            if (!searchInput || !optionsContainer) return;
+            
+            const searchTerm = searchInput.value.toLowerCase();
+            const options = optionsContainer.querySelectorAll('div');
+            
+            options.forEach(option => {
+                const text = option.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    option.style.display = 'block';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('#factoryDataTableContent .header-with-filter')) {
+                document.querySelectorAll('#factoryDataTableContent .filter-dropdown').forEach(dropdown => {
+                    dropdown.classList.remove('show');
+                });
+            }
+            if (!event.target.closest('#tableData .header-with-filter')) {
+                document.querySelectorAll('#tableData .filter-dropdown').forEach(dropdown => {
+                    dropdown.classList.remove('show');
+                });
+            }
+        });
+
+        // Databank Table Filtering Functions
+        let databankCurrentFilters = {};
+        let databankOriginalData = [];
+
+        function toggleDatabankColumnFilter(columnIndex, columnName) {
+            console.log(`🔍 Toggling databank filter for column ${columnIndex}: ${columnName}`);
+            
+            // Close all other dropdowns first
+            document.querySelectorAll('#tableData .filter-dropdown').forEach(dd => {
+                if (dd.id !== `databank-filter-${columnIndex}`) {
+                    dd.classList.remove('show');
+                }
+            });
+            
+            // Check if dropdown already exists
+            let dropdown = document.getElementById(`databank-filter-${columnIndex}`);
+            
+            if (!dropdown) {
+                // Find the correct header cell and create dropdown
+                const table = document.querySelector('#tableData table');
+                console.log('🔍 Looking for databank table:', table);
+                if (!table) {
+                    console.error('❌ Databank table not found');
+                    return;
+                }
+                
+                const headerRow = table.querySelector('thead tr');
+                console.log('🔍 Looking for databank header row:', headerRow);
+                if (!headerRow) {
+                    console.error('❌ Databank header row not found');
+                    return;
+                }
+                
+                const headerCell = headerRow.children[columnIndex];
+                console.log(`🔍 Looking for databank header cell ${columnIndex}:`, headerCell);
+                if (!headerCell) {
+                    console.error(`❌ Databank header cell ${columnIndex} not found`);
+                    return;
+                }
+                
+                // Create dropdown
+                dropdown = createDatabankFilterDropdown(columnIndex, columnName);
+                headerCell.appendChild(dropdown);
+                console.log('✅ Created and appended databank dropdown:', dropdown);
+            }
+            
+            // Toggle dropdown
+            if (dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+                console.log('🔽 Closed databank dropdown');
+            } else {
+                dropdown.classList.add('show');
+                console.log('🔼 Opened databank dropdown');
+                
+                // Populate dropdown with unique values
+                populateDatabankFilterDropdown(columnIndex, columnName);
+            }
+        }
+
+        function createDatabankFilterDropdown(columnIndex, columnName) {
+            const dropdown = document.createElement('div');
+            dropdown.id = `databank-filter-${columnIndex}`;
+            dropdown.className = 'filter-dropdown';
+            dropdown.style.cssText = `
+                position: absolute;
+                top: 100%;
+                left: 0;
+                background: white;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 1000;
+                min-width: 200px;
+                max-height: 300px;
+                overflow-y: auto;
+                display: none;
+                padding: 10px;
+            `;
+            
+            dropdown.innerHTML = `
+                <div style="margin-bottom: 10px;">
+                    <input type="text" id="databank-search-${columnIndex}" placeholder="Search ${columnName}..." 
+                           style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;"
+                           onkeyup="filterDatabankDropdownOptions(${columnIndex})">
+                </div>
+                <div id="databank-options-${columnIndex}">
+                    <!-- Options will be populated here -->
+                </div>
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee;">
+                    <button onclick="clearDatabankColumnFilter(${columnIndex}, '${columnName}')" 
+                            style="background: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">
+                        Clear Filter
+                    </button>
+                </div>
+            `;
+            
+            return dropdown;
+        }
+
+        function populateDatabankFilterDropdown(columnIndex, columnName) {
+            const optionsContainer = document.getElementById(`databank-options-${columnIndex}`);
+            console.log(`🔍 Populating databank dropdown for column ${columnIndex}, container:`, optionsContainer);
+            if (!optionsContainer) return;
+            
+            // Get unique values for this column
+            const uniqueValues = getDatabankUniqueValues(columnIndex);
+            console.log(`🔍 Unique values for databank column ${columnIndex}:`, uniqueValues);
+            
+            optionsContainer.innerHTML = '';
+            
+            if (uniqueValues.length === 0) {
+                optionsContainer.innerHTML = '<div style="padding: 8px; color: #666; font-style: italic;">No data available</div>';
+                return;
+            }
+            
+            uniqueValues.forEach(value => {
+                const option = document.createElement('div');
+                option.style.cssText = `
+                    padding: 4px 8px;
+                    cursor: pointer;
+                    font-size: 12px;
+                    border-radius: 4px;
+                    margin: 2px 0;
+                    transition: background-color 0.2s;
+                `;
+                option.innerHTML = `
+                    <label style="display: flex; align-items: center; cursor: pointer; margin: 0;">
+                        <input type="checkbox" value="${value}" style="margin-right: 6px;" 
+                               onchange="applyDatabankColumnFilter(${columnIndex}, '${columnName}')">
+                        <span>${value}</span>
+                    </label>
+                `;
+                option.onmouseover = () => option.style.backgroundColor = '#f8f9fa';
+                option.onmouseout = () => option.style.backgroundColor = 'transparent';
+                
+                optionsContainer.appendChild(option);
+            });
+            
+            console.log(`✅ Populated databank dropdown with ${uniqueValues.length} options`);
+        }
+
+        function getDatabankUniqueValues(columnIndex) {
+            if (!databankOriginalData || databankOriginalData.length === 0) {
+                // Get data from current table data
+                databankOriginalData = window.currentTableData || [];
+                console.log('🔍 Loaded databank data from currentTableData:', databankOriginalData.length, 'items');
+            }
+            
+            const values = new Set();
+            console.log(`🔍 Getting unique values for databank column ${columnIndex} from ${databankOriginalData.length} items`);
+            
+            // Get the column mapping from the current table
+            const columnMapping = window.currentColumnMapping || [];
+            const actualColumnName = columnMapping[columnIndex];
+            
+            if (!actualColumnName) {
+                console.log(`❌ No column mapping found for index ${columnIndex}`);
+                return [];
+            }
+            
+            databankOriginalData.forEach(item => {
+                const value = String(item[actualColumnName] || '').trim();
+                if (value && value !== '-') {
+                    values.add(value);
+                }
+            });
+            
+            return Array.from(values).sort();
+        }
+
+        function applyDatabankColumnFilter(columnIndex, columnName) {
+            const dropdown = document.getElementById(`databank-filter-${columnIndex}`);
+            const checkboxes = dropdown.querySelectorAll('input[type="checkbox"]');
+            const selectedValues = Array.from(checkboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+            
+            if (selectedValues.length > 0) {
+                databankCurrentFilters[columnName] = selectedValues;
+                console.log(`✅ Applied databank filter for ${columnName}:`, selectedValues);
+                
+                // Update filter button appearance
+                const filterButton = dropdown.parentElement.querySelector('.filter-triangle');
+                if (filterButton) {
+                    filterButton.classList.add('active');
+                }
+            } else {
+                delete databankCurrentFilters[columnName];
+                console.log(`❌ Removed databank filter for ${columnName}`);
+                
+                // Update filter button appearance
+                const filterButton = dropdown.parentElement.querySelector('.filter-triangle');
+                if (filterButton) {
+                    filterButton.classList.remove('active');
+                }
+            }
+            
+            console.log(`🔧 Current databank filters:`, databankCurrentFilters);
+            
+            // Apply filters
+            applyDatabankFilters();
+            
+            // Close dropdown
+            dropdown.classList.remove('show');
+        }
+
+        function clearDatabankColumnFilter(columnIndex, columnName) {
+            delete databankCurrentFilters[columnName];
+            console.log(`🧹 Cleared databank filter for ${columnName}`);
+            
+            // Update filter button appearance
+            const dropdown = document.getElementById(`databank-filter-${columnIndex}`);
+            if (dropdown) {
+                const filterButton = dropdown.parentElement.querySelector('.filter-triangle');
+                if (filterButton) {
+                    filterButton.classList.remove('active');
+                }
+            }
+            
+            // Uncheck all checkboxes
+            const checkboxes = document.querySelectorAll(`#databank-filter-${columnIndex} input[type="checkbox"]`);
+            checkboxes.forEach(cb => cb.checked = false);
+            
+            // Apply filters
+            applyDatabankFilters();
+            
+            // Close dropdown
+            document.getElementById(`databank-filter-${columnIndex}`).classList.remove('show');
+        }
+
+        function applyDatabankFilters() {
+            console.log('🔍 Applying databank filters:', databankCurrentFilters);
+            
+            if (!databankOriginalData || databankOriginalData.length === 0) {
+                databankOriginalData = window.currentTableData || [];
+            }
+            
+            let filteredData = databankOriginalData;
+            console.log('Starting with', filteredData.length, 'databank rows');
+            
+            // Apply each filter
+            Object.keys(databankCurrentFilters).forEach(columnName => {
+                const filterValue = databankCurrentFilters[columnName];
+                if (!filterValue || filterValue.length === 0) return;
+                
+                console.log(`Applying databank filter for ${columnName}:`, filterValue);
+                
+                const beforeCount = filteredData.length;
+                
+                // Find the actual column name
+                const columnMapping = window.currentColumnMapping || [];
+                const columnIndex = window.currentColumnHeaders?.indexOf(columnName);
+                const actualColumnName = columnMapping[columnIndex];
+                
+                if (!actualColumnName) {
+                    console.log(`❌ Could not find actual column name for ${columnName}`);
+                    return;
+                }
+                
+                // Filter for array of values (multiple selections)
+                filteredData = filteredData.filter(item => {
+                    const value = String(item[actualColumnName] || '').trim();
+                    const matches = filterValue.some(fv => value.toLowerCase().includes(fv.toLowerCase()));
+                    return matches;
+                });
+                
+                console.log(`Filtered ${columnName} from ${beforeCount} to ${filteredData.length} databank rows`);
+            });
+            
+            console.log('Final filtered databank data length:', filteredData.length);
+            
+            // Update the table with filtered data
+            updateDatabankTableWithFilteredData(filteredData);
+        }
+
+        function updateDatabankTableWithFilteredData(filteredData) {
+            // Store filtered data for table generation
+            window.databankFilteredData = filteredData;
+            
+            // Regenerate the table with filtered data
+            displayTableData(filteredData);
+        }
+
+        function clearAllDatabankFilters() {
+            databankCurrentFilters = {};
+            console.log('🧹 Cleared all databank filters');
+            
+            // Update all filter buttons
+            document.querySelectorAll('#tableData .filter-triangle').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Close all open dropdowns
+            document.querySelectorAll('#tableData .filter-dropdown').forEach(dropdown => {
+                dropdown.classList.remove('show');
+            });
+            
+            // Show all data
+            window.databankFilteredData = null;
+            displayTableData(window.currentTableData || []);
+        }
+
+        function filterDatabankDropdownOptions(columnIndex) {
+            const searchInput = document.getElementById(`databank-search-${columnIndex}`);
+            const optionsContainer = document.getElementById(`databank-options-${columnIndex}`);
+            
+            if (!searchInput || !optionsContainer) return;
+            
+            const searchTerm = searchInput.value.toLowerCase();
+            const options = optionsContainer.querySelectorAll('div');
+            
+            options.forEach(option => {
+                const text = option.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    option.style.display = 'block';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+        }
+
         // Save beanie data to database or local storage
         async function saveBeanieToDatabase() {
             const saveBtn = document.getElementById('saveBeanieBtn');
@@ -16459,6 +18268,14 @@
             try {
                 console.log('🔄 Starting beanie data save to local storage...');
                 
+                // Check if beanie template is visible
+                const costBreakdown = document.getElementById('costBreakdown');
+                if (!costBreakdown || costBreakdown.style.display === 'none') {
+                    console.error('❌ Beanie template is not visible');
+                    showNotification('Please select the Beanie template first.', 'error');
+                    return;
+                }
+                
                 // Calculate all costs first
                 calculateBeanieTemplate();
                 
@@ -16466,6 +18283,8 @@
                 const beanieData = {
                     template: 'beanie',
                     timestamp: new Date().toISOString(),
+                    status: 'pending', // Pending Madison review
+                    submittedBy: 'factory',
                     customer: document.querySelector('#costBreakdown input[placeholder*="Customer"]')?.value || '',
                     season: document.querySelector('#costBreakdown input[placeholder*="Season"]')?.value || '',
                     styleNumber: document.querySelector('#costBreakdown input[placeholder*="Style Number"]')?.value || '',
@@ -16481,13 +18300,18 @@
                     totalFactoryCost: getTotalFactoryCost()
                 };
                 
+                // Validate that we have some data
+                if (!beanieData.customer && !beanieData.season && !beanieData.styleNumber) {
+                    console.warn('⚠️ No basic product information found');
+                }
+                
                 // Save to local storage
                 const existingData = JSON.parse(localStorage.getItem('factoryData') || '[]');
                 existingData.push(beanieData);
                 localStorage.setItem('factoryData', JSON.stringify(existingData));
                 
                 // Show success notification
-                showNotification('Beanie data saved successfully!', 'success');
+                showNotification('Beanie data submitted for Madison review!', 'success');
                 
                 // Update Factory data table if visible
                 if (typeof updateFactoryDataTable === 'function') {
@@ -16498,7 +18322,8 @@
                 
             } catch (error) {
                 console.error('❌ Error saving beanie data to local storage:', error);
-                showNotification('Error saving data. Please try again.', 'error');
+                console.error('Error details:', error.message, error.stack);
+                showNotification(`Error saving data: ${error.message}`, 'error');
             }
         }
 
@@ -16507,6 +18332,14 @@
             try {
                 console.log('🔄 Starting ballcaps data save to local storage...');
                 
+                // Check if ballcaps template is visible
+                const ballcapsBreakdown = document.getElementById('ballcapsBreakdown');
+                if (!ballcapsBreakdown || ballcapsBreakdown.style.display === 'none') {
+                    console.error('❌ Ballcaps template is not visible');
+                    showNotification('Please select the Ballcaps template first.', 'error');
+                    return;
+                }
+                
                 // Calculate all costs first
                 calculateBallCapsTemplate();
                 
@@ -16514,6 +18347,8 @@
                 const ballcapsData = {
                     template: 'ballcaps',
                     timestamp: new Date().toISOString(),
+                    status: 'pending', // Pending Madison review
+                    submittedBy: 'factory',
                     customer: document.querySelector('#ballcapsBreakdown input[placeholder*="Customer"]')?.value || '',
                     season: document.querySelector('#ballcapsBreakdown input[placeholder*="Season"]')?.value || '',
                     styleNumber: document.querySelector('#ballcapsBreakdown input[placeholder*="Style Number"]')?.value || '',
@@ -16534,7 +18369,7 @@
                 localStorage.setItem('factoryData', JSON.stringify(existingData));
                 
                 // Show success notification
-                showNotification('Ballcaps data saved successfully!', 'success');
+                showNotification('Ballcaps data submitted for Madison review!', 'success');
                 
                 // Update Factory data table if visible
                 if (typeof updateFactoryDataTable === 'function') {
@@ -16545,7 +18380,8 @@
                 
             } catch (error) {
                 console.error('❌ Error saving ballcaps data to local storage:', error);
-                showNotification('Error saving data. Please try again.', 'error');
+                console.error('Error details:', error.message, error.stack);
+                showNotification(`Error saving data: ${error.message}`, 'error');
             }
         }
 
