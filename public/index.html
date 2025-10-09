@@ -3731,10 +3731,95 @@
                 </div>
             </div>
 
-            <button onclick="connectDatabase()" id="connectButton">Connect to Database</button>
-            <div id="connectionStatus"></div>
-            <div id="autoConnectStatus" style="display: block;">
-                <div class="loading">Auto-connecting to Supabase...</div>
+            <!-- Enhanced Database Connection Section -->
+            <div class="database-connection-section" style="
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                border: 2px solid #dee2e6;
+                border-radius: 12px;
+                padding: 20px;
+                margin: 20px 0;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            ">
+                <h3 style="margin: 0 0 15px 0; color: #495057; display: flex; align-items: center;">
+                    <span style="margin-right: 10px;">🔗</span>
+                    Database Connection
+                </h3>
+                
+                <div id="connectionStatus" style="
+                    padding: 12px;
+                    border-radius: 8px;
+                    margin: 10px 0;
+                    font-weight: 500;
+                    display: none;
+                "></div>
+                
+                <div id="autoConnectStatus" style="display: block;">
+                    <div class="loading" style="
+                        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+                        color: white;
+                        padding: 12px 20px;
+                        border-radius: 8px;
+                        text-align: center;
+                        font-weight: 500;
+                    ">
+                        🔄 Auto-connecting to Supabase...
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button onclick="connectDatabase()" id="connectButton" style="
+                        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+                        color: white;
+                        border: none;
+                        padding: 12px 24px;
+                        border-radius: 8px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        display: none;
+                    " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                        🔗 Connect to Database
+                    </button>
+                    
+                    <button onclick="checkConnectionStatus()" id="checkConnectionButton" style="
+                        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+                        color: white;
+                        border: none;
+                        padding: 12px 24px;
+                        border-radius: 8px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                    " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                        🔍 Check Connection
+                    </button>
+                    
+                    <button onclick="reconnectDatabase()" id="reconnectButton" style="
+                        background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+                        color: #212529;
+                        border: none;
+                        padding: 12px 24px;
+                        border-radius: 8px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        display: none;
+                    " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                        🔄 Reconnect
+                    </button>
+                </div>
+                
+                <div id="connectionDetails" style="
+                    margin-top: 15px;
+                    padding: 12px;
+                    background: #f8f9fa;
+                    border-radius: 8px;
+                    border-left: 4px solid #007bff;
+                    display: none;
+                ">
+                    <strong>Connection Details:</strong>
+                    <div id="connectionInfo" style="margin-top: 8px; font-family: monospace; font-size: 12px;"></div>
+                </div>
             </div>
             
             <!-- Welcome Message - Always Visible -->
@@ -5743,7 +5828,32 @@
                 if (result.success) {
                     clearTimeout(timeoutId); // Clear the timeout since connection succeeded
                     connectionId = result.connectionId;
-                    showStatus('connectionStatus', '✅ Auto-connected to Supabase successfully!', 'success');
+                    localStorage.setItem('currentConnectionId', connectionId);
+                    
+                    // Update enhanced connection status UI
+                    const statusDiv = document.getElementById('connectionStatus');
+                    const detailsDiv = document.getElementById('connectionDetails');
+                    const infoDiv = document.getElementById('connectionInfo');
+                    
+                    statusDiv.style.display = 'block';
+                    statusDiv.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+                    statusDiv.style.color = 'white';
+                    statusDiv.innerHTML = '✅ Auto-connected to Supabase successfully!';
+                    
+                    // Show connection details
+                    detailsDiv.style.display = 'block';
+                    infoDiv.innerHTML = `
+                        <div><strong>Connection ID:</strong> ${connectionId}</div>
+                        <div><strong>Database Type:</strong> SUPABASE</div>
+                        <div><strong>Status:</strong> Auto-Connected</div>
+                        <div><strong>Connected:</strong> ${new Date().toLocaleString()}</div>
+                    `;
+                    
+                    // Update button visibility
+                    document.getElementById('connectButton').style.display = 'none';
+                    document.getElementById('reconnectButton').style.display = 'inline-block';
+                    document.getElementById('autoConnectStatus').style.display = 'none';
+                    document.getElementById('welcomeMessage').style.display = 'none';
                     
                     // Only show databank table if user has permission
                     if (window.authService && window.authService.canViewDatabank()) {
@@ -5751,9 +5861,6 @@
                     } else {
                         document.getElementById('dataTableSection').style.display = 'none';
                     }
-                    
-                    document.getElementById('autoConnectStatus').style.display = 'none';
-                    document.getElementById('welcomeMessage').style.display = 'none';
                     
                     // Auto-load databank table data immediately (only if user has permission)
                     if (window.authService && window.authService.canViewDatabank()) {
@@ -5776,9 +5883,31 @@
                     }
                 } else {
                     clearTimeout(timeoutId); // Clear the timeout since we got a response
-                    showStatus('connectionStatus', '❌ Auto-connection failed: ' + (result.message || 'Unknown error'), 'error');
+                    
+                    // Update enhanced connection status UI with error
+                    const statusDiv = document.getElementById('connectionStatus');
+                    const detailsDiv = document.getElementById('connectionDetails');
+                    const infoDiv = document.getElementById('connectionInfo');
+                    
+                    statusDiv.style.display = 'block';
+                    statusDiv.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
+                    statusDiv.style.color = 'white';
+                    statusDiv.innerHTML = `❌ Auto-connection failed: ${result.message || 'Unknown error'}`;
+                    
+                    // Show connection details with error
+                    detailsDiv.style.display = 'block';
+                    infoDiv.innerHTML = `
+                        <div><strong>Connection ID:</strong> None</div>
+                        <div><strong>Database Type:</strong> SUPABASE</div>
+                        <div><strong>Status:</strong> Auto-Connection Failed</div>
+                        <div><strong>Error:</strong> ${result.message || 'Unknown error'}</div>
+                        <div><strong>Failed:</strong> ${new Date().toLocaleString()}</div>
+                    `;
+                    
+                    // Update button visibility
                     document.getElementById('autoConnectStatus').style.display = 'none';
                     document.getElementById('connectButton').style.display = 'inline-block';
+                    document.getElementById('reconnectButton').style.display = 'inline-block';
                     document.getElementById('welcomeMessage').style.display = 'block';
                     
                     // Hide intro overlay even if connection fails
@@ -5790,9 +5919,31 @@
                 }
             } catch (error) {
                 clearTimeout(timeoutId); // Clear the timeout since we got an error
-                showStatus('connectionStatus', '❌ Auto-connection error: ' + error.message, 'error');
+                
+                // Update enhanced connection status UI with error
+                const statusDiv = document.getElementById('connectionStatus');
+                const detailsDiv = document.getElementById('connectionDetails');
+                const infoDiv = document.getElementById('connectionInfo');
+                
+                statusDiv.style.display = 'block';
+                statusDiv.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
+                statusDiv.style.color = 'white';
+                statusDiv.innerHTML = `❌ Auto-connection error: ${error.message}`;
+                
+                // Show connection details with error
+                detailsDiv.style.display = 'block';
+                infoDiv.innerHTML = `
+                    <div><strong>Connection ID:</strong> None</div>
+                    <div><strong>Database Type:</strong> SUPABASE</div>
+                    <div><strong>Status:</strong> Auto-Connection Error</div>
+                    <div><strong>Error:</strong> ${error.message}</div>
+                    <div><strong>Error Time:</strong> ${new Date().toLocaleString()}</div>
+                `;
+                
+                // Update button visibility
                 document.getElementById('autoConnectStatus').style.display = 'none';
                 document.getElementById('connectButton').style.display = 'inline-block';
+                document.getElementById('reconnectButton').style.display = 'inline-block';
                 document.getElementById('welcomeMessage').style.display = 'block';
                 
                 // Hide intro overlay even if there's an error
@@ -5801,6 +5952,135 @@
                     // Make sure main content is visible
                     document.getElementById('productSelection').style.display = 'block';
                 }, 2000);
+            }
+        }
+
+        // Enhanced connection status checking
+        async function checkConnectionStatus() {
+            const statusDiv = document.getElementById('connectionStatus');
+            const detailsDiv = document.getElementById('connectionDetails');
+            const infoDiv = document.getElementById('connectionInfo');
+            
+            // Show loading status
+            statusDiv.style.display = 'block';
+            statusDiv.style.background = 'linear-gradient(135deg, #17a2b8 0%, #138496 100%)';
+            statusDiv.style.color = 'white';
+            statusDiv.innerHTML = '🔍 Checking connection status...';
+            
+            try {
+                if (connectionId) {
+                    // Test the connection by making a simple API call to existing function
+                    const response = await fetch(`/.netlify/functions/datatable-data?connectionId=${connectionId}`, {
+                        method: 'GET'
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success) {
+                            statusDiv.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+                            statusDiv.innerHTML = '✅ Database connection is active and working!';
+                            
+                            // Show connection details
+                            detailsDiv.style.display = 'block';
+                            infoDiv.innerHTML = `
+                                <div><strong>Connection ID:</strong> ${connectionId}</div>
+                                <div><strong>Status:</strong> Active</div>
+                                <div><strong>Last Check:</strong> ${new Date().toLocaleString()}</div>
+                                <div><strong>Response Time:</strong> ${result.responseTime || 'N/A'}ms</div>
+                            `;
+                            
+                            // Update button visibility
+                            document.getElementById('connectButton').style.display = 'none';
+                            document.getElementById('reconnectButton').style.display = 'inline-block';
+                            
+                        } else {
+                            throw new Error(result.message || 'Connection test failed');
+                        }
+                    } else {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                } else {
+                    throw new Error('No connection ID found');
+                }
+            } catch (error) {
+                statusDiv.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
+                statusDiv.innerHTML = `❌ Connection check failed: ${error.message}`;
+                
+                // Show connection details with error
+                detailsDiv.style.display = 'block';
+                infoDiv.innerHTML = `
+                    <div><strong>Connection ID:</strong> ${connectionId || 'None'}</div>
+                    <div><strong>Status:</strong> Failed</div>
+                    <div><strong>Error:</strong> ${error.message}</div>
+                    <div><strong>Last Check:</strong> ${new Date().toLocaleString()}</div>
+                `;
+                
+                // Update button visibility
+                document.getElementById('connectButton').style.display = 'inline-block';
+                document.getElementById('reconnectButton').style.display = 'inline-block';
+            }
+        }
+
+        // Enhanced reconnection function
+        async function reconnectDatabase() {
+            const statusDiv = document.getElementById('connectionStatus');
+            const detailsDiv = document.getElementById('connectionDetails');
+            
+            // Show reconnecting status
+            statusDiv.style.display = 'block';
+            statusDiv.style.background = 'linear-gradient(135deg, #ffc107 0%, #e0a800 100%)';
+            statusDiv.style.color = '#212529';
+            statusDiv.innerHTML = '🔄 Reconnecting to database...';
+            
+            // Clear old connection
+            connectionId = null;
+            localStorage.removeItem('currentConnectionId');
+            
+            // Try to reconnect using auto-connect
+            try {
+                await autoConnectToSupabase();
+                
+                // Check if reconnection was successful
+                setTimeout(async () => {
+                    if (connectionId) {
+                        statusDiv.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+                        statusDiv.style.color = 'white';
+                        statusDiv.innerHTML = '✅ Successfully reconnected to database!';
+                        
+                        // Update connection details
+                        const infoDiv = document.getElementById('connectionInfo');
+                        infoDiv.innerHTML = `
+                            <div><strong>Connection ID:</strong> ${connectionId}</div>
+                            <div><strong>Status:</strong> Reconnected</div>
+                            <div><strong>Reconnected:</strong> ${new Date().toLocaleString()}</div>
+                        `;
+                        
+                        // Update button visibility
+                        document.getElementById('connectButton').style.display = 'none';
+                        document.getElementById('reconnectButton').style.display = 'inline-block';
+                        
+                        showSuccessNotification('Database reconnected successfully!', {
+                            duration: 4000
+                        });
+                    } else {
+                        statusDiv.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
+                        statusDiv.style.color = 'white';
+                        statusDiv.innerHTML = '❌ Reconnection failed. Please try manual connection.';
+                        
+                        // Update button visibility
+                        document.getElementById('connectButton').style.display = 'inline-block';
+                        document.getElementById('reconnectButton').style.display = 'inline-block';
+                    }
+                }, 2000);
+                
+            } catch (error) {
+                statusDiv.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
+                statusDiv.style.color = 'white';
+                statusDiv.innerHTML = `❌ Reconnection failed: ${error.message}`;
+                
+                // Update button visibility
+                document.getElementById('connectButton').style.display = 'inline-block';
+                document.getElementById('reconnectButton').style.display = 'inline-block';
             }
         }
 
@@ -5839,6 +6119,7 @@
                 
                 if (result.success) {
                     connectionId = result.connectionId;
+                    localStorage.setItem('currentConnectionId', connectionId);
                     
                     // Update notification to success
                     notificationManager.updateMessage(loadingId, 'Connection Complete', `Connected to ${dbType.toUpperCase()} successfully!`);
@@ -5852,7 +6133,30 @@
                         });
                     }, 1000);
                     
-                    showStatus('connectionStatus', 'Connected successfully!', 'success');
+                    // Update enhanced connection status UI
+                    const statusDiv = document.getElementById('connectionStatus');
+                    const detailsDiv = document.getElementById('connectionDetails');
+                    const infoDiv = document.getElementById('connectionInfo');
+                    
+                    statusDiv.style.display = 'block';
+                    statusDiv.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+                    statusDiv.style.color = 'white';
+                    statusDiv.innerHTML = `✅ Connected to ${dbType.toUpperCase()} successfully!`;
+                    
+                    // Show connection details
+                    detailsDiv.style.display = 'block';
+                    infoDiv.innerHTML = `
+                        <div><strong>Connection ID:</strong> ${connectionId}</div>
+                        <div><strong>Database Type:</strong> ${dbType.toUpperCase()}</div>
+                        <div><strong>Status:</strong> Connected</div>
+                        <div><strong>Connected:</strong> ${new Date().toLocaleString()}</div>
+                    `;
+                    
+                    // Update button visibility
+                    document.getElementById('connectButton').style.display = 'none';
+                    document.getElementById('reconnectButton').style.display = 'inline-block';
+                    document.getElementById('autoConnectStatus').style.display = 'none';
+                    
                     document.getElementById('tablesSection').style.display = 'block';
                     document.getElementById('importSection').style.display = 'block';
                     loadTables();
@@ -5869,7 +6173,30 @@
                         });
                     }, 1000);
                     
-                    showStatus('connectionStatus', result.message || 'Connection failed', 'error');
+                    // Update enhanced connection status UI with error
+                    const statusDiv = document.getElementById('connectionStatus');
+                    const detailsDiv = document.getElementById('connectionDetails');
+                    const infoDiv = document.getElementById('connectionInfo');
+                    
+                    statusDiv.style.display = 'block';
+                    statusDiv.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
+                    statusDiv.style.color = 'white';
+                    statusDiv.innerHTML = `❌ Connection failed: ${result.message || 'Unknown error'}`;
+                    
+                    // Show connection details with error
+                    detailsDiv.style.display = 'block';
+                    infoDiv.innerHTML = `
+                        <div><strong>Connection ID:</strong> None</div>
+                        <div><strong>Database Type:</strong> ${dbType.toUpperCase()}</div>
+                        <div><strong>Status:</strong> Failed</div>
+                        <div><strong>Error:</strong> ${result.message || 'Unknown error'}</div>
+                        <div><strong>Failed:</strong> ${new Date().toLocaleString()}</div>
+                    `;
+                    
+                    // Update button visibility
+                    document.getElementById('connectButton').style.display = 'inline-block';
+                    document.getElementById('reconnectButton').style.display = 'inline-block';
+                    document.getElementById('autoConnectStatus').style.display = 'none';
                 }
             } catch (error) {
                 // Update notification to error
@@ -5884,7 +6211,30 @@
                     });
                 }, 1000);
                 
-                showStatus('connectionStatus', 'Connection error: ' + error.message, 'error');
+                // Update enhanced connection status UI with error
+                const statusDiv = document.getElementById('connectionStatus');
+                const detailsDiv = document.getElementById('connectionDetails');
+                const infoDiv = document.getElementById('connectionInfo');
+                
+                statusDiv.style.display = 'block';
+                statusDiv.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
+                statusDiv.style.color = 'white';
+                statusDiv.innerHTML = `❌ Connection error: ${error.message}`;
+                
+                // Show connection details with error
+                detailsDiv.style.display = 'block';
+                infoDiv.innerHTML = `
+                    <div><strong>Connection ID:</strong> None</div>
+                    <div><strong>Database Type:</strong> ${dbType || 'Unknown'}</div>
+                    <div><strong>Status:</strong> Error</div>
+                    <div><strong>Error:</strong> ${error.message}</div>
+                    <div><strong>Error Time:</strong> ${new Date().toLocaleString()}</div>
+                `;
+                
+                // Update button visibility
+                document.getElementById('connectButton').style.display = 'inline-block';
+                document.getElementById('reconnectButton').style.display = 'inline-block';
+                document.getElementById('autoConnectStatus').style.display = 'none';
             }
         }
 
@@ -5902,6 +6252,190 @@
                 }
             } catch (error) {
                 showStatus('tablesList', 'Error loading tables: ' + error.message, 'error');
+            }
+        }
+
+        // Create test databank data for demonstration
+        function createTestDatabankData() {
+            console.log('🧪 Creating test databank data...');
+            
+            const testData = [
+                {
+                    Season: 'SS24',
+                    Customer: 'Nike',
+                    'Style Number': 'NK001',
+                    'Style Name': 'Classic Beanie',
+                    'Main Material': '100% Cotton',
+                    'Material Consumption': '0.5',
+                    'Material Price': '2.50',
+                    'Total Material Cost': '1.25',
+                    'Product Type': 'Beanie',
+                    'Costed Quantity': '1000',
+                    'MOQ': '500',
+                    'Leadtime': '30 days',
+                    'Status': 'Approved',
+                    'Approved By': 'Madison',
+                    'Approved Date': new Date().toLocaleDateString()
+                },
+                {
+                    Season: 'FW24',
+                    Customer: 'Adidas',
+                    'Style Number': 'AD002',
+                    'Style Name': 'Sports Cap',
+                    'Main Material': 'Polyester Blend',
+                    'Material Consumption': '0.3',
+                    'Material Price': '3.00',
+                    'Total Material Cost': '0.90',
+                    'Product Type': 'BallCaps',
+                    'MOQ': '1000',
+                    'Leadtime': '25 days',
+                    'Status': 'Pending',
+                    'Submitted By': 'Factory',
+                    'Submitted Date': new Date().toLocaleDateString()
+                },
+                {
+                    Season: 'SS24',
+                    Customer: 'Puma',
+                    'Style Number': 'PM003',
+                    'Style Name': 'Winter Beanie',
+                    'Main Material': 'Wool Blend',
+                    'Material Consumption': '0.4',
+                    'Material Price': '4.50',
+                    'Total Material Cost': '1.80',
+                    'Product Type': 'Beanie',
+                    'Costed Quantity': '1500',
+                    'MOQ': '750',
+                    'Leadtime': '35 days',
+                    'Status': 'Declined',
+                    'Declined By': 'Madison',
+                    'Declined Date': new Date().toLocaleDateString(),
+                    'Decline Reason': 'Material cost too high'
+                }
+            ];
+            
+            // Save test data to localStorage
+            localStorage.setItem('databankData', JSON.stringify(testData));
+            
+            // Load and display the test data (this will normalize it)
+            loadLocalDatabankData();
+            
+            console.log('✅ Test databank data created and loaded');
+            showNotification('🧪 Test data created! You can now see how the databank table works.', 'success');
+        }
+
+        // Normalize databank data to ensure proper column structure
+        function normalizeDatabankData(data) {
+            if (!data || data.length === 0) return data;
+            
+            console.log('🔧 Normalizing databank data structure...');
+            
+            return data.map(item => {
+                // Ensure all items have the proper column structure
+                const normalizedItem = {
+                    'Season': item.Season || item.season || '',
+                    'Customer': item.Customer || item.customer || '',
+                    'Style Number': item['Style Number'] || item.styleNumber || item.style_number || '',
+                    'Style Name': item['Style Name'] || item.styleName || item.style_name || '',
+                    'Main Material': item['Main Material'] || item.mainMaterial || item.main_material || '',
+                    'Material Consumption': item['Material Consumption'] || item.materialConsumption || item.material_consumption || '',
+                    'Material Price': item['Material Price'] || item.materialPrice || item.material_price || '',
+                    'Total Material Cost': item['Total Material Cost'] || item.totalMaterialCost || item.total_material_cost || '',
+                    'Product Type': item['Product Type'] || item.productType || item.product_type || '',
+                    'MOQ': item.MOQ || item.moq || '',
+                    'Leadtime': item.Leadtime || item.leadtime || '',
+                    'Status': item.Status || item.status || 'Pending',
+                    'Submitted By': item['Submitted By'] || item.submittedBy || item.submitted_by || 'Factory',
+                    'Submitted Date': item['Submitted Date'] || item.submittedDate || item.submitted_date || '',
+                    'Approved By': item['Approved By'] || item.approvedBy || item.approved_by || '',
+                    'Approved Date': item['Approved Date'] || item.approvedDate || item.approved_date || '',
+                    'Declined By': item['Declined By'] || item.declinedBy || item.declined_by || '',
+                    'Declined Date': item['Declined Date'] || item.declinedDate || item.declined_date || '',
+                    'Decline Reason': item['Decline Reason'] || item.declineReason || item.decline_reason || ''
+                };
+                
+                // Preserve original data if it exists
+                if (item['Original Data']) {
+                    normalizedItem['Original Data'] = item['Original Data'];
+                }
+                
+                return normalizedItem;
+            });
+        }
+
+        // Load local databank data when Supabase data is not available
+        function loadLocalDatabankData() {
+            console.log('📁 Loading local databank data...');
+            
+            const localDatabankData = JSON.parse(localStorage.getItem('databankData') || '[]');
+            console.log('🔍 Found local databank data:', localDatabankData.length, 'items');
+            
+            if (localDatabankData.length > 0) {
+                // Normalize the data structure
+                const normalizedData = normalizeDatabankData(localDatabankData);
+                console.log('🔧 Normalized data structure:', normalizedData[0]);
+                
+                // Store data globally
+                window.currentTableData = normalizedData;
+                allTableData = normalizedData;
+                totalRecords = normalizedData.length;
+                window.totalRecords = totalRecords;
+                
+                // Clear any filtered data to show all data
+                window.databankFilteredData = null;
+                databankCurrentFilters = {};
+                
+                // Display the data
+                displayTableData(normalizedData);
+                
+                console.log('✅ Local databank data loaded and displayed');
+                showNotification(`📁 Loaded ${normalizedData.length} local records`, 'success');
+            } else {
+                console.log('📭 No local databank data found');
+                showNotification('No local databank data found. Try submitting data from factory side first.', 'info');
+            }
+        }
+
+        // Force refresh databank table with current data
+        function refreshDatabankTable() {
+            console.log('🔄 Force refreshing databank table...');
+            
+            // Try to get current data from multiple sources
+            let currentData = null;
+            
+            // First try current table data
+            if (window.currentTableData && window.currentTableData.length > 0) {
+                currentData = window.currentTableData;
+                console.log('📊 Using current table data:', currentData.length, 'items');
+            }
+            // Then try local storage
+            else {
+                const localData = JSON.parse(localStorage.getItem('databankData') || '[]');
+                if (localData.length > 0) {
+                    // Normalize the data structure
+                    currentData = normalizeDatabankData(localData);
+                    window.currentTableData = currentData;
+                    console.log('📁 Using normalized local storage data:', currentData.length, 'items');
+                }
+            }
+            
+            if (currentData && currentData.length > 0) {
+                // Clear filters to show all data
+                window.databankFilteredData = null;
+                databankCurrentFilters = {};
+                
+                // Update global variables
+                allTableData = currentData;
+                totalRecords = currentData.length;
+                window.totalRecords = totalRecords;
+                
+                // Display the data
+                displayTableData(currentData);
+                
+                console.log('✅ Databank table refreshed with', currentData.length, 'records');
+                showNotification(`🔄 Refreshed databank table with ${currentData.length} records`, 'success');
+            } else {
+                console.log('📭 No data available to refresh');
+                showNotification('No data available to refresh. Try loading data first.', 'info');
             }
         }
 
@@ -5944,12 +6478,56 @@
                     console.log('Data sample:', result.data.slice(0, 3));
                     console.log('Last few records:', result.data.slice(-3));
                     
+                    // Merge with any local approved data from localStorage
+                    const localDatabankData = JSON.parse(localStorage.getItem('databankData') || '[]');
+                    console.log('Local databank data:', localDatabankData.length, 'items');
+                    
+                    // Combine Supabase data with local approved data
+                    const combinedData = [...result.data];
+                    
+                    // Add local approved data that might not be in Supabase yet
+                    localDatabankData.forEach(localItem => {
+                        // Check if this local item already exists in Supabase data
+                        const exists = result.data.some(supabaseItem => 
+                            supabaseItem.timestamp === localItem.timestamp ||
+                            (supabaseItem.customer === localItem.customer && 
+                             supabaseItem.styleNumber === localItem.styleNumber &&
+                             supabaseItem.season === localItem.season)
+                        );
+                        
+                        if (!exists) {
+                            // Convert local item to databank format
+                            const databankRow = {
+                                Season: localItem.season || '',
+                                Customer: localItem.customer || '',
+                                'Style Number': localItem.styleNumber || '',
+                                'Style Name': localItem.styleName || '',
+                                'Main Material': localItem.yarn && localItem.yarn.length > 0 ? localItem.yarn[0].material : 
+                                                localItem.fabric && localItem.fabric.length > 0 ? localItem.fabric[0].material : '',
+                                'Material Consumption': localItem.yarn && localItem.yarn.length > 0 ? localItem.yarn[0].consumption : 
+                                                      localItem.fabric && localItem.fabric.length > 0 ? localItem.fabric[0].consumption : '',
+                                'Material Price': localItem.yarn && localItem.yarn.length > 0 ? localItem.yarn[0].price : 
+                                                localItem.fabric && localItem.fabric.length > 0 ? localItem.fabric[0].price : '',
+                                'Total Material Cost': localItem.totalMaterialCost || '0.00',
+                                'Product Type': localItem.template === 'beanie' ? 'Beanie' : 'BallCaps',
+                                'MOQ': localItem.moq || '',
+                                'Leadtime': localItem.leadtime || '',
+                                'Status': 'Approved',
+                                'Approved By': 'Madison',
+                                'Approved Date': new Date(localItem.approvedDate).toLocaleDateString()
+                            };
+                            combinedData.push(databankRow);
+                        }
+                    });
+                    
+                    console.log('Combined data (Supabase + Local):', combinedData.length, 'records');
+                    
                     // Store all data for pagination
-                    allTableData = result.data;
+                    allTableData = combinedData;
                     filteredData = null; // Clear any previous filters
                     
-                    // Store total records globally - use the actual count from API
-                    totalRecords = result.total || result.data.length;
+                    // Store total records globally - include local approved data
+                    totalRecords = combinedData.length;
                     window.totalRecords = totalRecords;
                     
                     console.log('Setting totalRecords to:', totalRecords);
@@ -5982,8 +6560,17 @@
                     showStatus('tableData', 'No data found in databank table', 'error');
                 }
             } catch (error) {
-                console.error('Error loading databank data:', error);
-                showStatus('tableData', 'Error loading databank data: ' + error.message, 'error');
+                console.error('Error loading databank data from Supabase:', error);
+                console.log('🔄 Trying to load local databank data instead...');
+                
+                // Try to load local data as fallback
+                const localDatabankData = JSON.parse(localStorage.getItem('databankData') || '[]');
+                if (localDatabankData.length > 0) {
+                    console.log('✅ Found local databank data, using as fallback');
+                    loadLocalDatabankData();
+                } else {
+                    showStatus('tableData', 'Error loading databank data: ' + error.message + ' (No local data available)', 'error');
+                }
             }
         }
 
@@ -6086,17 +6673,38 @@
             }
             
             if (!displayData || displayData.length === 0) {
-                console.log('📭 No data to display');
-                tableElement.innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: #6c757d;">
-                        <h3>📭 No Data Available</h3>
-                        <p>No records found in the databank table. Try importing some data!</p>
-                        <button onclick="loadDatabankData()" style="margin-top: 20px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                            🔄 Try Loading Data Again
-                        </button>
-                    </div>
-                `;
-                return;
+                console.log('📭 No data to display, checking local storage...');
+                
+                // Try to load local databank data
+                const localDatabankData = JSON.parse(localStorage.getItem('databankData') || '[]');
+                console.log('🔍 Local databank data found:', localDatabankData.length, 'items');
+                
+                if (localDatabankData.length > 0) {
+                    console.log('✅ Using local databank data');
+                    displayData = localDatabankData;
+                    window.currentTableData = localDatabankData;
+                } else {
+                    console.log('📭 No local data either');
+                    tableElement.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #6c757d;">
+                            <h3>📭 No Data Available</h3>
+                            <p>No records found in the databank table. Try submitting some data from the factory side!</p>
+                            <button onclick="loadDatabankData()" style="margin-top: 20px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                🔄 Try Loading Data Again
+                            </button>
+                            <button onclick="loadLocalDatabankData()" style="margin-top: 10px; padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                📁 Load Local Data
+                            </button>
+                            <button onclick="createTestDatabankData()" style="margin-top: 10px; padding: 10px 20px; background: #ffc107; color: black; border: none; border-radius: 4px; cursor: pointer;">
+                                🧪 Create Test Data
+                            </button>
+                            <button onclick="refreshDatabankTable()" style="margin-top: 10px; padding: 10px 20px; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                🔄 Refresh Table
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
             }
 
             // Define the specific columns we want to display in order (matching the image format)
@@ -6157,6 +6765,9 @@
 
             // Find actual database columns that match our display columns
             const availableColumns = Object.keys(displayData[0]);
+            console.log('🔍 Available columns in data:', availableColumns);
+            console.log('🔍 Sample data row:', displayData[0]);
+            
             const mappedColumns = [];
             const columnHeaders = [];
 
@@ -6409,6 +7020,16 @@
                     font-size: 12px;
                     margin-right: 10px;
                 ">🗑️ Clear All Filters</button>
+                <button onclick="refreshDatabankTable()" style="
+                    background: #17a2b8; 
+                    color: white; 
+                    border: none; 
+                    padding: 8px 16px; 
+                    border-radius: 4px; 
+                    cursor: pointer; 
+                    font-size: 12px;
+                    margin-right: 10px;
+                ">🔄 Refresh Table</button>
                 <span id="filterStatus" style="color: #6c757d; font-size: 12px;">No filters applied</span>
             `;
             
@@ -6818,10 +7439,10 @@
             const filterButton = filterElement ? filterElement.previousElementSibling?.querySelector('.filter-triangle') : null;
             
             if (filterButton) {
-                if (currentFilters[columnName]) {
-                    filterButton.classList.add('active');
-                } else {
-                    filterButton.classList.remove('active');
+            if (currentFilters[columnName]) {
+                filterButton.classList.add('active');
+            } else {
+                filterButton.classList.remove('active');
                 }
             }
 
@@ -7911,6 +8532,80 @@
         // Make test function globally available
         window.testFilter = testFilter;
         window.clearAllFilters = clearAllFilters;
+        window.refreshDatabankTable = refreshDatabankTable;
+        window.loadLocalDatabankData = loadLocalDatabankData;
+        window.createTestDatabankData = createTestDatabankData;
+        window.checkConnectionStatus = checkConnectionStatus;
+        window.reconnectDatabase = reconnectDatabase;
+        
+        // Debug function to test database save
+        window.testDatabaseSave = async function() {
+            console.log('🧪 Testing database save functionality...');
+            
+            const testData = {
+                Season: 'Test Season',
+                Customer: 'Test Customer',
+                'Style Number': 'TEST-001',
+                'Style Name': 'Test Style',
+                'Main Material': 'Test Material',
+                'Material Consumption': '1.0',
+                'Material Price': '10.00',
+                'Total Material Cost': '10.00',
+                'Product Type': 'Test',
+                'MOQ': '100',
+                'Leadtime': '30',
+                'Status': 'Test',
+                'Approved By': 'Test User',
+                'Approved Date': new Date().toLocaleDateString()
+            };
+            
+            try {
+                const connectionId = localStorage.getItem('currentConnectionId');
+                if (!connectionId) {
+                    console.error('❌ No connection ID found');
+                    showNotification('❌ No database connection found', 'error');
+                    return;
+                }
+                
+                console.log('📤 Sending test data to database...', testData);
+                
+                const response = await fetch(`/.netlify/functions/beanie-data-save`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        connectionId: connectionId,
+                        data: testData
+                    })
+                });
+                
+                console.log('📥 Response status:', response.status);
+                console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
+                
+                const responseText = await response.text();
+                console.log('📥 Response body:', responseText);
+                
+                if (response.ok) {
+                    const result = JSON.parse(responseText);
+                    console.log('✅ Test save successful:', result);
+                    showNotification('✅ Database save test successful!', 'success');
+                } else {
+                    console.error('❌ Test save failed:', response.status, response.statusText, responseText);
+                    
+                    if (response.status === 404) {
+                        showNotification('❌ Database function not deployed yet (404 error)', 'error');
+                        console.log('💡 To fix this: Deploy your Netlify functions or use a different deployment method');
+                    } else {
+                        showNotification(`❌ Database save test failed: ${response.status} ${response.statusText}`, 'error');
+                    }
+                }
+                
+            } catch (error) {
+                console.error('❌ Test save error:', error);
+                showNotification(`❌ Database save test error: ${error.message}`, 'error');
+            }
+        };
         
         // Manual data loading function for debugging
         window.forceLoadData = function() {
@@ -8279,10 +8974,16 @@
                 }, 600);
             }
             
-            // Hide factory data table
-            const factoryDataTable = document.getElementById('factoryDataTable');
-            if (factoryDataTable) {
-                factoryDataTable.style.display = 'none';
+            // Keep factory data table visible for factory users
+            const user = window.authService ? window.authService.getCurrentUser() : null;
+            const isFactoryUser = user && user.role === 'factory';
+            
+            if (!isFactoryUser) {
+                // Hide factory data table only for non-factory users
+                const factoryDataTable = document.getElementById('factoryDataTable');
+                if (factoryDataTable) {
+                    factoryDataTable.style.display = 'none';
+                }
             }
             
             productSelection.style.display = 'block';
@@ -9444,7 +10145,7 @@
                 'Material Price': formData.fabric && formData.fabric.length > 0 ? formData.fabric[0].price : '',
                 'Total Material Cost': formData.totalMaterialCost || '0.00',
                 'Product Type': 'BallCaps',
-                'Costed Quantity': formData.costedQuantity || '',
+                'MOQ': formData.moq || '',
                 'Leadtime': formData.leadtime || ''
             };
             
@@ -16558,7 +17259,7 @@
                 season: document.querySelector('#ballcapsBreakdown input[placeholder*="season"]')?.value || '',
                 styleNumber: document.querySelector('#ballcapsBreakdown input[placeholder*="style number"]')?.value || '',
                 styleName: document.querySelector('#ballcapsBreakdown input[placeholder*="style name"]')?.value || '',
-                costedQuantity: document.querySelector('#ballcapsBreakdown input[placeholder*="quantity"]')?.value || '',
+                moq: document.querySelector('#ballcapsBreakdown input[placeholder*="MOQ"]')?.value || '',
                 leadtime: document.querySelector('#ballcapsBreakdown input[placeholder*="leadtime"]')?.value || '',
                 
                 // FABRIC data with calculations (BallCaps uses fabric instead of yarn)
@@ -16817,7 +17518,7 @@
         }
 
         // Approve factory data and add to databank
-        function approveFactoryData(index) {
+        async function approveFactoryData(index) {
             try {
                 const factoryData = JSON.parse(localStorage.getItem('factoryData') || '[]');
                 const item = factoryData[index];
@@ -16832,13 +17533,16 @@
                 item.approvedBy = 'madison';
                 item.approvedDate = new Date().toISOString();
                 
-                // Add to databank (Madison's main data)
-                const databankData = JSON.parse(localStorage.getItem('databankData') || '[]');
-                databankData.push(item);
-                localStorage.setItem('databankData', JSON.stringify(databankData));
+                // Note: Databank data will be updated in the table display section below
+                // This ensures approved data appears as a new row at the end
                 
-                // Update factory data
+                // Remove approved item from factory data (so it doesn't show in review table)
+                factoryData.splice(index, 1);
                 localStorage.setItem('factoryData', JSON.stringify(factoryData));
+                
+                console.log('✅ Removed approved item from factory data. Remaining items:', factoryData.length);
+                
+                // Note: Database saving will happen after databank row is created below
                 
                 // Create notification for factory user
                 createFactoryNotification({
@@ -16851,15 +17555,200 @@
                 });
                 
                 // Show success notification
-                showNotification(`✅ ${item.template} data approved and added to databank!`, 'success');
+                showNotification(`✅ ${item.template} data approved and added to databank table!`, 'success');
                 
                 // Update review table
                 updateMadisonReviewTable();
                 
-                // Update databank table if visible
+                // Update the databank table to show the updated status (append, don't clear)
                 if (typeof displayTableData === 'function') {
-                    displayTableData(databankData);
+                    // Get current databank data
+                    const databankData = JSON.parse(localStorage.getItem('databankData') || '[]');
+                    
+                    // Always add approved data as a NEW row at the end of the databank table
+                    if (window.currentTableData && Array.isArray(window.currentTableData)) {
+                        // Create new approved row
+                        const approvedRow = {
+                            Season: item.season || '',
+                            Customer: item.customer || '',
+                            'Style Number': item.styleNumber || '',
+                            'Style Name': item.styleName || '',
+                            'Main Material': item.yarn && item.yarn.length > 0 ? item.yarn[0].material : 
+                                            item.fabric && item.fabric.length > 0 ? item.fabric[0].material : '',
+                            'Material Consumption': item.yarn && item.yarn.length > 0 ? item.yarn[0].consumption : 
+                                                  item.fabric && item.fabric.length > 0 ? item.fabric[0].consumption : '',
+                            'Material Price': item.yarn && item.yarn.length > 0 ? item.yarn[0].price : 
+                                            item.fabric && item.fabric.length > 0 ? item.fabric[0].price : '',
+                            'Total Material Cost': item.totalMaterialCost || '0.00',
+                            'Product Type': item.template === 'beanie' ? 'Beanie' : 'BallCaps',
+                            'MOQ': item.moq || '',
+                            'Leadtime': item.leadtime || '',
+                            'Status': 'Approved',
+                            'Approved By': 'Madison',
+                            'Approved Date': new Date().toLocaleDateString(),
+                            'Original Data': item
+                        };
+                        
+                        // Add the approved row to the END of the current table data
+                        window.currentTableData.push(approvedRow);
+                        console.log('✅ Added approved item as NEW row at end of databank table');
+                        console.log('📊 Approved row data:', approvedRow);
+                        console.log('📊 Total databank rows now:', window.currentTableData.length);
+                        
+                        // Also add to localStorage databank data
+                        databankData.push(approvedRow);
+                        localStorage.setItem('databankData', JSON.stringify(databankData));
+                        console.log('💾 Saved approved data to localStorage');
+                        
+                        // Refresh the table display with updated data
+                        displayTableData(window.currentTableData);
+                        console.log('🔄 Refreshed databank table display');
+                        
+                        // Save approved data to Supabase database
+                        try {
+                            const connectionId = localStorage.getItem('currentConnectionId');
+                            if (connectionId) {
+                                console.log('💾 Saving approved data to Supabase database...');
+                                
+                                // Try to save to Supabase via API
+                                try {
+                                    const response = await fetch(`/.netlify/functions/beanie-data-save`, {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                        },
+                                        body: JSON.stringify({
+                                            connectionId: connectionId,
+                                            data: approvedRow
+                                        })
+                                    });
+                                    
+                                    if (response.ok) {
+                                        console.log('✅ Approved data successfully saved to Supabase database');
+                                        showNotification('✅ Data saved to database successfully!', 'success');
+                                    } else {
+                                        const errorText = await response.text();
+                                        console.warn('⚠️ Failed to save approved data to Supabase:', response.status, response.statusText, errorText);
+                                        
+                                        // If it's a 404, the function isn't deployed yet
+                                        if (response.status === 404) {
+                                            console.log('📝 Netlify function not deployed yet, saving locally only');
+                                            showNotification('⚠️ Data saved locally (database function not deployed yet)', 'warning');
+                                        } else {
+                                            showNotification(`⚠️ Data saved locally but failed to save to database: ${response.status} ${response.statusText}`, 'warning');
+                                        }
+                                    }
+                                } catch (fetchError) {
+                                    console.warn('⚠️ Network error saving to database:', fetchError);
+                                    showNotification('⚠️ Data saved locally (network error)', 'warning');
+                                }
+                            } else {
+                                console.warn('⚠️ No connection ID found, data saved locally only');
+                                showNotification('⚠️ Data saved locally only (no database connection)', 'warning');
+                            }
+                        } catch (error) {
+                            console.error('❌ Error saving approved data to Supabase:', error);
+                            showNotification('❌ Error saving to database: ' + error.message, 'error');
+                        }
+                    } else {
+                        // If no current table data, create new array with approved item
+                        const approvedRow = {
+                            Season: item.season || '',
+                            Customer: item.customer || '',
+                            'Style Number': item.styleNumber || '',
+                            'Style Name': item.styleName || '',
+                            'Main Material': item.yarn && item.yarn.length > 0 ? item.yarn[0].material : 
+                                            item.fabric && item.fabric.length > 0 ? item.fabric[0].material : '',
+                            'Material Consumption': item.yarn && item.yarn.length > 0 ? item.yarn[0].consumption : 
+                                                  item.fabric && item.fabric.length > 0 ? item.fabric[0].consumption : '',
+                            'Material Price': item.yarn && item.yarn.length > 0 ? item.yarn[0].price : 
+                                            item.fabric && item.fabric.length > 0 ? item.fabric[0].price : '',
+                            'Total Material Cost': item.totalMaterialCost || '0.00',
+                            'Product Type': item.template === 'beanie' ? 'Beanie' : 'BallCaps',
+                            'MOQ': item.moq || '',
+                            'Leadtime': item.leadtime || '',
+                            'Status': 'Approved',
+                            'Approved By': 'Madison',
+                            'Approved Date': new Date().toLocaleDateString(),
+                            'Original Data': item
+                        };
+                        
+                        // Add to localStorage and display
+                        databankData.push(approvedRow);
+                        localStorage.setItem('databankData', JSON.stringify(databankData));
+                        console.log('💾 Saved approved data to localStorage (new table)');
+                        console.log('📊 Approved row data:', approvedRow);
+                        displayTableData(databankData);
+                        console.log('✅ Added approved item to new databank table');
+                        
+                        // Save approved data to Supabase database
+                        try {
+                            const connectionId = localStorage.getItem('currentConnectionId');
+                            if (connectionId) {
+                                console.log('💾 Saving approved data to Supabase database (new table)...');
+                                
+                                // Try to save to Supabase via API
+                                try {
+                                    const response = await fetch(`/.netlify/functions/beanie-data-save`, {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                        },
+                                        body: JSON.stringify({
+                                            connectionId: connectionId,
+                                            data: approvedRow
+                                        })
+                                    });
+                                    
+                                    if (response.ok) {
+                                        console.log('✅ Approved data successfully saved to Supabase database (new table)');
+                                        showNotification('✅ Data saved to database successfully!', 'success');
+                                    } else {
+                                        const errorText = await response.text();
+                                        console.warn('⚠️ Failed to save approved data to Supabase (new table):', response.status, response.statusText, errorText);
+                                        
+                                        // If it's a 404, the function isn't deployed yet
+                                        if (response.status === 404) {
+                                            console.log('📝 Netlify function not deployed yet, saving locally only (new table)');
+                                            showNotification('⚠️ Data saved locally (database function not deployed yet)', 'warning');
+                                        } else {
+                                            showNotification(`⚠️ Data saved locally but failed to save to database: ${response.status} ${response.statusText}`, 'warning');
+                                        }
+                                    }
+                                } catch (fetchError) {
+                                    console.warn('⚠️ Network error saving to database (new table):', fetchError);
+                                    showNotification('⚠️ Data saved locally (network error)', 'warning');
+                                }
+                            } else {
+                                console.warn('⚠️ No connection ID found, data saved locally only (new table)');
+                                showNotification('⚠️ Data saved locally only (no database connection)', 'warning');
+                            }
+                        } catch (error) {
+                            console.error('❌ Error saving approved data to Supabase (new table):', error);
+                            showNotification('❌ Error saving to database: ' + error.message, 'error');
+                        }
+                    }
+                    
+                    console.log('✅ Updated databank table with approved data (appended, not cleared)');
+                    
+                    // Ensure databank table is visible
+                    const databankSection = document.getElementById('databankSection');
+                    if (databankSection) {
+                        databankSection.style.display = 'block';
+                        console.log('✅ Made databank section visible');
+                    }
+                    
+                    // Scroll to databank table
+                    const tableData = document.getElementById('tableData');
+                    if (tableData) {
+                        tableData.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        console.log('✅ Scrolled to databank table');
+                    }
                 }
+                
+                // Don't reload from Supabase immediately - keep the local data visible
+                // The approved data is already added to the current table display
+                console.log('✅ Approved data added locally, not reloading from Supabase to preserve visibility');
                 
                 console.log('✅ Factory data approved:', item);
             } catch (error) {
@@ -16891,8 +17780,14 @@
                 item.declinedDate = new Date().toISOString();
                 item.declineReason = reason;
                 
-                // Update factory data
+                // Note: Databank data will be updated in the table display section below
+                // This ensures declined data appears as a new row at the end
+                
+                // Remove declined item from factory data (so it doesn't show in review table)
+                factoryData.splice(index, 1);
                 localStorage.setItem('factoryData', JSON.stringify(factoryData));
+                
+                console.log('✅ Removed declined item from factory data. Remaining items:', factoryData.length);
                 
                 // Create notification for factory user
                 createFactoryNotification({
@@ -16910,6 +17805,80 @@
                 
                 // Update review table
                 updateMadisonReviewTable();
+                
+                // Update the databank table to show the updated status (append, don't clear)
+                if (typeof displayTableData === 'function') {
+                    // Get current databank data
+                    const databankData = JSON.parse(localStorage.getItem('databankData') || '[]');
+                    
+                    // Always add declined data as a NEW row at the end of the databank table
+                    if (window.currentTableData && Array.isArray(window.currentTableData)) {
+                        // Create new declined row
+                        const declinedRow = {
+                            Season: item.season || '',
+                            Customer: item.customer || '',
+                            'Style Number': item.styleNumber || '',
+                            'Style Name': item.styleName || '',
+                            'Main Material': item.yarn && item.yarn.length > 0 ? item.yarn[0].material : 
+                                            item.fabric && item.fabric.length > 0 ? item.fabric[0].material : '',
+                            'Material Consumption': item.yarn && item.yarn.length > 0 ? item.yarn[0].consumption : 
+                                                  item.fabric && item.fabric.length > 0 ? item.fabric[0].consumption : '',
+                            'Material Price': item.yarn && item.yarn.length > 0 ? item.yarn[0].price : 
+                                            item.fabric && item.fabric.length > 0 ? item.fabric[0].price : '',
+                            'Total Material Cost': item.totalMaterialCost || '0.00',
+                            'Product Type': item.template === 'beanie' ? 'Beanie' : 'BallCaps',
+                            'MOQ': item.moq || '',
+                            'Leadtime': item.leadtime || '',
+                            'Status': 'Declined',
+                            'Declined By': 'Madison',
+                            'Declined Date': new Date().toLocaleDateString(),
+                            'Decline Reason': reason,
+                            'Original Data': item
+                        };
+                        
+                        // Add the declined row to the END of the current table data
+                        window.currentTableData.push(declinedRow);
+                        console.log('✅ Added declined item as NEW row at end of databank table');
+                        
+                        // Also add to localStorage databank data
+                        databankData.push(declinedRow);
+                        localStorage.setItem('databankData', JSON.stringify(databankData));
+                        
+                        // Refresh the table display with updated data
+                        displayTableData(window.currentTableData);
+                    } else {
+                        // If no current table data, create new array with declined item
+                        const declinedRow = {
+                            Season: item.season || '',
+                            Customer: item.customer || '',
+                            'Style Number': item.styleNumber || '',
+                            'Style Name': item.styleName || '',
+                            'Main Material': item.yarn && item.yarn.length > 0 ? item.yarn[0].material : 
+                                            item.fabric && item.fabric.length > 0 ? item.fabric[0].material : '',
+                            'Material Consumption': item.yarn && item.yarn.length > 0 ? item.yarn[0].consumption : 
+                                                  item.fabric && item.fabric.length > 0 ? item.fabric[0].consumption : '',
+                            'Material Price': item.yarn && item.yarn.length > 0 ? item.yarn[0].price : 
+                                            item.fabric && item.fabric.length > 0 ? item.fabric[0].price : '',
+                            'Total Material Cost': item.totalMaterialCost || '0.00',
+                            'Product Type': item.template === 'beanie' ? 'Beanie' : 'BallCaps',
+                            'MOQ': item.moq || '',
+                            'Leadtime': item.leadtime || '',
+                            'Status': 'Declined',
+                            'Declined By': 'Madison',
+                            'Declined Date': new Date().toLocaleDateString(),
+                            'Decline Reason': reason,
+                            'Original Data': item
+                        };
+                        
+                        // Add to localStorage and display
+                        databankData.push(declinedRow);
+                        localStorage.setItem('databankData', JSON.stringify(databankData));
+                        displayTableData(databankData);
+                        console.log('✅ Added declined item to new databank table');
+                    }
+                    
+                    console.log('✅ Updated databank table with declined data (appended, not cleared)');
+                }
                 
                 console.log('✅ Factory data declined:', item);
             } catch (error) {
@@ -17958,23 +18927,25 @@
             const values = new Set();
             console.log(`🔍 Getting unique values for databank column ${columnIndex} from ${databankOriginalData.length} items`);
             
-            // Get the column mapping from the current table
-            const columnMapping = window.currentColumnMapping || [];
-            const actualColumnName = columnMapping[columnIndex];
+            // Get the column name from the current headers
+            const columnHeaders = window.currentColumnHeaders || [];
+            const columnName = columnHeaders[columnIndex];
             
-            if (!actualColumnName) {
-                console.log(`❌ No column mapping found for index ${columnIndex}`);
+            if (!columnName) {
+                console.log(`❌ No column name found for index ${columnIndex}`);
                 return [];
             }
             
             databankOriginalData.forEach(item => {
-                const value = String(item[actualColumnName] || '').trim();
+                const value = String(item[columnName] || '').trim();
                 if (value && value !== '-') {
                     values.add(value);
                 }
             });
             
-            return Array.from(values).sort();
+            const uniqueValues = Array.from(values).sort();
+            console.log(`Found ${uniqueValues.length} unique values for databank column ${columnIndex} (${columnName}):`, uniqueValues);
+            return uniqueValues;
         }
 
         function applyDatabankColumnFilter(columnIndex, columnName) {
@@ -18056,19 +19027,9 @@
                 
                 const beforeCount = filteredData.length;
                 
-                // Find the actual column name
-                const columnMapping = window.currentColumnMapping || [];
-                const columnIndex = window.currentColumnHeaders?.indexOf(columnName);
-                const actualColumnName = columnMapping[columnIndex];
-                
-                if (!actualColumnName) {
-                    console.log(`❌ Could not find actual column name for ${columnName}`);
-                    return;
-                }
-                
-                // Filter for array of values (multiple selections)
+                // Filter directly using the column name as it appears in the data
                 filteredData = filteredData.filter(item => {
-                    const value = String(item[actualColumnName] || '').trim();
+                    const value = String(item[columnName] || '').trim();
                     const matches = filterValue.some(fv => value.toLowerCase().includes(fv.toLowerCase()));
                     return matches;
                 });
@@ -18307,10 +19268,10 @@
                     timestamp: new Date().toISOString(),
                     status: 'pending', // Pending Madison review
                     submittedBy: 'factory',
-                    customer: document.querySelector('#costBreakdown input[placeholder*="Customer"]')?.value || '',
-                    season: document.querySelector('#costBreakdown input[placeholder*="Season"]')?.value || '',
-                    styleNumber: document.querySelector('#costBreakdown input[placeholder*="Style Number"]')?.value || '',
-                    styleName: document.querySelector('#costBreakdown input[placeholder*="Style Name"]')?.value || '',
+                    customer: document.querySelector('#costBreakdown input[placeholder*="customer"]')?.value || '',
+                    season: document.querySelector('#costBreakdown input[placeholder*="season"]')?.value || '',
+                    styleNumber: document.querySelector('#costBreakdown input[placeholder*="style number"]')?.value || '',
+                    styleName: document.querySelector('#costBreakdown input[placeholder*="style name"]')?.value || '',
                     yarn: extractSectionData('YARN'),
                     fabric: extractSectionData('FABRIC'),
                     trim: extractSectionData('TRIM'),
@@ -18327,10 +19288,45 @@
                     console.warn('⚠️ No basic product information found');
                 }
                 
-                // Save to local storage
+                // Save to local storage (factory data for review)
                 const existingData = JSON.parse(localStorage.getItem('factoryData') || '[]');
                 existingData.push(beanieData);
                 localStorage.setItem('factoryData', JSON.stringify(existingData));
+                
+                // ALSO add to databank table immediately (all data should be in databank)
+                const databankData = JSON.parse(localStorage.getItem('databankData') || '[]');
+                
+                // Convert to databank format
+                const databankRow = {
+                    Season: beanieData.season || '',
+                    Customer: beanieData.customer || '',
+                    'Style Number': beanieData.styleNumber || '',
+                    'Style Name': beanieData.styleName || '',
+                    'Main Material': beanieData.yarn && beanieData.yarn.length > 0 ? beanieData.yarn[0].material : '',
+                    'Material Consumption': beanieData.yarn && beanieData.yarn.length > 0 ? beanieData.yarn[0].consumption : '',
+                    'Material Price': beanieData.yarn && beanieData.yarn.length > 0 ? beanieData.yarn[0].price : '',
+                    'Total Material Cost': beanieData.totalMaterialCost || '0.00',
+                    'Product Type': 'Beanie',
+                    'Costed Quantity': beanieData.costedQuantity || '',
+                    'MOQ': beanieData.moq || '',
+                    'Leadtime': beanieData.leadtime || '',
+                    'Status': 'Pending',
+                    'Submitted By': 'Factory',
+                    'Submitted Date': new Date().toLocaleDateString(),
+                    'Original Data': beanieData // Keep reference to original data
+                };
+                
+                databankData.push(databankRow);
+                localStorage.setItem('databankData', JSON.stringify(databankData));
+                
+                console.log('✅ Beanie data added to both factory data and databank table');
+                
+                // Refresh databank table if it's visible
+                if (typeof refreshDatabankTable === 'function') {
+                    setTimeout(() => {
+                        refreshDatabankTable();
+                    }, 500);
+                }
                 
                 // Show success notification
                 showNotification('Beanie data submitted for Madison review!', 'success');
@@ -18371,10 +19367,12 @@
                     timestamp: new Date().toISOString(),
                     status: 'pending', // Pending Madison review
                     submittedBy: 'factory',
-                    customer: document.querySelector('#ballcapsBreakdown input[placeholder*="Customer"]')?.value || '',
-                    season: document.querySelector('#ballcapsBreakdown input[placeholder*="Season"]')?.value || '',
-                    styleNumber: document.querySelector('#ballcapsBreakdown input[placeholder*="Style Number"]')?.value || '',
-                    styleName: document.querySelector('#ballcapsBreakdown input[placeholder*="Style Name"]')?.value || '',
+                    customer: document.querySelector('#ballcapsBreakdown input[placeholder*="customer"]')?.value || '',
+                    season: document.querySelector('#ballcapsBreakdown input[placeholder*="season"]')?.value || '',
+                    styleNumber: document.querySelector('#ballcapsBreakdown input[placeholder*="style number"]')?.value || '',
+                    styleName: document.querySelector('#ballcapsBreakdown input[placeholder*="style name"]')?.value || '',
+                    moq: document.querySelector('#ballcapsBreakdown input[placeholder*="MOQ"]')?.value || '',
+                    leadtime: document.querySelector('#ballcapsBreakdown input[placeholder*="leadtime"]')?.value || '',
                     fabric: extractBallCapsSectionData('FABRIC/S'),
                     otherFabric: extractBallCapsSectionData('OTHER FABRIC/S - TRIM/S'),
                     trim: extractBallCapsSectionData('TRIM/S'),
@@ -18385,10 +19383,44 @@
                     totalFactoryCost: getBallCapsTotalFactoryCost()
                 };
                 
-                // Save to local storage
+                // Save to local storage (factory data for review)
                 const existingData = JSON.parse(localStorage.getItem('factoryData') || '[]');
                 existingData.push(ballcapsData);
                 localStorage.setItem('factoryData', JSON.stringify(existingData));
+                
+                // ALSO add to databank table immediately (all data should be in databank)
+                const databankData = JSON.parse(localStorage.getItem('databankData') || '[]');
+                
+                // Convert to databank format
+                const databankRow = {
+                    Season: ballcapsData.season || '',
+                    Customer: ballcapsData.customer || '',
+                    'Style Number': ballcapsData.styleNumber || '',
+                    'Style Name': ballcapsData.styleName || '',
+                    'Main Material': ballcapsData.fabric && ballcapsData.fabric.length > 0 ? ballcapsData.fabric[0].material : '',
+                    'Material Consumption': ballcapsData.fabric && ballcapsData.fabric.length > 0 ? ballcapsData.fabric[0].consumption : '',
+                    'Material Price': ballcapsData.fabric && ballcapsData.fabric.length > 0 ? ballcapsData.fabric[0].price : '',
+                    'Total Material Cost': ballcapsData.totalMaterialCost || '0.00',
+                    'Product Type': 'BallCaps',
+                    'MOQ': ballcapsData.moq || '',
+                    'Leadtime': ballcapsData.leadtime || '',
+                    'Status': 'Pending',
+                    'Submitted By': 'Factory',
+                    'Submitted Date': new Date().toLocaleDateString(),
+                    'Original Data': ballcapsData // Keep reference to original data
+                };
+                
+                databankData.push(databankRow);
+                localStorage.setItem('databankData', JSON.stringify(databankData));
+                
+                console.log('✅ Ballcaps data added to both factory data and databank table');
+                
+                // Refresh databank table if it's visible
+                if (typeof refreshDatabankTable === 'function') {
+                    setTimeout(() => {
+                        refreshDatabankTable();
+                    }, 500);
+                }
                 
                 // Show success notification
                 showNotification('Ballcaps data submitted for Madison review!', 'success');
