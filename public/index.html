@@ -6814,12 +6814,15 @@
             }
 
             // Update UI
-            const filterButton = document.querySelector(`#filter-${columnIndex}`).previousElementSibling.querySelector('.filter-triangle');
+            const filterElement = document.querySelector(`#filter-${columnIndex}`);
+            const filterButton = filterElement ? filterElement.previousElementSibling?.querySelector('.filter-triangle') : null;
             
-            if (currentFilters[columnName]) {
-                filterButton.classList.add('active');
-            } else {
-                filterButton.classList.remove('active');
+            if (filterButton) {
+                if (currentFilters[columnName]) {
+                    filterButton.classList.add('active');
+                } else {
+                    filterButton.classList.remove('active');
+                }
             }
 
             // Close dropdown
@@ -10434,8 +10437,8 @@
             }
         }
 
-        // Show notification
-        function showNotification(message, type = 'info') {
+        // Show notification (legacy - use notificationManager instead)
+        function showNotificationLegacy(message, type = 'info') {
             // Remove existing notification
             const existingNotification = document.querySelector('.notification');
             if (existingNotification) {
@@ -11251,8 +11254,8 @@
         
         // Function to save data to database
         
-        // Function to show notifications
-        function showNotification(message, type = 'info') {
+        // Function to show notifications (legacy - use notificationManager instead)
+        function showNotificationLegacy2(message, type = 'info') {
             // Create notification element
             const notification = document.createElement('div');
             notification.className = `notification notification-${type}`;
@@ -15392,8 +15395,12 @@
             }
         }
 
-        function updateBallCapsSubtotal(selector, total) {
-            const section = document.querySelector(selector);
+        function updateBallCapsSubtotal(selectorOrElement, total) {
+            // Handle both selector strings and DOM elements
+            const section = typeof selectorOrElement === 'string' ? 
+                document.querySelector(selectorOrElement) : 
+                selectorOrElement;
+                
             if (section) {
                 const subtotalRow = section.querySelector('.subtotal-row');
                 if (subtotalRow) {
@@ -16555,10 +16562,10 @@
                 leadtime: document.querySelector('#ballcapsBreakdown input[placeholder*="leadtime"]')?.value || '',
                 
                 // FABRIC data with calculations (BallCaps uses fabric instead of yarn)
-                fabric: collectBallCapsSectionData('FABRIC'),
+                fabric: collectBallCapsSectionData('FABRIC/S'),
                 
                 // TRIM data with calculations
-                trim: collectBallCapsSectionData('TRIM'),
+                trim: collectBallCapsSectionData('TRIM/S'),
                 
                 // Total material cost
                 totalMaterialCost: getBallCapsTotalMaterialCost()
@@ -16600,10 +16607,20 @@
 
         // Collect data from a specific BallCaps section
         function collectBallCapsSectionData(sectionName) {
-            const section = document.querySelector(`#ballcapsBreakdown .cost-section[data-section="${sectionName}"]`);
-            if (!section) return [];
+            const sections = document.querySelectorAll('#ballcapsBreakdown .cost-section');
+            let targetSection = null;
+            
+            for (let section of sections) {
+                const header = section.querySelector('.section-header');
+                if (header && header.textContent.trim() === sectionName) {
+                    targetSection = section;
+                    break;
+                }
+            }
+            
+            if (!targetSection) return [];
 
-            const rows = section.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+            const rows = targetSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
             const data = [];
 
             rows.forEach(row => {
@@ -17092,14 +17109,14 @@
                                     <tr>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
                                             <div class="header-with-filter">
-                                                Season
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(0, 'Season')" title="Filter Season">▼</button>
+                                                Type
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(0, 'Type')" title="Filter Type">▼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
                                             <div class="header-with-filter">
-                                                Type
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(1, 'Type')" title="Filter Type">▼</button>
+                                                Season
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(1, 'Season')" title="Filter Season">▼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
@@ -17291,7 +17308,6 @@
                     
                     tableHTML += `
                         <tr>
-                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">${item.season || '-'}</td>
                             <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">
                                 <div style="display: flex; justify-content: flex-start; align-items: center;">
                                     <span class="factory-data-badge ${item.template}">
@@ -17299,6 +17315,7 @@
                                     </span>
                                 </div>
                             </td>
+                            <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">${item.season || '-'}</td>
                             <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">${item.customer || '-'}</td>
                             <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">${item.styleNumber || '-'}</td>
                             <td style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap;">${item.styleName || '-'}</td>
@@ -18499,6 +18516,14 @@
             });
             
             try {
+                // Check if we have a database connection
+                if (!connectionId) {
+                    showErrorNotification('No database connection found. Please connect to database first.', {
+                        duration: 6000
+                    });
+                    return;
+                }
+
                 // Check if we have parsed data or manually entered data
                 if (!window.currentParsedData) {
                     // Initialize with empty data structure for manual entry
