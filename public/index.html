@@ -8568,6 +8568,8 @@
                 }
                 
                 console.log('📤 Sending test data to database...', testData);
+                console.log('🔗 Function URL: /.netlify/functions/beanie-data-save');
+                console.log('🔑 Connection ID:', connectionId);
                 
                 const response = await fetch(`/.netlify/functions/beanie-data-save`, {
                     method: 'POST',
@@ -8596,6 +8598,9 @@
                     if (response.status === 404) {
                         showNotification('❌ Database function not deployed yet (404 error)', 'error');
                         console.log('💡 To fix this: Deploy your Netlify functions or use a different deployment method');
+                    } else if (response.status === 500) {
+                        showNotification('❌ Database function error (500) - Check environment variables', 'error');
+                        console.log('💡 Check if SUPABASE_URL and SUPABASE_ANON_KEY are set in Netlify');
                     } else {
                         showNotification(`❌ Database save test failed: ${response.status} ${response.statusText}`, 'error');
                     }
@@ -8604,6 +8609,30 @@
             } catch (error) {
                 console.error('❌ Test save error:', error);
                 showNotification(`❌ Database save test error: ${error.message}`, 'error');
+            }
+        };
+        
+        // Simple function to check if functions are deployed
+        window.checkFunctionDeployment = async function() {
+            console.log('🔍 Checking if Netlify functions are deployed...');
+            
+            try {
+                const response = await fetch(`/.netlify/functions/beanie-data-save`, {
+                    method: 'OPTIONS'
+                });
+                
+                console.log('📥 Function check response:', response.status);
+                
+                if (response.status === 200) {
+                    console.log('✅ Function is deployed and accessible');
+                    showNotification('✅ Netlify function is deployed!', 'success');
+                } else {
+                    console.log('❌ Function not accessible:', response.status);
+                    showNotification(`❌ Function not accessible: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                console.error('❌ Function check error:', error);
+                showNotification(`❌ Function check error: ${error.message}`, 'error');
             }
         };
         
