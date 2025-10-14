@@ -7,12 +7,61 @@ class AuthService {
     constructor() {
         this.currentUser = null;
         this.isAuthenticated = false;
+        this.logoutToken = null;
         this.init();
     }
 
     init() {
+        // Initialize logout token from localStorage
+        this.logoutToken = localStorage.getItem('logoutToken');
+        
+        // Register service worker for additional security
+        this.registerServiceWorker();
+        
+        // Add global popstate listener to prevent back button access
+        this.setupGlobalBackButtonProtection();
+        
         // Check for existing session on initialization
         this.checkExistingSession();
+    }
+    
+    /**
+     * Register service worker for authentication security
+     */
+    async registerServiceWorker() {
+        if ('serviceWorker' in navigator) {
+            try {
+                const registration = await navigator.serviceWorker.register('/sw.js');
+                console.log('Service Worker registered successfully:', registration);
+                
+                // Send logout message to service worker when needed
+                this.serviceWorkerRegistration = registration;
+            } catch (error) {
+                console.log('Service Worker registration failed:', error);
+            }
+        }
+    }
+    
+    /**
+     * Setup global protection against back button navigation
+     */
+    setupGlobalBackButtonProtection() {
+        // Remove any existing popstate listeners to avoid duplicates
+        window.removeEventListener('popstate', this.handlePopState);
+        
+        // Add the popstate listener
+        this.handlePopState = (event) => {
+            console.log('Back button detected, checking authentication...');
+            
+            // Always check authentication on any navigation
+            if (!this.isUserAuthenticated()) {
+                console.log('User not authenticated, redirecting to login...');
+                window.location.replace('login.html?popstate_redirect=' + Date.now());
+                return;
+            }
+        };
+        
+        window.addEventListener('popstate', this.handlePopState);
     }
 
     /**
@@ -21,6 +70,13 @@ class AuthService {
     checkExistingSession() {
         const isAuthenticated = localStorage.getItem('isAuthenticated');
         const user = localStorage.getItem('user');
+        const storedLogoutToken = localStorage.getItem('logoutToken');
+        
+        // Check if session was explicitly logged out
+        if (storedLogoutToken && this.logoutToken && storedLogoutToken === this.logoutToken) {
+            this.clearSession();
+            return false;
+        }
         
         if (isAuthenticated === 'true' && user) {
             try {
@@ -106,6 +162,8 @@ class AuthService {
             localStorage.setItem('user', JSON.stringify(this.currentUser));
             localStorage.setItem('isAuthenticated', 'true');
             localStorage.setItem('loginTime', new Date().toISOString());
+            // Clear any existing logout token on new login
+            localStorage.removeItem('logoutToken');
         }
     }
 
@@ -118,15 +176,98 @@ class AuthService {
         localStorage.removeItem('user');
         localStorage.removeItem('isAuthenticated');
         localStorage.removeItem('loginTime');
+        // Note: We intentionally keep logoutToken for security
     }
 
     /**
      * Logout user
      */
     logout() {
+        console.log('🚪 Starting logout process...');
+        
+        // Generate a unique logout token to prevent back button access
+        this.logoutToken = 'logout_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('logoutToken', this.logoutToken);
+        
+        // Notify service worker about logout
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+                type: 'LOGOUT',
+                token: this.logoutToken
+            });
+        }
+        
         this.clearSession();
-        // Redirect to login page
-        window.location.href = 'login.html';
+        
+        // Clear browser history and cache
+        this.clearBrowserCache();
+        
+        // Clear all history entries and prevent back navigation
+        this.clearBrowserHistory();
+        
+        console.log('🚪 Logout complete, redirecting to login...');
+        
+        // Redirect to login page with cache-busting
+        window.location.replace('login.html?logout=' + Date.now());
+    }
+    
+    /**
+     * Clear browser cache and prevent back button access
+     */
+    clearBrowserCache() {
+        // Clear all cached data
+        if ('caches' in window) {
+            caches.keys().then(function(names) {
+                for (let name of names) {
+                    caches.delete(name);
+                }
+            });
+        }
+        
+        // Clear session storage
+        sessionStorage.clear();
+        
+        // Clear all localStorage except logout token
+        const logoutToken = localStorage.getItem('logoutToken');
+        localStorage.clear();
+        if (logoutToken) {
+            localStorage.setItem('logoutToken', logoutToken);
+        }
+        
+        // Force reload from server (not cache)
+        if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, '', window.location.href);
+        }
+    }
+    
+    /**
+     * Clear browser history to prevent back button access
+     */
+    clearBrowserHistory() {
+        // Create a new history state that prevents back navigation
+        if (window.history && window.history.pushState) {
+            // Clear the entire history by pushing multiple states
+            for (let i = 0; i < 10; i++) {
+                window.history.pushState({logout: true, index: i}, '', window.location.href);
+            }
+            
+            // Replace the current state to ensure we're at the end
+            window.history.replaceState({logout: true, final: true}, '', window.location.href);
+        }
+        
+        // Add event listener to prevent back navigation
+        const backButtonHandler = (event) => {
+            console.log('🚫 Back button blocked, redirecting to login...');
+            // If user tries to go back, redirect to login
+            window.location.replace('login.html?blocked_back=' + Date.now());
+        };
+        
+        // Remove existing listener and add new one
+        window.removeEventListener('popstate', backButtonHandler);
+        window.addEventListener('popstate', backButtonHandler);
+        
+        // Store reference for cleanup
+        this.backButtonHandler = backButtonHandler;
     }
 
     /**
@@ -142,6 +283,21 @@ class AuthService {
      * @returns {boolean} Authentication status
      */
     isUserAuthenticated() {
+        // Always re-check session validity to prevent back button issues
+        if (this.isAuthenticated) {
+            // Check for logout token first
+            const storedLogoutToken = localStorage.getItem('logoutToken');
+            if (storedLogoutToken && this.logoutToken && storedLogoutToken === this.logoutToken) {
+                this.clearSession();
+                return false;
+            }
+            
+            // Check if session is expired
+            if (this.isSessionExpired()) {
+                this.logout();
+                return false;
+            }
+        }
         return this.isAuthenticated;
     }
 

@@ -1,9 +1,13 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Databank Data Management System - Updated</title>
+    <!-- Security headers to prevent caching of authenticated pages -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <!-- XLSX Library -->
     <script src="js/xlsx.min.js"></script>
     <!-- No external Supabase CDN - using pure API approach -->
@@ -1340,35 +1344,369 @@
             box-shadow: none;
         }
 
-        /* Product Selection Styles */
+        /* Professional Factory Import Layout */
         .product-selection-container {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 16px;
-            padding: 35px;
-            margin: 20px 0;
-            box-shadow: 0 12px 40px rgba(31, 38, 135, 0.2);
-            text-align: center;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: 24px;
+            padding: 48px 40px;
+            margin: 32px 0;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.08),
+                0 8px 25px rgba(0, 0, 0, 0.04),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            overflow: hidden;
+            position: relative;
+            backdrop-filter: blur(20px);
         }
 
-        .product-selection-header h2 {
-            color: #2c3e50;
+        .factory-import-layout {
+            display: flex;
+            align-items: center;
+            gap: 60px;
+            min-height: 240px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Left Section - Title */
+        .factory-title-section {
+            flex: 0 0 42%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .factory-title-box {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border-radius: 20px;
+            padding: 40px 32px;
+            box-shadow: 
+                0 12px 40px rgba(30, 41, 59, 0.15),
+                0 4px 16px rgba(30, 41, 59, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: slideInLeft 0.8s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .factory-title-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        }
+
+        .factory-title {
+            color: #ffffff;
             font-size: 28px;
             font-weight: 700;
-            margin: 0 0 30px 0;
+            margin: 0;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            letter-spacing: -0.02em;
+            letter-spacing: -0.025em;
             text-align: center;
+            line-height: 1.2;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .product-selection-buttons {
+        .title-line-1, .title-line-2 {
+            display: block;
+        }
+
+        .title-line-1 {
+            animation: fadeInUp 0.6s ease-out 0.2s both;
+        }
+
+        .title-line-2 {
+            animation: fadeInUp 0.6s ease-out 0.4s both;
+        }
+
+        /* Right Section - Product Options */
+        .factory-options-section {
+            flex: 1;
             display: flex;
-            gap: 20px;
-            justify-content: center;
-            flex-wrap: wrap;
+            flex-direction: column;
+            gap: 24px;
         }
 
+
+        .factory-product-button {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+            padding: 32px 40px;
+            border-radius: 20px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 12px 32px rgba(59, 130, 246, 0.25),
+                0 6px 16px rgba(59, 130, 246, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            width: 100%;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            animation: slideInRight 0.8s ease-out;
+        }
+
+        .beanie-button {
+            animation-delay: 0.2s;
+        }
+
+        .ballcaps-button {
+            animation-delay: 0.4s;
+        }
+
+        .button-content {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .button-icon {
+            font-size: 32px;
+            opacity: 0.9;
+            transition: all 0.3s ease;
+        }
+
+        .button-text {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            text-align: left;
+        }
+
+        .button-title {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin: 0;
+        }
+
+        .button-subtitle {
+            font-size: 14px;
+            font-weight: 400;
+            opacity: 0.8;
+            margin: 0;
+        }
+
+        .factory-product-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .factory-product-button:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 
+                0 20px 48px rgba(59, 130, 246, 0.3),
+                0 12px 24px rgba(59, 130, 246, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .factory-product-button:hover .button-icon {
+            transform: scale(1.1);
+            opacity: 1;
+        }
+
+        .factory-product-button:hover::before {
+            left: 100%;
+        }
+
+        .factory-product-button:active {
+            transform: translateY(-3px) scale(1.01);
+            box-shadow: 
+                0 12px 32px rgba(59, 130, 246, 0.25),
+                0 6px 16px rgba(59, 130, 246, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        /* Professional focus effects */
+        .factory-product-button:focus {
+            animation: pulseGlow 0.6s ease-out;
+        }
+
+        @keyframes pulseGlow {
+            0% {
+                box-shadow: 
+                    0 12px 32px rgba(59, 130, 246, 0.25),
+                    0 6px 16px rgba(59, 130, 246, 0.15),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            }
+            50% {
+                box-shadow: 
+                    0 20px 48px rgba(59, 130, 246, 0.4),
+                    0 12px 24px rgba(59, 130, 246, 0.25),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            }
+            100% {
+                box-shadow: 
+                    0 12px 32px rgba(59, 130, 246, 0.25),
+                    0 6px 16px rgba(59, 130, 246, 0.15),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            }
+        }
+
+        /* Professional background accent */
+        .product-selection-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.02) 0%, rgba(147, 197, 253, 0.01) 100%);
+            border-radius: 24px;
+            z-index: -1;
+        }
+
+        /* Animations */
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Professional Responsive Design */
+        @media (max-width: 1024px) {
+            .factory-import-layout {
+                gap: 40px;
+            }
+            
+            .factory-title {
+                font-size: 24px;
+            }
+            
+            .factory-title-box {
+                padding: 32px 24px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .product-selection-container {
+                padding: 32px 24px;
+                margin: 24px 0;
+            }
+            
+            .factory-import-layout {
+                flex-direction: column;
+                gap: 32px;
+                min-height: auto;
+            }
+            
+            .factory-title-section {
+                flex: none;
+            }
+            
+            .factory-title {
+                font-size: 22px;
+            }
+            
+            .factory-title-box {
+                padding: 28px 20px;
+            }
+            
+            .factory-options-section {
+                gap: 20px;
+            }
+            
+            .factory-product-button {
+                padding: 24px 32px;
+            }
+            
+            .button-content {
+                gap: 16px;
+            }
+            
+            .button-icon {
+                font-size: 28px;
+            }
+            
+            .button-title {
+                font-size: 18px;
+            }
+            
+            .button-subtitle {
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .product-selection-container {
+                padding: 24px 16px;
+            }
+            
+            .factory-title {
+                font-size: 20px;
+            }
+            
+            .factory-title-box {
+                padding: 24px 16px;
+            }
+            
+            .factory-product-button {
+                padding: 20px 24px;
+            }
+            
+            .button-content {
+                gap: 12px;
+            }
+            
+            .button-icon {
+                font-size: 24px;
+            }
+            
+            .button-title {
+                font-size: 16px;
+            }
+            
+            .button-subtitle {
+                font-size: 12px;
+            }
+        }
+
+        /* Legacy product button styles - kept for other parts of the app */
         .product-button {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -1383,59 +1721,6 @@
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 4px 12px rgba(135, 206, 235, 0.3);
             min-width: 150px;
-        }
-
-        .product-button.scroll-trigger {
-            animation: pulseGlow 0.6s ease-out;
-        }
-
-        @keyframes pulseGlow {
-            0% {
-                transform: scale(1);
-                box-shadow: 0 4px 12px rgba(135, 206, 235, 0.3);
-            }
-            50% {
-                transform: scale(1.05);
-                box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
-            }
-            100% {
-                transform: scale(1);
-                box-shadow: 0 4px 12px rgba(135, 206, 235, 0.3);
-            }
-        }
-
-        .product-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .product-button:hover {
-            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .product-button:hover::before {
-            left: 100%;
-        }
-
-        .product-button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 8px rgba(135, 206, 235, 0.3);
-        }
-
-        .beanie-button {
-            background: linear-gradient(135deg, #87CEEB 0%, #98D8E8 100%);
-        }
-
-        .ballcaps-button {
-            background: linear-gradient(135deg, #87CEEB 0%, #98D8E8 100%);
         }
 
         /* Factory Cost Breakdown Styles */
@@ -4006,16 +4291,41 @@
 
         <!-- Product Type Selection - Bottom of Page -->
         <div id="productSelection" class="product-selection-container">
-            <div class="product-selection-header scroll-slide-left scroll-stagger-1">
-                <h2>IMPORT EXCEL FILES FTY CBD</h2>
-            </div>
-            <div class="product-selection-buttons scroll-bounce-in scroll-stagger-2" id="productSelectionButtons">
-                <button class="product-button beanie-button scroll-scale-up scroll-stagger-3" onclick="showTemplate('beanie'); scrollToSection('costBreakdown')" id="beanieButton">
-                    Beanie
-                </button>
-                <button class="product-button ballcaps-button scroll-scale-up scroll-stagger-4" onclick="showTemplate('ballcaps'); scrollToSection('ballcapsBreakdown')" id="ballcapsButton">
-                    BallCaps
-                </button>
+            <div class="factory-import-layout">
+                <!-- Left Section - Title -->
+                <div class="factory-title-section">
+                    <div class="factory-title-box">
+                        <h2 class="factory-title">
+                            <span class="title-line-1">IMPORT EXCEL</span>
+                            <span class="title-line-2">FILES FTY CBD</span>
+                        </h2>
+                    </div>
+                </div>
+                
+                <!-- Right Section - Product Options -->
+                <div class="factory-options-section">
+                    <!-- Beanie Option -->
+                    <button class="factory-product-button beanie-button" onclick="showTemplate('beanie'); scrollToSection('costBreakdown')" id="beanieButton">
+                        <div class="button-content">
+                            <div class="button-icon">🧢</div>
+                            <div class="button-text">
+                                <span class="button-title">Beanie</span>
+                                <span class="button-subtitle">Import Excel Template</span>
+                            </div>
+                        </div>
+                    </button>
+                    
+                    <!-- BallCaps Option -->
+                    <button class="factory-product-button ballcaps-button" onclick="showTemplate('ballcaps'); scrollToSection('ballcapsBreakdown')" id="ballcapsButton">
+                        <div class="button-content">
+                            <div class="button-icon">⚾</div>
+                            <div class="button-text">
+                                <span class="button-title">BallCaps</span>
+                                <span class="button-subtitle">Import Excel Template</span>
+                            </div>
+                        </div>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -5658,26 +5968,56 @@
 
         // Authentication functions
         function checkAuthentication() {
-            if (window.authService && window.authService.isUserAuthenticated()) {
-                const user = window.authService.getCurrentUser();
-                document.getElementById('userName').textContent = user.username;
-                document.getElementById('userInfo').style.display = 'flex';
-                
-                // Check if session is expired
-                if (window.authService.isSessionExpired()) {
-                    window.authService.logout();
-                    return false;
-                }
-                
-                // Apply role-based UI visibility
-                applyRoleBasedVisibility();
-                
-                return true;
-            } else {
-                // Redirect to login page
-                window.location.href = 'login.html';
+            console.log('🔐 Checking authentication...');
+            
+            // Force fresh authentication check
+            if (!window.authService) {
+                console.log('❌ Auth service not available, redirecting to login...');
+                window.location.replace('login.html?no_auth_service=' + Date.now());
                 return false;
             }
+            
+            // Check logout token first (most important security check)
+            const storedLogoutToken = localStorage.getItem('logoutToken');
+            if (storedLogoutToken) {
+                console.log('🚫 Logout token detected, user was logged out');
+                window.location.replace('login.html?logout_token_detected=' + Date.now());
+                return false;
+            }
+            
+            // Check if user is authenticated
+            if (!window.authService.isUserAuthenticated()) {
+                console.log('❌ User not authenticated, redirecting to login...');
+                window.location.replace('login.html?not_authenticated=' + Date.now());
+                return false;
+            }
+            
+            // Double-check session expiration
+            if (window.authService.isSessionExpired()) {
+                console.log('⏰ Session expired, logging out...');
+                window.authService.logout();
+                return false;
+            }
+            
+            // If we get here, user is authenticated
+            console.log('✅ User is authenticated');
+            const user = window.authService.getCurrentUser();
+            document.getElementById('userName').textContent = user.username;
+            document.getElementById('userInfo').style.display = 'flex';
+            
+            // Apply role-based UI visibility
+            applyRoleBasedVisibility();
+            
+            // Add cache control headers to prevent browser caching
+            if (window.history && window.history.replaceState) {
+                const currentUrl = window.location.href;
+                if (!currentUrl.includes('nocache=')) {
+                    const separator = currentUrl.includes('?') ? '&' : '?';
+                    window.history.replaceState(null, '', currentUrl + separator + 'nocache=' + Date.now());
+                }
+            }
+            
+            return true;
         }
 
         // Apply role-based visibility controls
@@ -5754,6 +6094,47 @@
                 hideIntroOverlay();
                 document.getElementById('productSelection').style.display = 'block';
             }, 15000);
+        });
+        
+        // Prevent back button access after logout
+        window.addEventListener('pageshow', function(event) {
+            console.log('Page show event:', event.persisted);
+            
+            // If page was loaded from cache (back button), re-check authentication
+            if (event.persisted) {
+                console.log('Page loaded from cache, re-checking authentication...');
+                if (!checkAuthentication()) {
+                    return;
+                }
+            }
+        });
+        
+        // Additional security: Check authentication on focus
+        window.addEventListener('focus', function() {
+            console.log('Window focused, checking authentication...');
+            if (!checkAuthentication()) {
+                return;
+            }
+        });
+        
+        // Continuous authentication monitoring
+        setInterval(function() {
+            if (window.authService && !window.authService.isUserAuthenticated()) {
+                console.log('🔒 Authentication lost during session, redirecting to login...');
+                window.location.replace('login.html?session_lost=' + Date.now());
+            }
+        }, 5000); // Check every 5 seconds
+        
+        // Additional security: Check authentication on any user interaction
+        document.addEventListener('click', function(event) {
+            // Only check on certain interactions to avoid performance issues
+            if (event.target.tagName === 'BUTTON' || event.target.tagName === 'A') {
+                setTimeout(function() {
+                    if (!checkAuthentication()) {
+                        return;
+                    }
+                }, 100);
+            }
         });
         
         // Prevent database data from being displayed when Excel file is uploaded

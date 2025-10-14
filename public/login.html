@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Databank Data Management System</title>
+    <!-- Security headers to prevent caching -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <script src="js/auth.js"></script>
     <style>
         * {
@@ -481,9 +485,16 @@
 
         // Check if user is already logged in
         window.addEventListener('load', function() {
+            // Clear any logout tokens from URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('logout') || urlParams.has('redirected') || urlParams.has('focus_redirect')) {
+                // Clear the URL parameters for security
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+            
             if (window.authService && window.authService.isUserAuthenticated()) {
                 // User is already logged in, redirect to main app
-                window.location.href = 'index.html';
+                window.location.replace('index.html?login_redirect=' + Date.now());
             }
         });
 
