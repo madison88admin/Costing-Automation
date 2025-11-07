@@ -3753,7 +3753,7 @@
                     display: none;
                 "></div>
                 
-            <div id="autoConnectStatus" style="display: block;">
+                <div id="autoConnectStatus" style="display: block;">
                     <div class="loading" style="
                         background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
                         color: white;
@@ -6395,15 +6395,9 @@
             }
         }
 
-        // Force refresh databank table with current data (only for Madison users)
+        // Force refresh databank table with current data
         function refreshDatabankTable() {
             console.log('🔄 Force refreshing databank table...');
-            
-            // Only refresh if user can view databank (Madison users)
-            if (!window.authService || !window.authService.canViewDatabank()) {
-                console.log('✅ Skipping databank refresh for factory user');
-                return;
-            }
             
             // Try to get current data from multiple sources
             let currentData = null;
@@ -6691,13 +6685,13 @@
                     window.currentTableData = localDatabankData;
                 } else {
                     console.log('📭 No local data either');
-                tableElement.innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: #6c757d;">
-                        <h3>📭 No Data Available</h3>
+                    tableElement.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #6c757d;">
+                            <h3>📭 No Data Available</h3>
                             <p>No records found in the databank table. Try submitting some data from the factory side!</p>
-                        <button onclick="loadDatabankData()" style="margin-top: 20px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                            🔄 Try Loading Data Again
-                        </button>
+                            <button onclick="loadDatabankData()" style="margin-top: 20px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                🔄 Try Loading Data Again
+                            </button>
                             <button onclick="loadLocalDatabankData()" style="margin-top: 10px; padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
                                 📁 Load Local Data
                             </button>
@@ -6706,10 +6700,10 @@
                             </button>
                             <button onclick="refreshDatabankTable()" style="margin-top: 10px; padding: 10px 20px; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer;">
                                 🔄 Refresh Table
-                        </button>
-                    </div>
-                `;
-                return;
+                            </button>
+                        </div>
+                    `;
+                    return;
                 }
             }
 
@@ -9015,9 +9009,9 @@
             
             if (!isFactoryUser) {
                 // Hide factory data table only for non-factory users
-            const factoryDataTable = document.getElementById('factoryDataTable');
-            if (factoryDataTable) {
-                factoryDataTable.style.display = 'none';
+                const factoryDataTable = document.getElementById('factoryDataTable');
+                if (factoryDataTable) {
+                    factoryDataTable.style.display = 'none';
                 }
             }
             
@@ -17708,19 +17702,13 @@
                             'Original Data': item
                         };
                         
-                        // Add to localStorage and display (only for Madison users)
+                        // Add to localStorage and display
                         databankData.push(approvedRow);
                         localStorage.setItem('databankData', JSON.stringify(databankData));
                         console.log('💾 Saved approved data to localStorage (new table)');
                         console.log('📊 Approved row data:', approvedRow);
-                        
-                        // Only display table data for Madison users
-                        if (window.authService && window.authService.canViewDatabank()) {
-                    displayTableData(databankData);
-                            console.log('✅ Added approved item to new databank table');
-                        } else {
-                            console.log('✅ Approved data saved but table not displayed for factory user');
-                        }
+                        displayTableData(databankData);
+                        console.log('✅ Added approved item to new databank table');
                         
                         // Save approved data to Supabase database
                         try {
@@ -17772,28 +17760,18 @@
                     
                     console.log('✅ Updated databank table with approved data (appended, not cleared)');
                     
-                    // Ensure databank table is visible (only for Madison users)
+                    // Ensure databank table is visible
                     const databankSection = document.getElementById('databankSection');
                     if (databankSection) {
-                        // Only show databank table for Madison users
-                        if (window.authService && window.authService.canViewDatabank()) {
-                            databankSection.style.display = 'block';
-                            console.log('✅ Made databank section visible for Madison user');
-                        } else {
-                            databankSection.style.display = 'none';
-                            console.log('✅ Kept databank section hidden for factory user');
-                        }
+                        databankSection.style.display = 'block';
+                        console.log('✅ Made databank section visible');
                     }
                     
-                    // Scroll to databank table (only for Madison users)
-                    if (window.authService && window.authService.canViewDatabank()) {
-                        const tableData = document.getElementById('tableData');
-                        if (tableData) {
-                            tableData.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            console.log('✅ Scrolled to databank table for Madison user');
-                        }
-                    } else {
-                        console.log('✅ No scroll needed for factory user (databank hidden)');
+                    // Scroll to databank table
+                    const tableData = document.getElementById('tableData');
+                    if (tableData) {
+                        tableData.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        console.log('✅ Scrolled to databank table');
                     }
                 }
                 
@@ -17921,17 +17899,11 @@
                             'Original Data': item
                         };
                         
-                        // Add to localStorage and display (only for Madison users)
+                        // Add to localStorage and display
                         databankData.push(declinedRow);
                         localStorage.setItem('databankData', JSON.stringify(databankData));
-                        
-                        // Only display table data for Madison users
-                        if (window.authService && window.authService.canViewDatabank()) {
-                            displayTableData(databankData);
-                            console.log('✅ Added declined item to new databank table');
-                        } else {
-                            console.log('✅ Declined data saved but table not displayed for factory user');
-                        }
+                        displayTableData(databankData);
+                        console.log('✅ Added declined item to new databank table');
                     }
                     
                     console.log('✅ Updated databank table with declined data (appended, not cleared)');
@@ -19378,13 +19350,11 @@
                 
                 console.log('✅ Beanie data added to both factory data and databank table');
                 
-                // Refresh databank table if it's visible (only for Madison users)
-                if (typeof refreshDatabankTable === 'function' && window.authService && window.authService.canViewDatabank()) {
+                // Refresh databank table if it's visible
+                if (typeof refreshDatabankTable === 'function') {
                     setTimeout(() => {
                         refreshDatabankTable();
                     }, 500);
-                } else {
-                    console.log('✅ Skipping databank refresh for factory user');
                 }
                 
                 // Show success notification
@@ -19474,13 +19444,11 @@
                 
                 console.log('✅ Ballcaps data added to both factory data and databank table');
                 
-                // Refresh databank table if it's visible (only for Madison users)
-                if (typeof refreshDatabankTable === 'function' && window.authService && window.authService.canViewDatabank()) {
+                // Refresh databank table if it's visible
+                if (typeof refreshDatabankTable === 'function') {
                     setTimeout(() => {
                         refreshDatabankTable();
                     }, 500);
-                } else {
-                    console.log('✅ Skipping databank refresh for factory user');
                 }
                 
                 // Show success notification
