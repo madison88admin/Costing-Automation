@@ -1,4926 +1,7 @@
-﻿<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Databank Data Management System - Updated</title>
-    <!-- XLSX Library -->
-    <script src="js/xlsx.min.js"></script>
-    <!-- No external Supabase CDN - using pure API approach -->
-    <script>
-        // Skip Supabase CDN loading entirely
-        // Using API-only approach for database sync (no external CDN dependencies)
-    </script>
-    <!-- Application scripts -->
-    <script src="js/auth.js"></script>
-    <script src="excel_formulas_extractor.js"></script>
-    <script src="js/excelUtils.js"></script>
-    <script src="js/beanieImport.js"></script>
-    <script src="js/ballcapsImport.js"></script>
-    <!-- Fallback XLSX loading -->
-    <script>
-        // Fallback XLSX loading if CDN fails
-        window.addEventListener('load', function() {
-            if (typeof XLSX === 'undefined') {
-                console.warn('Primary XLSX CDN failed, trying fallback...');
-                const fallbackScript = document.createElement('script');
-                fallbackScript.src = 'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js';
-                fallbackScript.onload = function() {
-                    console.log('Fallback XLSX library loaded successfully');
-                };
-                fallbackScript.onerror = function() {
-                    console.error('❌ Both XLSX CDN sources failed to load');
-                };
-                document.head.appendChild(fallbackScript);
-            } else {
-                console.log('Primary XLSX CDN loaded successfully');
-            }
-        });
-    </script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%), url('everest.jpg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            color: #2c3e50;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            animation: fadeIn 0.8s ease-in-out;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .header {
-            background: rgba(255, 255, 255, 0.12);
-            backdrop-filter: blur(20px);
-            padding: 35px 45px;
-            border-radius: 24px;
-            box-shadow: 0 12px 40px rgba(0,0,0,0.15), 0 0 0 1px rgba(255, 255, 255, 0.1);
-            margin-bottom: 45px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 35px;
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            color: white;
-            font-size: 14px;
-        }
-
-        .logout-button {
-            background: rgba(220, 53, 69, 0.8);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-
-        .logout-button:hover {
-            background: rgba(220, 53, 69, 1);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
-        }
-        
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-        }
-
-        .nav-logo {
-            height: 60px;
-            width: auto;
-        }
-
-        .header-title {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-            font-size: 32px;
-            font-weight: 700;
-            color: #ffffff;
-            margin: 0;
-            letter-spacing: -0.02em;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .section {
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-            margin-bottom: 20px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            color: #2c3e50;
-            transition: all 0.3s ease;
-        }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: rgba(102, 126, 234, 0.7);
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-            background: rgba(255, 255, 255, 0.9);
-        }
-
-        input::placeholder, textarea::placeholder {
-            color: rgba(44, 62, 80, 0.6);
-        }
-
-        button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            margin-right: 10px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
-        }
-
-        button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-        }
-
-        button:hover::before {
-            left: 100%;
-        }
-
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 12px 40px rgba(31, 38, 135, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .table th, .table td {
-            padding: 18px 20px;
-            text-align: left;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            transition: all 0.2s ease;
-        }
-
-        .table td {
-            color: #2c3e50;
-            background: rgba(255, 255, 255, 0.8);
-            font-weight: 400;
-        }
-
-        .table th {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            color: white;
-            font-weight: 600;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .table tbody tr:hover {
-            background-color: rgba(102, 126, 234, 0.1);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
-        }
-
-        .table tbody tr:nth-child(even) {
-            background-color: rgba(248, 250, 252, 0.9);
-        }
-
-        .table tbody tr:nth-child(odd) {
-            background-color: rgba(255, 255, 255, 0.9);
-        }
-
-        /* Editable table styles */
-        .table.edit-mode {
-            border: 2px solid #007bff;
-            box-shadow: 0 0 20px rgba(0, 123, 255, 0.3);
-        }
-
-        .table.edit-mode .editable-cell {
-            position: relative;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .table.edit-mode .editable-cell:hover {
-            background-color: rgba(0, 123, 255, 0.1);
-            border: 1px solid #007bff;
-        }
-
-        .table.edit-mode tbody tr {
-            position: relative;
-            transition: none !important;
-        }
-
-        .table.edit-mode tbody tr:hover {
-            transform: none !important;
-            box-shadow: none !important;
-        }
-
-        .editable-input {
-            width: 100%;
-            height: 100%;
-            border: none;
-            background: transparent;
-            padding: 8px;
-            font-size: inherit;
-            font-family: inherit;
-            color: inherit;
-            outline: none;
-            border-radius: 4px;
-            transition: all 0.2s ease;
-        }
-
-        .editable-input:focus {
-            background-color: rgba(255, 255, 255, 0.9);
-            border: 2px solid #007bff;
-            box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
-        }
-
-        .edit-mode-indicator {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 25px;
-            font-size: 14px;
-            font-weight: 600;
-            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
-            z-index: 1000;
-            animation: slideInRight 0.3s ease-out;
-        }
-
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        .edit-mode-indicator.hide {
-            animation: slideOutRight 0.3s ease-in forwards;
-        }
-
-        @keyframes slideOutRight {
-            from {
-                transform: translateX(0);
-                opacity: 1;
-            }
-            to {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-        }
-
-        .data-table-container {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 16px;
-            padding: 25px;
-            box-shadow: 0 12px 40px rgba(31, 38, 135, 0.2);
-            margin: 20px 0;
-        }
-
-        .table-header {
-            position: relative;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding: 20px 30px;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(15px);
-            border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-
-        .table-actions {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .edit-table-button, .done-edit-button, .cancel-edit-button, .export-changes-button, .sync-changes-button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .edit-table-button {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            color: white;
-            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
-        }
-
-        .done-edit-button {
-            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-            color: white;
-            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
-        }
-
-        .cancel-edit-button {
-            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-            color: white;
-            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
-        }
-
-        .export-changes-button {
-            background: linear-gradient(135deg, #ffc107 0%, #ff8f00 100%);
-            color: white;
-            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
-        }
-
-        .sync-changes-button {
-            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
-            color: white;
-            box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
-        }
-
-        .edit-table-button:hover, .done-edit-button:hover, .cancel-edit-button:hover, .export-changes-button:hover, .sync-changes-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        .edit-table-button::before, .done-edit-button::before, .cancel-edit-button::before, .export-changes-button::before, .sync-changes-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .edit-table-button:hover::before, .done-edit-button:hover::before, .cancel-edit-button:hover::before, .export-changes-button:hover::before, .sync-changes-button:hover::before {
-            left: 100%;
-        }
-
-        .table-title {
-            font-size: 28px;
-            font-weight: 700;
-            color: #2c3e50;
-            margin: 0;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            letter-spacing: -0.02em;
-        }
-
-        /* Simple triangle filter button styles */
-        .filter-triangle {
-            background: none;
-            border: none;
-            color: white;
-            cursor: pointer;
-            font-size: 10px;
-            margin-left: 8px;
-            padding: 2px 4px;
-            transition: all 0.2s ease;
-            opacity: 0.7;
-        }
-
-        .filter-triangle:hover {
-            opacity: 1;
-            transform: scale(1.1);
-        }
-
-        .filter-triangle.active {
-            opacity: 1;
-            color: #ffd700;
-        }
-
-        .header-with-filter {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: relative;
-        }
-
-
-        .filter-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: #2d2d2d;
-            border: 1px solid #555;
-            border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-            z-index: 1000;
-            max-height: 300px;
-            overflow: hidden;
-            display: none;
-            min-width: 200px;
-            width: 250px;
-        }
-
-        .filter-dropdown.show {
-            display: block;
-        }
-
-        .filter-header {
-            background: #2d2d2d;
-            color: white;
-            padding: 10px 12px;
-            font-weight: 600;
-            border-bottom: 1px solid #555;
-            font-size: 13px;
-            text-transform: uppercase;
-        }
-
-        .filter-search {
-            padding: 10px 12px;
-            border-bottom: 1px solid #555;
-        }
-
-        .filter-search input {
-            width: 100%;
-            padding: 8px 10px;
-            background: #404040;
-            border: 1px solid #666;
-            border-radius: 4px;
-            color: white;
-            font-size: 12px;
-            outline: none;
-        }
-
-        .filter-search input::placeholder {
-            color: #aaa;
-        }
-
-        .filter-search input:focus {
-            border-color: #007bff;
-        }
-
-        .filter-options {
-            max-height: 180px;
-            overflow-y: auto;
-            background: #2d2d2d;
-        }
-
-        .filter-option {
-            padding: 8px 12px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            color: white;
-            font-size: 12px;
-            border-bottom: 1px solid #404040;
-            transition: background-color 0.2s ease;
-        }
-
-        .filter-option:hover {
-            background: #404040;
-        }
-
-        .filter-option:last-child {
-            border-bottom: none;
-        }
-
-        .filter-option input[type="checkbox"] {
-            margin-right: 8px;
-            width: 16px;
-            height: 16px;
-            accent-color: #007bff;
-            cursor: pointer;
-        }
-
-        .filter-option label {
-            flex: 1;
-            cursor: pointer;
-            margin: 0;
-            text-align: right;
-        }
-
-        .filter-actions {
-            padding: 10px 12px;
-            border-top: 1px solid #555;
-            background: #2d2d2d;
-            display: flex;
-            gap: 8px;
-            justify-content: space-between;
-        }
-
-        .filter-btn {
-            padding: 8px 16px;
-            border: 1px solid #666;
-            background: #404040;
-            color: white;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-
-        .filter-btn:hover {
-            background: #555;
-            border-color: #777;
-        }
-
-        .filter-btn.primary {
-            background: #007bff;
-            border-color: #007bff;
-            box-shadow: 0 0 0 1px rgba(0, 123, 255, 0.3);
-        }
-
-        .filter-btn.primary:hover {
-            background: #0056b3;
-            border-color: #0056b3;
-        }
-
-        /* Filter button styles */
-        .filter-triangle {
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 3px;
-            padding: 4px 8px;
-            cursor: pointer;
-            font-size: 10px;
-            margin-left: 8px;
-            transition: all 0.2s ease;
-        }
-
-        .filter-triangle:hover {
-            background: #5a6fd8;
-        }
-
-        .filter-triangle.active {
-            background: #28a745;
-        }
-
-        .header-with-filter {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        /* Super Search Styles */
-        .super-search-input {
-            padding-right: 40px !important;
-            font-size: 16px;
-            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-            border: 2px solid #e9ecef;
-            transition: all 0.3s ease;
-            min-width: 600px;
-            width: 600px;
-        }
-
-        /* Custom scrollbar styles */
-        .table-container::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        .table-container::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-
-        .table-container::-webkit-scrollbar-thumb {
-            background: #667eea;
-            border-radius: 4px;
-        }
-
-        .table-container::-webkit-scrollbar-thumb:hover {
-            background: #5a6fd8;
-        }
-
-        .super-search-input:focus {
-            border-color: #007bff;
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
-            background: #ffffff;
-        }
-
-        .search-actions {
-            z-index: 10;
-        }
-
-        .search-btn {
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 4px 6px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.2s ease;
-            backdrop-filter: blur(5px);
-        }
-
-        .search-btn:hover {
-            background: #007bff;
-            color: white;
-            transform: scale(1.1);
-        }
-
-        .super-search-suggestions {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 2px solid #007bff;
-            border-top: none;
-            border-radius: 0 0 12px 12px;
-            max-height: 600px;
-            min-height: 400px;
-            width: 100%;
-            overflow-y: auto;
-            overflow-x: hidden;
-            z-index: 1000;
-            display: none;
-            box-shadow: 0 12px 35px rgba(0,123,255,0.25);
-            backdrop-filter: blur(10px);
-            scrollbar-width: thin;
-            scrollbar-color: #007bff #f1f1f1;
-        }
-
-        /* Custom scrollbar for webkit browsers */
-        .super-search-suggestions::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .super-search-suggestions::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-
-        .super-search-suggestions::-webkit-scrollbar-thumb {
-            background: #007bff;
-            border-radius: 4px;
-            transition: background 0.3s ease;
-        }
-
-        .super-search-suggestions::-webkit-scrollbar-thumb:hover {
-            background: #0056b3;
-        }
-
-        .super-search-suggestions.show {
-            display: block;
-            animation: slideDown 0.3s ease-out;
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .suggestion-item {
-            padding: 16px 20px;
-            border-bottom: 1px solid #e9ecef;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            transition: all 0.3s ease;
-            font-size: 14px;
-            min-height: 80px;
-            gap: 16px;
-        }
-
-        .suggestion-item:hover {
-            background: linear-gradient(135deg, #e3f2fd 0%, #f8f9fa 100%);
-            transform: translateX(3px);
-            box-shadow: 0 2px 8px rgba(0,123,255,0.1);
-        }
-
-        .suggestion-item:last-child {
-            border-bottom: none;
-        }
-
-        .suggestion-icon {
-            font-size: 24px;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .suggestion-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .suggestion-main {
-            color: #333;
-            font-weight: 500;
-            font-size: 16px;
-            line-height: 1.4;
-            margin-bottom: 4px;
-        }
-
-        .suggestion-description {
-            color: #6c757d;
-            font-size: 13px;
-            font-weight: 400;
-            line-height: 1.3;
-        }
-
-        .suggestion-count {
-            color: #6c757d;
-            font-size: 11px;
-            background: #f8f9fa;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-weight: 600;
-            flex-shrink: 0;
-            min-width: 24px;
-            text-align: center;
-        }
-
-        .search-highlight {
-            background: #fff3cd;
-            padding: 2px 4px;
-            border-radius: 3px;
-        }
-
-        /* Custom Season Filter Panel */
-        .season-filter-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 9999;
-            display: none;
-        }
-
-        .season-filter-overlay.show {
-            display: block;
-        }
-
-        .season-filter-panel {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            border: 2px solid #e0e0e0;
-            border-radius: 16px;
-            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.25);
-            z-index: 10000;
-            padding: 24px;
-            max-width: 480px;
-            width: 90%;
-            max-height: 75vh;
-            overflow: visible;
-            display: none;
-            flex-direction: column;
-        }
-
-        .season-filter-panel.show {
-            display: flex;
-        }
-
-        /* Customer Filter Panel - Same styles as Season */
-        .customer-filter-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 9999;
-            display: none;
-        }
-
-        .customer-filter-overlay.show {
-            display: block;
-        }
-
-        .customer-filter-panel {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            border: 2px solid #e0e0e0;
-            border-radius: 16px;
-            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.25);
-            z-index: 10000;
-            padding: 24px;
-            max-width: 480px;
-            width: 90%;
-            max-height: 75vh;
-            overflow: visible;
-            display: none;
-            flex-direction: column;
-        }
-
-        .customer-filter-panel.show {
-            display: flex;
-        }
-
-        .customer-filter-header {
-            font-size: 18px;
-            font-weight: 700;
-            color: #2c3e50;
-            margin-bottom: 20px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            text-align: center;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #f0f0f0;
-        }
-
-        .customer-options-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            max-height: 200px;
-            overflow-y: auto;
-            padding: 8px 0;
-            margin-bottom: 16px;
-            flex: 0 0 auto;
-        }
-
-        .customer-option {
-            display: flex;
-            align-items: center;
-            padding: 12px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border: 1px solid transparent;
-        }
-
-        .customer-option:hover {
-            background-color: #f8f9fa;
-            border-color: #e9ecef;
-            transform: translateX(2px);
-        }
-
-        .customer-option.selected {
-            background-color: #e3f2fd;
-            border-color: #2196f3;
-            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
-        }
-
-        .customer-radio {
-            margin-right: 12px;
-            width: 16px;
-            height: 16px;
-            accent-color: #2196f3;
-        }
-
-        .customer-label {
-            font-size: 14px;
-            color: #2c3e50;
-            font-weight: 500;
-        }
-
-        .season-filter-header {
-            font-size: 18px;
-            font-weight: 700;
-            color: #2c3e50;
-            margin-bottom: 20px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            text-align: center;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #f0f0f0;
-        }
-
-        .season-options-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            max-height: 200px;
-            overflow-y: auto;
-            padding: 8px 0;
-            margin-bottom: 16px;
-            flex: 0 0 auto;
-        }
-
-        .season-option {
-            display: flex;
-            align-items: center;
-            padding: 12px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border: 1px solid transparent;
-        }
-
-        .season-option:hover {
-            background-color: #f8f9fa;
-            border-color: #e9ecef;
-            transform: translateX(2px);
-        }
-
-        .season-option.selected {
-            background-color: #e3f2fd;
-            border-color: #2196f3;
-            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
-        }
-
-        .season-radio {
-            margin-right: 12px;
-            width: 16px;
-            height: 16px;
-            accent-color: #2196f3;
-        }
-
-        .season-label {
-            font-size: 14px;
-            font-weight: 500;
-            color: #2c3e50;
-        }
-
-        .filter-panel-actions {
-            margin-top: 16px;
-            padding: 20px 0;
-            border-top: 1px solid #f0f0f0;
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            flex-shrink: 0;
-            min-height: 80px;
-            align-items: center;
-            background: #f8f9fa;
-            border-radius: 0 0 16px 16px;
-        }
-
-        .filter-apply-btn, .filter-clear-btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: all 0.2s ease;
-            min-width: 80px;
-        }
-
-        .filter-apply-btn {
-            background: linear-gradient(135deg, #2196f3, #1976d2);
-            color: white;
-            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
-        }
-
-        .filter-apply-btn:hover {
-            background: linear-gradient(135deg, #1976d2, #1565c0);
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(33, 150, 243, 0.4);
-        }
-
-        .filter-clear-btn {
-            background: #f8f9fa;
-            color: #6c757d;
-            border: 2px solid #e9ecef;
-        }
-
-        .filter-clear-btn:hover {
-            background: #e9ecef;
-            color: #495057;
-            border-color: #dee2e6;
-            transform: translateY(-1px);
-        }
-
-
-        .table-stats {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            color: #2c2c2c;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .search-container {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            padding: 0;
-            margin-bottom: 40px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            overflow: hidden;
-        }
-
-        .search-header {
-            background: rgba(255, 255, 255, 0.6);
-            padding: 30px 40px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .search-title {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-            font-size: 22px;
-            font-weight: 600;
-            color: #ffffff;
-            margin: 0;
-            letter-spacing: 0.5px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-
-        .search-form {
-            padding: 40px;
-            display: grid;
-            grid-template-columns: 1fr 2fr auto auto auto;
-            gap: 20px;
-            align-items: end;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 0 0 20px 20px;
-        }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .filter-group label {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            font-size: 12px;
-            font-weight: 500;
-            color: #2c2c2c;
-            margin-bottom: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .filter-select {
-            padding: 16px 20px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 12px;
-            font-size: 16px;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            color: #2c3e50;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23444' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-            background-position: right 16px center;
-            background-repeat: no-repeat;
-            background-size: 16px;
-            padding-right: 50px;
-            box-shadow: 0 4px 12px rgba(31, 38, 135, 0.15);
-        }
-
-        .filter-select:focus {
-            outline: none;
-            border-color: rgba(102, 126, 234, 0.7);
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-            background: rgba(255, 255, 255, 0.9);
-        }
-
-        .search-input {
-            padding: 16px 20px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 12px;
-            font-size: 16px;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            color: #2c3e50;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(31, 38, 135, 0.15);
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: rgba(102, 126, 234, 0.7);
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-            background: rgba(255, 255, 255, 0.9);
-        }
-
-        .search-input::placeholder {
-            color: rgba(44, 62, 80, 0.6);
-        }
-
-        .search-button {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            color: white;
-            border: 2px solid transparent;
-            padding: 16px 30px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            min-width: 70px;
-            justify-content: center;
-            letter-spacing: 0.5px;
-            box-shadow: 0 4px 12px rgba(44, 62, 80, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .search-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            transition: left 0.5s;
-        }
-
-        .search-button:hover {
-            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(44, 62, 80, 0.4);
-        }
-
-        .search-button:hover::before {
-            left: 100%;
-        }
-
-        .search-button:active {
-            transform: translateY(0);
-        }
-
-        .clear-button {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            color: #2c3e50;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            padding: 16px 25px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            min-width: 100px;
-            letter-spacing: 0.5px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        .clear-button:hover {
-            background: #faf9f7;
-            border-color: #2c2c2c;
-            color: #2c2c2c;
-        }
-
-        .import-button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: 2px solid transparent;
-            padding: 16px 30px;
-            border-radius: 12px;
-            position: relative;
-            overflow: hidden;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            letter-spacing: 0.5px;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-            min-width: 100px;
-        }
-
-        .import-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .import-button:hover {
-            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .import-button:hover::before {
-            left: 100%;
-        }
-
-        .import-button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-        }
-
-        .import-button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        /* Product Selection Styles */
-        .product-selection-container {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 16px;
-            padding: 35px;
-            margin: 20px 0;
-            box-shadow: 0 12px 40px rgba(31, 38, 135, 0.2);
-            text-align: center;
-        }
-
-        .product-selection-header h2 {
-            color: #2c3e50;
-            font-size: 28px;
-            font-weight: 700;
-            margin: 0 0 30px 0;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            letter-spacing: -0.02em;
-            text-align: center;
-        }
-
-        .product-selection-buttons {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .product-button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 20px 40px;
-            border-radius: 12px;
-            position: relative;
-            overflow: hidden;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 12px rgba(135, 206, 235, 0.3);
-            min-width: 150px;
-        }
-
-        .product-button.scroll-trigger {
-            animation: pulseGlow 0.6s ease-out;
-        }
-
-        @keyframes pulseGlow {
-            0% {
-                transform: scale(1);
-                box-shadow: 0 4px 12px rgba(135, 206, 235, 0.3);
-            }
-            50% {
-                transform: scale(1.05);
-                box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
-            }
-            100% {
-                transform: scale(1);
-                box-shadow: 0 4px 12px rgba(135, 206, 235, 0.3);
-            }
-        }
-
-        .product-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .product-button:hover {
-            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .product-button:hover::before {
-            left: 100%;
-        }
-
-        .product-button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 8px rgba(135, 206, 235, 0.3);
-        }
-
-        .beanie-button {
-            background: linear-gradient(135deg, #87CEEB 0%, #98D8E8 100%);
-        }
-
-        .ballcaps-button {
-            background: linear-gradient(135deg, #87CEEB 0%, #98D8E8 100%);
-        }
-
-        /* Factory Cost Breakdown Styles */
-        .cost-breakdown-container {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 16px;
-            padding: 25px;
-            margin: 20px 0;
-            box-shadow: 0 12px 40px rgba(31, 38, 135, 0.2);
-            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-            opacity: 0;
-            transform: translateY(30px);
-        }
-
-        .cost-breakdown-container.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .cost-breakdown-container.hide {
-            opacity: 0;
-            transform: translateY(-30px);
-            pointer-events: none;
-        }
-
-        .cost-breakdown-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-
-        .header-buttons {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .save-button {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
-        }
-
-        .save-button:hover {
-            background: linear-gradient(135deg, #45a049, #3d8b40);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
-        }
-
-        .save-button:active {
-            transform: translateY(0);
-        }
-
-        .save-button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .calculate-button {
-            background: linear-gradient(135deg, #2196F3, #1976D2);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
-            margin-right: 10px;
-        }
-
-        .calculate-button:hover {
-            background: linear-gradient(135deg, #1976D2, #1565C0);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
-        }
-
-        .calculate-button:active {
-            transform: translateY(0);
-        }
-
-
-        .header-content {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .cost-breakdown-header h2 {
-            color: #2c3e50;
-            font-size: 28px;
-            font-weight: 700;
-            margin: 0 0 8px 0;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            letter-spacing: -0.02em;
-        }
-
-        .template-description {
-            color: #7f8c8d;
-            font-size: 16px;
-            font-weight: 500;
-            margin: 0;
-            font-style: italic;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            letter-spacing: 0.01em;
-        }
-
-        /* Factory Data Badge Styles */
-        .factory-data-badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .factory-data-badge.beanie {
-            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-            color: #1976d2;
-            border: 1px solid rgba(25, 118, 210, 0.2);
-        }
-
-        .factory-data-badge.ballcaps {
-            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
-            color: #7b1fa2;
-            border: 1px solid rgba(123, 31, 162, 0.2);
-        }
-
-        /* Factory Data Empty State */
-        .factory-data-empty {
-            text-align: center;
-            padding: 60px 20px;
-            color: #7f8c8d;
-            font-style: italic;
-            background: rgba(248, 250, 252, 0.9);
-            border-radius: 12px;
-            margin: 20px 0;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 6px 20px rgba(31, 38, 135, 0.15);
-        }
-
-        .factory-data-empty h3 {
-            color: #6c757d;
-            margin-bottom: 10px;
-            font-size: 18px;
-        }
-
-        .factory-data-empty p {
-            color: #adb5bd;
-            font-size: 14px;
-            margin: 0;
-        }
-
-        /* Factory Data Filter Dropdown Styles */
-        #factoryDataTableContent .filter-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 1000;
-            min-width: 200px;
-            max-height: 300px;
-            overflow-y: auto;
-            display: none;
-            padding: 10px;
-        }
-
-        #factoryDataTableContent .filter-dropdown.show {
-            display: block;
-        }
-
-        #factoryDataTableContent .filter-dropdown input[type="text"] {
-            width: 100%;
-            padding: 6px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 12px;
-            margin-bottom: 10px;
-        }
-
-        #factoryDataTableContent .filter-dropdown label {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            margin: 0;
-            padding: 4px 8px;
-            border-radius: 4px;
-            margin: 2px 0;
-            transition: background-color 0.2s;
-            font-size: 12px;
-        }
-
-        #factoryDataTableContent .filter-dropdown label:hover {
-            background-color: #f8f9fa;
-        }
-
-        #factoryDataTableContent .filter-dropdown input[type="checkbox"] {
-            margin-right: 6px;
-        }
-
-        #factoryDataTableContent .filter-dropdown button {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        #factoryDataTableContent .filter-dropdown button:hover {
-            background: #c82333;
-        }
-
-        /* Highlight Knitting Time column in yellow with white text for header in factory table */
-        #factoryDataTableContent th:nth-child(12) { /* Knitting Time header */
-            background-color: #ffff00 !important;
-            color: #ffffff !important;
-        }
-
-        /* Make Knitting Time data cells have black text on yellow background in factory table */
-        #factoryDataTableContent td:nth-child(12) { /* Knitting Time data cells */
-            background-color: #ffff00 !important;
-            color: #000000 !important;
-        }
-
-        /* Databank Filter Dropdown Styles */
-        #tableData .filter-dropdown {
-            position: fixed !important;
-            background: white !important;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 10000 !important;
-            min-width: 200px;
-            max-height: 300px;
-            overflow-y: auto;
-            display: none;
-            padding: 10px;
-            color: #333 !important;
-            pointer-events: auto !important;
-        }
-
-        #tableData .filter-dropdown.show {
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-        }
-        
-        #tableData .filter-dropdown:not(.show) {
-            display: none !important;
-        }
-        
-        #tableData .filter-dropdown * {
-            color: #333 !important;
-            pointer-events: auto !important;
-        }
-        
-        /* Ensure table header doesn't block dropdown */
-        #tableData thead th {
-            overflow: visible !important;
-        }
-        
-        #tableData .header-with-filter {
-            overflow: visible !important;
-            position: relative !important;
-        }
-        
-        /* Ensure table header cells allow dropdown to show */
-        #tableData thead th {
-            overflow: visible !important;
-        }
-        
-        /* Ensure header-with-filter allows dropdown overflow */
-        #tableData .header-with-filter {
-            overflow: visible !important;
-        }
-
-        #tableData .filter-dropdown input[type="text"] {
-            width: 100%;
-            padding: 6px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 12px;
-            margin-bottom: 10px;
-        }
-
-        #tableData .filter-dropdown label {
-            display: flex !important;
-            align-items: center;
-            cursor: pointer !important;
-            margin: 0;
-            padding: 4px 8px;
-            border-radius: 4px;
-            margin: 2px 0;
-            transition: background-color 0.2s;
-            font-size: 12px;
-            color: #333 !important;
-            width: 100%;
-            pointer-events: auto !important;
-        }
-
-        #tableData .filter-dropdown label span {
-            color: #333 !important;
-            flex: 1;
-            pointer-events: none !important;
-        }
-        
-        #tableData .filter-dropdown input[type="checkbox"] {
-            pointer-events: auto !important;
-            cursor: pointer !important;
-        }
-
-        #tableData .filter-dropdown label:hover {
-            background-color: #f8f9fa;
-        }
-
-        #tableData .filter-dropdown input[type="checkbox"] {
-            margin-right: 6px;
-        }
-
-        #tableData .filter-dropdown button {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        #tableData .filter-dropdown button:hover {
-            background: #c82333;
-        }
-
-        /* Highlight cost columns in orange like the image */
-        #tableData th:nth-child(9),  /* Total Material Cost */
-        #tableData th:nth-child(13), /* Knitting Cost */
-        #tableData th:nth-child(15), /* Knitting + Ops Cost */
-        #tableData th:nth-child(18), /* PROFIT */
-        #tableData th:nth-child(19), /* FTY Adjustment */
-        #tableData th:nth-child(20), /* TTL FTY COST */
-        #tableData th:nth-child(22), /* Total FOB */
-        #tableData th:nth-child(23) { /* Sample Wt. With Tag (QC Check Form) GRAMS */
-            color: #ff8c00 !important;
-        }
-
-        /* Highlight Knitting Time column in yellow like the image */
-        #tableData th:nth-child(11) { /* Knitting Time header */
-            background-color: #ffff00 !important;
-            color: #ffffff !important;
-        }
-
-        /* Make Knitting Time data cells have black text on yellow background */
-        #tableData td:nth-child(11) { /* Knitting Time data cells */
-            background-color: #ffff00 !important;
-            color: #000000 !important;
-        }
-
-        .back-button {
-            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .back-button.scroll-back {
-            animation: backButtonPulse 0.6s ease-out;
-        }
-
-        @keyframes backButtonPulse {
-            0% {
-                transform: scale(1);
-                box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
-            }
-            50% {
-                transform: scale(1.08);
-                box-shadow: 0 4px 15px rgba(108, 117, 125, 0.5);
-            }
-            100% {
-                transform: scale(1);
-                box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
-            }
-        }
-
-        .back-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            transition: left 0.5s;
-        }
-
-        .back-button:hover::before {
-            left: 100%;
-        }
-
-        .back-button:hover {
-            background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
-        }
-
-        .back-button:active {
-            transform: translateY(0);
-        }
-
-        .cost-breakdown-content {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 30px;
-        }
-
-        .cost-sections {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .cost-section {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 6px 20px rgba(31, 38, 135, 0.15);
-            margin-bottom: 15px;
-        }
-
-        .section-header {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            color: white;
-            padding: 14px 18px;
-            font-weight: 600;
-            font-size: 16px;
-            text-align: center;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        .cost-table {
-            display: flex;
-            flex-direction: column;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-        
-        .cost-table::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        .cost-table::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-        }
-        
-        .cost-table::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 4px;
-        }
-        
-        .cost-table::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.5);
-        }
-
-        .cost-row {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr;
-            border-bottom: 1px solid #eee;
-        }
-
-        .cost-row.header-row {
-            background: #f8f9fa;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .cost-row.subtotal-row {
-            background: #e8f5e8;
-            font-weight: 600;
-        }
-
-        .cost-cell {
-            padding: 12px 16px;
-            border-right: 1px solid #eee;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-        }
-
-        .cost-cell:last-child {
-            border-right: none;
-        }
-
-        .total-section {
-            background: rgba(232, 245, 232, 0.3);
-            backdrop-filter: blur(8px);
-            border: 2px solid rgba(40, 167, 69, 0.6);
-            box-shadow: 0 4px 16px rgba(40, 167, 69, 0.2);
-        }
-
-        .total-material-cost, .total-factory-cost {
-            padding: 20px;
-            text-align: center;
-        }
-
-        .total-label {
-            font-size: 18px;
-            font-weight: 700;
-            color: #2c2c2c;
-            margin-bottom: 10px;
-        }
-
-        .total-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: #28a745;
-        }
-
-        /* Product Details Styles */
-        .product-details {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .product-info {
-            background: rgba(248, 249, 250, 0.25);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-        }
-
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 12px;
-            font-size: 14px;
-        }
-
-        .product-info {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            align-items: flex-start;
-        }
-
-        .product-info .info-row {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            margin-bottom: 0;
-            width: 100%;
-        }
-
-        .product-info .info-label {
-            font-size: 14px;
-            margin-bottom: 4px;
-            color: #333;
-        }
-
-        .product-info .info-input {
-            width: 200px;
-            padding: 4px 8px;
-            border: 1px solid #ddd;
-            border-radius: 3px;
-            font-size: 12px;
-            background-color: #fff;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-            height: 28px;
-        }
-
-        .info-label {
-            font-weight: 600;
-            color: #2c2c2c;
-        }
-
-        .info-value {
-            color: #666;
-        }
-
-        .info-value.editable {
-            cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 4px;
-            transition: background-color 0.2s ease;
-        }
-
-        .info-value.editable:hover {
-            background-color: #f0f0f0;
-        }
-
-        .info-value.editing {
-            background-color: #fff;
-            border: 2px solid #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .info-input {
-            width: 100%;
-            border: none;
-            background: transparent;
-            color: #666;
-            font-size: 14px;
-            outline: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-        }
-
-        .info-input:focus {
-            background-color: #fff;
-            border: 2px solid #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .edit-controls {
-            display: none;
-            margin-top: 10px;
-            text-align: right;
-        }
-
-        .edit-controls.show {
-            display: block;
-        }
-
-        .edit-btn, .save-btn, .cancel-btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            margin-left: 5px;
-            transition: background-color 0.2s ease;
-        }
-
-        .edit-btn:hover, .save-btn:hover {
-            background: #5a6fd8;
-        }
-
-        .cancel-btn {
-            background: #6c757d;
-        }
-
-        .cancel-btn:hover {
-            background: #5a6268;
-        }
-
-        .product-info.editing .info-value {
-            display: none;
-        }
-
-        .product-info.editing .info-input {
-            display: block;
-        }
-
-
-        .product-info .info-input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .product-info .info-value {
-            display: none;
-        }
-
-
-        .product-image {
-            text-align: center;
-            padding: 20px;
-            background: rgba(248, 249, 250, 0.25);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            border-radius: 8px;
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-        }
-
-        .image-upload-area {
-            background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(5px);
-            border: 2px dashed rgba(255, 255, 255, 0.3);
-            border-radius: 8px;
-            padding: 30px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            min-height: 200px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .image-upload-area:hover {
-            border-color: #007bff;
-            background: rgba(0, 123, 255, 0.1);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 123, 255, 0.2);
-        }
-
-        .image-upload-area.drag-over {
-            border-color: #28a745;
-            background: rgba(40, 167, 69, 0.1);
-            transform: scale(1.02);
-        }
-
-        .image-placeholder {
-            text-align: center;
-            pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .beanie-icon {
-            font-size: 48px;
-        }
-
-        .image-text {
-            font-weight: 600;
-            color: #2c2c2c;
-            font-size: 16px;
-        }
-
-        .image-subtext {
-            color: #666;
-            font-size: 12px;
-            margin-top: 5px;
-        }
-
-        .notes-section {
-            background: rgba(255, 243, 205, 0.25);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 234, 167, 0.3);
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-        }
-
-        .notes-content {
-            font-size: 12px;
-            line-height: 1.4;
-        }
-
-        .note-item {
-            margin-bottom: 8px;
-            color: #2c2c2c;
-        }
-
-        .pricing-tiers {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #ddd;
-        }
-
-        .pricing-item {
-            font-weight: 600;
-            margin-bottom: 5px;
-            color: #2c2c2c;
-        }
-
-        .factory-cell {
-            background: rgba(248, 249, 250, 0.25);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-            text-align: center;
-        }
-
-        .factory-label {
-            font-size: 12px;
-            color: #666;
-            margin-bottom: 5px;
-        }
-
-        .factory-name {
-            font-weight: 600;
-            color: #2c2c2c;
-        }
-
-        .drag-drop-area {
-            background: linear-gradient(135deg, rgba(227, 242, 253, 0.3) 0%, rgba(187, 222, 251, 0.3) 100%);
-            backdrop-filter: blur(10px);
-            border: 3px dashed rgba(33, 150, 243, 0.5);
-            border-radius: 16px;
-            width: 200px;
-            height: 200px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 20px auto 0;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            pointer-events: auto;
-            z-index: 10;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .drag-drop-area::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
-            transform: translateX(-100%);
-            transition: transform 0.6s ease;
-        }
-
-        .drag-drop-area:hover::before {
-            transform: translateX(100%);
-        }
-
-        .drag-drop-area:hover {
-            background: linear-gradient(135deg, rgba(225, 245, 254, 0.4) 0%, rgba(179, 229, 252, 0.4) 100%);
-            border-color: rgba(25, 118, 210, 0.7);
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 8px 25px rgba(33, 150, 243, 0.3);
-        }
-
-        .drag-drop-area.drag-over {
-            background: linear-gradient(135deg, rgba(232, 245, 232, 0.4) 0%, rgba(200, 230, 201, 0.4) 100%);
-            border-color: rgba(76, 175, 80, 0.7);
-            transform: scale(1.05);
-            box-shadow: 0 12px 30px rgba(76, 175, 80, 0.4);
-        }
-
-        .drag-drop-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            z-index: 1;
-        }
-
-        .drag-drop-icon {
-            font-size: 48px;
-            margin-bottom: 12px;
-            opacity: 0.7;
-            transition: all 0.3s ease;
-        }
-
-        .drag-drop-area:hover .drag-drop-icon {
-            opacity: 1;
-            transform: scale(1.1);
-        }
-
-        .drag-drop-text {
-            color: #1976D2;
-            font-size: 14px;
-            font-weight: 600;
-            margin: 0;
-            line-height: 1.4;
-            transition: all 0.3s ease;
-        }
-
-        .drag-drop-area:hover .drag-drop-text {
-            color: #0D47A1;
-        }
-
-        .drag-drop-area.drag-over .drag-drop-text {
-            color: #2E7D32;
-        }
-
-        .file-formats {
-            color: #666;
-            font-size: 11px;
-            margin-top: 8px;
-            opacity: 0.8;
-        }
-
-        .drag-drop-options {
-            display: none;
-            flex-direction: column;
-            gap: 8px;
-            margin-top: 12px;
-        }
-
-        .drag-drop-options.show {
-            display: flex;
-        }
-
-        .option-button {
-            background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(139, 195, 74, 0.1) 100%);
-            border: 2px solid rgba(76, 175, 80, 0.3);
-            border-radius: 12px;
-            padding: 8px 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 11px;
-            font-weight: 600;
-            color: #2E7D32;
-            text-align: center;
-            backdrop-filter: blur(10px);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .option-button:hover {
-            background: linear-gradient(135deg, rgba(76, 175, 80, 0.2) 0%, rgba(139, 195, 74, 0.2) 100%);
-            border-color: rgba(76, 175, 80, 0.5);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
-            color: #1B5E20;
-        }
-
-        .option-button.clear {
-            background: linear-gradient(135deg, rgba(255, 87, 34, 0.1) 0%, rgba(255, 138, 101, 0.1) 100%);
-            border-color: rgba(255, 87, 34, 0.3);
-            color: #E65100;
-        }
-
-        .option-button.clear:hover {
-            background: linear-gradient(135deg, rgba(255, 87, 34, 0.2) 0%, rgba(255, 138, 101, 0.2) 100%);
-            border-color: rgba(255, 87, 34, 0.5);
-            box-shadow: 0 4px 15px rgba(255, 87, 34, 0.3);
-            color: #D84315;
-        }
-
-        .drag-drop-area.has-file {
-            background: linear-gradient(135deg, rgba(232, 245, 232, 0.4) 0%, rgba(200, 230, 201, 0.4) 100%);
-            border-color: rgba(76, 175, 80, 0.7);
-        }
-
-        .drag-drop-area.has-file .drag-drop-icon {
-            opacity: 0.7;
-        }
-
-        .drag-drop-area.has-file .drag-drop-text {
-            color: #2E7D32;
-        }
-
-
-        .import-template-button {
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 15px;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            min-width: 100px;
-        }
-
-        .import-template-button:hover {
-            background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
-        }
-
-        .import-template-button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
-        }
-
-        .import-template-button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        /* Responsive Design for Cost Breakdown */
-        @media (max-width: 1200px) {
-            .cost-breakdown-content {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .cost-row {
-                grid-template-columns: 1fr;
-                gap: 8px;
-            }
-            
-            .cost-cell {
-                border-right: none;
-                border-bottom: 1px solid #eee;
-            }
-            
-            .cost-cell:last-child {
-                border-bottom: none;
-            }
-        }
-
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .search-form {
-                grid-template-columns: 1fr;
-                gap: 16px;
-            }
-            
-            .search-header {
-                padding: 20px 24px;
-            }
-            
-            .search-button, .clear-button, .import-button {
-                padding: 14px 20px;
-                font-size: 14px;
-                min-width: 80px;
-            }
-            
-            .search-form {
-                padding: 24px;
-            }
-        }
-
-        .btn {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .status-active {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-inactive {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .status-pending {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .dropdown {
-            padding: 6px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            background: white;
-            font-size: 12px;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 5px;
-        }
-
-        .action-btn {
-            padding: 6px 10px;
-            border: none;
-            border-radius: 4px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .action-btn-edit {
-            background: #17a2b8;
-            color: white;
-        }
-
-        .action-btn-delete {
-            background: #dc3545;
-            color: white;
-        }
-
-        .action-btn:hover {
-            transform: scale(1.05);
-        }
-
-        .status {
-            padding: 10px;
-            border-radius: 4px;
-            margin: 10px 0;
-        }
-
-        .status.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .status.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .import-section {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            position: relative;
-            overflow: hidden;
-            margin-bottom: 40px;
-        }
-
-        /* Modal Styles */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(10px);
-            z-index: 1000;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            animation: fadeIn 0.3s ease-out;
-        }
-
-        .modal-content {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            padding: 40px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            animation: slideIn 0.3s ease-out;
-            position: relative;
-        }
-
-        .modal-close {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            background: none;
-            border: none;
-            font-size: 24px;
-            color: white;
-            cursor: pointer;
-            padding: 5px;
-            border-radius: 50%;
-            width: 35px;
-            height: 35px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.3s ease;
-        }
-
-        .modal-close:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes slideIn {
-            from { 
-                opacity: 0;
-                transform: translateY(-50px) scale(0.9);
-            }
-            to { 
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        /* Pagination Styles */
-        .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 20px 0;
-            gap: 6px;
-            background: rgba(0, 0, 0, 0.8);
-            border-radius: 12px;
-            padding: 12px 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .pagination-button {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-weight: 500;
-            min-width: 40px;
-            text-align: center;
-            font-size: 14px;
-        }
-
-        .pagination-button:hover {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-        }
-
-        .pagination-button.active {
-            background: #6f42c1;
-            border-color: #5a32a3;
-            color: white;
-            font-weight: 600;
-        }
-
-        .pagination-info {
-            color: white;
-            margin: 0 15px;
-            font-size: 14px;
-            font-weight: 500;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 8px 12px;
-            border-radius: 6px;
-        }
-
-        .pagination-nav {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-weight: 500;
-            font-size: 14px;
-        }
-
-        .pagination-nav:hover {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-        }
-
-        .pagination-nav:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-
-        .form-group-enhanced {
-            margin-bottom: 0;
-        }
-
-        .form-group-enhanced label {
-            font-weight: 600;
-            color: #495057;
-            margin-bottom: 8px;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .form-group-enhanced select {
-            background: white;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            padding: 12px 16px;
-            font-size: 14px;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-
-        .form-group-enhanced select:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-
-
-        .hidden {
-            display: none;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 20px;
-        }
-
-        .loading-spinner {
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 10px auto;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .loading-dots {
-            display: inline-block;
-            position: relative;
-            width: 80px;
-            height: 20px;
-        }
-
-        .loading-dots div {
-            position: absolute;
-            top: 0;
-            width: 13px;
-            height: 13px;
-            border-radius: 50%;
-            background: #667eea;
-            animation-timing-function: cubic-bezier(0, 1, 1, 0);
-        }
-
-        .loading-dots div:nth-child(1) {
-            left: 8px;
-            animation: loading-dots1 0.6s infinite;
-        }
-
-        .loading-dots div:nth-child(2) {
-            left: 8px;
-            animation: loading-dots2 0.6s infinite;
-        }
-
-        .loading-dots div:nth-child(3) {
-            left: 32px;
-            animation: loading-dots2 0.6s infinite;
-        }
-
-        .loading-dots div:nth-child(4) {
-            left: 56px;
-            animation: loading-dots3 0.6s infinite;
-        }
-
-        @keyframes loading-dots1 {
-            0% { transform: scale(0); }
-            100% { transform: scale(1); }
-        }
-
-        @keyframes loading-dots3 {
-            0% { transform: scale(1); }
-            100% { transform: scale(0); }
-        }
-
-        @keyframes loading-dots2 {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(24px, 0); }
-        }
-
-        /* Animated Notification System */
-        .notification-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 10000;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            pointer-events: none;
-        }
-
-        .notification {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 12px;
-            padding: 16px 20px;
-            min-width: 320px;
-            max-width: 400px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transform: translateX(100%) translateY(20px);
-            opacity: 0;
-            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            pointer-events: auto;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .notification.show {
-            transform: translateX(0) translateY(0);
-            opacity: 1;
-        }
-
-        .notification.hide {
-            transform: translateX(100%) translateY(20px);
-            opacity: 0;
-        }
-
-        .notification::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            transform: scaleX(0);
-            transform-origin: left;
-            transition: transform 0.3s ease;
-        }
-
-        .notification.show::before {
-            transform: scaleX(1);
-        }
-
-        .notification-icon {
-            font-size: 24px;
-            flex-shrink: 0;
-            animation: pulse 2s infinite;
-        }
-
-        .notification-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .notification-title {
-            font-weight: 600;
-            font-size: 14px;
-            color: #2c3e50;
-            margin: 0;
-        }
-
-        .notification-message {
-            font-size: 13px;
-            color: #6c757d;
-            margin: 0;
-            line-height: 1.4;
-        }
-
-        .notification-progress {
-            width: 100%;
-            height: 3px;
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 2px;
-            overflow: hidden;
-            margin-top: 8px;
-        }
-
-        .notification-progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            border-radius: 2px;
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-
-        .notification-close {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: none;
-            border: none;
-            font-size: 18px;
-            color: #6c757d;
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 4px;
-            transition: all 0.2s ease;
-            opacity: 0.7;
-        }
-
-        .notification-close:hover {
-            opacity: 1;
-            background: rgba(0, 0, 0, 0.1);
-        }
-
-        /* Notification Types */
-        .notification.success {
-            border-left: 4px solid #28a745;
-        }
-
-        .notification.success .notification-icon {
-            color: #28a745;
-        }
-
-        .notification.error {
-            border-left: 4px solid #dc3545;
-        }
-
-        .notification.error .notification-icon {
-            color: #dc3545;
-        }
-
-        .notification.warning {
-            border-left: 4px solid #ffc107;
-        }
-
-        .notification.warning .notification-icon {
-            color: #ffc107;
-        }
-
-        .notification.info {
-            border-left: 4px solid #17a2b8;
-        }
-
-        .notification.info .notification-icon {
-            color: #17a2b8;
-        }
-
-        .notification.loading {
-            border-left: 4px solid #667eea;
-        }
-
-        .notification.loading .notification-icon {
-            color: #667eea;
-        }
-
-        /* Animation Keyframes */
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100%) translateY(20px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0) translateY(0);
-                opacity: 1;
-            }
-        }
-
-        @keyframes slideOutRight {
-            from {
-                transform: translateX(0) translateY(0);
-                opacity: 1;
-            }
-            to {
-                transform: translateX(100%) translateY(20px);
-                opacity: 0;
-            }
-        }
-
-        @keyframes bounce {
-            0%, 20%, 53%, 80%, 100% {
-                transform: translate3d(0,0,0);
-            }
-            40%, 43% {
-                transform: translate3d(0, -8px, 0);
-            }
-            70% {
-                transform: translate3d(0, -4px, 0);
-            }
-            90% {
-                transform: translate3d(0, -2px, 0);
-            }
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
-            20%, 40%, 60%, 80% { transform: translateX(2px); }
-        }
-
-        /* Loading spinner for notifications */
-        .notification-spinner {
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(102, 126, 234, 0.3);
-            border-top: 2px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        /* Progress animation */
-        .notification-progress-bar.animated {
-            animation: progressFill 2s ease-in-out;
-        }
-
-        @keyframes progressFill {
-            from { width: 0%; }
-            to { width: 100%; }
-        }
-
-        /* Scroll Animations */
-        .scroll-animate {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .scroll-animate.animate-in {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .scroll-fade-in {
-            opacity: 0;
-            transition: opacity 0.8s ease-in-out;
-        }
-
-        .scroll-fade-in.animate-in {
-            opacity: 1;
-        }
-
-        /* Fallback: Show elements after 1 second if they haven't animated */
-        .scroll-fade-in.fallback-visible {
-            opacity: 1;
-        }
-
-        /* Make header visible immediately */
-        .header {
-            opacity: 1 !important;
-        }
-
-        .header .nav-logo,
-        .header .header-title {
-            opacity: 1 !important;
-            transform: none !important;
-        }
-
-        /* Make main product selection visible immediately */
-        .product-selection-container {
-            opacity: 1 !important;
-        }
-
-        .product-selection-header,
-        .product-selection-buttons {
-            opacity: 1 !important;
-            transform: none !important;
-        }
-
-        .scroll-slide-left {
-            opacity: 0;
-            transform: translateX(-50px);
-            transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .scroll-slide-left.animate-in {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        .scroll-slide-left.fallback-visible {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        .scroll-slide-right {
-            opacity: 0;
-            transform: translateX(50px);
-            transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .scroll-slide-right.animate-in {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        .scroll-slide-right.fallback-visible {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        .scroll-scale-up {
-            opacity: 0;
-            transform: scale(0.8);
-            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .scroll-scale-up.animate-in {
-            opacity: 1;
-            transform: scale(1);
-        }
-
-        .scroll-scale-up.fallback-visible {
-            opacity: 1;
-            transform: scale(1);
-        }
-
-        .scroll-rotate-in {
-            opacity: 0;
-            transform: rotate(-10deg) scale(0.9);
-            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .scroll-rotate-in.animate-in {
-            opacity: 1;
-            transform: rotate(0deg) scale(1);
-        }
-
-        .scroll-rotate-in.fallback-visible {
-            opacity: 1;
-            transform: rotate(0deg) scale(1);
-        }
-
-        .scroll-bounce-in {
-            opacity: 0;
-            transform: translateY(50px) scale(0.9);
-            transition: all 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-
-        .scroll-bounce-in.animate-in {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-
-        .scroll-bounce-in.fallback-visible {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-
-        .scroll-stagger-1 { transition-delay: 0.1s; }
-        .scroll-stagger-2 { transition-delay: 0.2s; }
-        .scroll-stagger-3 { transition-delay: 0.3s; }
-        .scroll-stagger-4 { transition-delay: 0.4s; }
-        .scroll-stagger-5 { transition-delay: 0.5s; }
-
-        /* Parallax scrolling effects */
-        .parallax-slow {
-            transform: translateY(var(--scroll-slow, 0));
-        }
-
-        .parallax-fast {
-            transform: translateY(var(--scroll-fast, 0));
-        }
-
-        /* Smooth scrolling for the entire page */
-        html {
-            scroll-behavior: smooth;
-        }
-
-        /* Enhanced section animations */
-        .section {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transition: left 0.8s ease;
-        }
-
-        .section.animate-in::before {
-            left: 100%;
-        }
-
-        /* Card hover effects enhanced */
-        .card, .section {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .card:hover, .section:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Text reveal animations */
-        .text-reveal {
-            overflow: hidden;
-        }
-
-        .text-reveal span {
-            display: inline-block;
-            opacity: 0;
-            transform: translateY(100%);
-            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .text-reveal.animate-in span {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* Progress bar animations */
-        .progress-bar {
-            width: 0%;
-            transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .progress-bar.animate-in {
-            width: 100%;
-        }
-
-        /* Floating elements */
-        .float-animation {
-            animation: float 3s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-
-        /* Glow effects on scroll */
-        .glow-on-scroll {
-            transition: all 0.3s ease;
-        }
-
-        .glow-on-scroll.animate-in {
-            box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
-        }
-
-        .search-loading {
-            background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
-            border: 2px solid #e3f2fd;
-            border-radius: 12px;
-            padding: 30px;
-            text-align: center;
-            margin: 20px 0;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
-        }
-
-        .search-loading h3 {
-            color: #2c3e50;
-            margin: 0 0 15px 0;
-            font-size: 18px;
-        }
-
-        .search-loading p {
-            color: #6c757d;
-            margin: 0;
-            font-size: 14px;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 6px;
-            background-color: #e9ecef;
-            border-radius: 3px;
-            overflow: hidden;
-            margin: 15px 0;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            border-radius: 3px;
-            animation: progress 2s ease-in-out infinite;
-        }
-
-        @keyframes progress {
-            0% { width: 0%; }
-            50% { width: 70%; }
-            100% { width: 100%; }
-        }
-
-        /* Intro Loading Animation */
-        .intro-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            opacity: 1;
-            transition: opacity 1s ease-out;
-        }
-
-        .intro-overlay.fade-out {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .intro-logo {
-            width: 700px;
-            height: auto;
-            max-width: 700px;
-            max-height: 700px;
-            object-fit: contain;
-            animation: logoPopFade 3s ease-in-out;
-        }
-
-        @keyframes logoPopFade {
-            0% { 
-                opacity: 0;
-                transform: scale(0.5);
-            }
-            20% { 
-                opacity: 1;
-                transform: scale(1.1);
-            }
-            80% { 
-                opacity: 1;
-                transform: scale(1);
-            }
-            100% { 
-                opacity: 0;
-                transform: scale(0.8);
-            }
-        }
-
-        /* Responsive design for intro logo */
-        @media (max-width: 1024px) {
-            .intro-logo {
-                width: 600px;
-                max-width: 600px;
-                max-height: 600px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .intro-logo {
-                width: 500px;
-                max-width: 500px;
-                max-height: 500px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .intro-logo {
-                width: 350px;
-                max-width: 350px;
-                max-height: 350px;
-            }
-        }
-
-        /* Combined Help & Tutorial Button Styles */
-        .help-tutorial-button {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            width: 80px;
-            height: 50px;
-            border-radius: 25px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            color: white;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-            z-index: 1000;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            user-select: none;
-        }
-
-        .help-tutorial-button:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .help-tutorial-button:active {
-            transform: translateY(-1px) scale(1.02);
-            transition: all 0.1s ease;
-        }
-
-        .help-tutorial-icon {
-            font-size: 18px;
-            line-height: 1;
-            transition: all 0.3s ease;
-        }
-
-        /* Remove floating animation for solid button style */
-
-        /* Help Panel Styles */
-        .help-panel {
-            position: fixed;
-            top: 0;
-            left: -400px;
-            width: 400px;
-            height: 100vh;
-            background: white;
-            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.15);
-            z-index: 10001;
-            transition: left 0.3s ease;
-            overflow-y: auto;
-        }
-
-        .help-panel.show {
-            left: 0;
-        }
-
-        .help-panel-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .help-panel-header h2 {
-            margin: 0;
-            font-size: 20px;
-            font-weight: 700;
-        }
-
-        .help-close-btn {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 28px;
-            cursor: pointer;
-            padding: 0;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            transition: background-color 0.2s ease;
-        }
-
-        .help-close-btn:hover {
-            background-color: rgba(255, 255, 255, 0.2);
-        }
-
-        .help-panel-content {
-            padding: 20px;
-        }
-
-        .help-section {
-            margin-bottom: 25px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        .help-section:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-        }
-
-        .help-section h3 {
-            color: #2c3e50;
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .help-section ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .help-section li {
-            padding: 8px 0;
-            color: #555;
-            line-height: 1.5;
-            position: relative;
-            padding-left: 20px;
-        }
-
-        .help-section li:before {
-            content: "•";
-            color: #667eea;
-            font-weight: bold;
-            position: absolute;
-            left: 0;
-        }
-
-        .help-section strong {
-            color: #2c3e50;
-            font-weight: 600;
-        }
-
-        /* Quick Guide Grid Styles */
-        .quick-guide-section {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 25px;
-        }
-
-        .quick-guide-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .quick-guide-item {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-
-        .quick-guide-item h4 {
-            color: #667eea;
-            font-size: 14px;
-            font-weight: 600;
-            margin: 0 0 8px 0;
-        }
-
-        .quick-guide-item p {
-            color: #666;
-            font-size: 12px;
-            margin: 0;
-            line-height: 1.4;
-        }
-
-        /* Help Overlay */
-        .help-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 10000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .help-overlay.show {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        /* Responsive Design for Help Panel */
-        @media (max-width: 768px) {
-            .help-panel {
-                width: 100%;
-                left: -100%;
-            }
-            
-            .help-tutorial-button {
-                bottom: 15px;
-                left: 15px;
-                width: 70px;
-                height: 45px;
-                border-radius: 22px;
-                font-size: 14px;
-            }
-            
-            .help-tutorial-button:hover {
-                transform: translateY(-3px) scale(1.05);
-            }
-            
-            .help-tutorial-button:active {
-                transform: translateY(-1px) scale(1.02);
-            }
-            
-            .help-tutorial-icon {
-                font-size: 16px;
-            }
-
-            .quick-guide-grid {
-                grid-template-columns: 1fr;
-                gap: 10px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .help-tutorial-button {
-                bottom: 10px;
-                left: 10px;
-                width: 65px;
-                height: 40px;
-                border-radius: 20px;
-                font-size: 12px;
-            }
-            
-            .help-tutorial-button:hover {
-                transform: translateY(-2px) scale(1.05);
-            }
-            
-            .help-tutorial-button:active {
-                transform: translateY(-1px) scale(1.02);
-            }
-            
-            .help-tutorial-icon {
-                font-size: 14px;
-            }
-        }
-
-
-
-    </style>
-</head>
-<body>
-    <!-- Intro Loading Animation -->
-    <div class="intro-overlay" id="introOverlay">
-        <img src="MadisonLogoDark.png" alt="Madison Logo" class="intro-logo">
-    </div>
-
-    <div class="container">
-        <div class="header scroll-fade-in">
-            <img src="MadisonWhiteLogo.png" alt="Madison Logo" class="nav-logo scroll-scale-up scroll-stagger-1">
-            <h1 class="header-title scroll-bounce-in scroll-stagger-2">Costing Department</h1>
-            <div class="user-info" id="userInfo" style="display: none;">
-                <span id="welcomeText">Welcome, <span id="userName"></span></span>
-                <button class="logout-button" onclick="logout()">Logout</button>
-            </div>
-        </div>
-
-        <!-- Database Connection Section - Hidden -->
-        <div class="section" style="display: none;">
-            <h2>Database Connection</h2>
-            <div class="form-group">
-                <label for="dbType">Database Type:</label>
-                <select id="dbType">
-                    <option value="supabase" selected>Supabase</option>
-                    <option value="mysql">MySQL</option>
-                    <option value="postgresql">PostgreSQL</option>
-                    <option value="sqlite">SQLite</option>
-                </select>
-            </div>
-            
-            <div id="supabaseConfig">
-                <div class="form-group">
-                    <label for="supabaseUrl">Supabase URL:</label>
-                    <input type="text" id="supabaseUrl" value="https://icavnpspgmcrrqmsprze.supabase.co" placeholder="https://your-project.supabase.co">
-                </div>
-                <div class="form-group">
-                    <label for="supabaseKey">Supabase Anon Key:</label>
-                    <input type="text" id="supabaseKey" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljYXZucHNwZ21jcnJxbXNwcnplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0NzEyMzMsImV4cCI6MjA3MzA0NzIzM30.5_-LPYwj5ks_KyCXwCae2mcbI-T7em48RsMiv4Oaurk" placeholder="Your anon key">
-                </div>
-            </div>
-
-            <div id="otherDbConfig" class="hidden">
-                <div class="form-group">
-                    <label for="dbHost">Host:</label>
-                    <input type="text" id="dbHost" placeholder="localhost">
-                </div>
-                <div class="form-group">
-                    <label for="dbPort">Port:</label>
-                    <input type="number" id="dbPort" placeholder="5432">
-                </div>
-                <div class="form-group">
-                    <label for="dbUsername">Username:</label>
-                    <input type="text" id="dbUsername" placeholder="username">
-                </div>
-                <div class="form-group">
-                    <label for="dbPassword">Password:</label>
-                    <input type="password" id="dbPassword" placeholder="password">
-                </div>
-                <div class="form-group">
-                    <label for="dbName">Database Name:</label>
-                    <input type="text" id="dbName" placeholder="database_name">
-                </div>
-            </div>
-
-            <!-- Enhanced Database Connection Section -->
-            <div class="database-connection-section" style="
-                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-                border: 2px solid #dee2e6;
-                border-radius: 12px;
-                padding: 20px;
-                margin: 20px 0;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            ">
-                <h3 style="margin: 0 0 15px 0; color: #495057; display: flex; align-items: center;">
-                    <span style="margin-right: 10px;">🔗</span>
-                    Database Connection
-                </h3>
-                
-                <div id="connectionStatus" style="
-                    padding: 12px;
-                    border-radius: 8px;
-                    margin: 10px 0;
-                    font-weight: 500;
-                    display: none;
-                "></div>
-                
-                <div id="autoConnectStatus" style="display: block;">
-                    <div class="loading" style="
-                        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-                        color: white;
-                        padding: 12px 20px;
-                        border-radius: 8px;
-                        text-align: center;
-                        font-weight: 500;
-                    ">
-                        🔄 Auto-connecting to Supabase...
-                    </div>
-                </div>
-                
-                <div style="display: flex; gap: 10px; margin-top: 15px;">
-                    <button onclick="connectDatabase()" id="connectButton" style="
-                        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-                        color: white;
-                        border: none;
-                        padding: 12px 24px;
-                        border-radius: 8px;
-                        font-weight: 600;
-                        cursor: pointer;
-                        transition: all 0.3s ease;
-                        display: none;
-                    " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-                        🔗 Connect to Database
-                    </button>
-                    
-                    <button onclick="checkConnectionStatus()" id="checkConnectionButton" style="
-                        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
-                        color: white;
-                        border: none;
-                        padding: 12px 24px;
-                        border-radius: 8px;
-                        font-weight: 600;
-                        cursor: pointer;
-                        transition: all 0.3s ease;
-                    " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-                        🔍 Check Connection
-                    </button>
-                    
-                    <button onclick="reconnectDatabase()" id="reconnectButton" style="
-                        background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
-                        color: #212529;
-                        border: none;
-                        padding: 12px 24px;
-                        border-radius: 8px;
-                        font-weight: 600;
-                        cursor: pointer;
-                        transition: all 0.3s ease;
-                        display: none;
-                    " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-                        🔄 Reconnect
-                    </button>
-                </div>
-                
-                <div id="connectionDetails" style="
-                    margin-top: 15px;
-                    padding: 12px;
-                    background: #f8f9fa;
-                    border-radius: 8px;
-                    border-left: 4px solid #007bff;
-                    display: none;
-                ">
-                    <strong>Connection Details:</strong>
-                    <div id="connectionInfo" style="margin-top: 8px; font-family: monospace; font-size: 12px;"></div>
-                </div>
-            </div>
-            
-            <!-- Welcome Message - Always Visible -->
-            <div id="welcomeMessage" class="welcome-section" style="
-                text-align: center; 
-                padding: 40px 20px; 
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                border-radius: 15px;
-                margin: 20px 0;
-                box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
-            ">
-                <h2 style="margin: 0 0 15px 0; font-size: 28px; font-weight: 600;">Welcome to Databank Management</h2>
-                <p style="margin: 0 0 20px 0; font-size: 16px; opacity: 0.9;">Your comprehensive data management solution</p>
-                <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                    <div style="background: rgba(255,255,255,0.2); padding: 15px 20px; border-radius: 10px; backdrop-filter: blur(10px);">
-                        <div style="font-size: 24px; margin-bottom: 5px;">📊</div>
-                        <div style="font-weight: 600;">Data Management</div>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.2); padding: 15px 20px; border-radius: 10px; backdrop-filter: blur(10px);">
-                        <div style="font-size: 24px; margin-bottom: 5px;">✏️</div>
-                        <div style="font-weight: 600;">Edit Tables</div>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.2); padding: 15px 20px; border-radius: 10px; backdrop-filter: blur(10px);">
-                        <div style="font-size: 24px; margin-bottom: 5px;">📈</div>
-                        <div style="font-weight: 600;">Analytics</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tables Section - Hidden -->
-        <div class="section" id="tablesSection" style="display: none;">
-            <h2>Database Tables</h2>
-            <button onclick="loadTables()">Refresh Tables</button>
-            <div id="tablesList"></div>
-        </div>
-
-        <!-- Madison Review Interface - Shows pending factory data for review -->
-        <div id="madisonReviewTable" class="data-table-container" style="display: none;">
-            <div class="table-header scroll-fade-in">
-                <h2 class="table-title scroll-slide-left scroll-stagger-1">Factory Data Review</h2>
-                <p style="color: #666; margin: 10px 0;">Review and approve factory data submissions</p>
-            </div>
-            <div id="madisonReviewTableContent">
-                <!-- Pending factory data will be populated here -->
-            </div>
-        </div>
-
-        <!-- Data Table Section -->
-        <div class="data-table-container" id="dataTableSection" style="display: none;">
-            <div class="table-header scroll-fade-in">
-                <h2 class="table-title scroll-slide-left scroll-stagger-1">Databank Management</h2>
-                
-                <!-- Edit Table Button and Clear Filters - Top Right -->
-                <div style="
-                    position: absolute; 
-                    top: 20px; 
-                    right: 20px; 
-                    z-index: 10;
-                    display: flex;
-                    gap: 10px;
-                    flex-wrap: wrap;
-                    justify-content: flex-end;
-                ">
-                    <button id="reviewFactoryBtn" class="review-factory-button" onclick="showMadisonReviewInterface()" style="
-                        background: linear-gradient(135deg, #ffc107 0%, #ff8c00 100%);
-                        color: white;
-                        border: none;
-                        padding: 12px 20px;
-                        border-radius: 25px;
-                        font-size: 14px;
-                        font-weight: 600;
-                        cursor: pointer;
-                        transition: all 0.3s ease;
-                        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
-                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(255, 193, 7, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(255, 193, 7, 0.3)'">
-                        📋 Review Factory Data
-                    </button>
-                    <button id="editTableBtn" class="edit-table-button" onclick="toggleEditMode()" style="
-                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                        color: white;
-                        border: none;
-                        padding: 12px 20px;
-                        border-radius: 25px;
-                        cursor: pointer;
-                        font-size: 14px;
-                        font-weight: 600;
-                        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-                        transition: all 0.3s ease;
-                        display: flex;
-                        align-items: center;
-                        gap: 8px;
-                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(102, 126, 234, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(102, 126, 234, 0.3)'">
-                        ✏️ Edit Table
-                    </button>
-                    <button id="doneEditBtn" class="done-edit-button" onclick="saveTableChanges()" style="
-                        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-                        color: white;
-                        border: none;
-                        padding: 12px 20px;
-                        border-radius: 25px;
-                        cursor: pointer;
-                        font-size: 14px;
-                        font-weight: 600;
-                        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
-                        transition: all 0.3s ease;
-                        display: none;
-                        align-items: center;
-                        gap: 8px;
-                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(40, 167, 69, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(40, 167, 69, 0.3)'">
-                        ✅ Done
-                    </button>
-                    <button id="cancelEditBtn" class="cancel-edit-button" onclick="cancelEditMode()" style="
-                        background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%);
-                        color: white;
-                        border: none;
-                        padding: 12px 20px;
-                        border-radius: 25px;
-                        cursor: pointer;
-                        font-size: 14px;
-                        font-weight: 600;
-                        box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
-                        transition: all 0.3s ease;
-                        display: none;
-                        align-items: center;
-                        gap: 8px;
-                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(220, 53, 69, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(220, 53, 69, 0.3)'">
-                        ❌ Cancel
-                    </button>
-                </div>
-            </div>
-            
-            <div class="search-container">
-                <div class="search-form">
-                    <div class="filter-group" style="flex: 1;">
-                        <label for="searchInput">🔍 Super Search</label>
-                        <div style="position: relative;">
-                            <input type="text" id="searchInput" class="search-input super-search-input" placeholder="Search across all fields... (e.g., TNF, SS26, beanie, F22)" onkeyup="handleSuperSearchKeyup(event)" oninput="showSuperSearchSuggestions()" onfocus="showSuperSearchSuggestions()" onblur="hideSuperSearchSuggestions()">
-                            <div class="search-actions" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: flex; gap: 4px;">
-                                <button class="search-btn" onclick="clearSuperSearch()" title="Clear Search">❌</button>
-                            </div>
-                            <div id="superSearchSuggestions" class="super-search-suggestions"></div>
-                        </div>
-                    </div>
-                    
-                    <button class="search-button" onclick="performSuperSearch()" id="searchButton">
-                        Search
-                    </button>
-                    <button class="clear-button" onclick="clearSuperSearch()" id="clearButton">
-                        Clear
-                    </button>
-                    <button class="import-button" onclick="exportToExcel()" id="exportButton">
-                        Export
-                    </button>
-                </div>
-            </div>
-            
-            <div id="tableData"></div>
-                
-            <!-- Pagination -->
-            <div id="pagination" class="pagination" style="display: none;">
-                <button class="pagination-nav" id="firstPage" onclick="goToPage(1)" disabled>
-                    First
-                </button>
-                <button class="pagination-nav" id="prevPage" onclick="goToPreviousPage()" disabled>
-                    Previous
-                </button>
-                
-                <div id="pageNumbers"></div>
-                
-                <button class="pagination-nav" id="nextPage" onclick="goToNextPage()" disabled>
-                    Next
-                </button>
-                <button class="pagination-nav" id="lastPage" onclick="goToLastPage()" disabled>
-                    Last
-                </button>
-                
-                <div class="pagination-info" id="paginationInfo">
-                    Page 1 of 1
-                </div>
-            </div>
-        </div>
-
-        <!-- Product Type Selection - Bottom of Page -->
-        <div id="productSelection" class="product-selection-container">
-            <div class="product-selection-header scroll-slide-left scroll-stagger-1">
-                <h2>IMPORT EXCEL FILES FTY CBD</h2>
-            </div>
-            <div class="product-selection-buttons scroll-bounce-in scroll-stagger-2" id="productSelectionButtons">
-                <button class="product-button beanie-button scroll-scale-up scroll-stagger-3" onclick="showTemplate('beanie'); scrollToSection('costBreakdown')" id="beanieButton">
-                    Beanie
-                </button>
-                <button class="product-button ballcaps-button scroll-scale-up scroll-stagger-4" onclick="showTemplate('ballcaps'); scrollToSection('ballcapsBreakdown')" id="ballcapsButton">
-                    BallCaps
-                </button>
-            </div>
-        </div>
-
-        <!-- Factory Data Table - Shows saved factory data -->
-        <div id="factoryDataTable" class="data-table-container" style="display: none;">
-            <div class="table-header scroll-fade-in">
-                <h2 class="table-title scroll-slide-left scroll-stagger-1">Factory Data Management</h2>
-                
-                <!-- Notification Bell -->
-                <div style="position: absolute; top: 20px; right: 20px; z-index: 10;">
-                    <button id="notificationBell" onclick="showFactoryNotifications()" style="
-                        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-                        color: white;
-                        border: none;
-                        padding: 12px;
-                        border-radius: 50%;
-                        cursor: pointer;
-                        font-size: 16px;
-                        width: 45px;
-                        height: 45px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
-                        transition: all 0.3s ease;
-                        position: relative;
-                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(255, 107, 107, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(255, 107, 107, 0.3)'">
-                        🔔
-                        <span id="notificationBadge" style="
-                            position: absolute;
-                            top: -5px;
-                            right: -5px;
-                            background: #ff4757;
-                            color: white;
-                            border-radius: 50%;
-                            width: 20px;
-                            height: 20px;
-                            font-size: 12px;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            font-weight: bold;
-                            display: none;
-                        ">0</span>
-                    </button>
-                </div>
-            </div>
-            <div id="factoryDataTableContent">
-                <!-- Factory data will be populated here -->
-            </div>
-        </div>
-
-        <!-- Factory Notifications Panel -->
-        <div id="factoryNotificationsPanel" style="
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
-            z-index: 1000;
-            max-width: 500px;
-            width: 90%;
-            max-height: 70vh;
-            overflow-y: auto;
-            display: none;
-        ">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3 style="margin: 0; color: #333;">🔔 Madison Notifications</h3>
-                <button onclick="closeFactoryNotifications()" style="
-                    background: #dc3545;
-                    color: white;
-                    border: none;
-                    padding: 8px 12px;
-                    border-radius: 6px;
-                    cursor: pointer;
-                    font-size: 14px;
-                ">✕ Close</button>
-            </div>
-            <div id="notificationsList">
-                <!-- Notifications will be populated here -->
-            </div>
-            <div style="margin-top: 20px; text-align: center;">
-                <button onclick="clearAllFactoryNotifications(); closeFactoryNotifications();" style="
-                    background: #6c757d;
-                    color: white;
-                    border: none;
-                    padding: 10px 20px;
-                    border-radius: 6px;
-                    cursor: pointer;
-                    font-size: 14px;
-                ">Clear All Notifications</button>
-            </div>
-        </div>
-
-
-        <!-- TEMPLATE 1: Factory Cost Breakdown Table - Bottom of Page -->
-        <div id="costBreakdown" class="cost-breakdown-container" style="display: none;">
-            <div class="cost-breakdown-header scroll-fade-in">
-                <div class="header-content scroll-slide-left scroll-stagger-1">
-                    <h2>Factory Cost Breakdown</h2>
-                    <p class="template-description">Template for Beanie</p>
-                </div>
-                <div class="header-buttons">
-                    <button class="save-button" onclick="saveBeanieToDatabase()" id="saveBeanieBtn">
-                        Save to Database
-                    </button>
-                <button class="back-button" onclick="goBackToSelection(); scrollBackToSelection()">
-                    ← Back to Selection
-                </button>
-                </div>
-            </div>
-            
-            
-
-            <div class="cost-breakdown-content">
-                <!-- Left Side - Cost Breakdown -->
-                <div class="cost-sections">
-
-                    <!-- YARN Section -->
-                    <div class="cost-section scroll-slide-left scroll-stagger-1" data-section="YARN">
-                        <div class="section-header">YARN</div>
-                        <div class="cost-table">
-                            <div class="cost-row header-row">
-                                <div class="cost-cell">YARN</div>
-                                <div class="cost-cell">CONSUMPTION (G)</div>
-                                <div class="cost-cell">MATERIAL PRICE (USD/KG)</div>
-                                <div class="cost-cell">MATERIAL COST</div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row subtotal-row">
-                                <div class="cost-cell">SUB TOTAL</div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell">$0.00</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- FABRIC Section -->
-                    <div class="cost-section scroll-slide-right scroll-stagger-2" data-section="FABRIC">
-                        <div class="section-header">FABRIC</div>
-                        <div class="cost-table">
-                            <div class="cost-row header-row">
-                                <div class="cost-cell">FABRIC</div>
-                                <div class="cost-cell">CONSUMPTION (YARDS)</div>
-                                <div class="cost-cell">MATERIAL PRICE (USD/YD)</div>
-                                <div class="cost-cell">MATERIAL COST</div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row subtotal-row">
-                                <div class="cost-cell">SUB TOTAL</div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell">$0.00</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- TRIM Section -->
-                    <div class="cost-section scroll-slide-left scroll-stagger-3" data-section="TRIM">
-                        <div class="section-header">TRIM</div>
-                        <div class="cost-table">
-                            <div class="cost-row header-row">
-                                <div class="cost-cell">TRIM</div>
-                                <div class="cost-cell">CONSUMPTION (PIECE)</div>
-                                <div class="cost-cell">MATERIAL PRICE (USD/PC)</div>
-                                <div class="cost-cell">MATERIAL COST</div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row subtotal-row">
-                                <div class="cost-cell">SUB TOTAL</div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell">$0.00</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- TOTAL MATERIAL COST -->
-                    <div class="cost-section total-section">
-                        <div class="total-material-cost">
-                            <div class="total-label">TOTAL MATERIAL AND SUBMATERIALS COST:</div>
-                            <div class="total-value">$0.00</div>
-                        </div>
-                    </div>
-
-                    <!-- KNITTING Section -->
-                    <div class="cost-section scroll-slide-right scroll-stagger-4">
-                        <div class="section-header">KNITTING</div>
-                        <div class="cost-table">
-                            <div class="cost-row header-row">
-                                <div class="cost-cell">KNITTING</div>
-                                <div class="cost-cell">KNITTING TIME (MINS)</div>
-                                <div class="cost-cell">KNITTING SAH (USD/MIN)</div>
-                                <div class="cost-cell">KNITTING COST</div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row subtotal-row">
-                                <div class="cost-cell">SUB TOTAL</div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell">$0.00</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- OPERATIONS Section -->
-                    <div class="cost-section scroll-slide-left scroll-stagger-5">
-                        <div class="section-header">OPERATIONS</div>
-                        <div class="cost-table">
-                            <div class="cost-row header-row">
-                                <div class="cost-cell">OPERATION</div>
-                                <div class="cost-cell" style="color: transparent; background-color: transparent;">BLANK</div>
-                                <div class="cost-cell">SMV</div>
-                                <div class="cost-cell">COST (USD/MIN)</div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row subtotal-row">
-                                <div class="cost-cell">SUB TOTAL</div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell">$0.00</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- PACKAGING Section -->
-                    <div class="cost-section scroll-slide-right scroll-stagger-6">
-                        <div class="section-header">PACKAGING</div>
-                        <div class="cost-table">
-                            <div class="cost-row header-row">
-                                <div class="cost-cell">PACKAGING</div>
-                                <div class="cost-cell">Factory Notes</div>
-                                <div class="cost-cell">COST</div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row subtotal-row">
-                                <div class="cost-cell">SUB TOTAL</div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell">$0.00</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- OVERHEAD/PROFIT Section -->
-                    <div class="cost-section scroll-slide-left scroll-stagger-7">
-                        <div class="section-header">OVERHEAD/PROFIT</div>
-                        <div class="cost-table">
-                            <div class="cost-row header-row">
-                                <div class="cost-cell">OVERHEAD/PROFIT</div>
-                                <div class="cost-cell">Factory Notes</div>
-                                <div class="cost-cell">COST</div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row subtotal-row">
-                                <div class="cost-cell">SUB TOTAL</div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell">$0.00</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- TOTAL FACTORY COST -->
-                    <div class="cost-section total-section">
-                        <div class="total-factory-cost">
-                            <div class="total-label">TOTAL FACTORY COST:</div>
-                            <div class="total-value">$0.00</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right Side - Product Details -->
-                <div class="product-details">
-                    <div class="product-info">
-                        <div class="info-row">
-                            <span class="info-label">Customer:</span>
-                            <input type="text" class="info-input" data-field="customer" placeholder="Enter customer name" onchange="updateProductData(this)">
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Season:</span>
-                            <input type="text" class="info-input" data-field="season" placeholder="Enter season" onchange="updateProductData(this)">
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Style#:</span>
-                            <input type="text" class="info-input" data-field="styleNumber" placeholder="Enter style number" onchange="updateProductData(this)">
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Style Name:</span>
-                            <input type="text" class="info-input" data-field="styleName" placeholder="Enter style name" onchange="updateProductData(this)">
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Costed Quantity:</span>
-                            <input type="text" class="info-input" data-field="costedQuantity" placeholder="Enter quantity" onchange="updateProductData(this)">
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Leadtime:</span>
-                            <input type="text" class="info-input" data-field="leadtime" placeholder="Enter leadtime" onchange="updateProductData(this)">
-                        </div>
-                    </div>
-
-                    <div class="product-image">
-                        <div class="image-upload-area" id="beanieImageUpload" ondrop="handleImageDrop(event, 'beanie')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" onclick="triggerImageInput('beanie')">
-                            <div class="image-placeholder">
-                                <div class="beanie-icon">📦</div>
-                                <div class="image-text">Drag & Drop Image Here</div>
-                                <div class="image-subtext">or click to select</div>
-                            </div>
-                            <input type="file" id="beanieImageInput" accept="image/*" style="display: none;" onchange="handleImageSelect(event, 'beanie')">
-                        </div>
-                    </div>
-
-                    <div class="notes-section">
-                        <div class="notes-content">
-                            <div class="note-item">Add your costing notes here...</div>
-                            <div class="note-item"></div>
-                            <div class="note-item"></div>
-                            <div class="note-item"></div>
-                            <div class="note-item"></div>
-                            <div class="note-item"></div>
-                            <div class="note-item"></div>
-                            <div class="pricing-tiers">
-                                <div class="pricing-item">Pricing tiers will appear here</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="factory-cell">
-                        <div class="factory-label">Factory Cell</div>
-                        <div class="factory-name"></div>
-                    </div>
-
-                    <div class="drag-drop-area">
-                        <div class="drag-drop-content">
-                            <div class="drag-drop-icon">📄</div>
-                            <div class="drag-drop-text">drag & drop<br>or click to select</div>
-                            <div class="file-formats">CSV • XLSX • XLSM</div>
-                        </div>
-                        <div class="drag-drop-options">
-                            <div class="option-button" onclick="uploadAnotherFile()">📁 Upload Another File</div>
-                            <div class="option-button clear" onclick="clearForm()">🗑️ Clear Form</div>
-                        </div>
-                    </div>
-                    
-                </div>
-            </div>
-        </div>
-
-        <!-- TEMPLATE 2: BallCaps Cost Breakdown Table - Bottom of Page -->
-        <div id="ballcapsBreakdown" class="cost-breakdown-container" style="display: none;">
-            <div class="cost-breakdown-header">
-                <div class="header-content">
-                    <h2>Factory Cost Breakdown</h2>
-                    <p class="template-description">Template for BallCaps</p>
-                </div>
-                <div class="header-buttons">
-                    <button class="save-button" onclick="saveBallCapsToDatabase()" id="saveBallCapsBtn">
-                        Save to Database
-                    </button>
-                <button class="back-button" onclick="goBackToSelection(); scrollBackToSelection()">
-                    ← Back to Selection
-                </button>
-                </div>
-            </div>
-            
-            <div class="cost-breakdown-content">
-                <!-- Left Side - Cost Breakdown -->
-                <div class="cost-sections">
-                    <!-- FABRIC/S Section -->
-                    <div class="cost-section">
-                        <div class="section-header">FABRIC/S</div>
-                        <div class="cost-table">
-                            <div class="cost-row header-row">
-                                <div class="cost-cell">(Name/Code/Description)Description</div>
-                                <div class="cost-cell">CONSUMPTION (YARD)</div>
-                                <div class="cost-cell">MATERIAL PRICE (USD/YD)</div>
-                                <div class="cost-cell">MATERIAL COST</div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row subtotal-row">
-                                <div class="cost-cell">SUB TOTAL</div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell">$0.00</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- OTHER FABRIC/S - TRIM/S Section -->
-                    <div class="cost-section">
-                        <div class="section-header">OTHER FABRIC/S - TRIM/S</div>
-                        <div class="cost-table">
-                            <div class="cost-row header-row">
-                                <div class="cost-cell">OTHER FABRIC/S - TRIM/S</div>
-                                <div class="cost-cell">CONSUMPTION (YARD)</div>
-                                <div class="cost-cell">MATERIAL PRICE (USD/YD)</div>
-                                <div class="cost-cell">MATERIAL COST</div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row subtotal-row">
-                                <div class="cost-cell">SUB TOTAL</div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell">$0.00</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- TRIM/S Section -->
-                    <div class="cost-section">
-                        <div class="section-header">TRIM/S</div>
-                        <div class="cost-table">
-                            <div class="cost-row header-row">
-                                <div class="cost-cell">(Name/Code/Description)Description</div>
-                                <div class="cost-cell">CONSUMPTION (PIECE)</div>
-                                <div class="cost-cell">MATERIAL PRICE (USD/PC)</div>
-                                <div class="cost-cell">MATERIAL COST</div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row subtotal-row">
-                                <div class="cost-cell">SUB TOTAL</div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell">$0.00</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- TOTAL MATERIAL COST -->
-                    <div class="cost-section total-section">
-                        <div class="total-material-cost">
-                            <div class="total-label">TOTAL MATERIAL AND SUBMATERIALS COST:</div>
-                            <div class="total-value">$0.00</div>
-                        </div>
-                    </div>
-
-                    <!-- OPERATIONS Section -->
-                    <div class="cost-section">
-                        <div class="section-header">OPERATIONS</div>
-                        <div class="cost-table">
-                            <div class="cost-row header-row">
-                                <div class="cost-cell">OPERATION</div>
-                                <div class="cost-cell" style="color: transparent; background-color: transparent;">BLANK</div>
-                                <div class="cost-cell">SMV</div>
-                                <div class="cost-cell">COST (USD/MIN)</div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row subtotal-row">
-                                <div class="cost-cell">SUB TOTAL</div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell">$0.00</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- PACKAGING Section -->
-                    <div class="cost-section">
-                        <div class="section-header">PACKAGING</div>
-                        <div class="cost-table">
-                            <div class="cost-row header-row">
-                                <div class="cost-cell">TYPE</div>
-                                <div class="cost-cell">NOTES</div>
-                                <div class="cost-cell">COST</div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row subtotal-row">
-                                <div class="cost-cell">SUB TOTAL</div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell">$0.00</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- OVERHEAD/PROFIT Section -->
-                    <div class="cost-section">
-                        <div class="section-header">OVERHEAD/PROFIT</div>
-                        <div class="cost-table">
-                            <div class="cost-row header-row">
-                                <div class="cost-cell">OVERHEAD/PROFIT</div>
-                                <div class="cost-cell">Factory Notes</div>
-                                <div class="cost-cell">COST</div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row">
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell"></div>
-                            </div>
-                            <div class="cost-row subtotal-row">
-                                <div class="cost-cell">SUB TOTAL</div>
-                                <div class="cost-cell"></div>
-                                <div class="cost-cell">$0.00</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- TOTAL FACTORY COST -->
-                    <div class="cost-section total-section">
-                        <div class="total-factory-cost">
-                            <div class="total-label">TOTAL FACTORY COST:</div>
-                            <div class="total-value">$0.00</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right Side - Product Details -->
-                <div class="product-details">
-                    <div class="product-info">
-                        <div class="info-row">
-                            <span class="info-label">Customer:</span>
-                            <input type="text" class="info-input" data-field="customer" placeholder="Enter customer name" onchange="updateProductData(this)">
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Season:</span>
-                            <input type="text" class="info-input" data-field="season" placeholder="Enter season" onchange="updateProductData(this)">
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Style#:</span>
-                            <input type="text" class="info-input" data-field="styleNumber" placeholder="Enter style number" onchange="updateProductData(this)">
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Style Name:</span>
-                            <input type="text" class="info-input" data-field="styleName" placeholder="Enter style name" onchange="updateProductData(this)">
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">MOQ:</span>
-                            <input type="text" class="info-input" data-field="moq" placeholder="Enter MOQ" onchange="updateProductData(this)">
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Leadtime:</span>
-                            <input type="text" class="info-input" data-field="leadtime" placeholder="Enter leadtime" onchange="updateProductData(this)">
-                        </div>
-                    </div>
-
-                    <div class="product-image">
-                        <div class="image-upload-area" id="ballcapsImageUpload" ondrop="handleImageDrop(event, 'ballcaps')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" onclick="triggerImageInput('ballcaps')">
-                            <div class="image-placeholder">
-                                <div class="beanie-icon">🧢</div>
-                                <div class="image-text">Drag & Drop Image Here</div>
-                                <div class="image-subtext">or click to select</div>
-                            </div>
-                            <input type="file" id="ballcapsImageInput" accept="image/*" style="display: none;" onchange="handleImageSelect(event, 'ballcaps')">
-                        </div>
-                    </div>
-
-                    <div class="notes-section">
-                        <div class="notes-content">
-                            <div class="note-item">Add your costing notes here...</div>
-                            <div class="note-item"></div>
-                            <div class="note-item"></div>
-                            <div class="note-item"></div>
-                            <div class="note-item"></div>
-                            <div class="note-item"></div>
-                            <div class="note-item"></div>
-                            <div class="pricing-tiers">
-                                <div class="pricing-item">Pricing tiers will appear here</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="factory-cell">
-                        <div class="factory-label">Factory Cell</div>
-                        <div class="factory-name"></div>
-                    </div>
-
-                    <div class="drag-drop-area">
-                        <div class="drag-drop-content">
-                            <div class="drag-drop-icon">📄</div>
-                            <div class="drag-drop-text">drag & drop<br>or click to select</div>
-                            <div class="file-formats">CSV • XLSX • XLSM</div>
-                        </div>
-                        <div class="drag-drop-options">
-                            <div class="option-button" onclick="uploadAnotherFile()">📁 Upload Another File</div>
-                            <div class="option-button clear" onclick="clearForm()">🗑️ Clear Form</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Notification Container -->
-    <div id="notificationContainer" class="notification-container"></div>
-
-    <script>
-        // Enhanced and more reliable XLSX library loading
+﻿// Enhanced and more reliable XLSX library loading
         function ensureXLSXLoaded() {
             return new Promise((resolve, reject) => {
-                console.log('🔍 Checking XLSX library availability...');
+                console.log('🔍” Checking XLSX library availability...');
                 
                 if (typeof XLSX !== 'undefined') {
                     console.log('XLSX library is already available');
@@ -4928,7 +9,7 @@
                     return;
                 }
 
-                console.log('⏳ XLSX library not ready, waiting for it to load...');
+                console.log('â³ XLSX library not ready, waiting for it to load...');
                 
                 // Check if script is already being loaded
                 const existingScript = document.querySelector('script[src*="xlsx"]');
@@ -4992,23 +73,23 @@
                     console.log('XLSX library loaded successfully');
                     console.log('XLSX version:', XLSX.version);
                 }).catch(error => {
-                    console.error('❌ Failed to load XLSX library:', error);
+                    console.error('âŒ Failed to load XLSX library:', error);
                 });
             }
         };
 
         // Simple test function to check XLSX loading
         window.testXLSXLoading = function() {
-            console.log('🧪 Testing XLSX library loading...');
+            console.log('🔍§ª Testing XLSX library loading...');
             if (typeof XLSX !== 'undefined') {
                 console.log('XLSX is already loaded');
                 return true;
             } else {
-                console.log('⏳ XLSX not loaded, loading now...');
+                console.log('â³ XLSX not loaded, loading now...');
                 ensureXLSXLoaded().then(() => {
                     console.log('XLSX loaded successfully');
                 }).catch(error => {
-                    console.error('❌ XLSX loading failed:', error);
+                    console.error('âŒ XLSX loading failed:', error);
                 });
                 return false;
             }
@@ -5016,7 +97,7 @@
 
         // Demo function to show how Excel contents are displayed
         window.demoExcelContentDisplay = function() {
-            console.log('📊 DEMO: How Excel file contents are displayed after reading');
+            console.log('🔍“Š DEMO: How Excel file contents are displayed after reading');
             console.log('======');
             
             // Create a sample Excel file structure to demonstrate
@@ -5044,17 +125,17 @@
                 }
             ];
 
-            console.log('1. 📋 Excel file structure after reading:');
+            console.log('1. 🔍“‹ Excel file structure after reading:');
             console.log('   - Array of sheet objects');
             console.log('   - Each sheet has: sheetName and data (2D array)');
             console.log('   - Data is in raw format (no formatting)');
             console.log('');
             
-            console.log('2. 📊 Sample Excel content structure:');
+            console.log('2. 🔍“Š Sample Excel content structure:');
             console.log(JSON.stringify(sampleExcelContent, null, 2));
             console.log('');
 
-            console.log('3. 🎯 How it appears in the UI:');
+            console.log('3. 🔍Ž¯ How it appears in the UI:');
             console.log('   - File info header with name, type, size, date');
             console.log('   - Each sheet displayed as separate section');
             console.log('   - Table format with headers (Column 1, Column 2, etc.)');
@@ -5062,24 +143,24 @@
             console.log('   - "View Full Contents" button for complete data');
             console.log('');
 
-            console.log('4. 📱 Visual representation:');
-            console.log('   ┌─────────────────────────────────────────┐');
-            console.log('   │ ⚡ File Contents: example.xlsx          │');
-            console.log('   │ Type: EXCEL | Size: 1.2 KB | Date: ...  │');
-            console.log('   ├─────────────────────────────────────────┤');
-            console.log('   │ ⚡ Sales Data                           │');
-            console.log('   │ ┌─────┬───────┬─────────┬───────┬──────┐ │');
-            console.log('   │ │Col1 │ Col2  │  Col3   │ Col4  │ Col5 │ │');
-            console.log('   │ ├─────┼───────┼─────────┼───────┼──────┤ │');
-            console.log('   │ │Prod │ Price │ Quantity│ Total │ Date │ │');
-            console.log('   │ │Lap  │ 999.99│    5    │4999.95│2024-1│ │');
-            console.log('   │ │Mouse│ 29.99 │   10    │299.90 │2024-1│ │');
-            console.log('   │ └─────┴───────┴─────────┴───────┴──────┘ │');
-            console.log('   │ [⚡ View Full Contents] button          │');
-            console.log('   └─────────────────────────────────────────┘');
+            console.log('4. 🔍“± Visual representation:');
+            console.log('   â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”');
+            console.log('   â”‚ âš¡ File Contents: example.xlsx          â”‚');
+            console.log('   â”‚ Type: EXCEL | Size: 1.2 KB | Date: ...  â”‚');
+            console.log('   â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤');
+            console.log('   â”‚ âš¡ Sales Data                           â”‚');
+            console.log('   â”‚ â”Œâ”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â” â”‚');
+            console.log('   â”‚ â”‚Col1 â”‚ Col2  â”‚  Col3   â”‚ Col4  â”‚ Col5 â”‚ â”‚');
+            console.log('   â”‚ â”œâ”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”¤ â”‚');
+            console.log('   â”‚ â”‚Prod â”‚ Price â”‚ Quantityâ”‚ Total â”‚ Date â”‚ â”‚');
+            console.log('   â”‚ â”‚Lap  â”‚ 999.99â”‚    5    â”‚4999.95â”‚2024-1â”‚ â”‚');
+            console.log('   â”‚ â”‚Mouseâ”‚ 29.99 â”‚   10    â”‚299.90 â”‚2024-1â”‚ â”‚');
+            console.log('   â”‚ â””â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”€â”˜ â”‚');
+            console.log('   â”‚ [âš¡ View Full Contents] button          â”‚');
+            console.log('   â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜');
             console.log('');
 
-            console.log('5. 🔧 Technical details:');
+            console.log('5. 🔍”§ Technical details:');
             console.log('   - Data stored in window.fileContent globally');
             console.log('   - Each cell value converted to string');
             console.log('   - Empty cells shown as empty strings');
@@ -5088,7 +169,7 @@
             console.log('   - Performance optimized for large files');
             console.log('');
 
-            console.log('6. 🚀 Performance features:');
+            console.log('6. [PERF] Performance features:');
             console.log('   - Ultra-fast processing with timing metrics');
             console.log('   - Web Workers for files >10MB');
             console.log('   - Optimized XLSX reading (raw data only)');
@@ -5097,7 +178,7 @@
             console.log('');
 
             // Simulate the display process
-            console.log('7. 🎬 Simulating display process...');
+            console.log('7. 🔍Ž¬ Simulating display process...');
             const mockFile = {
                 name: 'demo-excel-file.xlsx',
                 size: 1234,
@@ -5111,8 +192,8 @@
             // Display the content
             displayFileContentFast(sampleExcelContent, mockFile, 'excel');
             
-            console.log('✅ Demo complete! Check the UI for the visual display.');
-            console.log('💡 Try selecting a real Excel file to see it in action!');
+            console.log('âœ… Demo complete! Check the UI for the visual display.');
+            console.log('🔍’¡ Try selecting a real Excel file to see it in action!');
         };
 
         // Function to show the actual data structure of a loaded Excel file
@@ -5121,18 +202,18 @@
             const fileType = window.currentFileType;
             
             if (!fileContent) {
-                console.log('❌ No file content available. Please select an Excel file first.');
+                console.log('âŒ No file content available. Please select an Excel file first.');
                 return;
             }
             
-            console.log('📊 ACTUAL EXCEL FILE DATA STRUCTURE:');
+            console.log('🔍“Š ACTUAL EXCEL FILE DATA STRUCTURE:');
             console.log('==');
             console.log(`File Type: ${fileType}`);
             console.log(`Number of Sheets: ${fileContent.length}`);
             console.log('');
             
             fileContent.forEach((sheet, index) => {
-                console.log(`📋 Sheet ${index + 1}: "${sheet.sheetName}"`);
+                console.log(`🔍“‹ Sheet ${index + 1}: "${sheet.sheetName}"`);
                 console.log(`   - Data Type: ${Array.isArray(sheet.data) ? '2D Array' : typeof sheet.data}`);
                 console.log(`   - Rows: ${sheet.data ? sheet.data.length : 0}`);
                 console.log(`   - Columns: ${sheet.data && sheet.data[0] ? sheet.data[0].length : 0}`);
@@ -5149,7 +230,7 @@
                 console.log('');
             });
             
-            console.log('🔍 How this data is used:');
+            console.log('🔍” How this data is used:');
             console.log('1. Each sheet becomes a separate table section');
             console.log('2. First row becomes table headers (Column 1, Column 2, etc.)');
             console.log('3. Each subsequent row becomes a table row');
@@ -5158,16 +239,16 @@
             console.log('6. Data is stored globally in window.fileContent');
             console.log('');
             
-            console.log('💡 To see this in action, select an Excel file and watch the console!');
+            console.log('🔍’¡ To see this in action, select an Excel file and watch the console!');
         };
 
         // Demo function for ULTRA FAST file reading
         window.demoUltraFastReading = function() {
-            console.log('⚡ ULTRA FAST FILE READING DEMO');
+            console.log('âš¡ ULTRA FAST FILE READING DEMO');
             console.log('===');
             console.log('The main index.html now has ULTRA FAST file reading!');
             console.log('');
-            console.log('🚀 Optimizations applied:');
+            console.log('[OPTIMIZE] Optimizations applied:');
             console.log('- ULTRA MINIMAL XLSX processing options');
             console.log('- Process only first sheet for maximum speed');
             console.log('- Raw data processing only (no formatting)');
@@ -5178,31 +259,31 @@
             console.log('- Enhanced XLSX loading with fallback CDN');
             console.log('- Robust error handling and debugging');
             console.log('');
-            console.log('📊 Performance improvements:');
+            console.log('🔍“Š Performance improvements:');
             console.log('- Excel files: 10-50x faster');
             console.log('- CSV files: 20x faster');
             console.log('- Text files: 50x faster');
             console.log('- Processing time: milliseconds instead of seconds');
             console.log('');
-            console.log('💡 Try uploading a file now - it should be ULTRA FAST!');
-            console.log('⚡ Watch the console for processing time metrics');
-            console.log('🔧 Enhanced with fallback XLSX loading for reliability');
+            console.log('🔍’¡ Try uploading a file now - it should be ULTRA FAST!');
+            console.log('âš¡ Watch the console for processing time metrics');
+            console.log('🔍”§ Enhanced with fallback XLSX loading for reliability');
         };
 
         // Debug function to test image extraction
         window.testImageExtraction = function() {
-            console.log('🖼️ TESTING IMAGE EXTRACTION');
+            console.log('🔍–¼ï¸ TESTING IMAGE EXTRACTION');
             console.log('==');
             
             if (!window.lastExcelData) {
-                console.log('❌ No Excel data available. Please upload an Excel file first.');
+                console.log('âŒ No Excel data available. Please upload an Excel file first.');
                 return;
             }
             
             console.log('Raw Excel data structure:', window.lastExcelData);
             
             if (window.lastExcelData.images) {
-                console.log('✅ Found', window.lastExcelData.images.length, 'embedded images:');
+                console.log('âœ… Found', window.lastExcelData.images.length, 'embedded images:');
                 window.lastExcelData.images.forEach((image, index) => {
                     console.log(`  Image ${index + 1}:`, {
                         id: image.id,
@@ -5215,11 +296,11 @@
                 
                 // Test displaying the first image
                 if (window.lastExcelData.images.length > 0) {
-                    console.log('🎯 Testing image display...');
+                    console.log('🔍Ž¯ Testing image display...');
                     displayProductImages(window.lastExcelData.images);
                 }
             } else {
-                console.log('❌ No images found in Excel data');
+                console.log('âŒ No images found in Excel data');
                 console.log('This could mean:');
                 console.log('- The Excel file has no embedded images');
                 console.log('- Images are in a format not supported by XLSX.js');
@@ -5229,11 +310,11 @@
 
         // Debug function to analyze Excel file structure
         window.analyzeExcelStructure = function() {
-            console.log('🔍 ANALYZING EXCEL FILE STRUCTURE');
+            console.log('🔍” ANALYZING EXCEL FILE STRUCTURE');
             console.log('==');
             
             if (!window.lastExcelData) {
-                console.log('❌ No Excel data available. Please upload an Excel file first.');
+                console.log('âŒ No Excel data available. Please upload an Excel file first.');
                 return;
             }
             
@@ -5253,31 +334,31 @@
             
             // Check if it's the old format
             if (Array.isArray(window.lastExcelData)) {
-                console.log('⚠️ Using old array format - images may not be extracted');
+                console.log('âš ï¸ Using old array format - images may not be extracted');
                 console.log('Consider re-uploading the file to get the new format with image support');
             }
         };
 
         // Function to reinitialize drag & drop
         window.reinitializeDragDrop = function() {
-            console.log('🔄 Reinitializing drag & drop...');
+            console.log('🔍”„ Reinitializing drag & drop...');
             try {
                 initializeDragDrop();
-                console.log('✅ Drag & drop reinitialized successfully');
+                console.log('âœ… Drag & drop reinitialized successfully');
             } catch (error) {
-                console.error('❌ Error reinitializing drag & drop:', error);
+                console.error('âŒ Error reinitializing drag & drop:', error);
             }
         };
 
         // Function to manually initialize utilities
         window.initializeUtilitiesNow = function() {
-            console.log('🔧 Manually initializing utilities...');
+            console.log('🔍”§ Manually initializing utilities...');
             return initializeUtilities();
         };
 
         // Function to check drag & drop status
         window.checkDragDropStatus = function() {
-            console.log('🔍 CHECKING DRAG & DROP STATUS');
+            console.log('🔍” CHECKING DRAG & DROP STATUS');
             console.log('==');
             console.log('Document ready state:', document.readyState);
             console.log('Window loaded:', window.performance.timing.loadEventEnd > 0);
@@ -5307,7 +388,7 @@
 
         // Debug function to test drag and drop functionality
         window.testDragDrop = function() {
-            console.log('🎯 TESTING DRAG & DROP FUNCTIONALITY');
+            console.log('🔍Ž¯ TESTING DRAG & DROP FUNCTIONALITY');
             console.log('==');
             
             const dragDropAreas = document.querySelectorAll('.drag-drop-area');
@@ -5349,7 +430,7 @@
                 console.log('Drag over class applied:', testArea.classList.contains('drag-over'));
             }
             
-            console.log('💡 If drag & drop is not working:');
+            console.log('🔍’¡ If drag & drop is not working:');
             console.log('1. Check browser console for JavaScript errors');
             console.log('2. Make sure the page is fully loaded');
             console.log('3. Try refreshing the page');
@@ -5358,31 +439,31 @@
 
         // Test XLSX loading status
         window.testXLSXStatus = function() {
-            console.log('🔍 XLSX Library Status Check');
+            console.log('🔍” XLSX Library Status Check');
             console.log('');
             if (typeof XLSX !== 'undefined') {
-                console.log('✅ XLSX library is loaded and ready');
-                console.log('📊 Version:', XLSX.version || 'Unknown');
-                console.log('🔧 Available methods:', Object.keys(XLSX).slice(0, 10).join(', ') + '...');
-                console.log('📖 Read method available:', typeof XLSX.read);
-                console.log('🛠️ Utils available:', typeof XLSX.utils);
+                console.log('âœ… XLSX library is loaded and ready');
+                console.log('🔍“Š Version:', XLSX.version || 'Unknown');
+                console.log('🔍”§ Available methods:', Object.keys(XLSX).slice(0, 10).join(', ') + '...');
+                console.log('🔍“– Read method available:', typeof XLSX.read);
+                console.log('🔍› ï¸ Utils available:', typeof XLSX.utils);
             } else {
-                console.log('❌ XLSX library is not loaded');
-                console.log('🔄 Try refreshing the page or check your internet connection');
+                console.log('âŒ XLSX library is not loaded');
+                console.log('🔍”„ Try refreshing the page or check your internet connection');
             }
         };
 
         // Quick function to display any file contents
         window.displayFileContents = function(file) {
             if (!file) {
-                console.log('❌ No file provided. Usage: displayFileContents(file)');
-                console.log('💡 Or select a file using the Import button in the UI');
+                console.log('âŒ No file provided. Usage: displayFileContents(file)');
+                console.log('🔍’¡ Or select a file using the Import button in the UI');
                 return;
             }
             
-            console.log(`📁 Displaying contents of: ${file.name}`);
-            console.log(`📊 File size: ${(file.size / 1024).toFixed(2)} KB`);
-            console.log(`📅 Last modified: ${new Date(file.lastModified).toLocaleString()}`);
+            console.log(`🔍“ Displaying contents of: ${file.name}`);
+            console.log(`🔍“Š File size: ${(file.size / 1024).toFixed(2)} KB`);
+            console.log(`🔍“… Last modified: ${new Date(file.lastModified).toLocaleString()}`);
             console.log('');
             
             // Use the existing file reading system
@@ -5395,19 +476,19 @@
             const fileType = window.currentFileType;
             
             if (!fileContent) {
-                console.log('❌ No file content available.');
-                console.log('💡 Please select a file first using the Import button.');
+                console.log('âŒ No file content available.');
+                console.log('🔍’¡ Please select a file first using the Import button.');
                 return;
             }
             
-            console.log('📊 CURRENT FILE CONTENTS:');
+            console.log('🔍“Š CURRENT FILE CONTENTS:');
             console.log('====');
             console.log(`File Type: ${fileType}`);
             console.log(`Number of Sheets/Sections: ${fileContent.length}`);
             console.log('');
             
             fileContent.forEach((sheet, index) => {
-                console.log(`📋 Section ${index + 1}: "${sheet.sheetName}"`);
+                console.log(`🔍“‹ Section ${index + 1}: "${sheet.sheetName}"`);
                 console.log(`   Rows: ${sheet.data ? sheet.data.length : 0}`);
                 console.log(`   Columns: ${sheet.data && sheet.data[0] ? sheet.data[0].length : 0}`);
                 
@@ -5423,13 +504,13 @@
             // Also trigger the visual display
             if (currentFile) {
                 displayFileContentFast(fileContent, currentFile, fileType);
-                console.log('✅ Content displayed in UI! Check the web page.');
+                console.log('âœ… Content displayed in UI! Check the web page.');
             }
         };
 
         // Demo function to immediately display sample file contents
         window.demoDisplayContents = function() {
-            console.log('🎬 DEMO: Displaying sample file contents');
+            console.log('🔍Ž¬ DEMO: Displaying sample file contents');
             console.log('==');
             
             // Create sample Excel-like content
@@ -5469,7 +550,7 @@
             window.currentFileType = 'excel';
             window.currentFile = mockFile;
             
-            console.log('📊 Sample content created:');
+            console.log('🔍“Š Sample content created:');
             console.log(`- File: ${mockFile.name}`);
             console.log(`- Size: ${(mockFile.size / 1024).toFixed(2)} KB`);
             console.log(`- Sheets: ${sampleContent.length}`);
@@ -5478,8 +559,8 @@
             // Display the content
             displayFileContentFast(sampleContent, mockFile, 'excel');
             
-            console.log('✅ Sample content displayed in UI!');
-            console.log('💡 You can also use:');
+            console.log('âœ… Sample content displayed in UI!');
+            console.log('🔍’¡ You can also use:');
             console.log('   - showCurrentFileContents() - to see current file data');
             console.log('   - showFullFileContents() - to open full content modal');
             console.log('   - displayFileContents(file) - to display any file');
@@ -5491,14 +572,14 @@
             
             // Pre-load XLSX library in background for better user experience
             ensureXLSXLoaded().then(() => {
-                console.log('✅ XLSX library pre-loaded successfully');
+                console.log('âœ… XLSX library pre-loaded successfully');
                 // Update Excel status in import modal if it exists
                 const statusDiv = document.getElementById('excelStatus');
                 if (statusDiv) {
                     statusDiv.style.background = 'rgba(76, 175, 80, 0.1)';
                     statusDiv.style.border = '1px solid rgba(76, 175, 80, 0.3)';
                     statusDiv.innerHTML = `
-                        <h5 style="color: #4CAF50; margin-bottom: 10px;">✅ Excel Library Ready</h5>
+                        <h5 style="color: #4CAF50; margin-bottom: 10px;">âœ… Excel Library Ready</h5>
                         <p style="color: rgba(255, 255, 255, 0.9); font-size: 14px; margin: 0;">
                             Excel files (.xlsx, .xls, .xlsm) are fully supported! Upload any Excel file to get started.
                         </p>
@@ -5510,7 +591,7 @@
                 const statusDiv = document.getElementById('excelStatus');
                 if (statusDiv) {
                     statusDiv.innerHTML = `
-                        <h5 style="color: #ffc107; margin-bottom: 10px;">⚠️ Excel Library</h5>
+                        <h5 style="color: #ffc107; margin-bottom: 10px;">âš ï¸ Excel Library</h5>
                         <p style="color: rgba(255, 255, 255, 0.9); font-size: 14px; margin: 0;">
                             Excel library will load automatically when you upload an Excel file. CSV files work immediately.
                         </p>
@@ -5536,7 +617,7 @@
             if (isLocalhost) {
                 // Use local API directly when running on localhost
                 const localUrl = `/api${localEndpoint}`;
-                console.log('🔄 Using local API:', localUrl);
+                console.log('🔍”„ Using local API:', localUrl);
                 return await fetch(localUrl, options);
             } else {
                 // Try Netlify function first for production
@@ -5544,7 +625,7 @@
                 const localUrl = `/api${localEndpoint}`;
                 
                 try {
-                    console.log('🔄 Trying Netlify function:', netlifyUrl);
+                    console.log('🔍”„ Trying Netlify function:', netlifyUrl);
                     const response = await fetch(netlifyUrl, options);
                     
                     if (!response.ok) {
@@ -5552,7 +633,7 @@
                     }
                     return response;
                 } catch (netlifyError) {
-                    console.log('⚠️ Netlify function failed, trying local API:', netlifyError.message);
+                    console.log('âš ï¸ Netlify function failed, trying local API:', netlifyError.message);
                     // Fallback to local API
                     return await fetch(localUrl, options);
                 }
@@ -5764,7 +845,7 @@
                 if (saveBallCapsBtn) saveBallCapsBtn.textContent = 'Save to Database';
             }
             
-            console.log(`🔐 Applied role-based visibility for ${user.role} user`);
+            console.log(`🔍” Applied role-based visibility for ${user.role} user`);
         }
 
         function logout() {
@@ -5795,7 +876,7 @@
             
             // Fallback: ensure content is visible after 15 seconds regardless of connection status
             setTimeout(() => {
-                console.log('🔄 Fallback: Ensuring content is visible after timeout');
+                console.log('🔍”„ Fallback: Ensuring content is visible after timeout');
                 hideIntroOverlay();
                 document.getElementById('productSelection').style.display = 'block';
             }, 15000);
@@ -5805,7 +886,7 @@
         window.addEventListener('beforeunload', function() {
             // Clear any database data when leaving the page
             if (window.currentParsedData) {
-                console.log('🧹 Clearing parsed data before page unload');
+                console.log('🔍§¹ Clearing parsed data before page unload');
                 window.currentParsedData = null;
             }
         });
@@ -5820,20 +901,35 @@
         // Auto-connect function
         async function autoConnectToSupabase() {
             console.log('Starting auto-connect to Supabase...');
-            // Show loading status
-            document.getElementById('autoConnectStatus').style.display = 'block';
-            document.getElementById('connectButton').style.display = 'none';
+            // Show loading status (with null checks)
+            const autoConnectStatus = document.getElementById('autoConnectStatus');
+            const connectButton = document.getElementById('connectButton');
+            if (autoConnectStatus) {
+                autoConnectStatus.style.display = 'block';
+            }
+            if (connectButton) {
+                connectButton.style.display = 'none';
+            }
             
             // Set a timeout to ensure intro overlay is always hidden
             const timeoutId = setTimeout(() => {
-                console.log('⏰ Auto-connection timeout - hiding intro overlay and showing content');
+                console.log('â° Auto-connection timeout - hiding intro overlay and showing content');
                 hideIntroOverlay();
-                // Make sure main content is visible
-                document.getElementById('productSelection').style.display = 'block';
-                // Ensure welcome message is visible if connection failed
-                document.getElementById('welcomeMessage').style.display = 'block';
-                document.getElementById('autoConnectStatus').style.display = 'none';
-                document.getElementById('connectButton').style.display = 'inline-block';
+                // Make sure main content is visible (with null checks)
+                const productSelection = document.getElementById('productSelection');
+                const welcomeMessage = document.getElementById('welcomeMessage');
+                if (productSelection) {
+                    productSelection.style.display = 'block';
+                }
+                if (welcomeMessage) {
+                    welcomeMessage.style.display = 'block';
+                }
+                if (autoConnectStatus) {
+                    autoConnectStatus.style.display = 'none';
+                }
+                if (connectButton) {
+                    connectButton.style.display = 'inline-block';
+                }
             }, 10000); // 10 second timeout
             
             try {
@@ -5848,7 +944,7 @@
                 const netlifyUrl = '/.netlify/functions/database-connect';
                 const localUrl = '/api/database/connect';
                 
-                console.log('🔍 Debug Info:', {
+                console.log('🔍” Debug Info:', {
                     hostname: window.location.hostname,
                     isLocalhost: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1',
                     netlifyUrl: netlifyUrl,
@@ -5856,9 +952,9 @@
                     fullUrl: window.location.href,
                     timestamp: new Date().toISOString()
                 });
-                console.log('🚀 FORCE DEBUG - This should appear if deployment updated!');
-                console.log('🔥 NEW DEPLOYMENT TEST - If you see this, the deployment updated!');
-                console.log('📅 Deployment timestamp:', new Date().toISOString());
+                console.log('[DEBUG] FORCE DEBUG - This should appear if deployment updated!');
+                console.log('[DEPLOY] NEW DEPLOYMENT TEST - If you see this, the deployment updated!');
+                console.log('[DEPLOY] Deployment timestamp:', new Date().toISOString());
                 
                 const response = await apiCall('/database-connect', '/database/connect', {
                     method: 'POST',
@@ -5875,36 +971,57 @@
                     connectionId = result.connectionId;
                     localStorage.setItem('currentConnectionId', connectionId);
                     
-                    // Update enhanced connection status UI
+                    // Update enhanced connection status UI (with null checks)
                     const statusDiv = document.getElementById('connectionStatus');
                     const detailsDiv = document.getElementById('connectionDetails');
                     const infoDiv = document.getElementById('connectionInfo');
                     
-                    statusDiv.style.display = 'block';
-                    statusDiv.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
-                    statusDiv.style.color = 'white';
-                    statusDiv.innerHTML = '✅ Auto-connected to Supabase successfully!';
+                    if (statusDiv) {
+                        statusDiv.style.display = 'block';
+                        statusDiv.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+                        statusDiv.style.color = 'white';
+                        statusDiv.innerHTML = 'âœ… Auto-connected to Supabase successfully!';
+                    }
                     
                     // Show connection details
-                    detailsDiv.style.display = 'block';
-                    infoDiv.innerHTML = `
-                        <div><strong>Connection ID:</strong> ${connectionId}</div>
-                        <div><strong>Database Type:</strong> SUPABASE</div>
-                        <div><strong>Status:</strong> Auto-Connected</div>
-                        <div><strong>Connected:</strong> ${new Date().toLocaleString()}</div>
-                    `;
+                    if (detailsDiv) {
+                        detailsDiv.style.display = 'block';
+                    }
+                    if (infoDiv) {
+                        infoDiv.innerHTML = `
+                            <div><strong>Connection ID:</strong> ${connectionId}</div>
+                            <div><strong>Database Type:</strong> SUPABASE</div>
+                            <div><strong>Status:</strong> Auto-Connected</div>
+                            <div><strong>Connected:</strong> ${new Date().toLocaleString()}</div>
+                        `;
+                    }
                     
-                    // Update button visibility
-                    document.getElementById('connectButton').style.display = 'none';
-                    document.getElementById('reconnectButton').style.display = 'inline-block';
-                    document.getElementById('autoConnectStatus').style.display = 'none';
-                    document.getElementById('welcomeMessage').style.display = 'none';
+                    // Update button visibility (with null checks)
+                    const reconnectButton = document.getElementById('reconnectButton');
+                    const dataTableSection = document.getElementById('dataTableSection');
+                    if (connectButton) {
+                        connectButton.style.display = 'none';
+                    }
+                    if (reconnectButton) {
+                        reconnectButton.style.display = 'inline-block';
+                    }
+                    if (autoConnectStatus) {
+                        autoConnectStatus.style.display = 'none';
+                    }
+                    const welcomeMsg = document.getElementById('welcomeMessage');
+                    if (welcomeMsg) {
+                        welcomeMsg.style.display = 'none';
+                    }
                     
                     // Only show databank table if user has permission
                     if (window.authService && window.authService.canViewDatabank()) {
-                    document.getElementById('dataTableSection').style.display = 'block';
+                        if (dataTableSection) {
+                            dataTableSection.style.display = 'block';
+                        }
                     } else {
-                        document.getElementById('dataTableSection').style.display = 'none';
+                        if (dataTableSection) {
+                            dataTableSection.style.display = 'none';
+                        }
                     }
                     
                     // Auto-load databank table data immediately (only if user has permission)
@@ -5937,29 +1054,46 @@
                     statusDiv.style.display = 'block';
                     statusDiv.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
                     statusDiv.style.color = 'white';
-                    statusDiv.innerHTML = `❌ Auto-connection failed: ${result.message || 'Unknown error'}`;
+                    statusDiv.innerHTML = `âŒ Auto-connection failed: ${result.message || 'Unknown error'}`;
                     
-                    // Show connection details with error
-                    detailsDiv.style.display = 'block';
-                    infoDiv.innerHTML = `
-                        <div><strong>Connection ID:</strong> None</div>
-                        <div><strong>Database Type:</strong> SUPABASE</div>
-                        <div><strong>Status:</strong> Auto-Connection Failed</div>
-                        <div><strong>Error:</strong> ${result.message || 'Unknown error'}</div>
-                        <div><strong>Failed:</strong> ${new Date().toLocaleString()}</div>
-                    `;
+                    // Show connection details with error (with null checks)
+                    if (detailsDiv) {
+                        detailsDiv.style.display = 'block';
+                    }
+                    if (infoDiv) {
+                        infoDiv.innerHTML = `
+                            <div><strong>Connection ID:</strong> None</div>
+                            <div><strong>Database Type:</strong> SUPABASE</div>
+                            <div><strong>Status:</strong> Auto-Connection Failed</div>
+                            <div><strong>Error:</strong> ${result.message || 'Unknown error'}</div>
+                            <div><strong>Failed:</strong> ${new Date().toLocaleString()}</div>
+                        `;
+                    }
                     
-                    // Update button visibility
-                    document.getElementById('autoConnectStatus').style.display = 'none';
-                    document.getElementById('connectButton').style.display = 'inline-block';
-                    document.getElementById('reconnectButton').style.display = 'inline-block';
-                    document.getElementById('welcomeMessage').style.display = 'block';
+                    // Update button visibility (with null checks)
+                    if (autoConnectStatus) {
+                        autoConnectStatus.style.display = 'none';
+                    }
+                    if (connectButton) {
+                        connectButton.style.display = 'inline-block';
+                    }
+                    const reconnectBtn = document.getElementById('reconnectButton');
+                    if (reconnectBtn) {
+                        reconnectBtn.style.display = 'inline-block';
+                    }
+                    const welcomeMsg2 = document.getElementById('welcomeMessage');
+                    if (welcomeMsg2) {
+                        welcomeMsg2.style.display = 'block';
+                    }
                     
                     // Hide intro overlay even if connection fails
                     setTimeout(() => {
                         hideIntroOverlay();
                         // Make sure main content is visible
-                        document.getElementById('productSelection').style.display = 'block';
+                        const productSel = document.getElementById('productSelection');
+                        if (productSel) {
+                            productSel.style.display = 'block';
+                        }
                     }, 2000);
                 }
             } catch (error) {
@@ -5973,7 +1107,7 @@
                 statusDiv.style.display = 'block';
                 statusDiv.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
                 statusDiv.style.color = 'white';
-                statusDiv.innerHTML = `❌ Auto-connection error: ${error.message}`;
+                statusDiv.innerHTML = `âŒ Auto-connection error: ${error.message}`;
                 
                 // Show connection details with error
                 detailsDiv.style.display = 'block';
@@ -6010,7 +1144,7 @@
             statusDiv.style.display = 'block';
             statusDiv.style.background = 'linear-gradient(135deg, #17a2b8 0%, #138496 100%)';
             statusDiv.style.color = 'white';
-            statusDiv.innerHTML = '🔍 Checking connection status...';
+            statusDiv.innerHTML = '🔍” Checking connection status...';
             
             try {
                 if (connectionId) {
@@ -6023,7 +1157,7 @@
                         const result = await response.json();
                         if (result.success) {
                             statusDiv.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
-                            statusDiv.innerHTML = '✅ Database connection is active and working!';
+                            statusDiv.innerHTML = 'âœ… Database connection is active and working!';
                             
                             // Show connection details
                             detailsDiv.style.display = 'block';
@@ -6049,7 +1183,7 @@
                 }
             } catch (error) {
                 statusDiv.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
-                statusDiv.innerHTML = `❌ Connection check failed: ${error.message}`;
+                statusDiv.innerHTML = `âŒ Connection check failed: ${error.message}`;
                 
                 // Show connection details with error
                 detailsDiv.style.display = 'block';
@@ -6075,7 +1209,7 @@
             statusDiv.style.display = 'block';
             statusDiv.style.background = 'linear-gradient(135deg, #ffc107 0%, #e0a800 100%)';
             statusDiv.style.color = '#212529';
-            statusDiv.innerHTML = '🔄 Reconnecting to database...';
+            statusDiv.innerHTML = '🔍”„ Reconnecting to database...';
             
             // Clear old connection
             connectionId = null;
@@ -6090,7 +1224,7 @@
                     if (connectionId) {
                         statusDiv.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
                         statusDiv.style.color = 'white';
-                        statusDiv.innerHTML = '✅ Successfully reconnected to database!';
+                        statusDiv.innerHTML = 'âœ… Successfully reconnected to database!';
                         
                         // Update connection details
                         const infoDiv = document.getElementById('connectionInfo');
@@ -6110,7 +1244,7 @@
                     } else {
                         statusDiv.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
                         statusDiv.style.color = 'white';
-                        statusDiv.innerHTML = '❌ Reconnection failed. Please try manual connection.';
+                        statusDiv.innerHTML = 'âŒ Reconnection failed. Please try manual connection.';
                         
                         // Update button visibility
                         document.getElementById('connectButton').style.display = 'inline-block';
@@ -6121,7 +1255,7 @@
             } catch (error) {
                 statusDiv.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
                 statusDiv.style.color = 'white';
-                statusDiv.innerHTML = `❌ Reconnection failed: ${error.message}`;
+                statusDiv.innerHTML = `âŒ Reconnection failed: ${error.message}`;
                 
                 // Update button visibility
                 document.getElementById('connectButton').style.display = 'inline-block';
@@ -6186,7 +1320,7 @@
                     statusDiv.style.display = 'block';
                     statusDiv.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
                     statusDiv.style.color = 'white';
-                    statusDiv.innerHTML = `✅ Connected to ${dbType.toUpperCase()} successfully!`;
+                    statusDiv.innerHTML = `âœ… Connected to ${dbType.toUpperCase()} successfully!`;
                     
                     // Show connection details
                     detailsDiv.style.display = 'block';
@@ -6226,7 +1360,7 @@
                     statusDiv.style.display = 'block';
                     statusDiv.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
                     statusDiv.style.color = 'white';
-                    statusDiv.innerHTML = `❌ Connection failed: ${result.message || 'Unknown error'}`;
+                    statusDiv.innerHTML = `âŒ Connection failed: ${result.message || 'Unknown error'}`;
                     
                     // Show connection details with error
                     detailsDiv.style.display = 'block';
@@ -6264,7 +1398,7 @@
                 statusDiv.style.display = 'block';
                 statusDiv.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
                 statusDiv.style.color = 'white';
-                statusDiv.innerHTML = `❌ Connection error: ${error.message}`;
+                statusDiv.innerHTML = `âŒ Connection error: ${error.message}`;
                 
                 // Show connection details with error
                 detailsDiv.style.display = 'block';
@@ -6302,7 +1436,7 @@
 
         // Create test databank data for demonstration
         function createTestDatabankData() {
-            console.log('🧪 Creating test databank data...');
+            console.log('🔍§ª Creating test databank data...');
             
             const testData = [
                 {
@@ -6364,15 +1498,15 @@
             // Load and display the test data (this will normalize it)
             loadLocalDatabankData();
             
-            console.log('✅ Test databank data created and loaded');
-            showNotification('🧪 Test data created! You can now see how the databank table works.', 'success');
+            console.log('âœ… Test databank data created and loaded');
+            showNotification('🔍§ª Test data created! You can now see how the databank table works.', 'success');
         }
 
         // Normalize databank data to ensure proper column structure
         function normalizeDatabankData(data) {
             if (!data || data.length === 0) return data;
             
-            console.log('🔧 Normalizing databank data structure...');
+            console.log('🔍”§ Normalizing databank data structure...');
             
             return data.map(item => {
                 // Ensure all items have the proper column structure
@@ -6409,15 +1543,15 @@
 
         // Load local databank data when Supabase data is not available
         function loadLocalDatabankData() {
-            console.log('📁 Loading local databank data...');
+            console.log('🔍“ Loading local databank data...');
             
             const localDatabankData = JSON.parse(localStorage.getItem('databankData') || '[]');
-            console.log('🔍 Found local databank data:', localDatabankData.length, 'items');
+            console.log('🔍” Found local databank data:', localDatabankData.length, 'items');
             
             if (localDatabankData.length > 0) {
                 // Normalize the data structure
                 const normalizedData = normalizeDatabankData(localDatabankData);
-                console.log('🔧 Normalized data structure:', normalizedData[0]);
+                console.log('🔍”§ Normalized data structure:', normalizedData[0]);
                 
                 // Store data globally
                 window.currentTableData = normalizedData;
@@ -6432,17 +1566,23 @@
                 // Display the data
                 displayTableData(normalizedData);
                 
-                console.log('✅ Local databank data loaded and displayed');
-                showNotification(`📁 Loaded ${normalizedData.length} local records`, 'success');
+                console.log('âœ… Local databank data loaded and displayed');
+                showNotification(`🔍“ Loaded ${normalizedData.length} local records`, 'success');
             } else {
-                console.log('📭 No local databank data found');
+                console.log('🔍“­ No local databank data found');
                 showNotification('No local databank data found. Try submitting data from factory side first.', 'info');
             }
         }
 
-        // Force refresh databank table with current data
+        // Force refresh databank table with current data (only for Madison users)
         function refreshDatabankTable() {
-            console.log('🔄 Force refreshing databank table...');
+            console.log('🔍”„ Force refreshing databank table...');
+            
+            // Only refresh if user can view databank (Madison users)
+            if (!window.authService || !window.authService.canViewDatabank()) {
+                console.log('âœ… Skipping databank refresh for factory user');
+                return;
+            }
             
             // Try to get current data from multiple sources
             let currentData = null;
@@ -6450,7 +1590,7 @@
             // First try current table data
             if (window.currentTableData && window.currentTableData.length > 0) {
                 currentData = window.currentTableData;
-                console.log('📊 Using current table data:', currentData.length, 'items');
+                console.log('🔍“Š Using current table data:', currentData.length, 'items');
             }
             // Then try local storage
             else {
@@ -6459,7 +1599,7 @@
                     // Normalize the data structure
                     currentData = normalizeDatabankData(localData);
                     window.currentTableData = currentData;
-                    console.log('📁 Using normalized local storage data:', currentData.length, 'items');
+                    console.log('🔍“ Using normalized local storage data:', currentData.length, 'items');
                 }
             }
             
@@ -6476,10 +1616,10 @@
                 // Display the data
                 displayTableData(currentData);
                 
-                console.log('✅ Databank table refreshed with', currentData.length, 'records');
-                showNotification(`🔄 Refreshed databank table with ${currentData.length} records`, 'success');
+                console.log('âœ… Databank table refreshed with', currentData.length, 'records');
+                showNotification(`🔍”„ Refreshed databank table with ${currentData.length} records`, 'success');
             } else {
-                console.log('📭 No data available to refresh');
+                console.log('🔍“­ No data available to refresh');
                 showNotification('No data available to refresh. Try loading data first.', 'info');
             }
         }
@@ -6490,13 +1630,13 @@
             
             // Don't load database data if we're processing Excel
             if (window.isProcessingExcel) {
-                console.log('🚫 Skipping database load - processing Excel file');
+                console.log('🔍š« Skipping database load - processing Excel file');
                 return;
             }
             
             // Don't reload data if we're in edit mode or just finished editing
             if (preventDataReload) {
-                console.log('🚫 Skipping database load - preventDataReload flag is set');
+                console.log('🔍š« Skipping database load - preventDataReload flag is set');
                 return;
             }
             
@@ -6581,8 +1721,8 @@
                     
                     // If API total is different from data length, there might be more data
                     if (result.total && result.total > result.data.length) {
-                        console.warn('⚠️ API reports more records than returned! Total:', result.total, 'Returned:', result.data.length);
-                        showStatus('tableData', `⚠️ Warning: API reports ${result.total} total records but only ${result.data.length} were returned. This may indicate a backend limit.`, 'error');
+                        console.warn('âš ï¸ API reports more records than returned! Total:', result.total, 'Returned:', result.data.length);
+                        showStatus('tableData', `âš ï¸ Warning: API reports ${result.total} total records but only ${result.data.length} were returned. This may indicate a backend limit.`, 'error');
                     }
                     
                     // Calculate total pages
@@ -6592,30 +1732,29 @@
                     // Clear any cached data
                     window.currentTableData = null;
                     
-                    // Store original data for filtering
-                    databankOriginalData = [...result.data];
-                    console.log('✅ Stored original databank data for filtering:', databankOriginalData.length, 'records');
+                    // Set currentTableData BEFORE displaying so filters work
+                    window.currentTableData = combinedData;
                     
                     // Display all data directly (no pagination for initial load)
-                    displayTableData(result.data);
+                    displayTableData(combinedData);
                     updatePagination();
                     
                     // Update button counts with actual data
                     updateButtonCounts(totalRecords);
                     
-                    showStatus('tableData', `📊 Scanned entire database: ${result.data.length} records loaded (Total: ${totalRecords} records)`, 'success');
+                    showStatus('tableData', `🔍“Š Scanned entire database: ${result.data.length} records loaded (Total: ${totalRecords} records)`, 'success');
                 } else {
                     console.log('No data in result');
                     showStatus('tableData', 'No data found in databank table', 'error');
                 }
             } catch (error) {
                 console.error('Error loading databank data from Supabase:', error);
-                console.log('🔄 Trying to load local databank data instead...');
+                console.log('🔍”„ Trying to load local databank data instead...');
                 
                 // Try to load local data as fallback
                 const localDatabankData = JSON.parse(localStorage.getItem('databankData') || '[]');
                 if (localDatabankData.length > 0) {
-                    console.log('✅ Found local databank data, using as fallback');
+                    console.log('âœ… Found local databank data, using as fallback');
                     loadLocalDatabankData();
                 } else {
                     showStatus('tableData', 'Error loading databank data: ' + error.message + ' (No local data available)', 'error');
@@ -6703,61 +1842,58 @@
             let displayData = data;
             if (window.databankFilteredData) {
                 displayData = window.databankFilteredData;
-                console.log('📊 Using filtered databank data:', displayData.length, 'entries');
+                console.log('[DATA] Using filtered databank data:', displayData.length, 'entries');
+                // Still set currentTableData for search to work
+                window.currentTableData = displayData;
             } else {
-                console.log('📊 Using provided databank data:', displayData ? displayData.length : 'undefined', 'entries');
-                // Store current data globally for pagination
+                console.log('[DATA] Using provided databank data:', displayData ? displayData.length : 'undefined', 'entries');
+                // Store current data globally for pagination and search
                 window.currentTableData = data;
-                // Also store as original data for filtering if not already set
-                if (!databankOriginalData || databankOriginalData.length === 0) {
-                    databankOriginalData = [...data];
-                    console.log('✅ Stored original databank data for filtering:', databankOriginalData.length, 'records');
-                }
             }
             
             // Check if tableData element exists
             const tableElement = document.getElementById('tableData');
-            console.log('🔍 Table element exists:', !!tableElement);
-            console.log('🔍 Table element:', tableElement);
+            console.log('🔍” Table element exists:', !!tableElement);
+            console.log('🔍” Table element:', tableElement);
             
             if (!tableElement) {
-                console.error('❌ tableData element not found!');
+                console.error('âŒ tableData element not found!');
                 alert('Table element not found! Check console for details.');
                 return;
             }
             
             if (!displayData || displayData.length === 0) {
-                console.log('📭 No data to display, checking local storage...');
+                console.log('🔍“­ No data to display, checking local storage...');
                 
                 // Try to load local databank data
                 const localDatabankData = JSON.parse(localStorage.getItem('databankData') || '[]');
-                console.log('🔍 Local databank data found:', localDatabankData.length, 'items');
+                console.log('🔍” Local databank data found:', localDatabankData.length, 'items');
                 
                 if (localDatabankData.length > 0) {
-                    console.log('✅ Using local databank data');
+                    console.log('âœ… Using local databank data');
                     displayData = localDatabankData;
                     window.currentTableData = localDatabankData;
                 } else {
-                    console.log('📭 No local data either');
-                    tableElement.innerHTML = `
-                        <div style="text-align: center; padding: 40px; color: #6c757d;">
-                            <h3>📭 No Data Available</h3>
+                    console.log('🔍“­ No local data either');
+                tableElement.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #6c757d;">
+                        <h3>🔍“­ No Data Available</h3>
                             <p>No records found in the databank table. Try submitting some data from the factory side!</p>
-                            <button onclick="loadDatabankData()" style="margin-top: 20px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                                🔄 Try Loading Data Again
-                            </button>
+                        <button onclick="loadDatabankData()" style="margin-top: 20px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            🔍”„ Try Loading Data Again
+                        </button>
                             <button onclick="loadLocalDatabankData()" style="margin-top: 10px; padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                                📁 Load Local Data
+                                🔍“ Load Local Data
                             </button>
                             <button onclick="createTestDatabankData()" style="margin-top: 10px; padding: 10px 20px; background: #ffc107; color: black; border: none; border-radius: 4px; cursor: pointer;">
-                                🧪 Create Test Data
+                                🔍§ª Create Test Data
                             </button>
                             <button onclick="refreshDatabankTable()" style="margin-top: 10px; padding: 10px 20px; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                                🔄 Refresh Table
-                            </button>
-                        </div>
-                    `;
-                    return;
+                                🔍”„ Refresh Table
+                        </button>
+                    </div>
+                `;
+                return;
                 }
             }
 
@@ -6819,8 +1955,8 @@
 
             // Find actual database columns that match our display columns
             const availableColumns = Object.keys(displayData[0]);
-            console.log('🔍 Available columns in data:', availableColumns);
-            console.log('🔍 Sample data row:', displayData[0]);
+            console.log('🔍” Available columns in data:', availableColumns);
+            console.log('🔍” Sample data row:', displayData[0]);
             
             const mappedColumns = [];
             const columnHeaders = [];
@@ -6865,7 +2001,7 @@
                 // First show a simple message
             tableElement.innerHTML = `
                     <div style="padding: 20px; background: #e8f5e8; border: 2px solid #28a745; border-radius: 8px; margin: 10px;">
-                        <h3>🔄 Loading Table...</h3>
+                        <h3>🔍”„ Loading Table...</h3>
                         <p>Processing ${displayData.length} records with ${mappedColumns.filter(c => c !== null).length} mapped columns</p>
                 </div>
             `;
@@ -6879,7 +2015,7 @@
                 console.error('Error in displayTableData:', error);
                 tableElement.innerHTML = `
                     <div style="padding: 20px; background: #f8d7da; border: 2px solid #dc3545; border-radius: 8px; margin: 10px;">
-                        <h3>❌ Display Error</h3>
+                        <h3>âŒ Display Error</h3>
                         <p>Error: ${error.message}</p>
                         <p>Stack: ${error.stack}</p>
                     </div>
@@ -6903,8 +2039,8 @@
             
             // Create table with specific columns
             let html = `
-                <div style="border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 12px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); margin: 10px; box-shadow: 0 6px 20px rgba(31, 38, 135, 0.15); overflow: visible;">
-                    <div class="table-container" style="max-height: 500px; overflow-y: auto; overflow-x: auto; scrollbar-width: thin; scrollbar-color: #667eea #f1f1f1; position: relative;">
+                <div style="border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 12px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); margin: 10px; box-shadow: 0 6px 20px rgba(31, 38, 135, 0.15);">
+                    <div class="table-container" style="max-height: 500px; overflow-y: auto; overflow-x: auto; scrollbar-width: thin; scrollbar-color: #667eea #f1f1f1;">
                         <table class="table" style="width: 100%; border-collapse: collapse; min-width: ${columnHeaders.length * 150}px; margin: 0;">
                             <thead style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; position: sticky; top: 0; z-index: 10;">
                                 <tr>
@@ -6922,8 +2058,8 @@
                     <th style="${headerStyle}">
                         <div class="header-with-filter">
                             <span>${header}${isMissing ? ' (Missing)' : ''}</span>
-                            <button class="filter-triangle" onclick="event.stopPropagation(); toggleDatabankColumnFilter(${index}, '${header}', event)" title="Filter ${header}">
-                                ▼
+                            <button class="filter-triangle" onclick="toggleDatabankColumnFilter(${index}, '${header}')" title="Filter ${header}">
+                                â–¼
                             </button>
                         </div>
                     </th>
@@ -6996,7 +2132,7 @@
             
             // Safety check: if all rows were filtered out, show original data
             if (dataToShow.length === 0) {
-                console.warn('⚠️ All rows were filtered out as headers, showing original data');
+                console.warn('âš ï¸ All rows were filtered out as headers, showing original data');
                 dataToShow = data;
             }
             
@@ -7011,7 +2147,7 @@
                 mappedColumns.forEach((col, colIndex) => {
                     if (col === null) {
                         // Column not found in database - show placeholder
-                        html += `<td style="padding: 10px 8px; border: 1px solid #ddd; font-size: 13px; color: #c62828; font-style: italic; text-align: center; background: #ffebee; vertical-align: middle;">—</td>`;
+                        html += `<td style="padding: 10px 8px; border: 1px solid #ddd; font-size: 13px; color: #c62828; font-style: italic; text-align: center; background: #ffebee; vertical-align: middle;">â€”</td>`;
                     } else {
                         const value = row[col];
                         // Debug logging for first few rows only
@@ -7073,7 +2209,7 @@
                     cursor: pointer; 
                     font-size: 12px;
                     margin-right: 10px;
-                ">🗑️ Clear All Filters</button>
+                ">🔍—‘ï¸ Clear All Filters</button>
                 <button onclick="refreshDatabankTable()" style="
                     background: #17a2b8; 
                     color: white; 
@@ -7083,7 +2219,7 @@
                     cursor: pointer; 
                     font-size: 12px;
                     margin-right: 10px;
-                ">🔄 Refresh Table</button>
+                ">🔍”„ Refresh Table</button>
                 <span id="filterStatus" style="color: #6c757d; font-size: 12px;">No filters applied</span>
             `;
             
@@ -7121,7 +2257,7 @@
                 console.error('Error in showActualTable:', error);
                 tableElement.innerHTML = `
                     <div style="padding: 20px; background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; margin: 10px;">
-                        <h3>⚠️ Table Rendering Error</h3>
+                        <h3>âš ï¸ Table Rendering Error</h3>
                         <p>Error: ${error.message}</p>
                         <p>Stack: ${error.stack}</p>
                     </div>
@@ -7581,12 +2717,12 @@
             console.log('updateTableWithFilteredData called with', filteredData.length, 'rows');
             const tableElement = document.getElementById('tableData');
             if (!tableElement) {
-                console.log('❌ tableElement not found');
+                console.log('âŒ tableElement not found');
                 console.log('Available elements with "table" in ID:', document.querySelectorAll('[id*="table"]'));
                 return;
             }
 
-            console.log('✅ tableElement found:', tableElement);
+            console.log('âœ… tableElement found:', tableElement);
 
             // Get the current table structure
             let table = tableElement.querySelector('.table');
@@ -7596,7 +2732,7 @@
             }
             
             if (!table) {
-                console.log('❌ No table found, cannot update');
+                console.log('âŒ No table found, cannot update');
                 console.log('tableElement innerHTML:', tableElement.innerHTML.substring(0, 200));
                 // Try to create a new table if none exists
                 console.log('Creating new table structure...');
@@ -7604,7 +2740,7 @@
                 return;
             }
             
-            console.log('✅ table found:', table);
+            console.log('âœ… table found:', table);
 
             // Get or create tbody
             let tbody = table.querySelector('tbody');
@@ -7703,14 +2839,14 @@
                 tableContainer.style.overflowY = 'auto';
                 tableContainer.style.overflowX = 'auto';
                 tableContainer.style.width = '100%';
-                console.log('✅ Table container size locked at 500px height');
+                console.log('âœ… Table container size locked at 500px height');
             }
             
-            console.log('✅ Table updated successfully with', filteredData.length, 'rows');
-            console.log('✅ Table visibility:', table.style.display);
-            console.log('✅ TableElement visibility:', tableElement.style.display);
-            console.log('✅ TableElement display style:', window.getComputedStyle(tableElement).display);
-            console.log('✅ Number of rows in tbody:', tbody.children.length);
+            console.log('âœ… Table updated successfully with', filteredData.length, 'rows');
+            console.log('âœ… Table visibility:', table.style.display);
+            console.log('âœ… TableElement visibility:', tableElement.style.display);
+            console.log('âœ… TableElement display style:', window.getComputedStyle(tableElement).display);
+            console.log('âœ… Number of rows in tbody:', tbody.children.length);
         }
         
         function updateTableStats(filteredCount) {
@@ -7769,9 +2905,9 @@
             // If the clicked dropdown was not shown, show it now
             if (!isCurrentlyShown) {
                 dropdown.classList.add('show');
-                console.log(`✅ Showing filter dropdown for ${columnName}`);
+                console.log(`âœ… Showing filter dropdown for ${columnName}`);
             } else {
-                console.log(`❌ Hiding filter dropdown for ${columnName}`);
+                console.log(`âŒ Hiding filter dropdown for ${columnName}`);
             }
         }
 
@@ -7949,22 +3085,22 @@
 
         // Apply column filter
         function applyColumnFilter(columnIndex, columnName) {
-            console.log(`🔍 applyColumnFilter called for column ${columnIndex}: ${columnName}`);
+            console.log(`🔍” applyColumnFilter called for column ${columnIndex}: ${columnName}`);
             
             const dropdown = document.getElementById(`filter-${columnIndex}`);
             if (!dropdown) {
-                console.log('❌ Dropdown not found');
+                console.log('âŒ Dropdown not found');
                 return;
             }
             
             const checkboxes = dropdown.querySelectorAll('input[type="checkbox"]:checked');
             const selectedValues = Array.from(checkboxes).map(cb => cb.value);
             
-            console.log(`📋 Selected values:`, selectedValues);
+            console.log(`🔍“‹ Selected values:`, selectedValues);
             
             if (selectedValues.length > 0) {
                 currentFilters[columnName] = selectedValues;
-                console.log(`✅ Added filter for ${columnName}:`, selectedValues);
+                console.log(`âœ… Added filter for ${columnName}:`, selectedValues);
                 
                 // Update filter button appearance
                 const filterButton = dropdown.previousElementSibling.querySelector('.filter-triangle');
@@ -7973,7 +3109,7 @@
                 }
             } else {
                 delete currentFilters[columnName];
-                console.log(`❌ Removed filter for ${columnName}`);
+                console.log(`âŒ Removed filter for ${columnName}`);
                 
                 // Update filter button appearance
                 const filterButton = dropdown.previousElementSibling.querySelector('.filter-triangle');
@@ -7982,7 +3118,7 @@
                 }
             }
             
-            console.log(`🔧 Current filters:`, currentFilters);
+            console.log(`🔍”§ Current filters:`, currentFilters);
             
             // Apply filters
             applyFilters();
@@ -8025,7 +3161,7 @@
 
         // Unfilter all - clear all filters and show all data
         function unfilterAll() {
-            console.log('🗑️ Clearing all filters...');
+            console.log('🔍—‘ï¸ Clearing all filters...');
             
             // Clear all current filters
             currentFilters = {};
@@ -8052,7 +3188,7 @@
                 updateFilterStatus();
             }
             
-            console.log('✅ All filters cleared');
+            console.log('âœ… All filters cleared');
         }
 
         // Update filter status display
@@ -8078,7 +3214,6 @@
             clearTimeout(superSearchTimeout);
             
             if (event.key === 'Enter') {
-                event.preventDefault();
                 performSuperSearch();
                 hideSuperSearchSuggestions();
             } else if (event.key === 'Escape') {
@@ -8088,17 +3223,6 @@
                 superSearchTimeout = setTimeout(() => {
                     showSuperSearchSuggestions();
                 }, 300);
-                
-                // Also perform search as user types (debounced)
-                clearTimeout(window.searchDebounceTimeout);
-                window.searchDebounceTimeout = setTimeout(() => {
-                    const query = event.target.value.trim();
-                    if (query.length >= 2) {
-                        performSuperSearch();
-                    } else if (query.length === 0) {
-                        clearSuperSearch();
-                    }
-                }, 500);
             }
         }
 
@@ -8199,7 +3323,7 @@
                             color: #007bff;
                             justify-content: center;
                         ">
-                            <div class="suggestion-icon">📄</div>
+                            <div class="suggestion-icon">🔍“„</div>
                             <div class="suggestion-content">
                                 <div class="suggestion-main">Show ${suggestions.length - 10} more suggestions</div>
                                 <div class="suggestion-description">Click to see all results</div>
@@ -8220,27 +3344,27 @@
         // Get field icon based on field type
         function getFieldIcon(field) {
             const iconMap = {
-                'season': '📅',
-                'customer': '🏢',
-                'style_number': '🔢',
-                'style_name': '👕',
-                'main_material': '🧵',
-                'material_consumption': '📏',
-                'material_price': '💰',
-                'trim_cost': '✂️',
-                'total_material_cost': '💵',
-                'knitting_machine': '⚙️',
-                'knitting_time': '⏱️',
-                'knitting_cpm': '⚡',
-                'knitting_cost': '💸',
-                'ops_cost': '👷',
-                'packaging': '📦',
-                'oh': '📊',
-                'profit': '📈',
-                'fty_adjustment': '🔧',
-                'ttl_fty_cost': '💼'
+                'season': '🔍“…',
+                'customer': '🔍¢',
+                'style_number': '🔍”¢',
+                'style_name': '🔍‘•',
+                'main_material': '🔍§µ',
+                'material_consumption': '🔍“',
+                'material_price': '🔍’°',
+                'trim_cost': 'âœ‚ï¸',
+                'total_material_cost': '🔍’µ',
+                'knitting_machine': 'âš™ï¸',
+                'knitting_time': 'â±ï¸',
+                'knitting_cpm': 'âš¡',
+                'knitting_cost': '🔍’¸',
+                'ops_cost': '🔍‘·',
+                'packaging': '🔍“¦',
+                'oh': '🔍“Š',
+                'profit': '🔍“ˆ',
+                'fty_adjustment': '🔍”§',
+                'ttl_fty_cost': '🔍’¼'
             };
-            return iconMap[field] || '🔍';
+            return iconMap[field] || '🔍”';
         }
 
         // Get field description
@@ -8317,7 +3441,7 @@
                     color: #6c757d;
                     justify-content: center;
                 ">
-                    <div class="suggestion-icon">▲</div>
+                    <div class="suggestion-icon">â–²</div>
                     <div class="suggestion-content">
                         <div class="suggestion-main">Show Less</div>
                         <div class="suggestion-description">Collapse to first 5 results</div>
@@ -8361,7 +3485,7 @@
                         color: #007bff;
                         justify-content: center;
                     ">
-                        <div class="suggestion-icon">📄</div>
+                        <div class="suggestion-icon">🔍“„</div>
                         <div class="suggestion-content">
                             <div class="suggestion-main">Show ${allSuggestions.length - 10} more suggestions</div>
                             <div class="suggestion-description">Click to see all results</div>
@@ -8376,11 +3500,6 @@
         // Perform super search
         function performSuperSearch() {
             const searchInput = document.getElementById('searchInput');
-            if (!searchInput) {
-                console.error('❌ Search input element not found');
-                return;
-            }
-            
             const query = searchInput.value.trim();
             
             if (!query) {
@@ -8388,62 +3507,55 @@
                 return;
             }
             
-            console.log('🔍 Performing super search for:', query);
+            console.log('🔍” Performing super search for:', query);
             
-            // Use databankOriginalData if available, otherwise use currentTableData
-            let searchData = databankOriginalData && databankOriginalData.length > 0 
-                ? databankOriginalData 
-                : window.currentTableData;
-            
-            if (!searchData || searchData.length === 0) {
-                console.log('❌ No table data available for search');
+            if (!window.currentTableData) {
+                console.log('No table data available');
                 showStatus('tableData', 'No data available for search', 'error');
                 return;
             }
             
-            console.log('🔍 Searching through', searchData.length, 'total rows');
+            console.log('Searching through', window.currentTableData.length, 'total rows');
             
-            // Perform case-insensitive search across all fields
-            const results = searchData.filter(row => {
-                // Search through all values in the row
+            const results = window.currentTableData.filter(row => {
                 return Object.values(row).some(value => {
-                    if (value === null || value === undefined) return false;
-                    const stringValue = String(value).toLowerCase();
-                    const searchTerm = query.toLowerCase();
-                    return stringValue.includes(searchTerm);
+                    if (value && String(value).toLowerCase().includes(query.toLowerCase())) {
+                        console.log('Found match:', value, 'contains', query);
+                        return true;
+                    }
+                    return false;
                 });
             });
             
-            console.log(`✅ Found ${results.length} results for "${query}"`);
-            if (results.length > 0) {
-                console.log('Sample results:', results.slice(0, 3));
-            }
+            console.log(`Found ${results.length} results for "${query}"`);
+            console.log('Sample results:', results.slice(0, 3));
             
             // Update the table with filtered results
-            if (results.length > 0) {
-                // Store filtered data
-                window.databankFilteredData = results;
-                
-                // Regenerate table with filtered data
-                displayTableData(results);
-                
-                // Update status
-                showStatus('tableData', `🔍 Super search found ${results.length} results for "${query}"`, 'success');
-            } else {
-                // Show empty state
-                const tableElement = document.getElementById('tableData');
-                if (tableElement) {
-                    tableElement.innerHTML = `
-                        <div style="text-align: center; padding: 40px; color: #6c757d;">
-                            <h3>🔍 No Results Found</h3>
-                            <p>No records match your search: "<strong>${query}</strong>"</p>
-                            <button onclick="clearSuperSearch()" style="margin-top: 20px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                                Clear Search
-                            </button>
-                        </div>
-                    `;
+            filteredData = results;
+            
+            // Always try to update the existing table first to maintain size
+            updateTableWithFilteredData(results);
+            
+            // CRITICAL: Ensure table container maintains exact same size
+            const tableElement = document.getElementById('tableData');
+            if (tableElement) {
+                const tableContainer = tableElement.querySelector('.table-container');
+                if (tableContainer) {
+                    // Force exact same dimensions as original - NO SIZE CHANGES
+                    tableContainer.style.maxHeight = '500px';
+                    tableContainer.style.height = '500px';
+                    tableContainer.style.overflowY = 'auto';
+                    tableContainer.style.overflowX = 'auto';
+                    tableContainer.style.width = '100%';
+                    console.log('âœ… Super search: Table container size locked at 500px height');
                 }
-                showStatus('tableData', `🔍 No results found for "${query}"`, 'warning');
+            }
+            
+            // Update status
+            if (results.length === 0) {
+                showStatus('tableData', `🔍” No results found for "${query}"`, 'warning');
+            } else {
+                showStatus('tableData', `🔍” Super search found ${results.length} results for "${query}"`, 'success');
             }
         }
 
@@ -8452,22 +3564,32 @@
             document.getElementById('searchInput').value = '';
             hideSuperSearchSuggestions();
             
-            // Clear filtered data
-            window.databankFilteredData = null;
-            console.log('🔄 Clearing search - resetting to show all data');
+            // Reset to show all data
+            filteredData = null;
+            console.log('🔍”„ Clearing search - resetting to show all data');
             
-            // Get original data
-            let originalData = databankOriginalData && databankOriginalData.length > 0 
-                ? databankOriginalData 
-                : window.currentTableData;
-            
-            if (originalData && originalData.length > 0) {
-                console.log('✅ Restoring original table with', originalData.length, 'rows');
-                // Regenerate table with all data
-                displayTableData(originalData);
+            if (window.currentTableData) {
+                console.log('âœ… Restoring original table with', window.currentTableData.length, 'rows');
+                // Try to update existing table first to maintain size
+                updateTableWithFilteredData(window.currentTableData);
+                
+                // CRITICAL: Ensure table container maintains exact same size
+                const tableElement = document.getElementById('tableData');
+                if (tableElement) {
+                    const tableContainer = tableElement.querySelector('.table-container');
+                    if (tableContainer) {
+                        // Force exact same dimensions as original - NO SIZE CHANGES
+                        tableContainer.style.maxHeight = '500px';
+                        tableContainer.style.height = '500px';
+                        tableContainer.style.overflowY = 'auto';
+                        tableContainer.style.overflowX = 'auto';
+                        tableContainer.style.width = '100%';
+                        console.log('âœ… Clear search: Table container size locked at 500px height');
+                    }
+                }
                 
                 // Update table stats to show all data
-                updateTableStats(originalData.length);
+                updateTableStats(window.currentTableData.length);
             } else {
                 // If no data is loaded, try to load it
                 console.log('No current table data found, attempting to load data...');
@@ -8530,7 +3652,7 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 displayUploadedImage(e.target.result, productType);
-                console.log(`✅ Image uploaded for ${productType}:`, file.name, file.size, 'bytes');
+                console.log(`âœ… Image uploaded for ${productType}:`, file.name, file.size, 'bytes');
             };
             reader.readAsDataURL(file);
         }
@@ -8552,7 +3674,7 @@
                 
                 // Add remove button
                 const removeBtn = document.createElement('button');
-                removeBtn.innerHTML = '✕';
+                removeBtn.innerHTML = 'âœ•';
                 removeBtn.style.cssText = 'position: absolute; top: 10px; right: 10px; background: rgba(220, 53, 69, 0.8); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;';
                 removeBtn.onclick = function(e) {
                     e.stopPropagation();
@@ -8569,7 +3691,7 @@
             if (uploadArea) {
                 uploadArea.innerHTML = `
                     <div class="image-placeholder">
-                        <div class="beanie-icon">${productType === 'beanie' ? '📦' : '🧢'}</div>
+                        <div class="beanie-icon">${productType === 'beanie' ? '🔍“¦' : '🔍§¢'}</div>
                         <div class="image-text">Drag & Drop Image Here</div>
                         <div class="image-subtext">or click to select</div>
                     </div>
@@ -8608,7 +3730,7 @@
         
         // Debug function to test database save
         window.testDatabaseSave = async function() {
-            console.log('🧪 Testing database save functionality...');
+            console.log('🔍§ª Testing database save functionality...');
             
             const testData = {
                 Season: 'Test Season',
@@ -8630,14 +3752,14 @@
             try {
                 const connectionId = localStorage.getItem('currentConnectionId');
                 if (!connectionId) {
-                    console.error('❌ No connection ID found');
-                    showNotification('❌ No database connection found', 'error');
+                    console.error('âŒ No connection ID found');
+                    showNotification('âŒ No database connection found', 'error');
                     return;
                 }
                 
-                console.log('📤 Sending test data to database...', testData);
-                console.log('🔗 Function URL: /.netlify/functions/beanie-data-save');
-                console.log('🔑 Connection ID:', connectionId);
+                console.log('🔍“¤ Sending test data to database...', testData);
+                console.log('🔍”— Function URL: /.netlify/functions/beanie-data-save');
+                console.log('🔍”‘ Connection ID:', connectionId);
                 
                 const response = await fetch(`/.netlify/functions/beanie-data-save`, {
                     method: 'POST',
@@ -8650,63 +3772,63 @@
                     })
                 });
                 
-                console.log('📥 Response status:', response.status);
-                console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
+                console.log('🔍“¥ Response status:', response.status);
+                console.log('🔍“¥ Response headers:', Object.fromEntries(response.headers.entries()));
                 
                 const responseText = await response.text();
-                console.log('📥 Response body:', responseText);
+                console.log('🔍“¥ Response body:', responseText);
                 
                 if (response.ok) {
                     const result = JSON.parse(responseText);
-                    console.log('✅ Test save successful:', result);
-                    showNotification('✅ Database save test successful!', 'success');
+                    console.log('âœ… Test save successful:', result);
+                    showNotification('âœ… Database save test successful!', 'success');
                 } else {
-                    console.error('❌ Test save failed:', response.status, response.statusText, responseText);
+                    console.error('âŒ Test save failed:', response.status, response.statusText, responseText);
                     
                     if (response.status === 404) {
-                        showNotification('❌ Database function not deployed yet (404 error)', 'error');
-                        console.log('💡 To fix this: Deploy your Netlify functions or use a different deployment method');
+                        showNotification('âŒ Database function not deployed yet (404 error)', 'error');
+                        console.log('🔍’¡ To fix this: Deploy your Netlify functions or use a different deployment method');
                     } else if (response.status === 500) {
-                        showNotification('❌ Database function error (500) - Check environment variables', 'error');
-                        console.log('💡 Check if SUPABASE_URL and SUPABASE_ANON_KEY are set in Netlify');
+                        showNotification('âŒ Database function error (500) - Check environment variables', 'error');
+                        console.log('🔍’¡ Check if SUPABASE_URL and SUPABASE_ANON_KEY are set in Netlify');
                     } else {
-                        showNotification(`❌ Database save test failed: ${response.status} ${response.statusText}`, 'error');
+                        showNotification(`âŒ Database save test failed: ${response.status} ${response.statusText}`, 'error');
                     }
                 }
                 
             } catch (error) {
-                console.error('❌ Test save error:', error);
-                showNotification(`❌ Database save test error: ${error.message}`, 'error');
+                console.error('âŒ Test save error:', error);
+                showNotification(`âŒ Database save test error: ${error.message}`, 'error');
             }
         };
         
         // Simple function to check if functions are deployed
         window.checkFunctionDeployment = async function() {
-            console.log('🔍 Checking if Netlify functions are deployed...');
+            console.log('🔍” Checking if Netlify functions are deployed...');
             
             try {
                 const response = await fetch(`/.netlify/functions/beanie-data-save`, {
                     method: 'OPTIONS'
                 });
                 
-                console.log('📥 Function check response:', response.status);
+                console.log('🔍“¥ Function check response:', response.status);
                 
                 if (response.status === 200) {
-                    console.log('✅ Function is deployed and accessible');
-                    showNotification('✅ Netlify function is deployed!', 'success');
+                    console.log('âœ… Function is deployed and accessible');
+                    showNotification('âœ… Netlify function is deployed!', 'success');
                 } else {
-                    console.log('❌ Function not accessible:', response.status);
-                    showNotification(`❌ Function not accessible: ${response.status}`, 'error');
+                    console.log('âŒ Function not accessible:', response.status);
+                    showNotification(`âŒ Function not accessible: ${response.status}`, 'error');
                 }
             } catch (error) {
-                console.error('❌ Function check error:', error);
-                showNotification(`❌ Function check error: ${error.message}`, 'error');
+                console.error('âŒ Function check error:', error);
+                showNotification(`âŒ Function check error: ${error.message}`, 'error');
             }
         };
         
         // Manual data loading function for debugging
         window.forceLoadData = function() {
-            console.log('🔄 Force loading data...');
+            console.log('🔍”„ Force loading data...');
             if (connectionId) {
                 loadDatabankData();
             } else {
@@ -8717,7 +3839,7 @@
         
         // Debug function to check what data is available
         window.debugSearchData = function() {
-            console.log('🔍 Debug Search Data:');
+            console.log('🔍” Debug Search Data:');
             console.log('- Current table data length:', window.currentTableData ? window.currentTableData.length : 'null');
             console.log('- Filtered data length:', filteredData ? filteredData.length : 'null');
             console.log('- Sample data (first 3 rows):', window.currentTableData ? window.currentTableData.slice(0, 3) : 'null');
@@ -8730,7 +3852,7 @@
         
         // Force display search results
         window.forceShowSearchResults = function() {
-            console.log('🔄 Force showing search results...');
+            console.log('🔍”„ Force showing search results...');
             if (filteredData && filteredData.length > 0) {
                 console.log('Using filtered data:', filteredData.length, 'rows');
                 displayTableData(filteredData);
@@ -8744,7 +3866,7 @@
         
         // Force show all data (debug function)
         window.forceShowAllData = function() {
-            console.log('🔄 Force showing ALL data...');
+            console.log('🔍”„ Force showing ALL data...');
             console.log('Current table data length:', window.currentTableData ? window.currentTableData.length : 'null');
             console.log('All table data length:', allTableData ? allTableData.length : 'null');
             console.log('Filtered data length:', filteredData ? filteredData.length : 'null');
@@ -8776,7 +3898,7 @@
                     tableContainer.style.overflowX = 'auto';
                     tableContainer.style.width = '100%';
                     tableContainer.style.minHeight = '500px';
-                    console.log('✅ Table size LOCKED at 500px height - NO CHANGES');
+                    console.log('âœ… Table size LOCKED at 500px height - NO CHANGES');
                 }
             }
         }
@@ -8792,25 +3914,15 @@
                 container.style.overflowX = 'auto';
                 container.style.width = '100%';
                 container.style.minHeight = '500px';
-                console.log(`✅ Excel table ${index + 1} size LOCKED at 500px height - NO CHANGES`);
+                console.log(`âœ… Excel table ${index + 1} size LOCKED at 500px height - NO CHANGES`);
             });
         }
 
         // Close dropdowns when clicking outside
         document.addEventListener('click', function(e) {
-            // Don't close if clicking inside a dropdown
-            if (e.target.closest('.filter-dropdown') || 
-                e.target.closest('.filter-triangle') ||
-                e.target.closest('.header-with-filter')) {
-                return;
-            }
-            
             if (!e.target.closest('th') && !e.target.closest('.season-filter-overlay') && !e.target.closest('.season-filter-panel') && !e.target.closest('.customer-filter-overlay') && !e.target.closest('.customer-filter-panel')) {
                 document.querySelectorAll('.filter-dropdown').forEach(panel => {
-                    // Only close if it's not a databank or factory dropdown (they have their own handler)
-                    if (!panel.id || (!panel.id.startsWith('databank-filter-') && !panel.id.startsWith('factory-filter-'))) {
-                        panel.classList.remove('show');
-                    }
+                    panel.classList.remove('show');
                 });
                 // Close filter popups
                 closeSeasonFilter();
@@ -8830,7 +3942,7 @@
                 font-size: 12px;
             `;
             
-            let debugHtml = '<h4>🔍 Column Mapping Debug</h4>';
+            let debugHtml = '<h4>🔍” Column Mapping Debug</h4>';
             debugHtml += '<div style="display: flex; gap: 20px;">';
             
             // Show available database columns
@@ -8848,8 +3960,8 @@
             debugHtml += '<ul style="margin: 0; padding-left: 20px;">';
             displayColumns.forEach((displayCol, index) => {
                 const mappedCol = mappedColumns[index];
-                const status = mappedCol ? '✅' : '❌';
-                const statusText = mappedCol ? `→ ${mappedCol}` : 'Not found';
+                const status = mappedCol ? 'âœ…' : 'âŒ';
+                const statusText = mappedCol ? `â†’ ${mappedCol}` : 'Not found';
                 debugHtml += `<li>${status} ${displayCol} ${statusText}</li>`;
             });
             debugHtml += '</ul></div>';
@@ -8865,8 +3977,8 @@
         }
 
         function formatCellValue(value, columnName) {
-            if (value === null) return '<span style="color: #6c757d; font-style: italic;">—</span>';
-            if (value === undefined) return '<span style="color: #6c757d; font-style: italic;">—</span>';
+            if (value === null) return '<span style="color: #6c757d; font-style: italic;">â€”</span>';
+            if (value === undefined) return '<span style="color: #6c757d; font-style: italic;">â€”</span>';
             if (typeof value === 'object') return `<code style="font-size: 12px; background: #f8f9fa; padding: 2px 6px; border-radius: 3px;">${JSON.stringify(value)}</code>`;
             
             // Format based on column name patterns
@@ -8923,11 +4035,11 @@
             }
             
             if (loadMoreBtn) {
-                loadMoreBtn.textContent = `📄 Load More (100)`;
+                loadMoreBtn.textContent = `🔍“„ Load More (100)`;
             }
             
             if (loadAllBtn) {
-                loadAllBtn.textContent = `📚 Load All (${totalRecords.toLocaleString()})`;
+                loadAllBtn.textContent = `🔍“š Load All (${totalRecords.toLocaleString()})`;
             }
         }
 
@@ -8982,7 +4094,7 @@
 
         // Show template based on product type selection
         function showTemplate(productType) {
-            console.log('🎯 Showing template for product type:', productType);
+            console.log('🔍Ž¯ Showing template for product type:', productType);
             const costBreakdown = document.getElementById('costBreakdown');
             const ballcapsBreakdown = document.getElementById('ballcapsBreakdown');
             const productSelection = document.querySelector('.product-selection-container');
@@ -9013,10 +4125,10 @@
                 setTimeout(() => {
                     addCalculationEventListeners();
                     calculateBeanieTemplate();
-                    console.log('✅ Beanie template calculations enabled');
+                    console.log('âœ… Beanie template calculations enabled');
                 }, 100);
                 
-                console.log('✅ Beanie template shown');
+                console.log('âœ… Beanie template shown');
             } else if (productType === 'ballcaps') {
                 // Hide beanie if showing
                 if (costBreakdown.style.display !== 'none') {
@@ -9040,20 +4152,20 @@
                 setTimeout(() => {
                     addBallCapsCalculationEventListeners();
                     calculateBallCapsTemplate();
-                    console.log('✅ Ballcaps template calculations enabled');
+                    console.log('âœ… Ballcaps template calculations enabled');
                 }, 100);
                 
-                console.log('✅ Ballcaps template shown');
+                console.log('âœ… Ballcaps template shown');
             }
             
             // Reinitialize drag & drop after showing the template
             setTimeout(() => {
-                console.log('🔄 Reinitializing drag & drop after template change...');
+                console.log('🔍”„ Reinitializing drag & drop after template change...');
                 try {
                     initializeDragDrop();
-                    console.log('✅ Drag & drop reinitialized after template change');
+                    console.log('âœ… Drag & drop reinitialized after template change');
                 } catch (error) {
-                    console.error('❌ Error reinitializing drag & drop after template change:', error);
+                    console.error('âŒ Error reinitializing drag & drop after template change:', error);
                 }
             }, 100);
         }
@@ -9087,9 +4199,9 @@
             
             if (!isFactoryUser) {
                 // Hide factory data table only for non-factory users
-                const factoryDataTable = document.getElementById('factoryDataTable');
-                if (factoryDataTable) {
-                    factoryDataTable.style.display = 'none';
+            const factoryDataTable = document.getElementById('factoryDataTable');
+            if (factoryDataTable) {
+                factoryDataTable.style.display = 'none';
                 }
             }
             
@@ -9153,12 +4265,12 @@
         let preventDataReload = false; // Flag to prevent unnecessary data reloads
         
         // Cache buster to ensure fresh code
-        console.log('🔄 Editable table module loaded - version 1.5 with multi-approach sync');
+        console.log('🔍”„ Editable table module loaded - version 1.5 with multi-approach sync');
 
         // Test Supabase connection and table structure
         async function testSupabaseConnection() {
             try {
-                console.log('🧪 Testing Supabase connection...');
+                console.log('🔍§ª Testing Supabase connection...');
                 
                 const supabaseUrl = 'https://icavnpspgmcrrqmsprze.supabase.co';
                 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljYXZucHNwZ21jcnJxbXNwcnplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0NzEyMzMsImV4cCI6MjA3MzA0NzIzM30.5_-LPYwj5ks_KyCXwCae2mcbI-T7em48RsMiv4Oaurk';
@@ -9173,22 +4285,22 @@
                     }
                 });
                 
-                console.log(`🔍 Test connection response status: ${response.status}`);
+                console.log(`🔍” Test connection response status: ${response.status}`);
                 
                 if (response.ok) {
                     const data = await response.json();
-                    console.log('✅ Supabase connection successful!');
-                    console.log('📊 Sample record structure:', data[0] || 'No records found');
-                    console.log('📊 Available columns:', data[0] ? Object.keys(data[0]) : 'No data');
+                    console.log('âœ… Supabase connection successful!');
+                    console.log('🔍“Š Sample record structure:', data[0] || 'No records found');
+                    console.log('🔍“Š Available columns:', data[0] ? Object.keys(data[0]) : 'No data');
                     return true;
                 } else {
                     const errorText = await response.text();
-                    console.error('❌ Supabase connection failed:', response.status, errorText);
+                    console.error('âŒ Supabase connection failed:', response.status, errorText);
                     return false;
                 }
                 
             } catch (error) {
-                console.error('❌ Supabase connection test failed:', error);
+                console.error('âŒ Supabase connection test failed:', error);
                 return false;
             }
         }
@@ -9198,10 +4310,10 @@
         
         // Test function to debug Supabase updates
         window.testSupabaseUpdate = async function() {
-            console.log('🧪 Testing Supabase update...');
+            console.log('🔍§ª Testing Supabase update...');
             
             if (editedTableData.length === 0) {
-                console.log('❌ No data available for testing');
+                console.log('âŒ No data available for testing');
                 return;
             }
             
@@ -9209,44 +4321,44 @@
             const testColumn = Object.keys(testRecord)[1]; // Second column
             const testValue = 'TEST_' + Date.now();
             
-            console.log('🔍 Test record:', testRecord);
-            console.log('🔍 Test column:', testColumn);
-            console.log('🔍 Test value:', testValue);
+            console.log('🔍” Test record:', testRecord);
+            console.log('🔍” Test column:', testColumn);
+            console.log('🔍” Test value:', testValue);
             
             try {
                 await updateSingleCellInSupabase(0, testColumn, testValue);
-                console.log('✅ Test update successful');
+                console.log('âœ… Test update successful');
             } catch (error) {
-                console.error('❌ Test update failed:', error);
+                console.error('âŒ Test update failed:', error);
             }
         };
         
         // Function to check what ID field is being detected
         window.checkIdField = function() {
-            console.log('🔍 Checking ID field detection...');
-            console.log('🔑 Current recordIdField:', window.recordIdField);
+            console.log('🔍” Checking ID field detection...');
+            console.log('🔍”‘ Current recordIdField:', window.recordIdField);
             
             if (editedTableData.length > 0) {
                 const sampleRecord = editedTableData[0];
-                console.log('📋 Sample record keys:', Object.keys(sampleRecord));
-                console.log('📋 Sample record values:', sampleRecord);
+                console.log('🔍“‹ Sample record keys:', Object.keys(sampleRecord));
+                console.log('🔍“‹ Sample record values:', sampleRecord);
                 
                 // Check which field looks like an ID
                 Object.keys(sampleRecord).forEach(key => {
                     const value = sampleRecord[key];
-                    console.log(`🔍 ${key}: ${value} (type: ${typeof value})`);
+                    console.log(`🔍” ${key}: ${value} (type: ${typeof value})`);
                 });
             }
         };
         
         // Function to compare website data with Supabase data
         window.compareDataAlignment = async function() {
-            console.log('🔍 Comparing website data with Supabase data...');
+            console.log('🔍” Comparing website data with Supabase data...');
             
             try {
                 // Get website data (first 3 records)
                 const websiteData = editedTableData.slice(0, 3);
-                console.log('🌐 Website data (first 3 records):', websiteData);
+                console.log('🔍Œ Website data (first 3 records):', websiteData);
                 
                 // Get Supabase data via API
                 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -9265,17 +4377,17 @@
                 
                 const supabaseData = await response.json();
                 const supabaseFirst3 = supabaseData.slice(0, 3);
-                console.log('🗄️ Supabase data (first 3 records):', supabaseFirst3);
+                console.log('🔍—„ï¸ Supabase data (first 3 records):', supabaseFirst3);
                 
                 // Compare the data
-                console.log('🔍 COMPARISON ANALYSIS:');
+                console.log('🔍” COMPARISON ANALYSIS:');
                 console.log('================================');
                 
                 for (let i = 0; i < Math.min(3, websiteData.length, supabaseFirst3.length); i++) {
                     const websiteRecord = websiteData[i];
                     const supabaseRecord = supabaseFirst3[i];
                     
-                    console.log(`\n📊 ROW ${i + 1} COMPARISON:`);
+                    console.log(`\n🔍“Š ROW ${i + 1} COMPARISON:`);
                     console.log('Website:', websiteRecord);
                     console.log('Supabase:', supabaseRecord);
                     
@@ -9292,7 +4404,7 @@
                         if (websiteRecord[idField] !== undefined && supabaseRecord[idField] !== undefined) {
                             const websiteId = websiteRecord[idField];
                             const supabaseId = supabaseRecord[idField];
-                            console.log(`🔑 ${idField}: Website="${websiteId}" vs Supabase="${supabaseId}" ${websiteId === supabaseId ? '✅ MATCH' : '❌ MISMATCH'}`);
+                            console.log(`🔍”‘ ${idField}: Website="${websiteId}" vs Supabase="${supabaseId}" ${websiteId === supabaseId ? 'âœ… MATCH' : 'âŒ MISMATCH'}`);
                         }
                     });
                     
@@ -9301,55 +4413,55 @@
                     websiteKeys.forEach(key => {
                         if (supabaseRecord.hasOwnProperty(key)) {
                             if (websiteRecord[key] !== supabaseRecord[key]) {
-                                console.log(`❌ Content mismatch in ${key}: Website="${websiteRecord[key]}" vs Supabase="${supabaseRecord[key]}"`);
+                                console.log(`âŒ Content mismatch in ${key}: Website="${websiteRecord[key]}" vs Supabase="${supabaseRecord[key]}"`);
                                 contentMatches = false;
                             }
                         }
                     });
                     
                     if (contentMatches) {
-                        console.log('✅ Content matches between website and Supabase');
+                        console.log('âœ… Content matches between website and Supabase');
                     } else {
-                        console.log('❌ Content does NOT match between website and Supabase');
+                        console.log('âŒ Content does NOT match between website and Supabase');
                     }
                 }
                 
                 console.log('\n================================');
-                console.log('🔍 ANALYSIS COMPLETE');
+                console.log('🔍” ANALYSIS COMPLETE');
                 
             } catch (error) {
-                console.error('❌ Error comparing data:', error);
+                console.error('âŒ Error comparing data:', error);
             }
         };
         
         // Test function to manually test content matching
         window.testContentMatching = async function(rowIndex = 0) {
-            console.log(`🧪 Testing content matching for row ${rowIndex}...`);
+            console.log(`🔍§ª Testing content matching for row ${rowIndex}...`);
             
             if (!editedTableData || editedTableData.length === 0) {
-                console.log('❌ No data available for testing');
+                console.log('âŒ No data available for testing');
                 return;
             }
             
             const websiteRecord = editedTableData[rowIndex];
-            console.log('🌐 Website record to match:', websiteRecord);
+            console.log('🔍Œ Website record to match:', websiteRecord);
             
             const result = await findCorrectRecord(websiteRecord);
             
             if (result) {
-                console.log('✅ Content matching result:', result);
+                console.log('âœ… Content matching result:', result);
                 console.log(`   Match percentage: ${result.matchPercentage.toFixed(1)}%`);
                 console.log(`   Found ID: ${result.id}`);
                 console.log(`   ID Field: ${result.idField}`);
             } else {
-                console.log('❌ No matching record found');
+                console.log('âŒ No matching record found');
             }
         };
         
         // Test function to debug data alignment
         window.debugDataAlignment = async function() {
-            console.log('🔍 DEBUGGING DATA ALIGNMENT...');
-            console.log('🌐 Website data (first 3 rows):');
+            console.log('🔍” DEBUGGING DATA ALIGNMENT...');
+            console.log('🔍Œ Website data (first 3 rows):');
             console.log(allTableData.slice(0, 3));
             
             try {
@@ -9366,11 +4478,11 @@
                 } else if (supabaseData.data && Array.isArray(supabaseData.data)) {
                     records = supabaseData.data;
                 } else {
-                    console.error('❌ Unexpected data format from API:', supabaseData);
+                    console.error('âŒ Unexpected data format from API:', supabaseData);
                     records = [];
                 }
                 
-                console.log('🗄️ Supabase data (first 3 rows):');
+                console.log('🔍—„ï¸ Supabase data (first 3 rows):');
                 console.log(records.slice(0, 3));
                 
                 // Compare specific fields
@@ -9378,35 +4490,35 @@
                     const website = allTableData[i];
                     const supabase = records[i];
                     
-                    console.log(`\n📊 Row ${i + 1} comparison:`);
+                    console.log(`\n🔍“Š Row ${i + 1} comparison:`);
                     console.log(`Website style_name: "${website?.style_name}"`);
                     console.log(`Supabase style_name: "${supabase?.style_name}"`);
                     console.log(`Match: ${website?.style_name === supabase?.style_name}`);
                 }
             } catch (error) {
-                console.error('❌ Debug error:', error);
+                console.error('âŒ Debug error:', error);
             }
         };
 
         // Emergency data recovery function
         window.emergencyDataRecovery = async function() {
-            console.log('🚨 EMERGENCY DATA RECOVERY STARTING...');
-            console.log('⚠️ This will restore your website data to Supabase');
+            console.log('🔍š¨ EMERGENCY DATA RECOVERY STARTING...');
+            console.log('âš ï¸ This will restore your website data to Supabase');
             
             // Try to get data from multiple sources
             let recordsToRestore = [];
             
             if (editedTableData && editedTableData.length > 0) {
-                console.log('📊 Using editedTableData for recovery');
+                console.log('🔍“Š Using editedTableData for recovery');
                 recordsToRestore = editedTableData.slice(0, 10);
             } else if (allTableData && allTableData.length > 0) {
-                console.log('📊 Using allTableData for recovery');
+                console.log('🔍“Š Using allTableData for recovery');
                 recordsToRestore = allTableData.slice(0, 10);
             } else if (originalTableData && originalTableData.length > 0) {
-                console.log('📊 Using originalTableData for recovery');
+                console.log('🔍“Š Using originalTableData for recovery');
                 recordsToRestore = originalTableData.slice(0, 10);
             } else {
-                console.log('❌ No website data available for recovery');
+                console.log('âŒ No website data available for recovery');
                 console.log('Available data sources:');
                 console.log('- editedTableData:', editedTableData ? editedTableData.length : 'undefined');
                 console.log('- allTableData:', allTableData ? allTableData.length : 'undefined');
@@ -9415,7 +4527,7 @@
             }
             
             try {
-                console.log(`🔄 Restoring ${recordsToRestore.length} records to Supabase...`);
+                console.log(`🔍”„ Restoring ${recordsToRestore.length} records to Supabase...`);
                 
                 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
                 const apiUrl = isLocalhost ? `/api/datatable/update/${connectionId}` : `/.netlify/functions/datatable-update`;
@@ -9425,7 +4537,7 @@
                 
                 for (let i = 0; i < recordsToRestore.length; i++) {
                     const record = recordsToRestore[i];
-                    console.log(`\n🔄 Restoring record ${i + 1}/${recordsToRestore.length}:`, record);
+                    console.log(`\n🔍”„ Restoring record ${i + 1}/${recordsToRestore.length}:`, record);
                     
                     try {
                         // Find the record ID
@@ -9444,7 +4556,7 @@
                         }
                         
                         if (!recordId) {
-                            console.log(`⚠️ No ID found for record ${i + 1}, skipping...`);
+                            console.log(`âš ï¸ No ID found for record ${i + 1}, skipping...`);
                             errorCount++;
                             continue;
                         }
@@ -9460,7 +4572,7 @@
                             data: updateData
                         };
                         
-                        console.log(`📦 Update payload:`, updatePayload);
+                        console.log(`🔍“¦ Update payload:`, updatePayload);
                         
                         const response = await fetch(apiUrl, {
                             method: 'PUT',
@@ -9471,11 +4583,11 @@
                         });
                         
                         if (response.ok) {
-                            console.log(`✅ Successfully restored record ${i + 1}`);
+                            console.log(`âœ… Successfully restored record ${i + 1}`);
                             successCount++;
                         } else {
                             const errorText = await response.text();
-                            console.error(`❌ Failed to restore record ${i + 1}:`, response.status, errorText);
+                            console.error(`âŒ Failed to restore record ${i + 1}:`, response.status, errorText);
                             errorCount++;
                         }
                         
@@ -9483,33 +4595,33 @@
                         await new Promise(resolve => setTimeout(resolve, 500));
                         
                     } catch (error) {
-                        console.error(`❌ Error restoring record ${i + 1}:`, error);
+                        console.error(`âŒ Error restoring record ${i + 1}:`, error);
                         errorCount++;
                     }
                 }
                 
-                console.log('\n🎯 RECOVERY SUMMARY:');
-                console.log(`✅ Successfully restored: ${successCount} records`);
-                console.log(`❌ Failed to restore: ${errorCount} records`);
+                console.log('\n🔍Ž¯ RECOVERY SUMMARY:');
+                console.log(`âœ… Successfully restored: ${successCount} records`);
+                console.log(`âŒ Failed to restore: ${errorCount} records`);
                 
                 if (successCount > 0) {
-                    console.log('🎉 Data recovery completed! Check your Supabase database.');
+                    console.log('🔍Ž‰ Data recovery completed! Check your Supabase database.');
                 } else {
-                    console.log('❌ Data recovery failed. Please check the errors above.');
+                    console.log('âŒ Data recovery failed. Please check the errors above.');
                 }
                 
             } catch (error) {
-                console.error('❌ Emergency data recovery failed:', error);
+                console.error('âŒ Emergency data recovery failed:', error);
             }
         };
         
         // Function to check data corruption
         window.checkDataCorruption = async function() {
-            console.log('🔍 Checking for data corruption...');
+            console.log('🔍” Checking for data corruption...');
             
             try {
                 // First try to check local data
-                console.log('📊 Checking local data sources...');
+                console.log('🔍“Š Checking local data sources...');
                 console.log('- editedTableData:', editedTableData ? editedTableData.length : 'undefined');
                 console.log('- allTableData:', allTableData ? allTableData.length : 'undefined');
                 console.log('- originalTableData:', originalTableData ? originalTableData.length : 'undefined');
@@ -9518,7 +4630,7 @@
             const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
             const apiUrl = isLocalhost ? `/api/datatable/data/${connectionId}?table=databank` : `/.netlify/functions/datatable-data?table=databank`;
             
-            console.log(`🌐 Attempting to fetch data from: ${apiUrl}`);
+            console.log(`🔍Œ Attempting to fetch data from: ${apiUrl}`);
             
             const response = await fetch(apiUrl, {
                 method: 'GET',
@@ -9528,20 +4640,20 @@
             });
                 
                 if (!response.ok) {
-                    console.warn(`⚠️ API call failed with status ${response.status}`);
-                    console.log('📊 Falling back to local data analysis...');
+                    console.warn(`âš ï¸ API call failed with status ${response.status}`);
+                    console.log('🔍“Š Falling back to local data analysis...');
                     
                     // Analyze local data instead
                     const localData = allTableData || editedTableData || originalTableData || [];
                     if (localData.length > 0) {
-                        console.log(`🔍 Analyzing ${localData.length} local records...`);
+                        console.log(`🔍” Analyzing ${localData.length} local records...`);
                         
                         let corruptedRecords = 0;
                         let normalRecords = 0;
                         
                         for (let i = 0; i < Math.min(5, localData.length); i++) {
                             const record = localData[i];
-                            console.log(`\n📊 Local Record ${i + 1}:`, record);
+                            console.log(`\n🔍“Š Local Record ${i + 1}:`, record);
                             
                             // Check if record looks like column headers (corrupted)
                             const hasColumnHeaderValues = Object.values(record).some(value => 
@@ -9554,38 +4666,38 @@
                             );
                             
                             if (hasColumnHeaderValues) {
-                                console.log(`❌ Local record ${i + 1} appears to be corrupted (contains column headers)`);
+                                console.log(`âŒ Local record ${i + 1} appears to be corrupted (contains column headers)`);
                                 corruptedRecords++;
                             } else {
-                                console.log(`✅ Local record ${i + 1} appears to be normal`);
+                                console.log(`âœ… Local record ${i + 1} appears to be normal`);
                                 normalRecords++;
                             }
                         }
                         
-                        console.log('\n🎯 LOCAL DATA ANALYSIS:');
-                        console.log(`❌ Corrupted records: ${corruptedRecords}`);
-                        console.log(`✅ Normal records: ${normalRecords}`);
+                        console.log('\n🔍Ž¯ LOCAL DATA ANALYSIS:');
+                        console.log(`âŒ Corrupted records: ${corruptedRecords}`);
+                        console.log(`âœ… Normal records: ${normalRecords}`);
                         
                         if (corruptedRecords > 0) {
-                            console.log('⚠️ LOCAL DATA CORRUPTION DETECTED!');
+                            console.log('âš ï¸ LOCAL DATA CORRUPTION DETECTED!');
                         } else {
-                            console.log('✅ Local data appears to be normal.');
+                            console.log('âœ… Local data appears to be normal.');
                         }
                     } else {
-                        console.log('❌ No local data available for analysis');
+                        console.log('âŒ No local data available for analysis');
                     }
                     return;
                 }
                 
                 const supabaseData = await response.json();
-                console.log(`🔍 Checking ${supabaseData.length} records in Supabase...`);
+                console.log(`🔍” Checking ${supabaseData.length} records in Supabase...`);
                 
                 let corruptedRecords = 0;
                 let normalRecords = 0;
                 
                 for (let i = 0; i < Math.min(10, supabaseData.length); i++) {
                     const record = supabaseData[i];
-                    console.log(`\n📊 Record ${i + 1}:`, record);
+                    console.log(`\n🔍“Š Record ${i + 1}:`, record);
                     
                     // Check if record looks like column headers (corrupted)
                     const hasColumnHeaderValues = Object.values(record).some(value => 
@@ -9598,36 +4710,36 @@
                     );
                     
                     if (hasColumnHeaderValues) {
-                        console.log(`❌ Record ${i + 1} appears to be corrupted (contains column headers)`);
+                        console.log(`âŒ Record ${i + 1} appears to be corrupted (contains column headers)`);
                         corruptedRecords++;
                     } else {
-                        console.log(`✅ Record ${i + 1} appears to be normal`);
+                        console.log(`âœ… Record ${i + 1} appears to be normal`);
                         normalRecords++;
                     }
                 }
                 
-                console.log('\n🎯 CORRUPTION CHECK SUMMARY:');
-                console.log(`❌ Corrupted records: ${corruptedRecords}`);
-                console.log(`✅ Normal records: ${normalRecords}`);
+                console.log('\n🔍Ž¯ CORRUPTION CHECK SUMMARY:');
+                console.log(`âŒ Corrupted records: ${corruptedRecords}`);
+                console.log(`âœ… Normal records: ${normalRecords}`);
                 
                 if (corruptedRecords > 0) {
-                    console.log('⚠️ DATA CORRUPTION DETECTED! Use emergencyDataRecovery() to fix.');
+                    console.log('âš ï¸ DATA CORRUPTION DETECTED! Use emergencyDataRecovery() to fix.');
                 } else {
-                    console.log('✅ No data corruption detected.');
+                    console.log('âœ… No data corruption detected.');
                 }
                 
             } catch (error) {
-                console.error('❌ Error checking data corruption:', error);
-                console.log('📊 Attempting local data analysis as fallback...');
+                console.error('âŒ Error checking data corruption:', error);
+                console.log('🔍“Š Attempting local data analysis as fallback...');
                 
                 // Fallback to local data analysis
                 const localData = allTableData || editedTableData || originalTableData || [];
                 if (localData.length > 0) {
-                    console.log(`🔍 Analyzing ${localData.length} local records as fallback...`);
+                    console.log(`🔍” Analyzing ${localData.length} local records as fallback...`);
                     // Basic analysis of local data
-                    console.log('✅ Local data is available for recovery');
+                    console.log('âœ… Local data is available for recovery');
                 } else {
-                    console.log('❌ No data available for analysis or recovery');
+                    console.log('âŒ No data available for analysis or recovery');
                 }
             }
         };
@@ -9639,18 +4751,18 @@
             
             try {
                 button.disabled = true;
-                button.innerHTML = '🔍 Checking...';
+                button.innerHTML = '🔍” Checking...';
                 statusDiv.innerHTML = 'Checking for data corruption...';
                 
                 await checkDataCorruption();
                 
-                statusDiv.innerHTML = '✅ Corruption check completed. Check the browser console for details.';
-                button.innerHTML = '🔍 Check Data Corruption';
+                statusDiv.innerHTML = 'âœ… Corruption check completed. Check the browser console for details.';
+                button.innerHTML = '🔍” Check Data Corruption';
                 button.disabled = false;
                 
             } catch (error) {
-                statusDiv.innerHTML = '❌ Error checking corruption: ' + error.message;
-                button.innerHTML = '🔍 Check Data Corruption';
+                statusDiv.innerHTML = 'âŒ Error checking corruption: ' + error.message;
+                button.innerHTML = '🔍” Check Data Corruption';
                 button.disabled = false;
             }
         }
@@ -9661,25 +4773,25 @@
             
             try {
                 button.disabled = true;
-                button.innerHTML = '🛠️ Recovering...';
+                button.innerHTML = '🔍› ï¸ Recovering...';
                 statusDiv.innerHTML = 'Starting emergency data recovery...';
                 
                 await emergencyDataRecovery();
                 
-                statusDiv.innerHTML = '✅ Emergency recovery completed! Check the browser console for details.';
-                button.innerHTML = '🛠️ Emergency Recovery';
+                statusDiv.innerHTML = 'âœ… Emergency recovery completed! Check the browser console for details.';
+                button.innerHTML = '🔍› ï¸ Emergency Recovery';
                 button.disabled = false;
                 
             } catch (error) {
-                statusDiv.innerHTML = '❌ Error during recovery: ' + error.message;
-                button.innerHTML = '🛠️ Emergency Recovery';
+                statusDiv.innerHTML = 'âŒ Error during recovery: ' + error.message;
+                button.innerHTML = '🔍› ï¸ Emergency Recovery';
                 button.disabled = false;
             }
         }
         
         // Function to check what's actually in the database via API
         window.checkSupabaseData = async function() {
-            console.log('🔍 Checking database via API...');
+            console.log('🔍” Checking database via API...');
             
             try {
                 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -9694,23 +4806,23 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    console.log('📊 Database data (first 5 records):', data.slice(0, 5));
-                    console.log('📊 Available columns:', data[0] ? Object.keys(data[0]) : 'No data');
+                    console.log('🔍“Š Database data (first 5 records):', data.slice(0, 5));
+                    console.log('🔍“Š Available columns:', data[0] ? Object.keys(data[0]) : 'No data');
                 } else {
-                    console.error('❌ Failed to fetch database data:', response.status, await response.text());
+                    console.error('âŒ Failed to fetch database data:', response.status, await response.text());
                 }
             } catch (error) {
-                console.error('❌ Error checking database data:', error);
+                console.error('âŒ Error checking database data:', error);
             }
         };
         
         // Function to test direct Supabase update
         window.testDirectSupabaseUpdate = async function(recordId, idField = 'id', columnName, newValue) {
-            console.log('🧪 Testing direct Supabase update...');
-            console.log(`🔑 Record ID: ${recordId}`);
-            console.log(`🔑 ID Field: ${idField}`);
-            console.log(`📝 Column: ${columnName}`);
-            console.log(`📝 Value: ${newValue}`);
+            console.log('🔍§ª Testing direct Supabase update...');
+            console.log(`🔍”‘ Record ID: ${recordId}`);
+            console.log(`🔍”‘ ID Field: ${idField}`);
+            console.log(`🔍“ Column: ${columnName}`);
+            console.log(`🔍“ Value: ${newValue}`);
             
             try {
                 const supabaseUrl = 'https://icavnpspgmcrrqmsprze.supabase.co';
@@ -9721,8 +4833,8 @@
                 };
                 
                 const filterUrl = `${supabaseUrl}/rest/v1/databank?${idField}=eq.${encodeURIComponent(recordId)}`;
-                console.log(`🌐 Update URL: ${filterUrl}`);
-                console.log(`📦 Update data:`, updateData);
+                console.log(`🔍Œ Update URL: ${filterUrl}`);
+                console.log(`🔍“¦ Update data:`, updateData);
                 
                 const response = await fetch(filterUrl, {
                     method: 'PATCH',
@@ -9735,24 +4847,24 @@
                     body: JSON.stringify(updateData)
                 });
                 
-                console.log(`📡 Response status: ${response.status} ${response.statusText}`);
+                console.log(`🔍“¡ Response status: ${response.status} ${response.statusText}`);
                 
                 if (response.ok) {
                     const result = await response.json();
-                    console.log('✅ Direct update successful:', result);
+                    console.log('âœ… Direct update successful:', result);
                 } else {
                     const errorText = await response.text();
-                    console.error('❌ Direct update failed:', response.status, errorText);
+                    console.error('âŒ Direct update failed:', response.status, errorText);
                 }
             } catch (error) {
-                console.error('❌ Direct update error:', error);
+                console.error('âŒ Direct update error:', error);
             }
         };
         
         // Safe update function using content matching to find correct record
         window.safeUpdateSupabase = async function(rowIndex, columnName, newValue) {
-            console.log('🛡️ Safe Supabase update starting...');
-            console.log(`📝 Updating row ${rowIndex}, column "${columnName}" to "${newValue}"`);
+            console.log('🔍›¡ï¸ Safe Supabase update starting...');
+            console.log(`🔍“ Updating row ${rowIndex}, column "${columnName}" to "${newValue}"`);
             
             try {
                 // Get the record to update
@@ -9761,9 +4873,9 @@
                     throw new Error(`Record not found at row ${rowIndex}`);
                 }
                 
-                console.log('🔍 Record to update:', record);
-                console.log(`🎯 Current value of ${columnName}:`, record[columnName]);
-                console.log(`🔄 New value:`, newValue);
+                console.log('🔍” Record to update:', record);
+                console.log(`🔍Ž¯ Current value of ${columnName}:`, record[columnName]);
+                console.log(`🔍”„ New value:`, newValue);
                 
                 // First, try to find the correct record in Supabase by content matching
                 const correctRecord = await findCorrectRecord(record);
@@ -9771,11 +4883,11 @@
                 let idField, recordId;
                 
                 if (correctRecord) {
-                    console.log(`✅ Found correct record with ${correctRecord.matchPercentage.toFixed(1)}% match`);
+                    console.log(`âœ… Found correct record with ${correctRecord.matchPercentage.toFixed(1)}% match`);
                     idField = correctRecord.idField;
                     recordId = correctRecord.id;
                 } else {
-                    console.log('⚠️ No matching record found, using original ID detection');
+                    console.log('âš ï¸ No matching record found, using original ID detection');
                     
                     // Fallback to original ID detection
                     idField = window.recordIdField;
@@ -9806,11 +4918,11 @@
                     }
                 }
                 
-                console.log(`🔑 Using ID field: ${idField} with value: ${recordId}`);
+                console.log(`🔍”‘ Using ID field: ${idField} with value: ${recordId}`);
                 
                 // Map display column name to database column name
                 const dbColumnName = mapDisplayColumnToDatabase(columnName);
-                console.log(`📝 Updating column: ${columnName} -> ${dbColumnName} = "${newValue}"`);
+                console.log(`🔍“ Updating column: ${columnName} -> ${dbColumnName} = "${newValue}"`);
                 
                 // Use the existing API infrastructure instead of direct Supabase calls
                 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -9825,8 +4937,8 @@
                     }
                 };
                 
-                console.log(`📡 Using API: ${apiUrl}`);
-                console.log(`📦 Payload:`, updatePayload);
+                console.log(`🔍“¡ Using API: ${apiUrl}`);
+                console.log(`🔍“¦ Payload:`, updatePayload);
                 
                 // Retry mechanism for failed requests
                 let response;
@@ -9834,7 +4946,7 @@
                 
                 for (let attempt = 1; attempt <= 3; attempt++) {
                     try {
-                        console.log(`🔄 Attempt ${attempt}/3: Updating ${columnName}`);
+                        console.log(`🔍”„ Attempt ${attempt}/3: Updating ${columnName}`);
                         
                         response = await fetch(apiUrl, {
                             method: 'PUT',
@@ -9851,14 +4963,14 @@
                             lastError = new Error(`API update failed (${response.status}): ${errorText}`);
                             
                             if (attempt < 3) {
-                                console.log(`⚠️ Attempt ${attempt} failed, retrying in 1 second...`);
+                                console.log(`âš ï¸ Attempt ${attempt} failed, retrying in 1 second...`);
                                 await new Promise(resolve => setTimeout(resolve, 1000));
                             }
                         }
                     } catch (error) {
                         lastError = error;
                         if (attempt < 3) {
-                            console.log(`⚠️ Attempt ${attempt} failed with error: ${error.message}, retrying in 1 second...`);
+                            console.log(`âš ï¸ Attempt ${attempt} failed with error: ${error.message}, retrying in 1 second...`);
                             await new Promise(resolve => setTimeout(resolve, 1000));
                         }
                     }
@@ -9869,7 +4981,7 @@
                 }
                 
                 const result = await response.json();
-                console.log(`✅ Safe update successful:`, result);
+                console.log(`âœ… Safe update successful:`, result);
                 
                 // Update local data
                 if (originalTableData[rowIndex]) {
@@ -9885,15 +4997,15 @@
                 return true;
                 
             } catch (error) {
-                console.error('❌ Safe update failed:', error);
+                console.error('âŒ Safe update failed:', error);
                 throw error;
             }
         };
         
         // Function to find the correct record in Supabase by content matching
         window.findCorrectRecord = async function(websiteRecord) {
-            console.log('🔍 Finding correct record in Supabase by content matching...');
-            console.log('🌐 Website record to match:', websiteRecord);
+            console.log('🔍” Finding correct record in Supabase by content matching...');
+            console.log('🔍Œ Website record to match:', websiteRecord);
             
             try {
                 // Get all Supabase data
@@ -9920,12 +5032,12 @@
                 } else if (supabaseData.data && Array.isArray(supabaseData.data)) {
                     records = supabaseData.data;
                 } else {
-                    console.error('❌ Unexpected data format from API:', supabaseData);
+                    console.error('âŒ Unexpected data format from API:', supabaseData);
                     throw new Error('Invalid data format received from API');
                 }
                 
-                console.log(`🔍 Searching through ${records.length} records in Supabase...`);
-                console.log('🗄️ First 3 Supabase records for comparison:', records.slice(0, 3));
+                console.log(`🔍” Searching through ${records.length} records in Supabase...`);
+                console.log('🔍—„ï¸ First 3 Supabase records for comparison:', records.slice(0, 3));
                 
                 // Try to find a record that matches the content
                 let bestMatch = null;
@@ -9960,7 +5072,7 @@
                     
                     // Log detailed comparison for first few records
                     if (i < 5) {
-                        console.log(`\n📊 Record ${i} comparison:`);
+                        console.log(`\n🔍“Š Record ${i} comparison:`);
                         console.log(`   Match: ${matchScore}/${totalFields} fields (${matchPercentage.toFixed(1)}%)`);
                         console.log(`   Matching fields:`, matchingFields);
                         console.log(`   Mismatching fields:`, mismatchingFields);
@@ -9982,7 +5094,7 @@
                     
                     // If we have a very good match (90% or more fields match), use it immediately
                     if (matchPercentage >= 90) {
-                        console.log(`✅ Found excellent match at index ${i} with ${matchPercentage.toFixed(1)}% similarity`);
+                        console.log(`âœ… Found excellent match at index ${i} with ${matchPercentage.toFixed(1)}% similarity`);
                         console.log('Matching fields:', matchingFields);
                         console.log('Website record:', websiteRecord);
                         console.log('Supabase record:', supabaseRecord);
@@ -10004,7 +5116,7 @@
                 
                 // If no excellent match found, use the best match if it's reasonable
                 if (bestMatch && bestMatchScore >= 50) {
-                    console.log(`⚠️ Using best match at index ${bestMatch.index} with ${bestMatchScore.toFixed(1)}% similarity`);
+                    console.log(`âš ï¸ Using best match at index ${bestMatch.index} with ${bestMatchScore.toFixed(1)}% similarity`);
                     console.log('Best match details:', bestMatch);
                     
                     const supabaseRecord = bestMatch.record;
@@ -10021,19 +5133,19 @@
                     }
                 }
                 
-                console.log('❌ No matching record found in Supabase');
+                console.log('âŒ No matching record found in Supabase');
                 console.log('Best match was:', bestMatch);
                 return null;
                 
             } catch (error) {
-                console.error('❌ Error finding correct record:', error);
+                console.error('âŒ Error finding correct record:', error);
                 return null;
             }
         };
         
         // Auto-detect and fix common issues when entering edit mode
         async function autoDetectAndFix() {
-            console.log('🔍 Auto-detecting and fixing common issues...');
+            console.log('🔍” Auto-detecting and fixing common issues...');
             
             // Auto-detect ID field if not set
             if (!window.recordIdField && editedTableData.length > 0) {
@@ -10043,7 +5155,7 @@
                 for (const field of possibleIdFields) {
                     if (sampleRecord.hasOwnProperty(field) && sampleRecord[field] !== null && sampleRecord[field] !== undefined) {
                         window.recordIdField = field;
-                        console.log(`✅ Auto-detected ID field: ${field}`);
+                        console.log(`âœ… Auto-detected ID field: ${field}`);
                         break;
                     }
                 }
@@ -10051,7 +5163,7 @@
                 // If still no ID found, use first field
                 if (!window.recordIdField) {
                     window.recordIdField = Object.keys(sampleRecord)[0];
-                    console.log(`⚠️ Using first field as ID: ${window.recordIdField}`);
+                    console.log(`âš ï¸ Using first field as ID: ${window.recordIdField}`);
                 }
             }
             
@@ -10068,21 +5180,21 @@
                 });
                 
                 if (testResponse.ok) {
-                    console.log('✅ API connection test successful');
+                    console.log('âœ… API connection test successful');
                 } else {
-                    console.warn('⚠️ API connection test failed:', testResponse.status);
+                    console.warn('âš ï¸ API connection test failed:', testResponse.status);
                 }
             } catch (error) {
-                console.warn('⚠️ API connection test error:', error.message);
+                console.warn('âš ï¸ API connection test error:', error.message);
             }
             
-            console.log('✅ Auto-detection complete');
+            console.log('âœ… Auto-detection complete');
         }
 
         // Test Supabase write permissions
         async function testSupabaseWritePermissions() {
             try {
-                console.log('🧪 Testing Supabase write permissions...');
+                console.log('🔍§ª Testing Supabase write permissions...');
                 
                 const supabaseUrl = 'https://icavnpspgmcrrqmsprze.supabase.co';
                 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljYXZucHNwZ21jcnJxbXNwcnplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0NzEyMzMsImV4cCI6MjA3MzA0NzIzM30.5_-LPYwj5ks_KyCXwCae2mcbI-T7em48RsMiv4Oaurk';
@@ -10097,19 +5209,19 @@
                     }
                 });
                 
-                console.log(`🔍 Read test response status: ${response.status}`);
+                console.log(`🔍” Read test response status: ${response.status}`);
                 
                 if (response.ok) {
                     const data = await response.json();
-                    console.log('✅ Read permissions: OK');
-                    console.log('📊 Table structure:', data[0] || 'No records found');
+                    console.log('âœ… Read permissions: OK');
+                    console.log('🔍“Š Table structure:', data[0] || 'No records found');
                     
                     if (data.length > 0) {
                         const sampleRecord = data[0];
                         const idField = Object.keys(sampleRecord)[0]; // Use first field as ID
                         const recordId = sampleRecord[idField];
                         
-                        console.log(`🔍 Testing update with ${idField}=${recordId}`);
+                        console.log(`🔍” Testing update with ${idField}=${recordId}`);
                         
                         // Try a harmless update (update a field with the same value)
                         const testUpdateData = { ...sampleRecord };
@@ -10126,28 +5238,28 @@
                             body: JSON.stringify(testUpdateData)
                         });
                         
-                        console.log(`🔍 Write test response status: ${updateResponse.status}`);
+                        console.log(`🔍” Write test response status: ${updateResponse.status}`);
                         
                         if (updateResponse.ok) {
-                            console.log('✅ Write permissions: OK');
+                            console.log('âœ… Write permissions: OK');
                             return { canRead: true, canWrite: true, idField: idField };
                         } else {
                             const errorText = await updateResponse.text();
-                            console.error('❌ Write permissions: FAILED', updateResponse.status, errorText);
+                            console.error('âŒ Write permissions: FAILED', updateResponse.status, errorText);
                             return { canRead: true, canWrite: false, error: errorText };
                         }
                     } else {
-                        console.log('⚠️ No records found to test write permissions');
+                        console.log('âš ï¸ No records found to test write permissions');
                         return { canRead: true, canWrite: false, error: 'No records found' };
                     }
                 } else {
                     const errorText = await response.text();
-                    console.error('❌ Read permissions: FAILED', response.status, errorText);
+                    console.error('âŒ Read permissions: FAILED', response.status, errorText);
                     return { canRead: false, canWrite: false, error: errorText };
                 }
                 
             } catch (error) {
-                console.error('❌ Permission test failed:', error);
+                console.error('âŒ Permission test failed:', error);
                 return { canRead: false, canWrite: false, error: error.message };
             }
         }
@@ -10157,11 +5269,11 @@
 
         // Add new row function
         async function addNewRow() {
-            console.log('➕ Adding new row...');
+            console.log('âž• Adding new row...');
             
             // Check if we have data structure to work with
             if (!window.currentTableData || window.currentTableData.length === 0) {
-                showNotification('❌ No data loaded. Please load data first.', 'error');
+                showNotification('âŒ No data loaded. Please load data first.', 'error');
                 return;
             }
             
@@ -10183,7 +5295,7 @@
             displayTableData(window.currentTableData);
             
             // Show success message
-            showNotification('✅ New row added! Click on cells to edit and save to database.', 'success');
+            showNotification('âœ… New row added! Click on cells to edit and save to database.', 'success');
             
             // Scroll to the new row (last row)
             setTimeout(() => {
@@ -10202,7 +5314,7 @@
 
         // Add Beanie data to main table
         function addBeanieDataToMainTable(formData) {
-            console.log('📊 Adding Beanie data to main table...');
+            console.log('🔍“Š Adding Beanie data to main table...');
             
             if (!window.currentTableData) {
                 window.currentTableData = [];
@@ -10230,12 +5342,12 @@
             // Refresh the table display
             displayTableData(window.currentTableData);
             
-            console.log('✅ Beanie data added to main table');
+            console.log('âœ… Beanie data added to main table');
         }
 
         // Add BallCaps data to main table
         function addBallCapsDataToMainTable(formData) {
-            console.log('📊 Adding BallCaps data to main table...');
+            console.log('🔍“Š Adding BallCaps data to main table...');
             
             if (!window.currentTableData) {
                 window.currentTableData = [];
@@ -10263,12 +5375,12 @@
             // Refresh the table display
             displayTableData(window.currentTableData);
             
-            console.log('✅ BallCaps data added to main table');
+            console.log('âœ… BallCaps data added to main table');
         }
 
         // Save new row to database
         async function saveNewRowToDatabase(rowIndex) {
-            console.log(`💾 Saving new row ${rowIndex} to database...`);
+            console.log(`🔍’¾ Saving new row ${rowIndex} to database...`);
             
             const rowData = editedTableData[rowIndex];
             if (!rowData) {
@@ -10290,7 +5402,7 @@
             
             // Only insert if there's actual data
             if (Object.keys(dataToInsert).length === 0) {
-                console.log('⚠️ No data to insert, skipping...');
+                console.log('âš ï¸ No data to insert, skipping...');
                 return;
             }
             
@@ -10315,23 +5427,23 @@
                 }
                 
                 const result = await response.json();
-                console.log('✅ New row saved to database:', result);
+                console.log('âœ… New row saved to database:', result);
                 
                 // Update the local data with the new ID from database
                 if (result && result.length > 0 && result[0].id) {
                     editedTableData[rowIndex].id = result[0].id;
                     window.currentTableData[rowIndex].id = result[0].id;
-                    console.log(`✅ Row ${rowIndex} now has ID: ${result[0].id}`);
+                    console.log(`âœ… Row ${rowIndex} now has ID: ${result[0].id}`);
                 }
                 
                 // Show success notification
-                showNotification('✅ New row saved to database successfully!', 'success');
+                showNotification('âœ… New row saved to database successfully!', 'success');
                 
                 return result;
                 
             } catch (error) {
-                console.error('❌ Failed to save new row to database:', error);
-                showNotification(`❌ Failed to save new row: ${error.message}`, 'error');
+                console.error('âŒ Failed to save new row to database:', error);
+                showNotification(`âŒ Failed to save new row: ${error.message}`, 'error');
                 throw error;
             }
         }
@@ -10379,7 +5491,7 @@
             showEditModeIndicator();
             
             // Show ready status
-            showNotification('✅ Edit mode ready - Click any cell to edit', 'success');
+            showNotification('âœ… Edit mode ready - Click any cell to edit', 'success');
             
             // Make cells editable
             makeCellsEditable();
@@ -10466,7 +5578,7 @@
             const storedRowIndex = parseInt(cell.dataset.rowIndex) - 1; // -1 because we skip header
             const storedCellIndex = parseInt(cell.dataset.cellIndex);
             
-            console.log(`🔍 Saving cell edit: row ${storedRowIndex}, cell ${storedCellIndex}, value: "${newValue}"`);
+            console.log(`🔍” Saving cell edit: row ${storedRowIndex}, cell ${storedCellIndex}, value: "${newValue}"`);
             
             // Update the data safely
             if (editedTableData[storedRowIndex]) {
@@ -10474,25 +5586,25 @@
                 if (columnNames[storedCellIndex]) {
                     const columnName = columnNames[storedCellIndex];
                     editedTableData[storedRowIndex][columnName] = newValue;
-                    console.log(`✅ Updated data: ${columnName} = "${newValue}"`);
+                    console.log(`âœ… Updated data: ${columnName} = "${newValue}"`);
                     
                     // Update local data as well
                     if (allTableData[storedRowIndex]) {
                         allTableData[storedRowIndex][columnName] = newValue;
                     }
                 } else {
-                    console.warn(`⚠️ Column not found at index ${storedCellIndex}`);
+                    console.warn(`âš ï¸ Column not found at index ${storedCellIndex}`);
                 }
             } else {
-                console.warn(`⚠️ Row not found at index ${storedRowIndex}`);
+                console.warn(`âš ï¸ Row not found at index ${storedRowIndex}`);
             }
             
             // Update cell display without refreshing the table
             try {
-                cell.innerHTML = newValue || '<span style="color: #6c757d; font-style: italic;">—</span>';
+                cell.innerHTML = newValue || '<span style="color: #6c757d; font-style: italic;">â€”</span>';
             } catch (error) {
-                console.warn('⚠️ DOM update error, using textContent instead:', error);
-                cell.textContent = newValue || '—';
+                console.warn('âš ï¸ DOM update error, using textContent instead:', error);
+                cell.textContent = newValue || 'â€”';
             }
             cell.classList.remove('editable-cell');
             
@@ -10508,7 +5620,7 @@
                 
                 // Add a small indicator that this cell was changed
                 const indicator = document.createElement('span');
-                indicator.innerHTML = '🔄';
+                indicator.innerHTML = '🔍”„';
                 indicator.style.cssText = `
                     position: absolute;
                     top: 2px;
@@ -10547,43 +5659,43 @@
                             if (hasId) {
                                 // Existing row - update in database
                                 await safeUpdateSupabase(storedRowIndex, columnName, newValue);
-                                console.log(`✅ Cell ${columnName} updated in database`);
+                                console.log(`âœ… Cell ${columnName} updated in database`);
                             } else {
                                 // New row - save entire row to database
                                 await saveNewRowToDatabase(storedRowIndex);
-                                console.log(`✅ New row ${storedRowIndex} saved to database`);
+                                console.log(`âœ… New row ${storedRowIndex} saved to database`);
                             }
                             
                             // Change indicator to success
-                            indicator.innerHTML = '✅';
+                            indicator.innerHTML = 'âœ…';
                             indicator.style.color = '#28a745';
                             cell.style.backgroundColor = 'rgba(40, 167, 69, 0.1)';
                             cell.style.borderLeft = '3px solid #28a745';
                         } catch (error) {
-                            console.error(`❌ Failed to save ${columnName}:`, error.message);
+                            console.error(`âŒ Failed to save ${columnName}:`, error.message);
                             
                             // Check if it's a network error
                             if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
                                 // Save locally as fallback
-                                console.log(`💾 Saving ${columnName} locally as fallback`);
+                                console.log(`🔍’¾ Saving ${columnName} locally as fallback`);
                                 
                                 // Change indicator to warning (saved locally)
-                                indicator.innerHTML = '💾';
+                                indicator.innerHTML = '🔍’¾';
                                 indicator.style.color = '#ffc107';
                                 cell.style.backgroundColor = 'rgba(255, 193, 7, 0.1)';
                                 cell.style.borderLeft = '3px solid #ffc107';
                                 
                                 // Show warning notification
-                                showNotification(`⚠️ Saved ${columnName} locally (network unavailable)`, 'warning');
+                                showNotification(`âš ï¸ Saved ${columnName} locally (network unavailable)`, 'warning');
                             } else {
                                 // Change indicator to error
-                                indicator.innerHTML = '❌';
+                                indicator.innerHTML = 'âŒ';
                                 indicator.style.color = '#dc3545';
                                 cell.style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
                                 cell.style.borderLeft = '3px solid #dc3545';
                                 
                                 // Show error notification
-                                showNotification(`❌ Failed to save ${columnName}: ${error.message}`, 'error');
+                                showNotification(`âŒ Failed to save ${columnName}: ${error.message}`, 'error');
                             }
                         }
                         
@@ -10613,7 +5725,7 @@
 
         // Cancel cell edit
         function cancelCellEdit(cell, originalValue) {
-            cell.innerHTML = originalValue || '<span style="color: #6c757d; font-style: italic;">—</span>';
+            cell.innerHTML = originalValue || '<span style="color: #6c757d; font-style: italic;">â€”</span>';
             cell.classList.remove('editable-cell');
         }
 
@@ -10628,7 +5740,7 @@
             // Create new indicator
             const indicator = document.createElement('div');
             indicator.className = 'edit-mode-indicator';
-            indicator.innerHTML = '✏️ Edit Mode Active - Click cells to edit • 🔄 Auto-save to database enabled';
+            indicator.innerHTML = 'âœï¸ Edit Mode Active - Click cells to edit â€¢ 🔍”„ Auto-save to database enabled';
             document.body.appendChild(indicator);
         }
 
@@ -10651,7 +5763,7 @@
             const table = document.querySelector('.table');
             const tableContainer = document.querySelector('.data-table-container');
             
-            console.log('🔄 Cancelling edit mode...');
+            console.log('🔍”„ Cancelling edit mode...');
             
             // Clear all pending updates
             clearAllPendingUpdates();
@@ -10672,9 +5784,9 @@
             try {
                 editedTableData = JSON.parse(JSON.stringify(originalTableData));
                 allTableData = [...originalTableData];
-                console.log('✅ Data reset to original values');
+                console.log('âœ… Data reset to original values');
             } catch (error) {
-                console.error('❌ Error resetting data:', error);
+                console.error('âŒ Error resetting data:', error);
             }
             
             // DON'T refresh the table - it causes data to move around
@@ -10684,15 +5796,15 @@
             
             // Re-enable data reloads
             preventDataReload = false;
-            console.log('✅ Data reload prevention cleared (cancelled)');
+            console.log('âœ… Data reload prevention cleared (cancelled)');
             
             // Show cancellation message
-            showNotification('❌ Changes cancelled. Table reverted to original data.', 'info');
+            showNotification('âŒ Changes cancelled. Table reverted to original data.', 'info');
         }
 
         // Save table changes
         async function saveTableChanges() {
-            console.log('🎯 saveTableChanges() function called!');
+            console.log('🔍Ž¯ saveTableChanges() function called!');
             
             const editBtn = document.getElementById('editTableBtn');
             const doneBtn = document.getElementById('doneEditBtn');
@@ -10705,7 +5817,7 @@
                 clearAllPendingUpdates();
                 
                 // Show loading state
-                doneBtn.innerHTML = '💾 Saving...';
+                doneBtn.innerHTML = '🔍’¾ Saving...';
                 doneBtn.disabled = true;
                 
                 // Wait a moment for any pending real-time updates to complete
@@ -10714,13 +5826,13 @@
                 // Update local data to reflect the edited changes
                 allTableData = [...editedTableData];
                 
-                console.log('✅ All changes have been saved with safe Supabase updates');
+                console.log('âœ… All changes have been saved with safe Supabase updates');
                 
                 // Update UI
                 editBtn.style.display = 'inline-block';
                 doneBtn.style.display = 'none';
                 cancelBtn.style.display = 'none';
-                doneBtn.innerHTML = '✅ Done';
+                doneBtn.innerHTML = 'âœ… Done';
                 doneBtn.disabled = false;
                 
                 // Remove edit mode classes
@@ -10741,18 +5853,18 @@
                 // Re-enable data reloads after a short delay
                 setTimeout(() => {
                     preventDataReload = false;
-                    console.log('✅ Data reload prevention cleared');
+                    console.log('âœ… Data reload prevention cleared');
                 }, 2000);
                 
                 // Show success message
-                showNotification('✅ All changes saved successfully to Supabase!', 'success');
+                showNotification('âœ… All changes saved successfully to Supabase!', 'success');
                 
             } catch (error) {
                 console.error('Error saving table changes:', error);
-                showNotification('❌ Error saving changes. Please try again.', 'error');
+                showNotification('âŒ Error saving changes. Please try again.', 'error');
                 
                 // Reset button state
-                doneBtn.innerHTML = '✅ Done';
+                doneBtn.innerHTML = 'âœ… Done';
                 doneBtn.disabled = false;
             }
         }
@@ -10769,22 +5881,22 @@
                     
                     if (typeof supabase !== 'undefined') {
                         supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-                        console.log('✅ Supabase client initialized successfully');
+                        console.log('âœ… Supabase client initialized successfully');
                         return true;
                     } else {
                         retryCount++;
-                        console.log(`⏳ Waiting for Supabase library to load... (attempt ${retryCount}/${maxRetries})`);
+                        console.log(`â³ Waiting for Supabase library to load... (attempt ${retryCount}/${maxRetries})`);
                         
                         if (retryCount < maxRetries) {
                             // Wait 1 second before retrying
                             await new Promise(resolve => setTimeout(resolve, 1000));
                         } else {
-                            console.error('❌ Supabase library failed to load after maximum retries');
+                            console.error('âŒ Supabase library failed to load after maximum retries');
                             return false;
                         }
                     }
                 } catch (error) {
-                    console.error('❌ Error initializing Supabase client:', error);
+                    console.error('âŒ Error initializing Supabase client:', error);
                     return false;
                 }
             }
@@ -10794,8 +5906,8 @@
 
         // Sync table data to Supabase using existing API infrastructure
         async function syncTableDataToSupabase() {
-            console.log('🔄 Starting sync process...');
-            console.log('🔍 Connection ID:', connectionId);
+            console.log('🔍”„ Starting sync process...');
+            console.log('🔍” Connection ID:', connectionId);
             
             // Find changed records
             const changedRecords = editedTableData.filter((editedRecord, index) => {
@@ -10807,20 +5919,20 @@
             
             // Debug: Show the first record structure
             if (changedRecords.length > 0) {
-                console.log('🔍 First changed record structure:', changedRecords[0]);
-                console.log('🔍 Original record structure:', originalTableData.find((_, idx) => idx === editedTableData.indexOf(changedRecords[0])));
+                console.log('🔍” First changed record structure:', changedRecords[0]);
+                console.log('🔍” Original record structure:', originalTableData.find((_, idx) => idx === editedTableData.indexOf(changedRecords[0])));
             }
             
             if (changedRecords.length === 0) {
-                console.log('ℹ️ No changes to sync');
+                console.log('â„¹ï¸ No changes to sync');
                 return;
             }
             
-            console.log(`🔄 Found ${changedRecords.length} changed records to sync...`);
-            console.log('📊 Changed records:', changedRecords);
+            console.log(`🔍”„ Found ${changedRecords.length} changed records to sync...`);
+            console.log('🔍“Š Changed records:', changedRecords);
             
             // Always use API-based sync since connectionId might not be set
-            console.log('📡 Using direct API sync to Supabase...');
+            console.log('🔍“¡ Using direct API sync to Supabase...');
             await syncWithAPI(changedRecords);
         }
 
@@ -10837,7 +5949,7 @@
                         const recordId = record.id || record.ID || record[Object.keys(record)[0]];
                         
                         if (!recordId) {
-                            console.warn('⚠️ No ID found for record:', record);
+                            console.warn('âš ï¸ No ID found for record:', record);
                             continue;
                         }
                         
@@ -10846,7 +5958,7 @@
                         delete updateData.id;
                         delete updateData.ID;
                         
-                        console.log(`📝 Updating record ID: ${recordId}`, updateData);
+                        console.log(`🔍“ Updating record ID: ${recordId}`, updateData);
                         
                         // Update the record in Supabase
                         const { data, error } = await supabaseClient
@@ -10855,15 +5967,15 @@
                             .eq('id', recordId);
                         
                         if (error) {
-                            console.error(`❌ Error updating record ${recordId}:`, error);
+                            console.error(`âŒ Error updating record ${recordId}:`, error);
                             errorCount++;
                         } else {
-                            console.log(`✅ Successfully updated record ${recordId}`);
+                            console.log(`âœ… Successfully updated record ${recordId}`);
                             successCount++;
                         }
                         
                     } catch (error) {
-                        console.error('❌ Error processing record:', error);
+                        console.error('âŒ Error processing record:', error);
                         errorCount++;
                     }
                 }
@@ -10873,15 +5985,15 @@
                 
                 // Show appropriate notification
                 if (errorCount === 0) {
-                    showNotification(`✅ Successfully synced ${successCount} records to Supabase!`, 'success');
+                    showNotification(`âœ… Successfully synced ${successCount} records to Supabase!`, 'success');
                 } else if (successCount > 0) {
-                    showNotification(`⚠️ Synced ${successCount} records, ${errorCount} failed`, 'warning');
+                    showNotification(`âš ï¸ Synced ${successCount} records, ${errorCount} failed`, 'warning');
                 } else {
                     throw new Error(`All ${errorCount} records failed to sync`);
                 }
                 
             } catch (error) {
-                console.error('❌ Supabase client sync failed:', error);
+                console.error('âŒ Supabase client sync failed:', error);
                 throw error;
             }
         }
@@ -10889,15 +6001,15 @@
         // Automatic sync to Supabase and update table display
         async function syncWithAPI(changedRecords) {
             try {
-                console.log(`📡 Automatically syncing ${changedRecords.length} records to Supabase...`);
+                console.log(`🔍“¡ Automatically syncing ${changedRecords.length} records to Supabase...`);
                 
                 // First, test Supabase permissions
-                console.log('🧪 Testing Supabase permissions before sync...');
+                console.log('🔍§ª Testing Supabase permissions before sync...');
                 const permissionTest = await testSupabaseWritePermissions();
                 
                 if (!permissionTest.canWrite) {
-                    console.error('❌ Cannot write to Supabase:', permissionTest.error);
-                    showNotification(`❌ Cannot write to database: ${permissionTest.error}`, 'error');
+                    console.error('âŒ Cannot write to Supabase:', permissionTest.error);
+                    showNotification(`âŒ Cannot write to database: ${permissionTest.error}`, 'error');
                     
                     // Still update local data and table display
                     originalTableData = JSON.parse(JSON.stringify(editedTableData));
@@ -10905,13 +6017,13 @@
                     return;
                 }
                 
-                console.log('✅ Supabase write permissions confirmed');
+                console.log('âœ… Supabase write permissions confirmed');
                 
                 // Analyze the record structure to find the correct ID field
                 if (changedRecords.length > 0) {
                     const sampleRecord = changedRecords[0];
-                    console.log('🔍 Analyzing record structure:', sampleRecord);
-                    console.log('🔍 Available fields:', Object.keys(sampleRecord));
+                    console.log('🔍” Analyzing record structure:', sampleRecord);
+                    console.log('🔍” Available fields:', Object.keys(sampleRecord));
                     
                     // Use the ID field from permission test if available
                     let idField = permissionTest.idField;
@@ -10923,7 +6035,7 @@
                         for (const field of possibleIdFields) {
                             if (sampleRecord.hasOwnProperty(field)) {
                                 idField = field;
-                                console.log(`✅ Found ID field: ${idField}`);
+                                console.log(`âœ… Found ID field: ${idField}`);
                                 break;
                             }
                         }
@@ -10931,13 +6043,13 @@
                         if (!idField) {
                             // If no standard ID field found, use the first field
                             idField = Object.keys(sampleRecord)[0];
-                            console.log(`⚠️ No standard ID field found, using first field: ${idField}`);
+                            console.log(`âš ï¸ No standard ID field found, using first field: ${idField}`);
                         }
                     }
                     
                     // Store the ID field for use in updates
                     window.recordIdField = idField;
-                    console.log(`✅ Using ID field: ${idField}`);
+                    console.log(`âœ… Using ID field: ${idField}`);
                 }
                 
                 const supabaseUrl = 'https://icavnpspgmcrrqmsprze.supabase.co';
@@ -10953,11 +6065,11 @@
                         const recordId = record[idField];
                         
                         if (!recordId) {
-                            console.warn('⚠️ No ID found for record:', record);
+                            console.warn('âš ï¸ No ID found for record:', record);
                             continue;
                         }
                         
-                        console.log(`📝 Syncing record with ${idField}=${recordId} to Supabase...`);
+                        console.log(`🔍“ Syncing record with ${idField}=${recordId} to Supabase...`);
                         
                         // Prepare update data (remove ID field from update payload)
                         const updateData = { ...record };
@@ -10970,9 +6082,9 @@
                         // Approach 1: PATCH with correct ID field filter
                         try {
                             const filterUrl = `${supabaseUrl}/rest/v1/databank?${idField}=eq.${recordId}`;
-                            console.log(`🔍 PATCH URL: ${filterUrl}`);
-                            console.log(`🔍 Update data:`, updateData);
-                            console.log(`🔍 Headers:`, {
+                            console.log(`🔍” PATCH URL: ${filterUrl}`);
+                            console.log(`🔍” Update data:`, updateData);
+                            console.log(`🔍” Headers:`, {
                                 'Content-Type': 'application/json',
                                 'apikey': supabaseKey.substring(0, 20) + '...',
                                 'Authorization': `Bearer ${supabaseKey.substring(0, 20)}...`,
@@ -10990,17 +6102,17 @@
                                 body: JSON.stringify(updateData)
                             });
                             
-                            console.log(`🔍 PATCH response status: ${response.status}`);
-                            console.log(`🔍 PATCH response statusText: ${response.statusText}`);
-                            console.log(`🔍 PATCH response headers:`, Object.fromEntries(response.headers.entries()));
+                            console.log(`🔍” PATCH response status: ${response.status}`);
+                            console.log(`🔍” PATCH response statusText: ${response.statusText}`);
+                            console.log(`🔍” PATCH response headers:`, Object.fromEntries(response.headers.entries()));
                             
                             if (response.ok) {
                                 updateSuccess = true;
-                                console.log(`✅ Successfully UPDATED record ${idField}=${recordId} in Supabase`);
+                                console.log(`âœ… Successfully UPDATED record ${idField}=${recordId} in Supabase`);
                             } else {
                                 const errorText = await response.text();
-                                console.error(`❌ PATCH failed (${response.status}): ${errorText}`);
-                                console.error(`❌ Full error details:`, {
+                                console.error(`âŒ PATCH failed (${response.status}): ${errorText}`);
+                                console.error(`âŒ Full error details:`, {
                                     status: response.status,
                                     statusText: response.statusText,
                                     url: response.url,
@@ -11008,8 +6120,8 @@
                                 });
                             }
                         } catch (error) {
-                            console.error(`❌ PATCH request failed:`, error);
-                            console.error(`❌ Error details:`, {
+                            console.error(`âŒ PATCH request failed:`, error);
+                            console.error(`âŒ Error details:`, {
                                 name: error.name,
                                 message: error.message,
                                 stack: error.stack
@@ -11019,12 +6131,12 @@
                         if (updateSuccess) {
                             successCount++;
                         } else {
-                            console.error(`❌ Failed to update record ${idField}=${recordId}`);
+                            console.error(`âŒ Failed to update record ${idField}=${recordId}`);
                             errorCount++;
                         }
                         
                     } catch (error) {
-                        console.error('❌ Error syncing record:', error);
+                        console.error('âŒ Error syncing record:', error);
                         errorCount++;
                     }
                 }
@@ -11033,26 +6145,26 @@
                 originalTableData = JSON.parse(JSON.stringify(editedTableData));
                 
                 // Update the table display immediately
-                console.log('🔄 Updating table display with changes...');
+                console.log('🔍”„ Updating table display with changes...');
                 displayCurrentPageData();
                 
                 // Show appropriate notification
                 if (successCount > 0 && errorCount === 0) {
-                    showNotification(`✅ Successfully updated ${successCount} records in database and table!`, 'success');
+                    showNotification(`âœ… Successfully updated ${successCount} records in database and table!`, 'success');
                 } else if (successCount > 0) {
-                    showNotification(`⚠️ Updated ${successCount} records in database, ${errorCount} failed. Table shows all changes.`, 'warning');
+                    showNotification(`âš ï¸ Updated ${successCount} records in database, ${errorCount} failed. Table shows all changes.`, 'warning');
                 } else {
-                    showNotification(`❌ Database sync failed for all records. Table shows local changes only.`, 'error');
+                    showNotification(`âŒ Database sync failed for all records. Table shows local changes only.`, 'error');
                 }
                 
             } catch (error) {
-                console.error('❌ Sync failed:', error);
+                console.error('âŒ Sync failed:', error);
                 
                 // Even if sync fails, update local data and table display
                 originalTableData = JSON.parse(JSON.stringify(editedTableData));
                 displayCurrentPageData();
                 
-                showNotification(`⚠️ Database sync failed. Changes saved locally and displayed in table.`, 'warning');
+                showNotification(`âš ï¸ Database sync failed. Changes saved locally and displayed in table.`, 'warning');
             }
         }
 
@@ -11116,7 +6228,7 @@
         // Update a single cell using the existing API infrastructure
         async function updateSingleCellInSupabase(rowIndex, columnName, newValue) {
             try {
-                console.log(`🔄 Updating cell: ${columnName} = "${newValue}"`);
+                console.log(`🔍”„ Updating cell: ${columnName} = "${newValue}"`);
                 
                 // Get the record to update
                 const record = editedTableData[rowIndex];
@@ -11162,7 +6274,7 @@
                 
                 // Get the actual ID field name from the record
                 const actualIdField = idField;
-                console.log(`🔑 Using ID field: ${actualIdField} with value: ${recordId}`);
+                console.log(`🔍”‘ Using ID field: ${actualIdField} with value: ${recordId}`);
                 
                 const updatePayload = {
                     table: 'databank',
@@ -11173,11 +6285,11 @@
                     }
                 };
                 
-                console.log(`📡 Using API: ${apiUrl}`);
-                console.log(`📦 Payload:`, updatePayload);
-                console.log(`🔍 Record being updated:`, record);
-                console.log(`🔑 ID Field: ${actualIdField}, ID Value: ${recordId}`);
-                console.log(`📝 Column being updated: ${dbColumnName} = "${newValue}"`);
+                console.log(`🔍“¡ Using API: ${apiUrl}`);
+                console.log(`🔍“¦ Payload:`, updatePayload);
+                console.log(`🔍” Record being updated:`, record);
+                console.log(`🔍”‘ ID Field: ${actualIdField}, ID Value: ${recordId}`);
+                console.log(`🔍“ Column being updated: ${dbColumnName} = "${newValue}"`);
                 
                 // Retry mechanism for failed requests
                 let response;
@@ -11185,7 +6297,7 @@
                 
                 for (let attempt = 1; attempt <= 3; attempt++) {
                     try {
-                        console.log(`🔄 Attempt ${attempt}/3: Updating ${columnName}`);
+                        console.log(`🔍”„ Attempt ${attempt}/3: Updating ${columnName}`);
                         
                         response = await fetch(apiUrl, {
                             method: 'PUT',
@@ -11202,14 +6314,14 @@
                             lastError = new Error(`API update failed (${response.status}): ${errorText}`);
                             
                             if (attempt < 3) {
-                                console.log(`⚠️ Attempt ${attempt} failed, retrying in 1 second...`);
+                                console.log(`âš ï¸ Attempt ${attempt} failed, retrying in 1 second...`);
                                 await new Promise(resolve => setTimeout(resolve, 1000));
                             }
                         }
                     } catch (error) {
                         lastError = error;
                         if (attempt < 3) {
-                            console.log(`⚠️ Attempt ${attempt} failed with error: ${error.message}, retrying in 1 second...`);
+                            console.log(`âš ï¸ Attempt ${attempt} failed with error: ${error.message}, retrying in 1 second...`);
                             await new Promise(resolve => setTimeout(resolve, 1000));
                         }
                     }
@@ -11220,7 +6332,7 @@
                 }
                 
                 const result = await response.json();
-                console.log(`✅ Update successful:`, result);
+                console.log(`âœ… Update successful:`, result);
                 
                 // Update the original data to reflect the change
                 if (originalTableData[rowIndex]) {
@@ -11235,12 +6347,12 @@
                 // Store the successful ID field for future updates
                 window.recordIdField = idField;
                 
-                console.log(`✅ Data updated in memory - row ${rowIndex}, column ${columnName} = "${newValue}"`);
+                console.log(`âœ… Data updated in memory - row ${rowIndex}, column ${columnName} = "${newValue}"`);
                 
                 return true;
                 
             } catch (error) {
-                console.error(`❌ Error updating cell:`, error.message);
+                console.error(`âŒ Error updating cell:`, error.message);
                 throw error;
             }
         }
@@ -11315,7 +6427,7 @@
 
         // Drag & Drop functionality for both templates
         function initializeDragDrop() {
-            console.log('🚀 Initializing drag & drop functionality...');
+            console.log('[INIT] Initializing drag & drop functionality...');
             console.log('Document body:', document.body);
             console.log('Document ready state:', document.readyState);
             
@@ -11324,14 +6436,14 @@
             console.log('Drag drop areas:', dragDropAreas);
             
             if (dragDropAreas.length === 0) {
-                console.error('❌ No drag drop areas found!');
+                console.error('âŒ No drag drop areas found!');
                 console.error('Available elements with "drag" in class:', document.querySelectorAll('[class*="drag"]'));
                 console.error('Available elements with "drop" in class:', document.querySelectorAll('[class*="drop"]'));
                 return;
             }
             
             dragDropAreas.forEach((dragDropArea, index) => {
-                console.log(`🔧 Initializing drag drop area ${index + 1}:`, dragDropArea);
+                console.log(`🔍”§ Initializing drag drop area ${index + 1}:`, dragDropArea);
                 
                 // Remove existing event listeners to prevent duplicates
                 const newDragDropArea = dragDropArea.cloneNode(true);
@@ -11379,10 +6491,10 @@
                     }
                 });
                 
-                console.log(`✅ Drag drop area ${index + 1} initialized successfully`);
+                console.log(`âœ… Drag drop area ${index + 1} initialized successfully`);
             });
             
-            console.log('✅ All drag & drop areas initialized successfully');
+            console.log('âœ… All drag & drop areas initialized successfully');
         }
 
         function preventDefaults(e) {
@@ -11391,17 +6503,17 @@
         }
 
         function highlight(e, dragDropArea) {
-            console.log('🎯 Highlight called');
+            console.log('🔍Ž¯ Highlight called');
             dragDropArea.classList.add('drag-over');
         }
 
         function unhighlight(e, dragDropArea) {
-            console.log('🎯 Unhighlight called');
+            console.log('🔍Ž¯ Unhighlight called');
             dragDropArea.classList.remove('drag-over');
         }
 
         function handleDrop(e, dragDropArea) {
-            console.log('🎯 Handle drop called');
+            console.log('🔍Ž¯ Handle drop called');
             e.preventDefault();
             e.stopPropagation();
             
@@ -11440,13 +6552,13 @@
                 });
                 
                 dragDropIcons.forEach(dragDropIcon => {
-                    dragDropIcon.textContent = '✅';
+                    dragDropIcon.textContent = 'âœ…';
                 });
                 
-                console.log('✅ All drag drop areas updated with file name');
+                console.log('âœ… All drag drop areas updated with file name');
                 
                 // Automatically process the file
-                console.log('🔄 Auto-processing new file...');
+                console.log('🔍”„ Auto-processing new file...');
                 setTimeout(() => {
                     processImportedFile();
                 }, 100);
@@ -11457,7 +6569,7 @@
 
         // Function to clear previous data when new file is uploaded
         function clearPreviousData() {
-            console.log('🧹 Clearing previous data...');
+            console.log('🔍§¹ Clearing previous data...');
             
             // Clear global variables
             window.lastExcelData = null;
@@ -11515,7 +6627,7 @@
                 img.src = '';
             });
             
-            console.log('✅ Previous data cleared');
+            console.log('âœ… Previous data cleared');
         }
 
         function resetDragDrop() {
@@ -11523,7 +6635,7 @@
             const dragDropIcon = document.querySelector('.drag-drop-icon');
             
             if (dragDropText && dragDropIcon) {
-                dragDropIcon.textContent = '📁';
+                dragDropIcon.textContent = '🔍“';
                 dragDropText.innerHTML = 'drag & drop<br>or click to select';
             }
         }
@@ -11547,11 +6659,11 @@
                 });
                 
                 dragDropIcons.forEach(dragDropIcon => {
-                    dragDropIcon.textContent = '✅';
+                    dragDropIcon.textContent = 'âœ…';
                 });
                 
                 // Automatically process the file
-                console.log('🔄 Auto-processing new file...');
+                console.log('🔍”„ Auto-processing new file...');
                 setTimeout(() => {
                     processImportedFile();
                 }, 100);
@@ -11570,7 +6682,7 @@
 
         // Function to initialize utilities
         function initializeUtilities() {
-            console.log('🔧 Initializing utilities...');
+            console.log('🔍”§ Initializing utilities...');
             console.log('Available classes:', {
                 TNFBeanieImporter: typeof TNFBeanieImporter,
                 TNFBallCapsImporter: typeof TNFBallCapsImporter,
@@ -11581,18 +6693,18 @@
                 if (typeof TNFBeanieImporter !== 'undefined' && typeof TNFBallCapsImporter !== 'undefined') {
                     beanieImporter = new TNFBeanieImporter();
                     ballcapsImporter = new TNFBallCapsImporter();
-                    console.log('✅ Utilities initialized successfully');
+                    console.log('âœ… Utilities initialized successfully');
                     return true;
                 } else {
-                    console.error('❌ Required classes not available:', {
+                    console.error('âŒ Required classes not available:', {
                         TNFBeanieImporter: typeof TNFBeanieImporter,
                         TNFBallCapsImporter: typeof TNFBallCapsImporter
                     });
-                    console.log('🔄 Will retry initialization in 500ms...');
+                    console.log('🔍”„ Will retry initialization in 500ms...');
                     return false;
                 }
             } catch (error) {
-                console.error('❌ Error initializing utilities:', error);
+                console.error('âŒ Error initializing utilities:', error);
                 console.error('Error details:', error.message, error.stack);
                 return false;
             }
@@ -11606,9 +6718,9 @@
 
             // Check if utilities are initialized
             if (!beanieImporter || !ballcapsImporter) {
-                console.log('🔄 Utilities not initialized, attempting to initialize...');
+                console.log('🔍”„ Utilities not initialized, attempting to initialize...');
                 if (!initializeUtilities()) {
-                    console.error('❌ Failed to initialize utilities');
+                    console.error('âŒ Failed to initialize utilities');
                     alert('Import utilities not ready. Please refresh the page and try again.');
                     return;
                 }
@@ -11623,7 +6735,7 @@
                 }
 
                 // Read file content using utility
-                console.log('🔍 DEBUGGING FILE READING:');
+                console.log('🔍” DEBUGGING FILE READING:');
                 console.log('File name:', uploadedFile.name);
                 console.log('File size:', uploadedFile.size);
                 console.log('File type:', uploadedFile.type);
@@ -11658,7 +6770,7 @@
                     parsedData = ballcapsImporter.parseExcelData(rawData);
                 } else {
                     console.log('Using TNF Beanie Importer (default)');
-                    console.log('🔍 DEBUGGING BEANIE PARSER:');
+                    console.log('🔍” DEBUGGING BEANIE PARSER:');
                     console.log('Raw data being passed to parser:', rawData);
                     console.log('Data to process:', dataToProcess);
                     console.log('Data to process length:', dataToProcess ? dataToProcess.length : 'no data');
@@ -11666,7 +6778,7 @@
                     try {
                         parsedData = beanieImporter.parseExcelData(rawData);
                         
-                        console.log('🔍 PARSER RESULT:');
+                        console.log('🔍” PARSER RESULT:');
                         console.log('Parsed data type:', typeof parsedData);
                         console.log('Parsed data keys:', parsedData ? Object.keys(parsedData) : 'null');
                         console.log('Parsed data customer:', parsedData ? parsedData.customer : 'null');
@@ -11674,14 +6786,14 @@
                         console.log('Parsed data styleNumber:', parsedData ? parsedData.styleNumber : 'null');
                         console.log('Parsed data styleName:', parsedData ? parsedData.styleName : 'null');
                     } catch (parserError) {
-                        console.error('❌ PARSER ERROR:', parserError);
-                        alert('❌ Parser error: ' + parserError.message);
+                        console.error('âŒ PARSER ERROR:', parserError);
+                        alert('âŒ Parser error: ' + parserError.message);
                         return;
                     }
                 }
                     
                 if (parsedData) {
-                    console.log('🔍 DEBUGGING PARSED DATA:');
+                    console.log('🔍” DEBUGGING PARSED DATA:');
                     console.log('Parsed data:', parsedData);
                     console.log('Data sections found:');
                     console.log('- Customer:', parsedData.customer);
@@ -11700,8 +6812,8 @@
                     
                     // Check if parsed data is empty
                     if (!parsedData.customer && !parsedData.season && !parsedData.styleNumber && !parsedData.styleName) {
-                        console.error('❌ PARSED DATA IS EMPTY! Excel file was not read correctly.');
-                        alert('❌ Excel file was not read correctly. Please check the file format and try again.');
+                        console.error('âŒ PARSED DATA IS EMPTY! Excel file was not read correctly.');
+                        alert('âŒ Excel file was not read correctly. Please check the file format and try again.');
                         return;
                     }
                     
@@ -11711,8 +6823,8 @@
                     // Prevent auto-loading of database data while processing Excel
                     window.isProcessingExcel = true;
                     
-                    console.log('🔄 Starting template population for type:', templateType);
-                    console.log('📊 Parsed data summary:', {
+                    console.log('🔍”„ Starting template population for type:', templateType);
+                    console.log('🔍“Š Parsed data summary:', {
                         customer: parsedData.customer,
                         season: parsedData.season,
                         styleNumber: parsedData.styleNumber,
@@ -11737,8 +6849,8 @@
                     
                     // Ensure interface is fully updated
                     setTimeout(() => {
-                        console.log('✅ Template population completed for', templateType, 'template');
-                        console.log('✅ Interface should now show updated data for:', parsedData.customer, parsedData.styleNumber);
+                        console.log('âœ… Template population completed for', templateType, 'template');
+                        console.log('âœ… Interface should now show updated data for:', parsedData.customer, parsedData.styleNumber);
                         
                         // Show drag-drop options after successful import
                         showDragDropOptions();
@@ -11748,8 +6860,8 @@
                     // Reset Excel processing flag
                     window.isProcessingExcel = false;
                 } else {
-                    console.error('❌ NO PARSED DATA! Excel file parsing failed.');
-                    alert('❌ Excel file parsing failed. Please check the file format and try again.');
+                    console.error('âŒ NO PARSED DATA! Excel file parsing failed.');
+                    alert('âŒ Excel file parsing failed. Please check the file format and try again.');
                 }
                     
                 } catch (error) {
@@ -11758,15 +6870,15 @@
                 
                 // Clear uploaded file state and reinitialize drag & drop even after error
                 uploadedFile = null;
-                console.log('🔄 Cleared uploaded file state after error');
+                console.log('🔍”„ Cleared uploaded file state after error');
                 
                 setTimeout(() => {
-                    console.log('🔄 Reinitializing drag & drop after error...');
+                    console.log('🔍”„ Reinitializing drag & drop after error...');
                     try {
                         initializeDragDrop();
-                        console.log('✅ Drag & drop reinitialized after error');
+                        console.log('âœ… Drag & drop reinitialized after error');
                     } catch (reinitError) {
-                        console.error('❌ Error reinitializing drag & drop after error:', reinitError);
+                        console.error('âŒ Error reinitializing drag & drop after error:', reinitError);
                     }
                 }, 500);
             } finally {
@@ -11786,15 +6898,15 @@
                     
                     // Clear uploaded file state and reinitialize drag & drop for next file upload
                     uploadedFile = null;
-                    console.log('🔄 Cleared uploaded file state for next upload');
+                    console.log('🔍”„ Cleared uploaded file state for next upload');
                     
                     setTimeout(() => {
-                        console.log('🔄 Reinitializing drag & drop after successful import...');
+                        console.log('🔍”„ Reinitializing drag & drop after successful import...');
                         try {
                             initializeDragDrop();
-                            console.log('✅ Drag & drop reinitialized after import');
+                            console.log('âœ… Drag & drop reinitialized after import');
                         } catch (error) {
-                            console.error('❌ Error reinitializing drag & drop after import:', error);
+                            console.error('âŒ Error reinitializing drag & drop after import:', error);
                         }
                     }, 500);
                 }, 1000);
@@ -11806,7 +6918,7 @@
 
         // Clear any existing database data from the interface
         function clearDatabaseData() {
-            console.log('🧹 Clearing database data from interface...');
+            console.log('🔍§¹ Clearing database data from interface...');
             
             // Clear product information
             const productInfo = document.querySelector('.product-info');
@@ -11860,12 +6972,12 @@
                 cell.textContent = '';
             });
             
-            console.log('✅ All extracted data cleared from interface');
+            console.log('âœ… All extracted data cleared from interface');
         }
 
         // Dynamic drag-drop functionality
         function showDragDropOptions() {
-            console.log('📁 Showing drag-drop options after file processing...');
+            console.log('🔍“ Showing drag-drop options after file processing...');
             const dragDropAreas = document.querySelectorAll('.drag-drop-area');
             dragDropAreas.forEach(area => {
                 area.classList.add('has-file');
@@ -11877,7 +6989,7 @@
         }
 
         function hideDragDropOptions() {
-            console.log('📁 Hiding drag-drop options...');
+            console.log('🔍“ Hiding drag-drop options...');
             const dragDropAreas = document.querySelectorAll('.drag-drop-area');
             dragDropAreas.forEach(area => {
                 area.classList.remove('has-file');
@@ -11889,7 +7001,7 @@
         }
 
         function uploadAnotherFile() {
-            console.log('📁 Upload another file clicked...');
+            console.log('🔍“ Upload another file clicked...');
             const fileInput = document.getElementById('fileInput');
             if (fileInput) {
                 fileInput.click();
@@ -11897,7 +7009,7 @@
         }
 
         function clearForm() {
-            console.log('🗑️ Clear form clicked...');
+            console.log('🔍—‘ï¸ Clear form clicked...');
             
             // Clear all extracted data
             clearDatabaseData();
@@ -11918,11 +7030,11 @@
             if (beanieTemplate) beanieTemplate.style.display = 'block';
             if (ballcapsTemplate) ballcapsTemplate.style.display = 'none';
             
-            console.log('✅ Form cleared successfully - templates remain visible');
+            console.log('âœ… Form cleared successfully - templates remain visible');
         }
 
         function fillTemplateWithData(data) {
-            console.log('🔍 Debugging Beanie template population:');
+            console.log('🔍” Debugging Beanie template population:');
             console.log('- data.moq:', data.moq);
             console.log('- data.costedQuantity:', data.costedQuantity);
             console.log('- data keys:', Object.keys(data));
@@ -11930,13 +7042,13 @@
             // Map costedQuantity to moq if moq is not available
             if (!data.moq && data.costedQuantity) {
                 data.moq = data.costedQuantity;
-                console.log('✅ Mapped costedQuantity to moq:', data.moq);
+                console.log('âœ… Mapped costedQuantity to moq:', data.moq);
             }
             
             // Fill Product Information - Target the visible beanie template specifically
             const visibleTemplate = document.querySelector('#costBreakdown:not([style*="display: none"]) .product-info');
             if (!visibleTemplate) {
-                console.error('❌ No visible beanie template found for product info');
+                console.error('âŒ No visible beanie template found for product info');
                 return;
             }
             
@@ -11955,9 +7067,9 @@
                 console.log(`- Processing ${label}:`, value);
                 if (inputField && value) {
                     inputField.value = value;
-                    console.log(`✅ Set ${label} to:`, value);
+                    console.log(`âœ… Set ${label} to:`, value);
                 } else {
-                    console.log(`❌ Skipped ${label} - no value or element`);
+                    console.log(`âŒ Skipped ${label} - no value or element`);
                 }
             });
 
@@ -11989,7 +7101,7 @@
                             notesContent.appendChild(pricingTiers);
                         }
                         
-                        console.log('✅ Notes populated with', notesLines.length, 'lines');
+                        console.log('âœ… Notes populated with', notesLines.length, 'lines');
                     }
                 }
             }
@@ -12017,7 +7129,7 @@
             fillCostSection('TRIM', data.trim, ['material', 'consumption', 'price', 'cost']);
             
             // Fill KNITTING section
-            console.log('🔍 KNITTING DATA FROM EXCEL:', data.knitting);
+            console.log('🔍” KNITTING DATA FROM EXCEL:', data.knitting);
             fillCostSection('KNITTING', data.knitting, ['machine', 'time', 'sah', 'cost']);
             
             // Fill OPERATIONS section - Updated to match new header structure
@@ -12039,7 +7151,7 @@
                                 if (cells[1]) cells[1].textContent = item.smv || ''; // BLANK column shows SMV values
                                 if (cells[2]) cells[2].textContent = item.costPerMin || ''; // SMV column shows cost per minute
                                 if (cells[3]) cells[3].textContent = item.total || ''; // COST (USD/MIN) column shows total
-                                console.log(`✅ OPERATIONS item ${index}:`, item.operation, item.smv, item.costPerMin, item.total);
+                                console.log(`âœ… OPERATIONS item ${index}:`, item.operation, item.smv, item.costPerMin, item.total);
                             }
                         });
                     }
@@ -12050,7 +7162,7 @@
             fillCostSection('PACKAGING', data.packaging, ['type', 'notes', 'cost']);
             
             // Fill OVERHEAD/PROFIT section
-            console.log('🔍 OVERHEAD DATA FROM EXCEL:', data.overhead);
+            console.log('🔍” OVERHEAD DATA FROM EXCEL:', data.overhead);
             fillCostSection('OVERHEAD/PROFIT', data.overhead, ['type', 'notes', 'cost']);
             
             // Let the calculation system handle totals instead of importing from Excel
@@ -12095,51 +7207,51 @@
         }
 
         function fillCostSection(sectionName, data, columns) {
-            console.log('🔍 fillCostSection called for:', sectionName, 'with data:', data);
+            console.log('🔍” fillCostSection called for:', sectionName, 'with data:', data);
             
             // Only search within the currently visible template
             const visibleTemplate = document.querySelector('.cost-breakdown-container:not([style*="display: none"])');
             if (!visibleTemplate) {
-                console.log('❌ No visible template found');
+                console.log('âŒ No visible template found');
                 return;
             }
             
             const sections = visibleTemplate.querySelectorAll('.cost-section');
-            console.log('🔍 Found', sections.length, 'sections');
+            console.log('🔍” Found', sections.length, 'sections');
             let targetSection = null;
             
             sections.forEach((section, index) => {
                 const header = section.querySelector('.section-header');
                 if (header) {
                     const headerText = header.textContent.trim();
-                    console.log(`🔍 Section ${index}:`, headerText);
+                    console.log(`🔍” Section ${index}:`, headerText);
                     if (headerText === sectionName) {
                     targetSection = section;
-                        console.log('✅ Found target section:', sectionName, 'at index', index);
-                        console.log('✅ Section element:', section);
+                        console.log('âœ… Found target section:', sectionName, 'at index', index);
+                        console.log('âœ… Section element:', section);
                     }
                 }
             });
             
             if (!targetSection) {
-                console.log('❌ No target section found for:', sectionName);
+                console.log('âŒ No target section found for:', sectionName);
                 console.log('Available sections:', Array.from(sections).map(s => s.querySelector('.section-header')?.textContent.trim()));
             }
             
             if (targetSection) {
                 const rows = targetSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
-                console.log(`🔍 Found ${rows.length} data rows for ${sectionName}`);
+                console.log(`🔍” Found ${rows.length} data rows for ${sectionName}`);
                 
                 if (data && Array.isArray(data)) {
-                    console.log(`🔍 Processing ${data.length} data items for ${sectionName}:`, data);
+                    console.log(`🔍” Processing ${data.length} data items for ${sectionName}:`, data);
                     data.forEach((item, index) => {
                         // Skip SUB TOTAL items - they will be handled separately
                         if (item.isSubtotal) {
-                            console.log('⏭️ Skipping subtotal item:', item);
+                            console.log('â­ï¸ Skipping subtotal item:', item);
                             return;
                         }
                         
-                        console.log(`🔍 Processing ${sectionName} item ${index}:`, item);
+                        console.log(`🔍” Processing ${sectionName} item ${index}:`, item);
                         if (rows[index] && item) {
                             const cells = rows[index].querySelectorAll('.cost-cell');
                             // Fill only the cells that exist, up to the minimum of columns.length and cells.length
@@ -12148,21 +7260,21 @@
                                 const column = columns[cellIndex];
                                 if (cells[cellIndex] && item[column] !== undefined && item[column] !== null) {
                                     cells[cellIndex].textContent = String(item[column] || '');
-                                    console.log(`✅ Set ${sectionName} cell ${cellIndex} (${column}):`, item[column]);
+                                    console.log(`âœ… Set ${sectionName} cell ${cellIndex} (${column}):`, item[column]);
                                 }
                             }
                         } else {
-                            console.log(`❌ No row found for item ${index} in ${sectionName}`);
+                            console.log(`âŒ No row found for item ${index} in ${sectionName}`);
                         }
                     });
                 }
                 
                 // Skip SUB TOTAL rows - let calculation system handle them
-                console.log('🔍 Skipping SUB TOTAL import - will be calculated by system');
+                console.log('🔍” Skipping SUB TOTAL import - will be calculated by system');
             }
             
             // Let the main calculation system handle all totals
-            console.log('🔍 Section populated - totals will be calculated by main system');
+            console.log('🔍” Section populated - totals will be calculated by main system');
         }
 
         function updateSectionSubtotalWithData(section, data, columns) {
@@ -12224,7 +7336,7 @@
                     placeholder.innerHTML = '';
                     placeholder.appendChild(img);
                     
-                    console.log('✅ Product image displayed:', image.mimeType, image.size, 'bytes');
+                    console.log('âœ… Product image displayed:', image.mimeType, image.size, 'bytes');
                 }
             });
         }
@@ -12255,7 +7367,7 @@
 
         /**
          * Calculate material cost for YARN section
-         * Formula: (CONSUMPTION (G) ÷ 1000) × MATERIAL PRICE (USD/KG)
+         * Formula: (CONSUMPTION (G) Ã· 1000) Ã— MATERIAL PRICE (USD/KG)
          */
         function calculateYarnCost(consumption, price) {
             const consumptionValue = parseFloat(consumption);
@@ -12272,8 +7384,8 @@
 
         /**
          * Calculate material cost for FABRIC section
-         * Formula: CONSUMPTION (YARDS) × MATERIAL PRICE (USD/YD)
-         * Also handles YARN data: (CONSUMPTION (G) ÷ 1000) × MATERIAL PRICE (USD/KG)
+         * Formula: CONSUMPTION (YARDS) Ã— MATERIAL PRICE (USD/YD)
+         * Also handles YARN data: (CONSUMPTION (G) Ã· 1000) Ã— MATERIAL PRICE (USD/KG)
          */
         function calculateFabricCost(consumption, price) {
             const consumptionValue = parseFloat(consumption);
@@ -12288,18 +7400,18 @@
             // YARN data typically has small consumption (< 100) and higher price per unit (> 10)
             // FABRIC data typically has larger consumption (> 1) and lower price per unit (< 20)
             if (consumptionValue < 100 && priceValue > 10) {
-                // YARN calculation: (grams ÷ 1000) × USD/KG
+                // YARN calculation: (grams Ã· 1000) Ã— USD/KG
                 const consumptionKg = consumptionValue / 1000;
                 return (consumptionKg * priceValue).toFixed(2);
             } else {
-                // FABRIC calculation: yards × USD/YD
+                // FABRIC calculation: yards Ã— USD/YD
                 return (consumptionValue * priceValue).toFixed(2);
             }
         }
 
         /**
          * Calculate material cost for TRIM section
-         * Formula: CONSUMPTION (PIECE) × MATERIAL PRICE (USD/PC)
+         * Formula: CONSUMPTION (PIECE) Ã— MATERIAL PRICE (USD/PC)
          */
         function calculateTrimCost(consumption, price) {
             const consumptionValue = parseFloat(consumption);
@@ -12315,7 +7427,7 @@
 
         /**
          * Calculate knitting cost
-         * Formula: KNITTING TIME (MINS) × KNITTING SAH (USD/MIN)
+         * Formula: KNITTING TIME (MINS) Ã— KNITTING SAH (USD/MIN)
          */
         function calculateKnittingCost(time, sah) {
             const timeValue = parseFloat(time);
@@ -12331,7 +7443,7 @@
 
         /**
          * Calculate operation cost
-         * Formula: OPERATION TIME (MINS) × OPERATION COST (USD/MIN)
+         * Formula: OPERATION TIME (MINS) Ã— OPERATION COST (USD/MIN)
          */
         function calculateOperationCost(time, costPerMin) {
             const timeValue = parseFloat(time);
@@ -12367,27 +7479,27 @@
          * Update section subtotal
          */
         function updateSectionSubtotal(sectionSelector, total) {
-            console.log(`🔍 updateSectionSubtotal called with selector: ${sectionSelector}, total: ${total}`);
+            console.log(`🔍” updateSectionSubtotal called with selector: ${sectionSelector}, total: ${total}`);
             const section = document.querySelector(sectionSelector);
             if (!section) {
-                console.log('❌ No section found with selector:', sectionSelector);
+                console.log('âŒ No section found with selector:', sectionSelector);
                 return;
             }
 
             const sectionHeader = section.querySelector('.section-header');
-            console.log(`🔍 Found section: ${sectionHeader ? sectionHeader.textContent.trim() : 'Unknown'}`);
+            console.log(`🔍” Found section: ${sectionHeader ? sectionHeader.textContent.trim() : 'Unknown'}`);
 
             const subtotalRow = section.querySelector('.subtotal-row');
             if (subtotalRow) {
                 const subtotalCell = subtotalRow.querySelector('.cost-cell:last-child');
                 if (subtotalCell) {
-                    console.log(`🔍 Updating subtotal from ${subtotalCell.textContent} to $${total}`);
+                    console.log(`🔍” Updating subtotal from ${subtotalCell.textContent} to $${total}`);
                     subtotalCell.textContent = `$${total}`;
                 } else {
-                    console.log('❌ No subtotal cell found');
+                    console.log('âŒ No subtotal cell found');
                 }
             } else {
-                console.log('❌ No subtotal row found');
+                console.log('âŒ No subtotal row found');
             }
         }
 
@@ -12395,8 +7507,8 @@
          * Calculate and update all beanie template calculations
          */
         function calculateBeanieTemplate() {
-            console.log('🧮 Calculating beanie template...');
-            console.log('🧮 Current time:', new Date().toISOString());
+            console.log('🔍§® Calculating beanie template...');
+            console.log('🔍§® Current time:', new Date().toISOString());
             
             // Find sections by their headers
             const sections = document.querySelectorAll('#costBreakdown .cost-section');
@@ -12516,22 +7628,22 @@
             if (knittingSection) {
                 const knittingRows = knittingSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
                 let knittingTotal = 0;
-                console.log('🔍 KNITTING: Found', knittingRows.length, 'rows');
+                console.log('🔍” KNITTING: Found', knittingRows.length, 'rows');
                 
                 knittingRows.forEach((row, index) => {
                     const cells = row.querySelectorAll('.cost-cell');
-                    console.log(`🔍 KNITTING Row ${index}:`, Array.from(cells).map(c => c.textContent.trim()));
+                    console.log(`🔍” KNITTING Row ${index}:`, Array.from(cells).map(c => c.textContent.trim()));
                     
                     if (cells.length >= 4) {
                         const time = cells[1].textContent.trim();
                         const sah = cells[2].textContent.trim();
                         const existingCost = cells[3].textContent.trim().replace('$', '');
                         
-                        console.log(`🔍 KNITTING Row ${index} - Time: ${time}, SAH: ${sah}, Existing Cost: ${existingCost}`);
+                        console.log(`🔍” KNITTING Row ${index} - Time: ${time}, SAH: ${sah}, Existing Cost: ${existingCost}`);
                         
                         // Check if we have direct cost data (from Excel import), use that first
                         if (existingCost && !isNaN(parseFloat(existingCost)) && parseFloat(existingCost) > 0) {
-                            console.log(`✅ KNITTING Row ${index} - Using existing cost: ${existingCost}`);
+                            console.log(`âœ… KNITTING Row ${index} - Using existing cost: ${existingCost}`);
                             knittingTotal += parseFloat(existingCost);
                         }
                         // Otherwise, calculate from time and rate
@@ -12539,7 +7651,7 @@
                             const cost = calculateKnittingCost(time, sah);
                             cells[3].textContent = `$${cost}`;
                             knittingTotal += parseFloat(cost);
-                            console.log(`✅ KNITTING Row ${index} - Calculated cost: ${cost} (${time} × ${sah})`);
+                            console.log(`âœ… KNITTING Row ${index} - Calculated cost: ${cost} (${time} Ã— ${sah})`);
                         }
                     }
                 });
@@ -12547,30 +7659,30 @@
                 // Update KNITTING subtotal - use more specific selector
                 const knittingSectionSelector = '#costBreakdown .cost-section:nth-child(5)';
                 updateSectionSubtotal(knittingSectionSelector, knittingTotal.toFixed(2));
-                console.log('🧮 KNITTING Total:', knittingTotal.toFixed(2));
-                console.log('🧮 KNITTING Section Selector:', knittingSectionSelector);
+                console.log('🔍§® KNITTING Total:', knittingTotal.toFixed(2));
+                console.log('🔍§® KNITTING Section Selector:', knittingSectionSelector);
             }
 
             // Calculate OPERATIONS section
             if (operationsSection) {
                 const operationRows = operationsSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
                 let operationsTotal = 0;
-                console.log('🔍 OPERATIONS: Found', operationRows.length, 'rows');
+                console.log('🔍” OPERATIONS: Found', operationRows.length, 'rows');
                 
                 operationRows.forEach((row, index) => {
                     const cells = row.querySelectorAll('.cost-cell');
-                    console.log(`🔍 OPERATIONS Row ${index}:`, Array.from(cells).map(c => c.textContent.trim()));
+                    console.log(`🔍” OPERATIONS Row ${index}:`, Array.from(cells).map(c => c.textContent.trim()));
                     
                     if (cells.length >= 4) {
                         const time = cells[1].textContent.trim();
                         const costPerMin = cells[2].textContent.trim();
                         const existingCost = cells[3].textContent.trim().replace('$', '');
                         
-                        console.log(`🔍 OPERATIONS Row ${index} - Time: ${time}, CostPerMin: ${costPerMin}, Existing Cost: ${existingCost}`);
+                        console.log(`🔍” OPERATIONS Row ${index} - Time: ${time}, CostPerMin: ${costPerMin}, Existing Cost: ${existingCost}`);
                         
                         // Check if we have direct cost data (from Excel import), use that first
                         if (existingCost && !isNaN(parseFloat(existingCost)) && parseFloat(existingCost) > 0) {
-                            console.log(`✅ OPERATIONS Row ${index} - Using existing cost: ${existingCost}`);
+                            console.log(`âœ… OPERATIONS Row ${index} - Using existing cost: ${existingCost}`);
                             operationsTotal += parseFloat(existingCost);
                         }
                         // Otherwise, calculate from time and rate
@@ -12578,14 +7690,14 @@
                             const cost = calculateOperationCost(time, costPerMin);
                             cells[3].textContent = `$${cost}`;
                             operationsTotal += parseFloat(cost);
-                            console.log(`✅ OPERATIONS Row ${index} - Calculated cost: ${cost} (${time} × ${costPerMin})`);
+                            console.log(`âœ… OPERATIONS Row ${index} - Calculated cost: ${cost} (${time} Ã— ${costPerMin})`);
                         }
                     }
                 });
                 
                 // Update OPERATIONS subtotal
                 updateSectionSubtotal('#costBreakdown .cost-section:nth-child(6)', operationsTotal.toFixed(2));
-                console.log('🧮 OPERATIONS Total:', operationsTotal.toFixed(2));
+                console.log('🔍§® OPERATIONS Total:', operationsTotal.toFixed(2));
             }
 
             // Calculate PACKAGING section (direct costs)
@@ -12702,7 +7814,7 @@
                 factoryTotalElement.textContent = `$${finalFactoryTotal.toFixed(2)}`;
             }
 
-            console.log('✅ Beanie template calculations completed');
+            console.log('âœ… Beanie template calculations completed');
             console.log('Material Total:', totalMaterialCost.toFixed(2));
             console.log('Factory Total (Manufacturing):', totalFactoryCost.toFixed(2));
             console.log('Final Factory Total (All):', finalFactoryTotal.toFixed(2));
@@ -12745,7 +7857,7 @@
          * Add event listeners for ballcaps template real-time calculations
          */
         function addBallCapsCalculationEventListeners() {
-            console.log('🔧 Adding ballcaps calculation event listeners...');
+            console.log('🔍”§ Adding ballcaps calculation event listeners...');
             
             // Add listeners to FABRIC/S section
             const fabricSection = findBallCapsSection('FABRIC/S');
@@ -12842,7 +7954,7 @@
                 });
             }
             
-            console.log('✅ Ballcaps calculation event listeners added');
+            console.log('âœ… Ballcaps calculation event listeners added');
         }
 
         // Helper function to make ballcaps cells editable
@@ -12906,14 +8018,14 @@
             let cost = 0;
 
             if (sectionType === 'fabric' || sectionType === 'otherFabric' || sectionType === 'trim') {
-                // FABRIC/OTHER FABRIC/TRIM: Consumption × Price
+                // FABRIC/OTHER FABRIC/TRIM: Consumption Ã— Price
                 const consumption = parseFloat(cells[1].textContent.trim()) || 0;
                 const price = parseFloat(cells[2].textContent.trim()) || 0;
                 cost = consumption * price;
                 // Update the cost cell
                 if (cells[3]) cells[3].textContent = cost.toFixed(2);
             } else if (sectionType === 'operations') {
-                // OPERATIONS: Blank column × SMV column (4-column format)
+                // OPERATIONS: Blank column Ã— SMV column (4-column format)
                 const blankValue = parseFloat(cells[1].textContent.trim()) || 0;
                 const smv = parseFloat(cells[2].textContent.trim()) || 0;
                 cost = blankValue * smv;
@@ -12927,7 +8039,7 @@
                 cost = parseFloat(cells[2].textContent.trim()) || 0;
 
                 // No need to update the cell since it's already the cost input
-                console.log(`🔍 ${sectionType} cost: ${cost}`);
+                console.log(`🔍” ${sectionType} cost: ${cost}`);
             }
 
             // Update subtotals
@@ -12936,33 +8048,33 @@
 
         // Initialize Excel formulas validation
         function validateExcelFormulasImplementation() {
-            console.log('🔍 Validating Excel formulas implementation...');
+            console.log('🔍” Validating Excel formulas implementation...');
             
             if (window.excelFormulasExtractor) {
                 const validationResults = window.excelFormulasExtractor.validateImplementation();
-                console.log('📊 Formula validation results:', validationResults);
+                console.log('🔍“Š Formula validation results:', validationResults);
                 
                 // Check for any errors
                 if (validationResults.errors.length > 0) {
-                    console.error('❌ Formula validation errors:', validationResults.errors);
+                    console.error('âŒ Formula validation errors:', validationResults.errors);
                 } else {
-                    console.log('✅ All Excel formulas are properly implemented in the system');
+                    console.log('âœ… All Excel formulas are properly implemented in the system');
                 }
                 
                 // Log Excel formulas for reference
                 const excelFormulas = window.excelFormulasExtractor.generateExcelFormulas();
-                console.log('📋 Excel formulas reference:', excelFormulas);
+                console.log('🔍“‹ Excel formulas reference:', excelFormulas);
                 
                 return validationResults;
             } else {
-                console.warn('⚠️ Excel formulas extractor not loaded');
+                console.warn('âš ï¸ Excel formulas extractor not loaded');
                 return null;
             }
         }
 
         // Initialize drag & drop when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 DOM Content Loaded - Initializing drag & drop...');
+            console.log('[INIT] DOM Content Loaded - Initializing drag & drop...');
             console.log('Document ready state:', document.readyState);
             console.log('Window loaded:', document.readyState === 'complete');
             
@@ -13000,38 +8112,38 @@
             
             function tryInitializeUtilities() {
                 if (initializeUtilities()) {
-                    console.log('✅ Utilities initialized successfully');
+                    console.log('âœ… Utilities initialized successfully');
                 } else if (utilityRetryCount < maxUtilityRetries) {
                     utilityRetryCount++;
-                    console.log(`🔄 Retrying utility initialization (${utilityRetryCount}/${maxUtilityRetries})...`);
+                    console.log(`🔍”„ Retrying utility initialization (${utilityRetryCount}/${maxUtilityRetries})...`);
                     setTimeout(tryInitializeUtilities, 500);
                 } else {
-                    console.error('❌ Failed to initialize utilities after maximum retries');
+                    console.error('âŒ Failed to initialize utilities after maximum retries');
                 }
             }
             
             setTimeout(() => {
-                console.log('🔧 Starting utility initialization...');
+                console.log('🔍”§ Starting utility initialization...');
                 tryInitializeUtilities();
             }, 50);
 
             // Add a small delay to ensure all elements are rendered
             setTimeout(() => {
-                console.log('🔧 Attempting drag & drop initialization...');
+                console.log('🔍”§ Attempting drag & drop initialization...');
                 try {
             initializeDragDrop();
-                    console.log('✅ Drag & drop initialized successfully');
+                    console.log('âœ… Drag & drop initialized successfully');
                 } catch (error) {
-                    console.error('❌ Error initializing drag & drop:', error);
+                    console.error('âŒ Error initializing drag & drop:', error);
                     console.error('Error details:', error.message, error.stack);
                     // Try again after a longer delay
                     setTimeout(() => {
-                        console.log('🔄 Retrying drag & drop initialization...');
+                        console.log('🔍”„ Retrying drag & drop initialization...');
                         try {
                             initializeDragDrop();
-                            console.log('✅ Drag & drop initialized on retry');
+                            console.log('âœ… Drag & drop initialized on retry');
                         } catch (retryError) {
-                            console.error('❌ Drag & drop initialization failed on retry:', retryError);
+                            console.error('âŒ Drag & drop initialization failed on retry:', retryError);
                             console.error('Retry error details:', retryError.message, retryError.stack);
                         }
                     }, 1000);
@@ -13047,40 +8159,40 @@
             fileInput.onchange = handleFileSelect;
             fileInput.id = 'hiddenFileInput';
             document.body.appendChild(fileInput);
-                console.log('✅ File input created successfully');
+                console.log('âœ… File input created successfully');
             } catch (error) {
-                console.error('❌ Error creating file input:', error);
+                console.error('âŒ Error creating file input:', error);
             }
         });
 
         // Also initialize on window load as a fallback
         window.addEventListener('load', function() {
-            console.log('🚀 Window Loaded - Fallback initialization...');
+            console.log('[INIT] Window Loaded - Fallback initialization...');
             setTimeout(() => {
                 try {
                     initializeDragDrop();
-                    console.log('✅ Drag & drop initialized on window load');
+                    console.log('âœ… Drag & drop initialized on window load');
                 } catch (error) {
-                    console.error('❌ Error initializing drag & drop on window load:', error);
+                    console.error('âŒ Error initializing drag & drop on window load:', error);
                 }
             }, 500);
         });
 
         // Force initialization after a delay to ensure everything is loaded
         setTimeout(() => {
-            console.log('🔄 Force initialization after delay...');
+            console.log('🔍”„ Force initialization after delay...');
             try {
                 initializeDragDrop();
-                console.log('✅ Force initialization successful');
+                console.log('âœ… Force initialization successful');
             } catch (error) {
-                console.error('❌ Force initialization failed:', error);
+                console.error('âŒ Force initialization failed:', error);
             }
         }, 2000);
 
         // Export table data to Excel
         async function exportToExcel() {
             try {
-                console.log('🚀 Starting Excel export...');
+                console.log('[EXPORT] Starting Excel export...');
                 
                 // Try to load XLSX library, but don't wait too long
                 if (typeof XLSX === 'undefined') {
@@ -13237,7 +8349,7 @@
                 XLSX.writeFile(wb, filename);
 
                 // Show success message
-                showStatus('tableData', `✅ Excel file exported successfully: ${filename} (${tableData.length} records)`, 'success');
+                showStatus('tableData', `âœ… Excel file exported successfully: ${filename} (${tableData.length} records)`, 'success');
                 
             } catch (error) {
                 console.error('Error exporting to Excel:', error);
@@ -13370,11 +8482,11 @@
                 link.click();
                 document.body.removeChild(link);
 
-                showStatus('tableData', `✅ CSV file exported successfully: ${filename} (${tableData.length} records)`, 'success');
+                showStatus('tableData', `âœ… CSV file exported successfully: ${filename} (${tableData.length} records)`, 'success');
                 
             } catch (error) {
                 console.error('Error exporting to CSV:', error);
-                showStatus('tableData', `❌ Error exporting to CSV: ${error.message}`, 'error');
+                showStatus('tableData', `âŒ Error exporting to CSV: ${error.message}`, 'error');
             }
         }
 
@@ -13629,7 +8741,7 @@
                     
                     if (!actualFieldName) {
                         console.error('Field not found in database:', filterType, 'Available fields:', Object.keys(result.data[0] || {}));
-                        showStatus('tableData', `❌ Field "${filterType}" not found in database. Available fields: ${Object.keys(result.data[0] || {}).join(', ')}`, 'error');
+                        showStatus('tableData', `âŒ Field "${filterType}" not found in database. Available fields: ${Object.keys(result.data[0] || {}).join(', ')}`, 'error');
                         return;
                     }
                     
@@ -13672,17 +8784,17 @@
                         updatePagination();
                         
                         // Show similarity information in console for debugging
-                        console.log('🔍 Search results with similarity scores:');
+                        console.log('🔍” Search results with similarity scores:');
                         searchResults.slice(0, 5).forEach((item, index) => {
                             console.log(`${index + 1}. ${item.fieldValue} (${(item.similarity * 100).toFixed(1)}% match)`);
                         });
                         
-                        showStatus('tableData', `✅ Found ${filteredData.length} similar records for "${searchValue}" in ${filterType} (searched ${result.data.length} FRESH records from Supabase)`, 'success');
+                        showStatus('tableData', `âœ… Found ${filteredData.length} similar records for "${searchValue}" in ${filterType} (searched ${result.data.length} FRESH records from Supabase)`, 'success');
                     } else {
-                        showStatus('tableData', `❌ No records found matching "${searchValue}" in ${filterType} (searched ${result.data.length} FRESH records from Supabase)`, 'error');
+                        showStatus('tableData', `âŒ No records found matching "${searchValue}" in ${filterType} (searched ${result.data.length} FRESH records from Supabase)`, 'error');
                     }
                 } else {
-                    showStatus('tableData', `❌ No data available in database`, 'error');
+                    showStatus('tableData', `âŒ No data available in database`, 'error');
                 }
             } catch (error) {
                 console.error('Search error:', error);
@@ -13696,7 +8808,7 @@
             tableElement.innerHTML = `
                 <div class="search-loading">
                     <div class="loading-spinner"></div>
-                    <h3>🔍 ${message}</h3>
+                    <h3>🔍” ${message}</h3>
                     <p>Please wait while we fetch the latest data from Supabase...</p>
                     <div class="progress-bar">
                         <div class="progress-fill"></div>
@@ -13716,7 +8828,7 @@
                         <div></div>
                         <div></div>
                     </div>
-                    <h3>🔍 ${message}</h3>
+                    <h3>🔍” ${message}</h3>
                     <p>Analyzing data and finding matches...</p>
                     <div class="progress-bar">
                         <div class="progress-fill"></div>
@@ -13742,7 +8854,7 @@
             displayCurrentPageData();
             updatePagination();
             
-            showStatus('tableData', '🔍 Search cleared - showing all data', 'info');
+            showStatus('tableData', '🔍” Search cleared - showing all data', 'info');
         }
 
 
@@ -13805,7 +8917,7 @@
             const totalCount = totalText ? parseInt(totalText[1].replace(/,/g, '')) : 1000;
             
             console.log(`Loading all ${totalCount} records...`);
-            showStatus('tableData', `🔄 Loading all ${totalCount.toLocaleString()} records... This may take a moment.`, 'info');
+            showStatus('tableData', `🔍”„ Loading all ${totalCount.toLocaleString()} records... This may take a moment.`, 'info');
             await loadDatabankData(totalCount);
         }
 
@@ -13814,7 +8926,7 @@
         function showFileInfo(file, fileType) {
             const fileInfo = `
                 <div style="background: rgba(76, 175, 80, 0.1); border: 1px solid rgba(76, 175, 80, 0.3); border-radius: 8px; padding: 15px; margin: 15px 0;">
-                    <h5 style="color: #4CAF50; margin-bottom: 10px;">📁 File Selected</h5>
+                    <h5 style="color: #4CAF50; margin-bottom: 10px;">🔍“ File Selected</h5>
                     <p style="color: rgba(255, 255, 255, 0.9); margin: 5px 0;"><strong>Name:</strong> ${file.name}</p>
                     <p style="color: rgba(255, 255, 255, 0.9); margin: 5px 0;"><strong>Type:</strong> ${fileType.toUpperCase()}</p>
                     <p style="color: rgba(255, 255, 255, 0.9); margin: 5px 0;"><strong>Size:</strong> ${(file.size / 1024).toFixed(1)} KB</p>
@@ -13848,7 +8960,7 @@
                 
             } catch (error) {
                 console.error('File processing failed:', error);
-                showStatus('importStatus', '❌ ' + error.message, 'error');
+                showStatus('importStatus', 'âŒ ' + error.message, 'error');
                 resetImportState();
             }
         }
@@ -13894,7 +9006,7 @@
         // ULTRA FAST file reader and display function - connected to main index.html
         async function readAndDisplayFile(file) {
             const startTime = performance.now();
-            console.log(`⚡ ULTRA FAST processing: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`);
+            console.log(`âš¡ ULTRA FAST processing: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`);
             
             // Show loading notification
             const loadingId = showLoadingNotification(`Processing ${file.name}...`, {
@@ -13904,7 +9016,7 @@
             
             try {
                 showProgress(true);
-                updateProgress(5, `⚡ ULTRA FAST reading ${file.name}...`);
+                updateProgress(5, `âš¡ ULTRA FAST reading ${file.name}...`);
                 
                 const fileType = getFileType(file);
                 let content;
@@ -13912,37 +9024,37 @@
                 // ULTRA FAST processing - no Web Workers needed for most files
                 if (fileType === 'excel') {
                     try {
-                        updateProgress(20, '⚡ ULTRA FAST Excel processing...');
+                        updateProgress(20, 'âš¡ ULTRA FAST Excel processing...');
                         content = await readExcelUltraFast(file);
                     } catch (error) {
                         console.warn('Excel reading failed, trying as text:', error.message);
-                        updateProgress(30, '⚡ Fallback to text reading...');
+                        updateProgress(30, 'âš¡ Fallback to text reading...');
                         content = await readTextUltraFast(file);
                     }
                 } else if (fileType === 'csv') {
-                    updateProgress(20, '⚡ ULTRA FAST CSV processing...');
+                    updateProgress(20, 'âš¡ ULTRA FAST CSV processing...');
                     content = await readCSVUltraFast(file);
                 } else if (fileType === 'text') {
-                    updateProgress(20, '⚡ ULTRA FAST text processing...');
+                    updateProgress(20, 'âš¡ ULTRA FAST text processing...');
                     content = await readTextUltraFast(file);
                 } else if (fileType === 'image') {
-                    updateProgress(20, '⚡ ULTRA FAST image processing...');
+                    updateProgress(20, 'âš¡ ULTRA FAST image processing...');
                     content = await readImageUltraFast(file);
                 } else if (fileType === 'pdf') {
-                    updateProgress(20, '⚡ ULTRA FAST PDF processing...');
+                    updateProgress(20, 'âš¡ ULTRA FAST PDF processing...');
                     content = await readPDFUltraFast(file);
                 } else {
-                    updateProgress(20, '⚡ ULTRA FAST text fallback...');
+                    updateProgress(20, 'âš¡ ULTRA FAST text fallback...');
                     content = await readTextUltraFast(file);
                 }
                 
-                updateProgress(80, '⚡ Processing content...');
+                updateProgress(80, 'âš¡ Processing content...');
                 
                 // Store content globally for display
                 window.fileContent = content;
                 window.currentFileType = fileType;
                 
-                updateProgress(90, '⚡ Displaying content...');
+                updateProgress(90, 'âš¡ Displaying content...');
                 
                 // Display the content with optimized rendering
                 displayFileContentUltraFast(content, file, fileType);
@@ -13950,8 +9062,8 @@
                 const endTime = performance.now();
                 const processingTime = ((endTime - startTime) / 1000).toFixed(3);
                 
-                updateProgress(100, `⚡ ULTRA FAST processed in ${processingTime}s!`);
-                console.log(`⚡ ULTRA FAST processing completed in ${processingTime} seconds`);
+                updateProgress(100, `âš¡ ULTRA FAST processed in ${processingTime}s!`);
+                console.log(`âš¡ ULTRA FAST processing completed in ${processingTime} seconds`);
                 
                 // Update notification to success
                 notificationManager.updateMessage(loadingId, 'Import Complete', `File processed successfully in ${processingTime}s`);
@@ -13969,7 +9081,7 @@
                 
             } catch (error) {
                 console.error('Error reading file:', error);
-                showStatus('importStatus', '❌ Error reading file: ' + error.message, 'error');
+                showStatus('importStatus', 'âŒ Error reading file: ' + error.message, 'error');
                 
                 // Update notification to error
                 notificationManager.updateMessage(loadingId, 'Import Failed', `Error: ${error.message}`);
@@ -13989,12 +9101,12 @@
 
         // ULTRA FAST reading functions - connected to main index.html
         async function readExcelUltraFast(file) {
-            console.log('📊 Starting ULTRA FAST Excel processing...');
+            console.log('🔍“Š Starting ULTRA FAST Excel processing...');
             
             try {
                 await ensureXLSXLoaded();
             } catch (error) {
-                console.error('❌ XLSX library loading failed:', error);
+                console.error('âŒ XLSX library loading failed:', error);
                 throw new Error('XLSX library not available. Please refresh the page and try again.');
             }
             
@@ -14002,7 +9114,7 @@
                 throw new Error('XLSX library not loaded after waiting');
             }
             
-            console.log('✅ XLSX library confirmed available, processing Excel...');
+            console.log('âœ… XLSX library confirmed available, processing Excel...');
 
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -14044,7 +9156,7 @@
                             data: jsonData
                         });
                         
-                        console.log(`⚡ ULTRA FAST Excel processed: ${result.length} sheets, ${jsonData.length} rows`);
+                        console.log(`âš¡ ULTRA FAST Excel processed: ${result.length} sheets, ${jsonData.length} rows`);
                         resolve(result);
                     } catch (error) {
                         reject(error);
@@ -14065,7 +9177,7 @@
                         const lines = text.split(/\r?\n/);
                         const data = lines.map(line => line.split(','));
                         
-                        console.log(`⚡ ULTRA FAST CSV processed: ${data.length} rows`);
+                        console.log(`âš¡ ULTRA FAST CSV processed: ${data.length} rows`);
                         resolve([{ sheetName: 'CSV Data', data: data }]);
                     } catch (error) {
                         reject(error);
@@ -14085,7 +9197,7 @@
                         // ULTRA FAST line splitting - minimal processing
                         const lines = text.split(/\r?\n/);
                         
-                        console.log(`⚡ ULTRA FAST text processed: ${lines.length} lines`);
+                        console.log(`âš¡ ULTRA FAST text processed: ${lines.length} lines`);
                         resolve([{ sheetName: 'Text Content', data: lines.map(line => [line]) }]);
                     } catch (error) {
                         reject(error);
@@ -14101,7 +9213,7 @@
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     try {
-                        console.log(`⚡ ULTRA FAST image processed: ${file.name}`);
+                        console.log(`âš¡ ULTRA FAST image processed: ${file.name}`);
                         resolve([{ 
                             sheetName: 'Image', 
                             data: [[e.target.result]], 
@@ -14122,7 +9234,7 @@
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     try {
-                        console.log(`⚡ ULTRA FAST PDF processed: ${file.name}`);
+                        console.log(`âš¡ ULTRA FAST PDF processed: ${file.name}`);
                         resolve([{ 
                             sheetName: 'PDF Document', 
                             data: [['PDF files cannot be directly parsed in the browser.']],
@@ -14145,11 +9257,11 @@
             if (!previewDiv) return;
 
             const startTime = performance.now();
-            console.log(`⚡ ULTRA FAST content display for ${file.name}...`);
+            console.log(`âš¡ ULTRA FAST content display for ${file.name}...`);
 
             let html = `
                 <div style="background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid rgba(255, 255, 255, 0.2);">
-                    <h3 style="color: white; margin-bottom: 15px;">⚡ ULTRA FAST File Contents: ${file.name}</h3>
+                    <h3 style="color: white; margin-bottom: 15px;">âš¡ ULTRA FAST File Contents: ${file.name}</h3>
                     <p style="color: rgba(255, 255, 255, 0.8); margin-bottom: 15px;">
                         <strong>Type:</strong> ${fileType.toUpperCase()} | 
                         <strong>Size:</strong> ${(file.size / 1024).toFixed(2)} KB | 
@@ -14160,7 +9272,7 @@
             content.forEach((sheet, index) => {
                 html += `
                     <div style="margin-bottom: 20px;">
-                        <h4 style="color: #4CAF50; margin-bottom: 10px;">⚡ ${sheet.sheetName}</h4>
+                        <h4 style="color: #4CAF50; margin-bottom: 10px;">âš¡ ${sheet.sheetName}</h4>
                 `;
 
                 if (sheet.isImage) {
@@ -14172,7 +9284,7 @@
                 } else if (sheet.isPDF) {
                     html += `
                         <div style="text-align: center; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 8px;">
-                            <div style="font-size: 48px; color: #ff6b6b; margin-bottom: 10px;">📄</div>
+                            <div style="font-size: 48px; color: #ff6b6b; margin-bottom: 10px;">🔍“„</div>
                             <p style="color: rgba(255, 255, 255, 0.8);">PDF files cannot be directly parsed in the browser.</p>
                             <p style="color: rgba(255, 255, 255, 0.6); font-size: 14px;">File: ${sheet.fileName} (${(sheet.fileSize / 1024).toFixed(2)} KB)</p>
                         </div>
@@ -14225,7 +9337,7 @@
             html += `
                 <div style="text-align: center; margin-top: 20px;">
                     <button onclick="showFullFileContents()" style="background: #2196F3; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);">
-                        ⚡ View Full Contents
+                        âš¡ View Full Contents
                     </button>
                 </div>
             </div>
@@ -14241,14 +9353,14 @@
 
             const endTime = performance.now();
             const displayTime = ((endTime - startTime) / 1000).toFixed(3);
-            console.log(`⚡ ULTRA FAST content display completed in ${displayTime} seconds`);
+            console.log(`âš¡ ULTRA FAST content display completed in ${displayTime} seconds`);
         }
 
         // ULTRA FAST Excel reading - optimized for maximum speed
         async function readExcelFileFast(file) {
             // Ensure XLSX library is loaded before processing
             if (typeof XLSX === 'undefined') {
-                console.log('⚡ Loading XLSX library for ultra-fast processing...');
+                console.log('âš¡ Loading XLSX library for ultra-fast processing...');
                 try {
                     await ensureXLSXLoaded();
                 } catch (error) {
@@ -14281,7 +9393,7 @@
                         const result = [];
                         
                         // Debug: Show all available sheets
-                        console.log('📋 Available sheets in Excel file:');
+                        console.log('🔍“‹ Available sheets in Excel file:');
                         workbook.SheetNames.forEach((name, index) => {
                             console.log(`  Sheet ${index}: "${name}"`);
                         });
@@ -14298,10 +9410,10 @@
                             if (worksheet && !worksheet['!hidden']) {
                                 targetSheetName = sheetName;
                                 targetSheetIndex = i;
-                                console.log(`✅ Selected visible sheet: "${sheetName}" (index ${i})`);
+                                console.log(`âœ… Selected visible sheet: "${sheetName}" (index ${i})`);
                                 break;
                             } else {
-                                console.log(`⚠️ Skipping hidden sheet: "${sheetName}"`);
+                                console.log(`âš ï¸ Skipping hidden sheet: "${sheetName}"`);
                             }
                         }
                         
@@ -14309,7 +9421,7 @@
                         if (!targetSheetName) {
                             targetSheetName = workbook.SheetNames[0];
                             targetSheetIndex = 0;
-                            console.log(`⚠️ No visible sheet found, using first sheet: "${targetSheetName}"`);
+                            console.log(`âš ï¸ No visible sheet found, using first sheet: "${targetSheetName}"`);
                         }
                         
                         const worksheet = workbook.Sheets[targetSheetName];
@@ -14327,7 +9439,7 @@
                             data: jsonData
                         });
                         
-                        console.log(`⚡ Excel file processed in record time: ${result.length} sheets, ${jsonData.length} rows`);
+                        console.log(`âš¡ Excel file processed in record time: ${result.length} sheets, ${jsonData.length} rows`);
                         resolve(result);
                     } catch (error) {
                         reject(error);
@@ -14348,7 +9460,7 @@
                         const lines = text.split(/\r?\n/);
                         const data = lines.map(line => line.split(','));
                         
-                        console.log(`⚡ CSV file processed in record time: ${data.length} rows`);
+                        console.log(`âš¡ CSV file processed in record time: ${data.length} rows`);
                         resolve([{ sheetName: 'CSV Data', data: data }]);
                     } catch (error) {
                         reject(error);
@@ -14368,7 +9480,7 @@
                         // ULTRA FAST line splitting - minimal processing
                         const lines = text.split(/\r?\n/);
                         
-                        console.log(`⚡ Text file processed in record time: ${lines.length} lines`);
+                        console.log(`âš¡ Text file processed in record time: ${lines.length} lines`);
                         resolve([{ sheetName: 'Text Content', data: lines.map(line => [line]) }]);
                     } catch (error) {
                         reject(error);
@@ -14384,7 +9496,7 @@
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     try {
-                        console.log(`⚡ Image file processed in record time: ${file.name}`);
+                        console.log(`âš¡ Image file processed in record time: ${file.name}`);
                         resolve([{ 
                             sheetName: 'Image', 
                             data: [[e.target.result]], 
@@ -14405,7 +9517,7 @@
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     try {
-                        console.log(`⚡ PDF file processed in record time: ${file.name}`);
+                        console.log(`âš¡ PDF file processed in record time: ${file.name}`);
                         resolve([{ 
                             sheetName: 'PDF Document', 
                             data: [['PDF files cannot be directly parsed in the browser.']],
@@ -14485,11 +9597,11 @@
             if (!previewDiv) return;
 
             const startTime = performance.now();
-            console.log(`⚡ Starting fast content display for ${file.name}...`);
+            console.log(`âš¡ Starting fast content display for ${file.name}...`);
 
             let html = `
                 <div style="background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid rgba(255, 255, 255, 0.2);">
-                    <h3 style="color: white; margin-bottom: 15px;">⚡ File Contents: ${file.name}</h3>
+                    <h3 style="color: white; margin-bottom: 15px;">âš¡ File Contents: ${file.name}</h3>
                     <p style="color: rgba(255, 255, 255, 0.8); margin-bottom: 15px;">
                         <strong>Type:</strong> ${fileType.toUpperCase()} | 
                         <strong>Size:</strong> ${(file.size / 1024).toFixed(2)} KB | 
@@ -14500,7 +9612,7 @@
             content.forEach((sheet, index) => {
                 html += `
                     <div style="margin-bottom: 20px;">
-                        <h4 style="color: #4CAF50; margin-bottom: 10px;">⚡ ${sheet.sheetName}</h4>
+                        <h4 style="color: #4CAF50; margin-bottom: 10px;">âš¡ ${sheet.sheetName}</h4>
                 `;
 
                 if (sheet.isImage) {
@@ -14512,7 +9624,7 @@
                 } else if (sheet.isPDF) {
                     html += `
                         <div style="text-align: center; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 8px;">
-                            <div style="font-size: 48px; color: #ff6b6b; margin-bottom: 10px;">📄</div>
+                            <div style="font-size: 48px; color: #ff6b6b; margin-bottom: 10px;">🔍“„</div>
                             <p style="color: rgba(255, 255, 255, 0.8);">PDF files cannot be directly parsed in the browser.</p>
                             <p style="color: rgba(255, 255, 255, 0.6); font-size: 14px;">File: ${sheet.fileName} (${(sheet.fileSize / 1024).toFixed(2)} KB)</p>
                         </div>
@@ -14565,7 +9677,7 @@
             html += `
                 <div style="text-align: center; margin-top: 20px;">
                     <button onclick="showFullFileContents()" style="background: #2196F3; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);">
-                        ⚡ View Full Contents
+                        âš¡ View Full Contents
                     </button>
                 </div>
             </div>
@@ -14581,7 +9693,7 @@
 
             const endTime = performance.now();
             const displayTime = ((endTime - startTime) / 1000).toFixed(2);
-            console.log(`⚡ Content display completed in ${displayTime} seconds`);
+            console.log(`âš¡ Content display completed in ${displayTime} seconds`);
         }
 
         // File reading functions for different file types
@@ -14707,7 +9819,7 @@
 
             let html = `
                 <div style="background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid rgba(255, 255, 255, 0.2);">
-                    <h3 style="color: white; margin-bottom: 15px;">📄 File Contents: ${file.name}</h3>
+                    <h3 style="color: white; margin-bottom: 15px;">🔍“„ File Contents: ${file.name}</h3>
                     <p style="color: rgba(255, 255, 255, 0.8); margin-bottom: 15px;">
                         <strong>Type:</strong> ${fileType.toUpperCase()} | 
                         <strong>Size:</strong> ${(file.size / 1024).toFixed(2)} KB | 
@@ -14718,7 +9830,7 @@
             content.forEach((sheet, index) => {
                 html += `
                     <div style="margin-bottom: 20px;">
-                        <h4 style="color: #4CAF50; margin-bottom: 10px;">📊 ${sheet.sheetName}</h4>
+                        <h4 style="color: #4CAF50; margin-bottom: 10px;">🔍“Š ${sheet.sheetName}</h4>
                 `;
 
                 if (sheet.isImage) {
@@ -14730,7 +9842,7 @@
                 } else if (sheet.isPDF) {
                     html += `
                         <div style="text-align: center; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 8px;">
-                            <div style="font-size: 48px; color: #ff6b6b; margin-bottom: 10px;">📄</div>
+                            <div style="font-size: 48px; color: #ff6b6b; margin-bottom: 10px;">🔍“„</div>
                             <p style="color: rgba(255, 255, 255, 0.8);">PDF files cannot be directly parsed in the browser.</p>
                             <p style="color: rgba(255, 255, 255, 0.6); font-size: 14px;">File: ${sheet.fileName} (${(sheet.fileSize / 1024).toFixed(2)} KB)</p>
                         </div>
@@ -14783,7 +9895,7 @@
             html += `
                 <div style="text-align: center; margin-top: 20px;">
                     <button onclick="showFullFileContents()" style="background: #2196F3; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);">
-                        📊 View Full Contents
+                        🔍“Š View Full Contents
                     </button>
                 </div>
             </div>
@@ -14813,7 +9925,7 @@
                 <div id="fileContentsModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 10000; display: flex; align-items: center; justify-content: center;">
                     <div style="background: white; border-radius: 12px; padding: 20px; max-width: 90%; max-height: 90%; overflow: hidden; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px;">
-                            <h2 style="margin: 0; color: #333;">📊 Full File Contents: ${currentFile ? currentFile.name : 'Unknown'}</h2>
+                            <h2 style="margin: 0; color: #333;">🔍“Š Full File Contents: ${currentFile ? currentFile.name : 'Unknown'}</h2>
                             <button onclick="closeFileContentsModal()" style="background: #ff6b6b; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer;">&times;</button>
                         </div>
                         <div style="max-height: 70vh; overflow: auto; border: 1px solid #ddd; border-radius: 8px;">
@@ -14843,7 +9955,7 @@
 
             content.forEach((sheet, sheetIndex) => {
                 html += `<div style="margin-bottom: 30px;">`;
-                html += `<h3 style="color: #333; margin-bottom: 15px; padding: 10px; background: #f5f5f5; border-radius: 6px;">📊 ${sheet.sheetName}</h3>`;
+                html += `<h3 style="color: #333; margin-bottom: 15px; padding: 10px; background: #f5f5f5; border-radius: 6px;">🔍“Š ${sheet.sheetName}</h3>`;
 
                 if (sheet.isImage) {
                     html += `
@@ -14854,7 +9966,7 @@
                 } else if (sheet.isPDF) {
                     html += `
                         <div style="text-align: center; padding: 20px; background: #f9f9f9; border-radius: 8px;">
-                            <div style="font-size: 64px; color: #ff6b6b; margin-bottom: 15px;">📄</div>
+                            <div style="font-size: 64px; color: #ff6b6b; margin-bottom: 15px;">🔍“„</div>
                             <p style="color: #666; font-size: 16px;">PDF files cannot be directly parsed in the browser.</p>
                             <p style="color: #999; font-size: 14px;">File: ${sheet.fileName} (${(sheet.fileSize / 1024).toFixed(2)} KB)</p>
                         </div>
@@ -14972,7 +10084,7 @@
                 
             } catch (error) {
                 console.error('Error in enhanced intelligent import:', error);
-                showStatus('importStatus', '❌ Error processing file: ' + error.message, 'error');
+                showStatus('importStatus', 'âŒ Error processing file: ' + error.message, 'error');
                 resetImportState();
             } finally {
                 isProcessing = false;
@@ -14987,7 +10099,7 @@
                 
                 reader.onload = function(e) {
                     try {
-                        console.log('🔍 Reading Excel file with XLSX...');
+                        console.log('🔍” Reading Excel file with XLSX...');
                         
                         // Ensure XLSX is loaded
                         if (typeof XLSX === 'undefined') {
@@ -14996,7 +10108,7 @@
                         }
                         
                         const data = new Uint8Array(e.target.result);
-                        console.log('📊 Excel file data length:', data.length);
+                        console.log('🔍“Š Excel file data length:', data.length);
                         
                         // Read Excel file with optimized settings
                         const workbook = XLSX.read(data, { 
@@ -15013,7 +10125,7 @@
                             dense: true
                         });
                         
-                        console.log('📋 Workbook sheets found:', workbook.SheetNames);
+                        console.log('🔍“‹ Workbook sheets found:', workbook.SheetNames);
                         
                         // Get the first sheet data
                         const firstSheetName = workbook.SheetNames[0];
@@ -15024,8 +10136,8 @@
                             raw: true
                         });
                         
-                        console.log('📊 Excel data rows:', jsonData.length);
-                        console.log('📊 First 5 rows:', jsonData.slice(0, 5));
+                        console.log('🔍“Š Excel data rows:', jsonData.length);
+                        console.log('🔍“Š First 5 rows:', jsonData.slice(0, 5));
                         
                         // Return data in expected format
                         resolve({
@@ -15035,13 +10147,13 @@
                         });
                         
                     } catch (error) {
-                        console.error('❌ Error reading Excel file:', error);
+                        console.error('âŒ Error reading Excel file:', error);
                         reject(error);
                     }
                 };
                 
                 reader.onerror = function(error) {
-                    console.error('❌ FileReader error:', error);
+                    console.error('âŒ FileReader error:', error);
                     reject(new Error('Failed to read file'));
                 };
                 
@@ -15087,7 +10199,7 @@
                                 }
                                 
                                 // Debug: Show all available sheets
-                                console.log('📋 Available sheets in Excel file (enhanced import):');
+                                console.log('🔍“‹ Available sheets in Excel file (enhanced import):');
                                 workbook.SheetNames.forEach((name, index) => {
                                     console.log(`  Sheet ${index}: "${name}"`);
                                 });
@@ -15101,17 +10213,17 @@
                                     // Check if sheet is visible (not hidden)
                                     if (worksheet && !worksheet['!hidden']) {
                                         targetSheetName = sheetName;
-                                        console.log(`✅ Selected visible sheet: "${sheetName}" (index ${i})`);
+                                        console.log(`âœ… Selected visible sheet: "${sheetName}" (index ${i})`);
                                         break;
                                     } else {
-                                        console.log(`⚠️ Skipping hidden sheet: "${sheetName}"`);
+                                        console.log(`âš ï¸ Skipping hidden sheet: "${sheetName}"`);
                                     }
                                 }
                                 
                                 // Fallback to first sheet if no visible sheet found
                                 if (!targetSheetName) {
                                     targetSheetName = workbook.SheetNames[0];
-                                    console.log(`⚠️ No visible sheet found, using first sheet: "${targetSheetName}"`);
+                                    console.log(`âš ï¸ No visible sheet found, using first sheet: "${targetSheetName}"`);
                                 }
                                 
                                 const worksheet = workbook.Sheets[targetSheetName];
@@ -15129,7 +10241,7 @@
                                 });
                                 
                                 console.log(`Excel file processed: ${jsonData.length} rows, ${jsonData[0] ? jsonData[0].length : 0} columns`);
-                                console.log('📊 First few rows from selected sheet:');
+                                console.log('🔍“Š First few rows from selected sheet:');
                                 jsonData.slice(0, 5).forEach((row, index) => {
                                     console.log(`  Row ${index}:`, row);
                                 });
@@ -15636,14 +10748,14 @@
                 }
                 if (firstCell.includes('MOQ') && row[1]) {
                     extractedData.moq = String(row[1]).trim();
-                    console.log('🔍 Found MOQ in row', i, ':', firstCell, '->', extractedData.moq);
+                    console.log('🔍” Found MOQ in row', i, ':', firstCell, '->', extractedData.moq);
                 }
                 if (firstCell.includes('Leadtime') && row[1]) {
                     extractedData.leadtime = String(row[1]).trim();
                 }
             }
             
-            console.log('🔍 Final extracted data:', extractedData);
+            console.log('🔍” Final extracted data:', extractedData);
             console.log('MOQ value:', extractedData.moq);
             
             return extractedData;
@@ -15805,7 +10917,7 @@
             // Populate basic info - Target the visible ballcaps template specifically
             const visibleTemplate = document.querySelector('#ballcapsBreakdown:not([style*="display: none"]) .product-info');
             if (!visibleTemplate) {
-                console.error('❌ No visible ballcaps template found for product info');
+                console.error('âŒ No visible ballcaps template found for product info');
                 return;
             }
             
@@ -15814,7 +10926,7 @@
             const values = [parsedData.customer, parsedData.season, parsedData.styleNumber, parsedData.styleName, parsedData.moq || parsedData.costedQuantity, parsedData.leadtime];
             const labels = ['customer', 'season', 'styleNumber', 'styleName', 'moq', 'leadtime'];
             
-            console.log('🔍 Debugging MOQ population:');
+            console.log('🔍” Debugging MOQ population:');
             console.log('- infoRows found:', infoRows.length);
             console.log('- labels:', labels);
             console.log('- parsedData.moq:', parsedData.moq);
@@ -15824,7 +10936,7 @@
             // Map costedQuantity to moq if moq is not available
             if (!parsedData.moq && parsedData.costedQuantity) {
                 parsedData.moq = parsedData.costedQuantity;
-                console.log('✅ Mapped costedQuantity to moq:', parsedData.moq);
+                console.log('âœ… Mapped costedQuantity to moq:', parsedData.moq);
             }
             
             infoRows.forEach((element, index) => {
@@ -15836,10 +10948,10 @@
                     const inputField = element.querySelector('.info-input');
                     if (inputField) {
                         inputField.value = value;
-                        console.log(`✅ Set ${label} to:`, value);
+                        console.log(`âœ… Set ${label} to:`, value);
                     }
                 } else {
-                    console.log(`❌ Skipped ${label} - no value`);
+                    console.log(`âŒ Skipped ${label} - no value`);
                 }
             });
             
@@ -15886,7 +10998,7 @@
                             const cells = subtotalRow.querySelectorAll('.cost-cell');
                             if (cells[0]) cells[0].textContent = item.material;
                             if (cells[3]) cells[3].textContent = `$${item.cost}`;
-                            console.log('✅ Updated TRIM subtotal:', item.material, item.cost);
+                            console.log('âœ… Updated TRIM subtotal:', item.material, item.cost);
                         }
                     } else {
                         // Regular item
@@ -15912,13 +11024,13 @@
                     if (cells[0] && !cells[0].textContent.includes('TOTAL')) {
                         cells[0].textContent = 'SUB TOTAL';
                         cells[3].textContent = `$${trimTotal.toFixed(2)}`;
-                        console.log('✅ Calculated TRIM subtotal:', trimTotal.toFixed(2));
+                        console.log('âœ… Calculated TRIM subtotal:', trimTotal.toFixed(2));
                     }
                 }
             }
             
             // Populate operations section
-            console.log('🔍 OPERATIONS DEBUG - Starting operations population:');
+            console.log('🔍” OPERATIONS DEBUG - Starting operations population:');
             console.log('- parsedData.operations exists:', !!parsedData.operations);
             console.log('- parsedData.operations length:', parsedData.operations ? parsedData.operations.length : 'undefined');
             console.log('- Full parsedData:', parsedData);
@@ -15926,7 +11038,7 @@
             
             if (parsedData.operations && parsedData.operations.length > 0) {
                 const operationsRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(5) .cost-row:not(.header-row):not(.subtotal-row)');
-                console.log('🔍 OPERATIONS DEBUG:');
+                console.log('🔍” OPERATIONS DEBUG:');
                 console.log('- Found operations data:', parsedData.operations.length, 'items');
                 console.log('- Found DOM rows:', operationsRows.length);
                 console.log('- Operations data:', parsedData.operations);
@@ -15943,20 +11055,20 @@
                             const cells = subtotalRow.querySelectorAll('.cost-cell');
                             if (cells[2]) cells[2].textContent = item.operation; // SUB TOTAL in column 3
                             if (cells[3]) cells[3].textContent = `$${item.total || '0.00'}`; // Total in column 4
-                            console.log('✅ Updated OPERATIONS subtotal:', item.operation, item.total);
+                            console.log('âœ… Updated OPERATIONS subtotal:', item.operation, item.total);
                         }
                     } else {
                         // Regular item - 4 column structure: OPERATION | BLANK | SMV | COST (USD/MIN)
                         if (operationsRows[regularItemCount]) {
                             const cells = operationsRows[regularItemCount].querySelectorAll('.cost-cell');
-                            console.log(`🔍 Populating operation ${regularItemCount + 1}:`, {
+                            console.log(`🔍” Populating operation ${regularItemCount + 1}:`, {
                                 operation: item.operation,
                                 smv: item.smv,
                                 costPerMin: item.costPerMin,
                                 total: item.total
                             });
                             
-                            console.log(`🔍 Setting cells for operation ${regularItemCount + 1}:`, {
+                            console.log(`🔍” Setting cells for operation ${regularItemCount + 1}:`, {
                                 operation: item.operation,
                                 smv: item.smv,
                                 total: item.total,
@@ -15965,19 +11077,19 @@
                             
                             if (cells[0]) {
                                 cells[0].textContent = item.operation || '';
-                                console.log(`✅ Set cell 0 (OPERATION): "${item.operation}"`);
+                                console.log(`âœ… Set cell 0 (OPERATION): "${item.operation}"`);
                             }
                             if (cells[1]) {
                                 cells[1].textContent = item.smv || ''; // BLANK column shows SMV values
-                                console.log(`✅ Set cell 1 (BLANK): "${item.smv}"`);
+                                console.log(`âœ… Set cell 1 (BLANK): "${item.smv}"`);
                             }
                             if (cells[2]) {
                                 cells[2].textContent = item.costPerMin || ''; // SMV column shows cost per minute
-                                console.log(`✅ Set cell 2 (SMV): "${item.costPerMin}"`);
+                                console.log(`âœ… Set cell 2 (SMV): "${item.costPerMin}"`);
                             }
                             if (cells[3]) {
                                 cells[3].textContent = item.total || ''; // COST (USD/MIN) column shows total
-                                console.log(`✅ Set cell 3 (COST USD/MIN): "${item.total}"`);
+                                console.log(`âœ… Set cell 3 (COST USD/MIN): "${item.total}"`);
                             }
                             
                             // Add to total for calculation - use total from calculated value
@@ -15995,7 +11107,7 @@
                     if (cells[2] && !cells[2].textContent.includes('TOTAL')) {
                         cells[2].textContent = 'SUB TOTAL';
                         cells[3].textContent = `$${operationsTotal.toFixed(2)}`;
-                        console.log('✅ Calculated OPERATIONS subtotal:', operationsTotal.toFixed(2));
+                        console.log('âœ… Calculated OPERATIONS subtotal:', operationsTotal.toFixed(2));
                     }
                 }
             }
@@ -16003,7 +11115,7 @@
             // Populate packaging section
             if (parsedData.packaging && parsedData.packaging.length > 0) {
                 const packagingRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(6) .cost-row:not(.header-row):not(.subtotal-row)');
-                console.log('🔍 PACKAGING DEBUG:');
+                console.log('🔍” PACKAGING DEBUG:');
                 console.log('- Found packaging data:', parsedData.packaging.length, 'items');
                 console.log('- Found DOM rows:', packagingRows.length);
                 console.log('- Packaging data:', parsedData.packaging);
@@ -16019,7 +11131,7 @@
                             const cells = subtotalRow.querySelectorAll('.cost-cell');
                             if (cells[0]) cells[0].textContent = item.type;
                             if (cells[2]) cells[2].textContent = `$${item.cost}`;
-                            console.log('✅ Updated PACKAGING subtotal:', item.type, item.cost);
+                            console.log('âœ… Updated PACKAGING subtotal:', item.type, item.cost);
                         }
                     } else {
                         // Regular item
@@ -16044,7 +11156,7 @@
                     if (cells[0] && !cells[0].textContent.includes('TOTAL')) {
                         cells[0].textContent = 'SUB TOTAL';
                         cells[2].textContent = `$${packagingTotal.toFixed(2)}`;
-                        console.log('✅ Calculated PACKAGING subtotal:', packagingTotal.toFixed(2));
+                        console.log('âœ… Calculated PACKAGING subtotal:', packagingTotal.toFixed(2));
                     }
                 }
             }
@@ -16052,7 +11164,7 @@
             // Populate overhead section
             if (parsedData.overhead && parsedData.overhead.length > 0) {
                 const overheadRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(7) .cost-row:not(.header-row):not(.subtotal-row)');
-                console.log('🔍 OVERHEAD DEBUG:');
+                console.log('🔍” OVERHEAD DEBUG:');
                 console.log('- Found overhead data:', parsedData.overhead.length, 'items');
                 console.log('- Found DOM rows:', overheadRows.length);
                 console.log('- Overhead data:', parsedData.overhead);
@@ -16068,7 +11180,7 @@
                             const cells = subtotalRow.querySelectorAll('.cost-cell');
                             if (cells[0]) cells[0].textContent = item.type;
                             if (cells[2]) cells[2].textContent = `$${item.cost}`;
-                            console.log('✅ Updated OVERHEAD subtotal:', item.type, item.cost);
+                            console.log('âœ… Updated OVERHEAD subtotal:', item.type, item.cost);
                         }
                     } else {
                         // Regular item
@@ -16093,7 +11205,7 @@
                     if (cells[0] && !cells[0].textContent.includes('TOTAL')) {
                         cells[0].textContent = 'SUB TOTAL';
                         cells[2].textContent = `$${overheadTotal.toFixed(2)}`;
-                        console.log('✅ Calculated OVERHEAD subtotal:', overheadTotal.toFixed(2));
+                        console.log('âœ… Calculated OVERHEAD subtotal:', overheadTotal.toFixed(2));
                     }
                 }
             }
@@ -16125,7 +11237,7 @@
                             notesContent.appendChild(pricingTiers);
                         }
                         
-                        console.log('✅ BallCaps Notes populated with', notesLines.length, 'lines');
+                        console.log('âœ… BallCaps Notes populated with', notesLines.length, 'lines');
                     }
                 }
             }
@@ -16280,7 +11392,7 @@
          * Calculate and update all ballcaps template calculations
          */
         function calculateBallCapsTemplate() {
-            console.log('🧮 Calculating ballcaps template...');
+            console.log('🔍§® Calculating ballcaps template...');
             
             // Find sections by their headers
             const sections = document.querySelectorAll('#ballcapsBreakdown .cost-section');
@@ -16365,7 +11477,7 @@
                 factoryTotalElement.textContent = '$' + totalFactoryCost.toFixed(2);
             }
             
-            console.log('✅ Ballcaps template calculations complete');
+            console.log('âœ… Ballcaps template calculations complete');
             console.log('Material Total:', totalMaterialCost.toFixed(2));
             console.log('Factory Total:', totalFactoryCost.toFixed(2));
         }
@@ -16376,39 +11488,39 @@
         function calculateBallCapsSectionTotal(section) {
             let total = 0;
             const rows = section.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
-            console.log('🔍 calculateBallCapsSectionTotal: Found', rows.length, 'rows');
+            console.log('🔍” calculateBallCapsSectionTotal: Found', rows.length, 'rows');
 
             const header = section.querySelector('.section-header');
             const sectionName = header ? header.textContent.trim() : '';
-            console.log('🔍 Section name:', sectionName);
+            console.log('🔍” Section name:', sectionName);
 
             rows.forEach((row, index) => {
                 const cells = row.querySelectorAll('.cost-cell');
-                console.log(`🔍 Row ${index}: ${cells.length} cells`);
+                console.log(`🔍” Row ${index}: ${cells.length} cells`);
 
                 let cost = 0;
                 if (sectionName === 'PACKAGING' || sectionName === 'OVERHEAD/PROFIT') {
                     if (cells.length >= 3) {
                         const costText = cells[2].textContent.replace('$', '').trim();
                         cost = parseFloat(costText) || 0;
-                        console.log(`🔍 Row ${index} (3-col): costText="${costText}", cost=${cost}`);
+                        console.log(`🔍” Row ${index} (3-col): costText="${costText}", cost=${cost}`);
                     }
                 } else if (sectionName === 'OPERATIONS') {
                     if (cells.length >= 4) {
                         const costText = cells[3].textContent.replace('$', '').trim();
                         cost = parseFloat(costText) || 0;
-                        console.log(`🔍 Row ${index} (operations): costText="${costText}", cost=${cost}`);
+                        console.log(`🔍” Row ${index} (operations): costText="${costText}", cost=${cost}`);
                     }
                 } else {
                     if (cells.length >= 4) {
                         const costText = cells[3].textContent.replace('$', '').trim();
                         cost = parseFloat(costText) || 0;
-                        console.log(`🔍 Row ${index} (4-col): costText="${costText}", cost=${cost}`);
+                        console.log(`🔍” Row ${index} (4-col): costText="${costText}", cost=${cost}`);
                     }
                 }
                 total += cost;
             });
-            console.log('🔍 calculateBallCapsSectionTotal: Total =', total);
+            console.log('🔍” calculateBallCapsSectionTotal: Total =', total);
             return total;
         }
 
@@ -16487,7 +11599,7 @@
                 validationHtml += '</ul>';
                 document.getElementById('validationContent').innerHTML = validationHtml;
             } else {
-                document.getElementById('validationContent').innerHTML = '<p style="color: #4CAF50; padding: 15px; background: rgba(76, 175, 80, 0.1); border-radius: 6px; border-left: 4px solid #4CAF50;">✅ No validation errors found</p>';
+                document.getElementById('validationContent').innerHTML = '<p style="color: #4CAF50; padding: 15px; background: rgba(76, 175, 80, 0.1); border-radius: 6px; border-left: 4px solid #4CAF50;">âœ… No validation errors found</p>';
             }
             
             document.getElementById('dataReviewPanel').style.display = 'block';
@@ -16620,7 +11732,7 @@
             createCloseButton(id, onClose) {
                 const closeButton = document.createElement('button');
                 closeButton.className = 'notification-close';
-                closeButton.innerHTML = '×';
+                closeButton.innerHTML = 'Ã—';
                 closeButton.onclick = () => {
                     this.hide(id);
                     if (onClose) onClose();
@@ -16630,11 +11742,11 @@
 
             getDefaultIcon(type) {
                 const icons = {
-                    success: '✅',
-                    error: '❌',
-                    warning: '⚠️',
-                    info: 'ℹ️',
-                    loading: '⏳'
+                    success: 'âœ…',
+                    error: 'âŒ',
+                    warning: 'âš ï¸',
+                    info: 'â„¹ï¸',
+                    loading: 'â³'
                 };
                 return icons[type] || icons.info;
             }
@@ -17155,35 +12267,35 @@
             let cost = 0;
 
             if (sectionType === 'yarn') {
-                // YARN: (CONSUMPTION (G) ÷ 1000) × MATERIAL PRICE (USD/KG)
+                // YARN: (CONSUMPTION (G) Ã· 1000) Ã— MATERIAL PRICE (USD/KG)
                 const consumption = parseFloat(cells[1].textContent.trim()) || 0;
                 const price = parseFloat(cells[2].textContent.trim()) || 0;
                 cost = (consumption / 1000) * price;
                 // Update the cost cell
                 if (cells[3]) cells[3].textContent = cost.toFixed(2);
             } else if (sectionType === 'fabric') {
-                // FABRIC: CONSUMPTION (YARDS) × MATERIAL PRICE (USD/YD)
+                // FABRIC: CONSUMPTION (YARDS) Ã— MATERIAL PRICE (USD/YD)
                 const consumption = parseFloat(cells[1].textContent.trim()) || 0;
                 const price = parseFloat(cells[2].textContent.trim()) || 0;
                 cost = consumption * price;
                 // Update the cost cell
                 if (cells[3]) cells[3].textContent = cost.toFixed(2);
             } else if (sectionType === 'trim') {
-                // TRIM: CONSUMPTION (PIECE) × MATERIAL PRICE (USD/PC)
+                // TRIM: CONSUMPTION (PIECE) Ã— MATERIAL PRICE (USD/PC)
                 const consumption = parseFloat(cells[1].textContent.trim()) || 0;
                 const price = parseFloat(cells[2].textContent.trim()) || 0;
                 cost = consumption * price;
                 // Update the cost cell
                 if (cells[3]) cells[3].textContent = cost.toFixed(2);
             } else if (sectionType === 'knitting') {
-                // KNITTING: TIME (MINS) × SAH (USD/MIN)
+                // KNITTING: TIME (MINS) Ã— SAH (USD/MIN)
                 const time = parseFloat(cells[1].textContent.trim()) || 0;
                 const sah = parseFloat(cells[2].textContent.trim()) || 0;
                 cost = time * sah;
                 // Update the cost cell
                 if (cells[3]) cells[3].textContent = cost.toFixed(2);
             } else if (sectionType === 'operations') {
-                // OPERATIONS: SMV × Cost per Minute
+                // OPERATIONS: SMV Ã— Cost per Minute
                 const smv = parseFloat(cells[2].textContent.trim()) || 0;
                 const costPerMinute = parseFloat(cells[3].textContent.trim()) || 0;
                 cost = smv * costPerMinute;
@@ -17193,7 +12305,7 @@
                 // PACKAGING/OVERHEAD: Direct cost entry (3-column structure)
                 cost = parseFloat(cells[2].textContent.trim()) || 0;
                 // No need to update the cell since it's already the cost input
-                console.log(`🔍 ${sectionType} cost: ${cost}`);
+                console.log(`🔍” ${sectionType} cost: ${cost}`);
             }
             
             // Update subtotals
@@ -17222,7 +12334,7 @@
 
         // Update subtotal for a specific beanie section
         function updateBeanieSectionSubtotal(sectionName) {
-            console.log(`🔍 Updating beanie section subtotal for: ${sectionName}`);
+            console.log(`🔍” Updating beanie section subtotal for: ${sectionName}`);
             
             // Find section by header text
             const sections = document.querySelectorAll('#costBreakdown .cost-section');
@@ -17236,46 +12348,46 @@
             });
             
             if (!targetSection) {
-                console.log(`❌ Section not found: ${sectionName}`);
+                console.log(`âŒ Section not found: ${sectionName}`);
                 return;
             }
             
             const rows = targetSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
             let subtotal = 0;
-            console.log(`🔍 Found ${rows.length} rows in ${sectionName}`);
+            console.log(`🔍” Found ${rows.length} rows in ${sectionName}`);
 
             rows.forEach((row, index) => {
                 const cells = row.querySelectorAll('.cost-cell');
-                console.log(`🔍 Row ${index}: ${cells.length} cells`);
+                console.log(`🔍” Row ${index}: ${cells.length} cells`);
                 
                 if (cells.length >= 4) {
                     const costText = cells[3].textContent.trim().replace('$', '');
                     const cost = parseFloat(costText) || 0;
-                    console.log(`🔍 Row ${index} cost: ${costText} = ${cost}`);
+                    console.log(`🔍” Row ${index} cost: ${costText} = ${cost}`);
                     subtotal += cost;
                 } else if (cells.length >= 3) {
                     // For 3-column sections (PACKAGING, OVERHEAD/PROFIT)
                     const costText = cells[2].textContent.trim().replace('$', '');
                     const cost = parseFloat(costText) || 0;
-                    console.log(`🔍 Row ${index} cost (3-col): ${costText} = ${cost}`);
+                    console.log(`🔍” Row ${index} cost (3-col): ${costText} = ${cost}`);
                     subtotal += cost;
                 }
             });
 
-            console.log(`🔍 ${sectionName} subtotal: ${subtotal}`);
+            console.log(`🔍” ${sectionName} subtotal: ${subtotal}`);
 
             // Update subtotal row
             const subtotalRow = targetSection.querySelector('.subtotal-row');
             if (subtotalRow) {
                 const subtotalCell = subtotalRow.querySelector('.cost-cell:last-child');
                 if (subtotalCell) {
-                    console.log(`🔍 Updating ${sectionName} subtotal from ${subtotalCell.textContent} to $${subtotal.toFixed(2)}`);
+                    console.log(`🔍” Updating ${sectionName} subtotal from ${subtotalCell.textContent} to $${subtotal.toFixed(2)}`);
                     subtotalCell.textContent = `$${subtotal.toFixed(2)}`;
                 } else {
-                    console.log(`❌ No subtotal cell found in ${sectionName}`);
+                    console.log(`âŒ No subtotal cell found in ${sectionName}`);
                 }
             } else {
-                console.log(`❌ No subtotal row found in ${sectionName}`);
+                console.log(`âŒ No subtotal row found in ${sectionName}`);
             }
         }
 
@@ -17482,7 +12594,7 @@
         function showMadisonReviewInterface() {
             const user = window.authService ? window.authService.getCurrentUser() : null;
             if (!user || user.role !== 'madison') {
-                console.log('❌ Only Madison users can access review interface');
+                console.log('âŒ Only Madison users can access review interface');
                 return;
             }
 
@@ -17497,13 +12609,13 @@
         // Update Madison review table with pending factory data
         function updateMadisonReviewTable() {
             try {
-                console.log('🔄 Updating Madison review table...');
+                console.log('🔍”„ Updating Madison review table...');
                 const factoryData = JSON.parse(localStorage.getItem('factoryData') || '[]');
                 const pendingData = factoryData.filter(item => item.status === 'pending');
                 const tableContainer = document.getElementById('madisonReviewTableContent');
                 
                 if (!tableContainer) {
-                    console.log('❌ Madison review table container not found');
+                    console.log('âŒ Madison review table container not found');
                     return;
                 }
 
@@ -17590,7 +12702,7 @@
                                     margin-right: 8px;
                                     transition: all 0.3s ease;
                                 " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(40, 167, 69, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                                    ✅ Approve
+                                    âœ… Approve
                                 </button>
                                 <button onclick="declineFactoryData(${index})" style="
                                     background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
@@ -17603,7 +12715,7 @@
                                     font-weight: 600;
                                     transition: all 0.3s ease;
                                 " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(220, 53, 69, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                                    ❌ Decline
+                                    âŒ Decline
                                 </button>
                             </td>
                         </tr>
@@ -17618,9 +12730,9 @@
                 `;
 
                 tableContainer.innerHTML = tableHTML;
-                console.log('✅ Madison review table updated with', pendingData.length, 'pending entries');
+                console.log('âœ… Madison review table updated with', pendingData.length, 'pending entries');
             } catch (error) {
-                console.error('❌ Error updating Madison review table:', error);
+                console.error('âŒ Error updating Madison review table:', error);
             }
         }
 
@@ -17647,14 +12759,14 @@
                 factoryData.splice(index, 1);
                 localStorage.setItem('factoryData', JSON.stringify(factoryData));
                 
-                console.log('✅ Removed approved item from factory data. Remaining items:', factoryData.length);
+                console.log('âœ… Removed approved item from factory data. Remaining items:', factoryData.length);
                 
                 // Note: Database saving will happen after databank row is created below
                 
                 // Create notification for factory user
                 createFactoryNotification({
                     type: 'approval',
-                    title: '✅ Data Approved by Madison',
+                    title: 'âœ… Data Approved by Madison',
                     message: `Your ${item.template} data (${item.customer || 'Unknown Customer'}) has been approved and added to the databank.`,
                     timestamp: new Date().toISOString(),
                     dataId: item.timestamp,
@@ -17662,7 +12774,7 @@
                 });
                 
                 // Show success notification
-                showNotification(`✅ ${item.template} data approved and added to databank table!`, 'success');
+                showNotification(`âœ… ${item.template} data approved and added to databank table!`, 'success');
                 
                 // Update review table
                 updateMadisonReviewTable();
@@ -17698,24 +12810,24 @@
                         
                         // Add the approved row to the END of the current table data
                         window.currentTableData.push(approvedRow);
-                        console.log('✅ Added approved item as NEW row at end of databank table');
-                        console.log('📊 Approved row data:', approvedRow);
-                        console.log('📊 Total databank rows now:', window.currentTableData.length);
+                        console.log('âœ… Added approved item as NEW row at end of databank table');
+                        console.log('🔍“Š Approved row data:', approvedRow);
+                        console.log('🔍“Š Total databank rows now:', window.currentTableData.length);
                         
                         // Also add to localStorage databank data
                         databankData.push(approvedRow);
                         localStorage.setItem('databankData', JSON.stringify(databankData));
-                        console.log('💾 Saved approved data to localStorage');
+                        console.log('🔍’¾ Saved approved data to localStorage');
                         
                         // Refresh the table display with updated data
                         displayTableData(window.currentTableData);
-                        console.log('🔄 Refreshed databank table display');
+                        console.log('🔍”„ Refreshed databank table display');
                         
                         // Save approved data to Supabase database
                         try {
                             const connectionId = localStorage.getItem('currentConnectionId');
                             if (connectionId) {
-                                console.log('💾 Saving approved data to Supabase database...');
+                                console.log('🔍’¾ Saving approved data to Supabase database...');
                                 
                                 // Try to save to Supabase via API
                                 try {
@@ -17731,31 +12843,31 @@
                                     });
                                     
                                     if (response.ok) {
-                                        console.log('✅ Approved data successfully saved to Supabase database');
-                                        showNotification('✅ Data saved to database successfully!', 'success');
+                                        console.log('âœ… Approved data successfully saved to Supabase database');
+                                        showNotification('âœ… Data saved to database successfully!', 'success');
                                     } else {
                                         const errorText = await response.text();
-                                        console.warn('⚠️ Failed to save approved data to Supabase:', response.status, response.statusText, errorText);
+                                        console.warn('âš ï¸ Failed to save approved data to Supabase:', response.status, response.statusText, errorText);
                                         
                                         // If it's a 404, the function isn't deployed yet
                                         if (response.status === 404) {
-                                            console.log('📝 Netlify function not deployed yet, saving locally only');
-                                            showNotification('⚠️ Data saved locally (database function not deployed yet)', 'warning');
+                                            console.log('🔍“ Netlify function not deployed yet, saving locally only');
+                                            showNotification('âš ï¸ Data saved locally (database function not deployed yet)', 'warning');
                                         } else {
-                                            showNotification(`⚠️ Data saved locally but failed to save to database: ${response.status} ${response.statusText}`, 'warning');
+                                            showNotification(`âš ï¸ Data saved locally but failed to save to database: ${response.status} ${response.statusText}`, 'warning');
                                         }
                                     }
                                 } catch (fetchError) {
-                                    console.warn('⚠️ Network error saving to database:', fetchError);
-                                    showNotification('⚠️ Data saved locally (network error)', 'warning');
+                                    console.warn('âš ï¸ Network error saving to database:', fetchError);
+                                    showNotification('âš ï¸ Data saved locally (network error)', 'warning');
                                 }
                             } else {
-                                console.warn('⚠️ No connection ID found, data saved locally only');
-                                showNotification('⚠️ Data saved locally only (no database connection)', 'warning');
+                                console.warn('âš ï¸ No connection ID found, data saved locally only');
+                                showNotification('âš ï¸ Data saved locally only (no database connection)', 'warning');
                             }
                         } catch (error) {
-                            console.error('❌ Error saving approved data to Supabase:', error);
-                            showNotification('❌ Error saving to database: ' + error.message, 'error');
+                            console.error('âŒ Error saving approved data to Supabase:', error);
+                            showNotification('âŒ Error saving to database: ' + error.message, 'error');
                         }
                     } else {
                         // If no current table data, create new array with approved item
@@ -17780,19 +12892,25 @@
                             'Original Data': item
                         };
                         
-                        // Add to localStorage and display
+                        // Add to localStorage and display (only for Madison users)
                         databankData.push(approvedRow);
                         localStorage.setItem('databankData', JSON.stringify(databankData));
-                        console.log('💾 Saved approved data to localStorage (new table)');
-                        console.log('📊 Approved row data:', approvedRow);
-                        displayTableData(databankData);
-                        console.log('✅ Added approved item to new databank table');
+                        console.log('🔍’¾ Saved approved data to localStorage (new table)');
+                        console.log('🔍“Š Approved row data:', approvedRow);
+                        
+                        // Only display table data for Madison users
+                        if (window.authService && window.authService.canViewDatabank()) {
+                    displayTableData(databankData);
+                            console.log('âœ… Added approved item to new databank table');
+                        } else {
+                            console.log('âœ… Approved data saved but table not displayed for factory user');
+                        }
                         
                         // Save approved data to Supabase database
                         try {
                             const connectionId = localStorage.getItem('currentConnectionId');
                             if (connectionId) {
-                                console.log('💾 Saving approved data to Supabase database (new table)...');
+                                console.log('🔍’¾ Saving approved data to Supabase database (new table)...');
                                 
                                 // Try to save to Supabase via API
                                 try {
@@ -17808,58 +12926,68 @@
                                     });
                                     
                                     if (response.ok) {
-                                        console.log('✅ Approved data successfully saved to Supabase database (new table)');
-                                        showNotification('✅ Data saved to database successfully!', 'success');
+                                        console.log('âœ… Approved data successfully saved to Supabase database (new table)');
+                                        showNotification('âœ… Data saved to database successfully!', 'success');
                                     } else {
                                         const errorText = await response.text();
-                                        console.warn('⚠️ Failed to save approved data to Supabase (new table):', response.status, response.statusText, errorText);
+                                        console.warn('âš ï¸ Failed to save approved data to Supabase (new table):', response.status, response.statusText, errorText);
                                         
                                         // If it's a 404, the function isn't deployed yet
                                         if (response.status === 404) {
-                                            console.log('📝 Netlify function not deployed yet, saving locally only (new table)');
-                                            showNotification('⚠️ Data saved locally (database function not deployed yet)', 'warning');
+                                            console.log('🔍“ Netlify function not deployed yet, saving locally only (new table)');
+                                            showNotification('âš ï¸ Data saved locally (database function not deployed yet)', 'warning');
                                         } else {
-                                            showNotification(`⚠️ Data saved locally but failed to save to database: ${response.status} ${response.statusText}`, 'warning');
+                                            showNotification(`âš ï¸ Data saved locally but failed to save to database: ${response.status} ${response.statusText}`, 'warning');
                                         }
                                     }
                                 } catch (fetchError) {
-                                    console.warn('⚠️ Network error saving to database (new table):', fetchError);
-                                    showNotification('⚠️ Data saved locally (network error)', 'warning');
+                                    console.warn('âš ï¸ Network error saving to database (new table):', fetchError);
+                                    showNotification('âš ï¸ Data saved locally (network error)', 'warning');
                                 }
                             } else {
-                                console.warn('⚠️ No connection ID found, data saved locally only (new table)');
-                                showNotification('⚠️ Data saved locally only (no database connection)', 'warning');
+                                console.warn('âš ï¸ No connection ID found, data saved locally only (new table)');
+                                showNotification('âš ï¸ Data saved locally only (no database connection)', 'warning');
                             }
                         } catch (error) {
-                            console.error('❌ Error saving approved data to Supabase (new table):', error);
-                            showNotification('❌ Error saving to database: ' + error.message, 'error');
+                            console.error('âŒ Error saving approved data to Supabase (new table):', error);
+                            showNotification('âŒ Error saving to database: ' + error.message, 'error');
                         }
                     }
                     
-                    console.log('✅ Updated databank table with approved data (appended, not cleared)');
+                    console.log('âœ… Updated databank table with approved data (appended, not cleared)');
                     
-                    // Ensure databank table is visible
+                    // Ensure databank table is visible (only for Madison users)
                     const databankSection = document.getElementById('databankSection');
                     if (databankSection) {
-                        databankSection.style.display = 'block';
-                        console.log('✅ Made databank section visible');
+                        // Only show databank table for Madison users
+                        if (window.authService && window.authService.canViewDatabank()) {
+                            databankSection.style.display = 'block';
+                            console.log('âœ… Made databank section visible for Madison user');
+                        } else {
+                            databankSection.style.display = 'none';
+                            console.log('âœ… Kept databank section hidden for factory user');
+                        }
                     }
                     
-                    // Scroll to databank table
-                    const tableData = document.getElementById('tableData');
-                    if (tableData) {
-                        tableData.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        console.log('✅ Scrolled to databank table');
+                    // Scroll to databank table (only for Madison users)
+                    if (window.authService && window.authService.canViewDatabank()) {
+                        const tableData = document.getElementById('tableData');
+                        if (tableData) {
+                            tableData.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            console.log('âœ… Scrolled to databank table for Madison user');
+                        }
+                    } else {
+                        console.log('âœ… No scroll needed for factory user (databank hidden)');
                     }
                 }
                 
                 // Don't reload from Supabase immediately - keep the local data visible
                 // The approved data is already added to the current table display
-                console.log('✅ Approved data added locally, not reloading from Supabase to preserve visibility');
+                console.log('âœ… Approved data added locally, not reloading from Supabase to preserve visibility');
                 
-                console.log('✅ Factory data approved:', item);
+                console.log('âœ… Factory data approved:', item);
             } catch (error) {
-                console.error('❌ Error approving factory data:', error);
+                console.error('âŒ Error approving factory data:', error);
                 showNotification('Error approving data!', 'error');
             }
         }
@@ -17894,12 +13022,12 @@
                 factoryData.splice(index, 1);
                 localStorage.setItem('factoryData', JSON.stringify(factoryData));
                 
-                console.log('✅ Removed declined item from factory data. Remaining items:', factoryData.length);
+                console.log('âœ… Removed declined item from factory data. Remaining items:', factoryData.length);
                 
                 // Create notification for factory user
                 createFactoryNotification({
                     type: 'decline',
-                    title: '❌ Data Declined by Madison',
+                    title: 'âŒ Data Declined by Madison',
                     message: `Your ${item.template} data (${item.customer || 'Unknown Customer'}) has been declined. Reason: ${reason}`,
                     timestamp: new Date().toISOString(),
                     dataId: item.timestamp,
@@ -17908,7 +13036,7 @@
                 });
                 
                 // Show success notification
-                showNotification(`❌ ${item.template} data declined. Factory has been notified.`, 'success');
+                showNotification(`âŒ ${item.template} data declined. Factory has been notified.`, 'success');
                 
                 // Update review table
                 updateMadisonReviewTable();
@@ -17945,7 +13073,7 @@
                         
                         // Add the declined row to the END of the current table data
                         window.currentTableData.push(declinedRow);
-                        console.log('✅ Added declined item as NEW row at end of databank table');
+                        console.log('âœ… Added declined item as NEW row at end of databank table');
                         
                         // Also add to localStorage databank data
                         databankData.push(declinedRow);
@@ -17977,19 +13105,25 @@
                             'Original Data': item
                         };
                         
-                        // Add to localStorage and display
+                        // Add to localStorage and display (only for Madison users)
                         databankData.push(declinedRow);
                         localStorage.setItem('databankData', JSON.stringify(databankData));
-                        displayTableData(databankData);
-                        console.log('✅ Added declined item to new databank table');
+                        
+                        // Only display table data for Madison users
+                        if (window.authService && window.authService.canViewDatabank()) {
+                            displayTableData(databankData);
+                            console.log('âœ… Added declined item to new databank table');
+                        } else {
+                            console.log('âœ… Declined data saved but table not displayed for factory user');
+                        }
                     }
                     
-                    console.log('✅ Updated databank table with declined data (appended, not cleared)');
+                    console.log('âœ… Updated databank table with declined data (appended, not cleared)');
                 }
                 
-                console.log('✅ Factory data declined:', item);
+                console.log('âœ… Factory data declined:', item);
             } catch (error) {
-                console.error('❌ Error declining factory data:', error);
+                console.error('âŒ Error declining factory data:', error);
                 showNotification('Error declining data!', 'error');
             }
         }
@@ -18006,7 +13140,7 @@
                 }
                 
                 localStorage.setItem('factoryNotifications', JSON.stringify(notifications));
-                console.log('✅ Factory notification created:', notification);
+                console.log('âœ… Factory notification created:', notification);
                 
                 // Show notification if factory user is currently logged in
                 const user = window.authService ? window.authService.getCurrentUser() : null;
@@ -18014,7 +13148,7 @@
                     showNotification(notification.message, notification.type === 'approval' ? 'success' : 'error');
                 }
             } catch (error) {
-                console.error('❌ Error creating factory notification:', error);
+                console.error('âŒ Error creating factory notification:', error);
             }
         }
 
@@ -18023,7 +13157,7 @@
             try {
                 return JSON.parse(localStorage.getItem('factoryNotifications') || '[]');
             } catch (error) {
-                console.error('❌ Error getting factory notifications:', error);
+                console.error('âŒ Error getting factory notifications:', error);
                 return [];
             }
         }
@@ -18038,7 +13172,7 @@
                     localStorage.setItem('factoryNotifications', JSON.stringify(notifications));
                 }
             } catch (error) {
-                console.error('❌ Error marking notification as read:', error);
+                console.error('âŒ Error marking notification as read:', error);
             }
         }
 
@@ -18047,9 +13181,9 @@
             try {
                 localStorage.setItem('factoryNotifications', JSON.stringify([]));
                 updateNotificationBadge();
-                console.log('✅ All factory notifications cleared');
+                console.log('âœ… All factory notifications cleared');
             } catch (error) {
-                console.error('❌ Error clearing notifications:', error);
+                console.error('âŒ Error clearing notifications:', error);
             }
         }
 
@@ -18116,7 +13250,7 @@
                                 </small>
                             </div>
                             <div style="margin-left: 10px;">
-                                ${notification.type === 'approval' ? '✅' : '❌'}
+                                ${notification.type === 'approval' ? 'âœ…' : 'âŒ'}
                             </div>
                         </div>
                     </div>
@@ -18145,29 +13279,29 @@
         // Update factory data table display
         function updateFactoryDataTable() {
             try {
-                console.log('🔄 Updating factory data table...');
+                console.log('🔍”„ Updating factory data table...');
                 
                 // Use filtered data if available, otherwise get all data
                 let factoryData;
                 if (window.factoryFilteredData) {
                     factoryData = window.factoryFilteredData;
-                    console.log('📊 Using filtered factory data:', factoryData.length, 'entries');
+                    console.log('🔍“Š Using filtered factory data:', factoryData.length, 'entries');
                 } else {
                     factoryData = JSON.parse(localStorage.getItem('factoryData') || '[]');
-                    console.log('📊 Using all factory data:', factoryData.length, 'entries');
+                    console.log('🔍“Š Using all factory data:', factoryData.length, 'entries');
                 }
                 
                 const tableContainer = document.getElementById('factoryDataTableContent');
                 
                 if (!tableContainer) {
-                    console.log('❌ Factory data table container not found');
+                    console.log('âŒ Factory data table container not found');
                     return;
                 }
                 
                 if (factoryData.length === 0) {
                     tableContainer.innerHTML = `
                         <div class="factory-data-empty">
-                            <h3>📝 No Saved Data Yet</h3>
+                            <h3>🔍“ No Saved Data Yet</h3>
                             <p>Fill out a template and click SAVE to see your data here</p>
                         </div>
                     `;
@@ -18186,163 +13320,163 @@
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
                                             <div class="header-with-filter">
                                                 Type
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(0, 'Type')" title="Filter Type">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(0, 'Type')" title="Filter Type">â–¼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
                                             <div class="header-with-filter">
                                                 Season
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(1, 'Season')" title="Filter Season">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(1, 'Season')" title="Filter Season">â–¼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
                                             <div class="header-with-filter">
                                                 Customer
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(2, 'Customer')" title="Filter Customer">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(2, 'Customer')" title="Filter Customer">â–¼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
                                             <div class="header-with-filter">
                                                 Style Number
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(3, 'Style Number')" title="Filter Style Number">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(3, 'Style Number')" title="Filter Style Number">â–¼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
                                             <div class="header-with-filter">
                                                 Style Name
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(4, 'Style Name')" title="Filter Style Name">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(4, 'Style Name')" title="Filter Style Name">â–¼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
                                             <div class="header-with-filter">
                                                 Status
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(5, 'Status')" title="Filter Status">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(5, 'Status')" title="Filter Status">â–¼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
                                             <div class="header-with-filter">
                                                 Main Material
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(6, 'Main Material')" title="Filter Main Material">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(6, 'Main Material')" title="Filter Main Material">â–¼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
                                             <div class="header-with-filter">
                                                 Material Consumption
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(7, 'Material Consumption')" title="Filter Material Consumption">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(7, 'Material Consumption')" title="Filter Material Consumption">â–¼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
                                             <div class="header-with-filter">
                                                 Material Price
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(8, 'Material Price')" title="Filter Material Price">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(8, 'Material Price')" title="Filter Material Price">â–¼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
                                             <div class="header-with-filter">
                                                 Trim Cost
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(9, 'Trim Cost')" title="Filter Trim Cost">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(9, 'Trim Cost')" title="Filter Trim Cost">â–¼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative; color: #ff8c00;">
                                             <div class="header-with-filter">
                                                 Total Material Cost
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(10, 'Total Material Cost')" title="Filter Total Material Cost">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(10, 'Total Material Cost')" title="Filter Total Material Cost">â–¼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
                                             <div class="header-with-filter">
                                                 Knitting Machine
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(11, 'Knitting Machine')" title="Filter Knitting Machine">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(11, 'Knitting Machine')" title="Filter Knitting Machine">â–¼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative; background-color: #ffff00; color: #000;">
                                             <div class="header-with-filter">
                                                 Knitting Time
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(12, 'Knitting Time')" title="Filter Knitting Time">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(12, 'Knitting Time')" title="Filter Knitting Time">â–¼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
                                             <div class="header-with-filter">
                                                 Knitting CPM
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(13, 'Knitting CPM')" title="Filter Knitting CPM">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(13, 'Knitting CPM')" title="Filter Knitting CPM">â–¼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative; color: #ff8c00;">
                                             <div class="header-with-filter">
                                                 Knitting Cost
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(14, 'Knitting Cost')" title="Filter Knitting Cost">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(14, 'Knitting Cost')" title="Filter Knitting Cost">â–¼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative; color: #ff8c00;">
                                             <div class="header-with-filter">
                                                 Ops Cost
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(15, 'Ops Cost')" title="Filter Ops Cost">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(15, 'Ops Cost')" title="Filter Ops Cost">â–¼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative; color: #ff8c00;">
                                             <div class="header-with-filter">
                                                 Knitting + Ops Cost
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(16, 'Knitting + Ops Cost')" title="Filter Knitting + Ops Cost">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(16, 'Knitting + Ops Cost')" title="Filter Knitting + Ops Cost">â–¼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
                                             <div class="header-with-filter">
                                                 Packaging
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(17, 'Packaging')" title="Filter Packaging">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(17, 'Packaging')" title="Filter Packaging">â–¼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative; color: #ff8c00;">
                                             <div class="header-with-filter">
                                                 OH
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(18, 'OH')" title="Filter OH">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(18, 'OH')" title="Filter OH">â–¼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative; color: #ff8c00;">
                                             <div class="header-with-filter">
                                                 PROFIT
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(19, 'PROFIT')" title="Filter PROFIT">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(19, 'PROFIT')" title="Filter PROFIT">â–¼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative; color: #ff8c00;">
                                             <div class="header-with-filter">
                                                 FTY Adjustment
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(20, 'FTY Adjustment')" title="Filter FTY Adjustment">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(20, 'FTY Adjustment')" title="Filter FTY Adjustment">â–¼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative; color: #ff8c00;">
                                             <div class="header-with-filter">
                                                 TTL FTY COST
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(21, 'TTL FTY COST')" title="Filter TTL FTY COST">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(21, 'TTL FTY COST')" title="Filter TTL FTY COST">â–¼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
                                             <div class="header-with-filter">
                                                 SMV
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(22, 'SMV')" title="Filter SMV">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(22, 'SMV')" title="Filter SMV">â–¼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative; color: #ff8c00;">
                                             <div class="header-with-filter">
                                                 Total FOB
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(23, 'Total FOB')" title="Filter Total FOB">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(23, 'Total FOB')" title="Filter Total FOB">â–¼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
                                             <div class="header-with-filter">
                                                 Sample Wt. With Tag (QC Check Form) GRAMS
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(24, 'Sample Wt. With Tag (QC Check Form) GRAMS')" title="Filter Sample Wt. With Tag (QC Check Form) GRAMS">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(24, 'Sample Wt. With Tag (QC Check Form) GRAMS')" title="Filter Sample Wt. With Tag (QC Check Form) GRAMS">â–¼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
                                             <div class="header-with-filter">
                                                 Review Status
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(25, 'Review Status')" title="Filter Review Status">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(25, 'Review Status')" title="Filter Review Status">â–¼</button>
                                             </div>
                                         </th>
                                         <th style="padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;">
                                             <div class="header-with-filter">
                                                 Date
-                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(26, 'Date')" title="Filter Date">▼</button>
+                                                <button class="filter-triangle" onclick="toggleFactoryColumnFilter(26, 'Date')" title="Filter Date">â–¼</button>
                                             </div>
                                         </th>
                                     </tr>
@@ -18443,11 +13577,11 @@
                     factoryTable.style.display = 'block';
                 }
                 
-                console.log('✅ Factory data table updated with', factoryData.length, 'entries');
-                console.log('🔍 Factory data sample:', factoryData[0]);
+                console.log('âœ… Factory data table updated with', factoryData.length, 'entries');
+                console.log('🔍” Factory data sample:', factoryData[0]);
                 
             } catch (error) {
-                console.error('❌ Error updating factory data table:', error);
+                console.error('âŒ Error updating factory data table:', error);
             }
         }
 
@@ -18456,7 +13590,7 @@
         let factoryOriginalData = [];
 
         function toggleFactoryColumnFilter(columnIndex, columnName) {
-            console.log(`🔍 Toggling factory filter for column ${columnIndex}: ${columnName}`);
+            console.log(`🔍” Toggling factory filter for column ${columnIndex}: ${columnName}`);
             
             // Close all other dropdowns first
             document.querySelectorAll('#factoryDataTableContent .filter-dropdown').forEach(dd => {
@@ -18471,39 +13605,39 @@
             if (!dropdown) {
                 // Find the correct header cell and create dropdown
                 const table = document.querySelector('#factoryDataTableContent table');
-                console.log('🔍 Looking for table:', table);
+                console.log('🔍” Looking for table:', table);
                 if (!table) {
-                    console.error('❌ Factory data table not found');
+                    console.error('âŒ Factory data table not found');
                     return;
                 }
                 
                 const headerRow = table.querySelector('thead tr');
-                console.log('🔍 Looking for header row:', headerRow);
+                console.log('🔍” Looking for header row:', headerRow);
                 if (!headerRow) {
-                    console.error('❌ Header row not found');
+                    console.error('âŒ Header row not found');
                     return;
                 }
                 
                 const headerCell = headerRow.children[columnIndex];
-                console.log(`🔍 Looking for header cell ${columnIndex}:`, headerCell);
+                console.log(`🔍” Looking for header cell ${columnIndex}:`, headerCell);
                 if (!headerCell) {
-                    console.error(`❌ Header cell ${columnIndex} not found`);
+                    console.error(`âŒ Header cell ${columnIndex} not found`);
                     return;
                 }
                 
                 // Create dropdown
                 dropdown = createFactoryFilterDropdown(columnIndex, columnName);
                 headerCell.appendChild(dropdown);
-                console.log('✅ Created and appended dropdown:', dropdown);
+                console.log('âœ… Created and appended dropdown:', dropdown);
             }
             
             // Toggle dropdown
             if (dropdown.classList.contains('show')) {
                 dropdown.classList.remove('show');
-                console.log('🔽 Closed dropdown');
+                console.log('🔍”½ Closed dropdown');
             } else {
                 dropdown.classList.add('show');
-                console.log('🔼 Opened dropdown');
+                console.log('🔍”¼ Opened dropdown');
                 
                 // Populate dropdown with unique values
                 populateFactoryFilterDropdown(columnIndex, columnName);
@@ -18552,12 +13686,12 @@
 
         function populateFactoryFilterDropdown(columnIndex, columnName) {
             const optionsContainer = document.getElementById(`factory-options-${columnIndex}`);
-            console.log(`🔍 Populating dropdown for column ${columnIndex}, container:`, optionsContainer);
+            console.log(`🔍” Populating dropdown for column ${columnIndex}, container:`, optionsContainer);
             if (!optionsContainer) return;
             
             // Get unique values for this column
             const uniqueValues = getFactoryUniqueValues(columnIndex);
-            console.log(`🔍 Unique values for column ${columnIndex}:`, uniqueValues);
+            console.log(`🔍” Unique values for column ${columnIndex}:`, uniqueValues);
             
             optionsContainer.innerHTML = '';
             
@@ -18589,7 +13723,7 @@
                 optionsContainer.appendChild(option);
             });
             
-            console.log(`✅ Populated dropdown with ${uniqueValues.length} options`);
+            console.log(`âœ… Populated dropdown with ${uniqueValues.length} options`);
         }
 
         function getFactoryUniqueValues(columnIndex) {
@@ -18597,11 +13731,11 @@
                 // Get data from localStorage
                 const factoryData = JSON.parse(localStorage.getItem('factoryData') || '[]');
                 factoryOriginalData = factoryData;
-                console.log('🔍 Loaded factory data from localStorage:', factoryData.length, 'items');
+                console.log('🔍” Loaded factory data from localStorage:', factoryData.length, 'items');
             }
             
             const values = new Set();
-            console.log(`🔍 Getting unique values for column ${columnIndex} from ${factoryOriginalData.length} items`);
+            console.log(`🔍” Getting unique values for column ${columnIndex} from ${factoryOriginalData.length} items`);
             const columnNames = [
                 'template', 'season', 'customer', 'styleNumber', 'styleName', 'mainMaterial',
                 'materialConsumption', 'materialPrice', 'trimCost', 'totalMaterialCost',
@@ -18683,7 +13817,7 @@
             
             if (selectedValues.length > 0) {
                 factoryCurrentFilters[columnName] = selectedValues;
-                console.log(`✅ Applied factory filter for ${columnName}:`, selectedValues);
+                console.log(`âœ… Applied factory filter for ${columnName}:`, selectedValues);
                 
                 // Update filter button appearance
                 const dropdown = document.getElementById(`factory-filter-${columnIndex}`);
@@ -18695,7 +13829,7 @@
                 }
             } else {
                 delete factoryCurrentFilters[columnName];
-                console.log(`❌ Removed factory filter for ${columnName}`);
+                console.log(`âŒ Removed factory filter for ${columnName}`);
                 
                 // Update filter button appearance
                 const dropdown = document.getElementById(`factory-filter-${columnIndex}`);
@@ -18707,7 +13841,7 @@
                 }
             }
             
-            console.log(`🔧 Current factory filters:`, factoryCurrentFilters);
+            console.log(`🔍”§ Current factory filters:`, factoryCurrentFilters);
             
             // Apply filters
             applyFactoryFilters();
@@ -18718,7 +13852,7 @@
 
         function clearFactoryColumnFilter(columnIndex, columnName) {
             delete factoryCurrentFilters[columnName];
-            console.log(`🧹 Cleared factory filter for ${columnName}`);
+            console.log(`🔍§¹ Cleared factory filter for ${columnName}`);
             
             // Update filter button appearance
             const dropdown = document.getElementById(`factory-filter-${columnIndex}`);
@@ -18741,7 +13875,7 @@
         }
 
         function applyFactoryFilters() {
-            console.log('🔍 Applying factory filters:', factoryCurrentFilters);
+            console.log('🔍” Applying factory filters:', factoryCurrentFilters);
             
             if (!factoryOriginalData || factoryOriginalData.length === 0) {
                 const factoryData = JSON.parse(localStorage.getItem('factoryData') || '[]');
@@ -18833,7 +13967,7 @@
 
         function clearAllFactoryFilters() {
             factoryCurrentFilters = {};
-            console.log('🧹 Cleared all factory filters');
+            console.log('🔍§¹ Cleared all factory filters');
             
             // Update all filter buttons
             document.querySelectorAll('#factoryDataTableContent .filter-triangle').forEach(button => {
@@ -18869,141 +14003,109 @@
             });
         }
 
-// Close dropdowns when clicking outside
-document.addEventListener('click', function(event) {
-    const clickedElement = event.target;
-    
-    // Don't close if clicking the filter button itself
-    if (clickedElement.closest('.filter-triangle') || 
-        clickedElement.classList.contains('filter-triangle')) {
-        return; // Let the toggle function handle it
-    }
-    
-    // Don't close if clicking inside a dropdown
-    const isInDropdown = clickedElement.closest('#tableData .filter-dropdown') || 
-                        clickedElement.closest('#factoryDataTableContent .filter-dropdown') ||
-                        clickedElement.closest('[id^="databank-filter-"]') ||
-                        clickedElement.closest('[id^="factory-filter-"]');
-    
-    if (isInDropdown) {
-        return; // Don't close if clicking inside dropdown
-    }
-    
-    // Close factory dropdowns
-    document.querySelectorAll('#factoryDataTableContent .filter-dropdown').forEach(dropdown => {
-        dropdown.classList.remove('show');
-    });
-    
-    // Close databank dropdowns
-    document.querySelectorAll('#tableData .filter-dropdown').forEach(dropdown => {
-        dropdown.classList.remove('show');
-    });
-});
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('#factoryDataTableContent .header-with-filter')) {
+                document.querySelectorAll('#factoryDataTableContent .filter-dropdown').forEach(dropdown => {
+                    dropdown.classList.remove('show');
+                });
+            }
+            if (!event.target.closest('#tableData .header-with-filter')) {
+                document.querySelectorAll('#tableData .filter-dropdown').forEach(dropdown => {
+                    dropdown.classList.remove('show');
+                });
+            }
+        });
+
         // Databank Table Filtering Functions
         let databankCurrentFilters = {};
         let databankOriginalData = [];
-
         function toggleDatabankColumnFilter(columnIndex, columnName, event) {
-    if (event) {
-        event.stopPropagation();
-        event.preventDefault();
-    }
-    
-    console.log(`🔍 Toggling databank filter for column ${columnIndex}: ${columnName}`);
-    
-    // Check if dropdown exists
-    let dropdown = document.getElementById(`databank-filter-${columnIndex}`);
-    
-    if (dropdown) {
-        // If it exists and is showing, close it
-        if (dropdown.classList.contains('show')) {
-            dropdown.remove();
-            console.log('🔽 Closed databank dropdown');
-            return;
+            // Prevent event bubbling
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+            
+            console.log(`🔍 Toggling databank filter for column ${columnIndex}: ${columnName}`);
+            
+            // Close all other dropdowns first
+            document.querySelectorAll('.filter-dropdown').forEach(dd => {
+                if (dd.id !== `databank-filter-${columnIndex}`) {
+                    dd.classList.remove('show');
+                    dd.remove(); // Remove them completely
+                }
+            });
+            
+            // **ALWAYS DELETE AND RECREATE THE DROPDOWN**
+            let dropdown = document.getElementById(`databank-filter-${columnIndex}`);
+            if (dropdown) {
+                const wasShowing = dropdown.classList.contains('show');
+                dropdown.remove();
+                
+                // If it was showing, we're closing it, so just return
+                if (wasShowing) {
+                    console.log('🔽 Closed databank dropdown');
+                    return;
+                }
+            }
+            
+            // Create new dropdown
+            dropdown = createDatabankFilterDropdown(columnIndex, columnName);
+            document.body.appendChild(dropdown);
+            
+            // Get positioning
+            const table = document.querySelector('#tableData table');
+            const headerRow = table.querySelector('thead tr');
+            const headerCell = headerRow.children[columnIndex];
+            const filterButton = headerCell.querySelector('.filter-triangle');
+            const rect = (filterButton || headerCell).getBoundingClientRect();
+            
+            console.log('📏 Button position:', rect);
+            
+            // **SET POSITION USING STYLE.SETPROPERTY (HIGHER PRIORITY)**
+            dropdown.style.setProperty('position', 'fixed', 'important');
+            dropdown.style.setProperty('top', (rect.bottom + 5) + 'px', 'important');
+            dropdown.style.setProperty('left', rect.left + 'px', 'important');
+            dropdown.style.setProperty('width', '250px', 'important');
+            dropdown.style.setProperty('max-height', '400px', 'important');
+            dropdown.style.setProperty('z-index', '999999', 'important');
+            dropdown.style.setProperty('display', 'block', 'important');
+            dropdown.style.setProperty('visibility', 'visible', 'important');
+            dropdown.style.setProperty('opacity', '1', 'important');
+            
+            dropdown.classList.add('show');
+            
+            console.log('📍 Positioned dropdown at:', {
+                top: dropdown.style.top,
+                left: dropdown.style.left,
+                rectBottom: rect.bottom,
+                rectLeft: rect.left
+            });
+            
+            // Populate dropdown
+            populateDatabankFilterDropdown(columnIndex, columnName);
+            
+            console.log('🔼 Opened databank dropdown');
         }
-        // Remove old one
-        dropdown.remove();
-    }
-    
-    // Close all other dropdowns
-    document.querySelectorAll('.filter-dropdown').forEach(dd => {
-        dd.remove();
-    });
-    
-    // Get positioning FIRST
-    const table = document.querySelector('#tableData table');
-    const headerRow = table.querySelector('thead tr');
-    const headerCell = headerRow.children[columnIndex];
-    const filterButton = headerCell.querySelector('.filter-triangle');
-    const rect = (filterButton || headerCell).getBoundingClientRect();
-    
-    console.log('📏 Button position:', {
-        top: rect.top,
-        bottom: rect.bottom,
-        left: rect.left,
-        right: rect.right
-    });
-    
-    // Create dropdown
-    dropdown = createDatabankFilterDropdown(columnIndex, columnName);
-    
-    // Set position BEFORE appending
-    dropdown.style.cssText = `
-        position: fixed !important;
-        top: ${rect.bottom + 5}px !important;
-        left: ${rect.left}px !important;
-        width: 250px !important;
-        max-height: 400px !important;
-        background: white !important;
-        border: 1px solid #ddd !important;
-        border-radius: 8px !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
-        z-index: 999999 !important;
-        min-width: 200px !important;
-        overflow-y: auto !important;
-        padding: 10px !important;
-        color: #333 !important;
-        pointer-events: auto !important;
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-    `;
-    
-    dropdown.classList.add('show');
-    
-    console.log('📍 Set dropdown position to:', {
-        top: (rect.bottom + 5) + 'px',
-        left: rect.left + 'px'
-    });
-    
-    // NOW append it
-    document.body.appendChild(dropdown);
-    
-    console.log('🔼 Opened databank dropdown');
-    
-    // Populate dropdown
-    populateDatabankFilterDropdown(columnIndex, columnName);
-}
-
         function createDatabankFilterDropdown(columnIndex, columnName) {
             const dropdown = document.createElement('div');
             dropdown.id = `databank-filter-${columnIndex}`;
             dropdown.className = 'filter-dropdown';
-            // Set initial styles but NOT display - let CSS .show class handle visibility
+            // **REMOVED position, top, left - these will be set by toggle function**
             dropdown.style.cssText = `
-                position: absolute;  /* Changed from fixed */
-                top: 100%;
                 background: white !important;
                 border: 1px solid #ddd;
                 border-radius: 8px;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                z-index: 10000 !important;
+                z-index: 999999 !important;
                 min-width: 200px;
                 max-height: 300px;
                 overflow-y: auto;
                 padding: 10px;
                 color: #333 !important;
                 pointer-events: auto !important;
+                display: none;
             `;
             
             dropdown.innerHTML = `
@@ -19032,12 +14134,12 @@ document.addEventListener('click', function(event) {
 
         function populateDatabankFilterDropdown(columnIndex, columnName) {
             const optionsContainer = document.getElementById(`databank-options-${columnIndex}`);
-            console.log(`🔍 Populating databank dropdown for column ${columnIndex}, container:`, optionsContainer);
+            console.log(`🔍” Populating databank dropdown for column ${columnIndex}, container:`, optionsContainer);
             if (!optionsContainer) return;
             
             // Get unique values for this column
             const uniqueValues = getDatabankUniqueValues(columnIndex);
-            console.log(`🔍 Unique values for databank column ${columnIndex}:`, uniqueValues);
+            console.log(`🔍” Unique values for databank column ${columnIndex}:`, uniqueValues);
             
             optionsContainer.innerHTML = '';
             
@@ -19055,89 +14157,51 @@ document.addEventListener('click', function(event) {
                     border-radius: 4px;
                     margin: 2px 0;
                     transition: background-color 0.2s;
-                    color: #333;
-                    background-color: white;
                 `;
-                // Escape HTML to prevent XSS
-                const safeValue = String(value).replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 option.innerHTML = `
-                    <label style="display: flex !important; align-items: center; cursor: pointer !important; margin: 0; color: #333 !important; width: 100%; pointer-events: auto !important;">
-                        <input type="checkbox" value="${safeValue}" style="margin-right: 6px; cursor: pointer !important; pointer-events: auto !important; width: auto; height: auto;">
-                        <span style="color: #333 !important; flex: 1; pointer-events: none !important; user-select: none;">${value}</span>
+                    <label style="display: flex; align-items: center; cursor: pointer; margin: 0;">
+                        <input type="checkbox" value="${value}" style="margin-right: 6px;" 
+                               onchange="applyDatabankColumnFilter(${columnIndex}, '${columnName}')">
+                        <span>${value}</span>
                     </label>
                 `;
-                option.onmouseover = () => {
-                    option.style.backgroundColor = '#f8f9fa';
-                };
-                option.onmouseout = () => {
-                    option.style.backgroundColor = 'white';
-                };
+                option.onmouseover = () => option.style.backgroundColor = '#f8f9fa';
+                option.onmouseout = () => option.style.backgroundColor = 'transparent';
                 
                 optionsContainer.appendChild(option);
             });
             
-            console.log(`✅ Populated databank dropdown with ${uniqueValues.length} options`);
+            console.log(`âœ… Populated databank dropdown with ${uniqueValues.length} options`);
         }
 
         function getDatabankUniqueValues(columnIndex) {
             if (!databankOriginalData || databankOriginalData.length === 0) {
                 // Get data from current table data
                 databankOriginalData = window.currentTableData || [];
-                console.log('🔍 Loaded databank data from currentTableData:', databankOriginalData.length, 'items');
-            }
-            
-            if (!databankOriginalData || databankOriginalData.length === 0) {
-                console.log('❌ No databank data available');
-                return [];
+                console.log('🔍” Loaded databank data from currentTableData:', databankOriginalData.length, 'items');
             }
             
             const values = new Set();
-            console.log(`🔍 Getting unique values for databank column ${columnIndex} from ${databankOriginalData.length} items`);
+            console.log(`🔍” Getting unique values for databank column ${columnIndex} from ${databankOriginalData.length} items`);
             
-            // Get the column name from the current headers (display name)
+            // Get the column name from the current headers
             const columnHeaders = window.currentColumnHeaders || [];
-            const displayName = columnHeaders[columnIndex];
+            const columnName = columnHeaders[columnIndex];
             
-            if (!displayName) {
-                console.log(`❌ No column name found for index ${columnIndex}`);
+            if (!columnName) {
+                console.log(`âŒ No column name found for index ${columnIndex}`);
                 return [];
             }
             
-            // Get the mapped column (actual data key) from the column mapping
-            const mappedColumns = window.currentColumnMapping || [];
-            const actualColumnName = mappedColumns[columnIndex];
-            
-            if (!actualColumnName) {
-                console.log(`❌ No mapped column found for index ${columnIndex} (display: ${displayName})`);
-                return [];
-            }
-            
-            console.log(`🔍 Using actual column name: "${actualColumnName}" for display name: "${displayName}"`);
-            
-            // Get unique values using the actual column name
             databankOriginalData.forEach(item => {
-                // Try the actual column name first
-                let value = item[actualColumnName];
-                
-                // If not found, try case variations
-                if (value === undefined || value === null) {
-                    const availableKeys = Object.keys(item);
-                    const foundKey = availableKeys.find(key => 
-                        key.toLowerCase() === actualColumnName.toLowerCase()
-                    );
-                    if (foundKey) {
-                        value = item[foundKey];
-                    }
-                }
-                
-                const stringValue = String(value || '').trim();
-                if (stringValue && stringValue !== '-' && stringValue !== 'null' && stringValue !== 'undefined') {
-                    values.add(stringValue);
+                const value = String(item[columnName] || '').trim();
+                if (value && value !== '-') {
+                    values.add(value);
                 }
             });
             
             const uniqueValues = Array.from(values).sort();
-            console.log(`✅ Found ${uniqueValues.length} unique values for databank column ${columnIndex} (${displayName} -> ${actualColumnName}):`, uniqueValues.slice(0, 10));
+            console.log(`Found ${uniqueValues.length} unique values for databank column ${columnIndex} (${columnName}):`, uniqueValues);
             return uniqueValues;
         }
 
@@ -19150,7 +14214,7 @@ document.addEventListener('click', function(event) {
             
             if (selectedValues.length > 0) {
                 databankCurrentFilters[columnName] = selectedValues;
-                console.log(`✅ Applied databank filter for ${columnName}:`, selectedValues);
+                console.log(`âœ… Applied databank filter for ${columnName}:`, selectedValues);
                 
                 // Update filter button appearance
                 const filterButton = dropdown.parentElement.querySelector('.filter-triangle');
@@ -19159,7 +14223,7 @@ document.addEventListener('click', function(event) {
                 }
             } else {
                 delete databankCurrentFilters[columnName];
-                console.log(`❌ Removed databank filter for ${columnName}`);
+                console.log(`âŒ Removed databank filter for ${columnName}`);
                 
                 // Update filter button appearance
                 const filterButton = dropdown.parentElement.querySelector('.filter-triangle');
@@ -19168,7 +14232,7 @@ document.addEventListener('click', function(event) {
                 }
             }
             
-            console.log(`🔧 Current databank filters:`, databankCurrentFilters);
+            console.log(`🔍”§ Current databank filters:`, databankCurrentFilters);
             
             // Apply filters
             applyDatabankFilters();
@@ -19179,7 +14243,7 @@ document.addEventListener('click', function(event) {
 
         function clearDatabankColumnFilter(columnIndex, columnName) {
             delete databankCurrentFilters[columnName];
-            console.log(`🧹 Cleared databank filter for ${columnName}`);
+            console.log(`🔍§¹ Cleared databank filter for ${columnName}`);
             
             // Update filter button appearance
             const dropdown = document.getElementById(`databank-filter-${columnIndex}`);
@@ -19202,73 +14266,32 @@ document.addEventListener('click', function(event) {
         }
 
         function applyDatabankFilters() {
-            console.log('🔍 Applying databank filters:', databankCurrentFilters);
+            console.log('🔍” Applying databank filters:', databankCurrentFilters);
             
             if (!databankOriginalData || databankOriginalData.length === 0) {
                 databankOriginalData = window.currentTableData || [];
             }
             
-            if (!databankOriginalData || databankOriginalData.length === 0) {
-                console.log('❌ No databank data available for filtering');
-                return;
-            }
-            
-            let filteredData = [...databankOriginalData]; // Create a copy
+            let filteredData = databankOriginalData;
             console.log('Starting with', filteredData.length, 'databank rows');
             
-            // Get column mapping
-            const columnHeaders = window.currentColumnHeaders || [];
-            const mappedColumns = window.currentColumnMapping || [];
-            
             // Apply each filter
-            Object.keys(databankCurrentFilters).forEach(displayName => {
-                const filterValue = databankCurrentFilters[displayName];
+            Object.keys(databankCurrentFilters).forEach(columnName => {
+                const filterValue = databankCurrentFilters[columnName];
                 if (!filterValue || filterValue.length === 0) return;
                 
-                // Find the column index for this display name
-                const columnIndex = columnHeaders.indexOf(displayName);
-                if (columnIndex === -1) {
-                    console.log(`❌ Column index not found for display name: ${displayName}`);
-                    return;
-                }
-                
-                // Get the actual column name from mapping
-                const actualColumnName = mappedColumns[columnIndex];
-                if (!actualColumnName) {
-                    console.log(`❌ No mapped column found for display name: ${displayName}`);
-                    return;
-                }
-                
-                console.log(`Applying databank filter for ${displayName} (${actualColumnName}):`, filterValue);
+                console.log(`Applying databank filter for ${columnName}:`, filterValue);
                 
                 const beforeCount = filteredData.length;
                 
-                // Filter using the actual column name
+                // Filter directly using the column name as it appears in the data
                 filteredData = filteredData.filter(item => {
-                    // Try the actual column name first
-                    let value = item[actualColumnName];
-                    
-                    // If not found, try case variations
-                    if (value === undefined || value === null) {
-                        const availableKeys = Object.keys(item);
-                        const foundKey = availableKeys.find(key => 
-                            key.toLowerCase() === actualColumnName.toLowerCase()
-                        );
-                        if (foundKey) {
-                            value = item[foundKey];
-                        }
-                    }
-                    
-                    const stringValue = String(value || '').trim();
-                    // Check if any of the filter values match (case-insensitive)
-                    const matches = filterValue.some(fv => 
-                        stringValue.toLowerCase() === fv.toLowerCase() || 
-                        stringValue.toLowerCase().includes(fv.toLowerCase())
-                    );
+                    const value = String(item[columnName] || '').trim();
+                    const matches = filterValue.some(fv => value.toLowerCase().includes(fv.toLowerCase()));
                     return matches;
                 });
                 
-                console.log(`Filtered ${displayName} from ${beforeCount} to ${filteredData.length} databank rows`);
+                console.log(`Filtered ${columnName} from ${beforeCount} to ${filteredData.length} databank rows`);
             });
             
             console.log('Final filtered databank data length:', filteredData.length);
@@ -19287,7 +14310,7 @@ document.addEventListener('click', function(event) {
 
         function clearAllDatabankFilters() {
             databankCurrentFilters = {};
-            console.log('🧹 Cleared all databank filters');
+            console.log('🔍§¹ Cleared all databank filters');
             
             // Update all filter buttons
             document.querySelectorAll('#tableData .filter-triangle').forEach(button => {
@@ -19411,7 +14434,7 @@ document.addEventListener('click', function(event) {
                         // Hide loading notification and show update success
                         setTimeout(() => {
                             notificationManager.hide(loadingId);
-                            showSuccessNotification('🔄 Existing beanie data updated successfully! Duplicate prevented.', {
+                            showSuccessNotification('🔍”„ Existing beanie data updated successfully! Duplicate prevented.', {
                                 duration: 6000
                             });
                             
@@ -19425,7 +14448,7 @@ document.addEventListener('click', function(event) {
                         // Hide loading notification and show success
                         setTimeout(() => {
                             notificationManager.hide(loadingId);
-                            showSuccessNotification('✅ New beanie data saved successfully to database!', {
+                            showSuccessNotification('âœ… New beanie data saved successfully to database!', {
                                 duration: 5000
                             });
                             
@@ -19483,12 +14506,12 @@ document.addEventListener('click', function(event) {
         // Save beanie data to local storage (for Factory users)
         function saveBeanieToLocalStorage() {
             try {
-                console.log('🔄 Starting beanie data save to local storage...');
+                console.log('🔍”„ Starting beanie data save to local storage...');
                 
                 // Check if beanie template is visible
                 const costBreakdown = document.getElementById('costBreakdown');
                 if (!costBreakdown || costBreakdown.style.display === 'none') {
-                    console.error('❌ Beanie template is not visible');
+                    console.error('âŒ Beanie template is not visible');
                     showNotification('Please select the Beanie template first.', 'error');
                     return;
                 }
@@ -19519,7 +14542,7 @@ document.addEventListener('click', function(event) {
                 
                 // Validate that we have some data
                 if (!beanieData.customer && !beanieData.season && !beanieData.styleNumber) {
-                    console.warn('⚠️ No basic product information found');
+                    console.warn('âš ï¸ No basic product information found');
                 }
                 
                 // Save to local storage (factory data for review)
@@ -19553,13 +14576,15 @@ document.addEventListener('click', function(event) {
                 databankData.push(databankRow);
                 localStorage.setItem('databankData', JSON.stringify(databankData));
                 
-                console.log('✅ Beanie data added to both factory data and databank table');
+                console.log('âœ… Beanie data added to both factory data and databank table');
                 
-                // Refresh databank table if it's visible
-                if (typeof refreshDatabankTable === 'function') {
+                // Refresh databank table if it's visible (only for Madison users)
+                if (typeof refreshDatabankTable === 'function' && window.authService && window.authService.canViewDatabank()) {
                     setTimeout(() => {
                         refreshDatabankTable();
                     }, 500);
+                } else {
+                    console.log('âœ… Skipping databank refresh for factory user');
                 }
                 
                 // Show success notification
@@ -19570,10 +14595,10 @@ document.addEventListener('click', function(event) {
                     updateFactoryDataTable();
                 }
                 
-                console.log('✅ Beanie data saved to local storage:', beanieData);
+                console.log('âœ… Beanie data saved to local storage:', beanieData);
                 
             } catch (error) {
-                console.error('❌ Error saving beanie data to local storage:', error);
+                console.error('âŒ Error saving beanie data to local storage:', error);
                 console.error('Error details:', error.message, error.stack);
                 showNotification(`Error saving data: ${error.message}`, 'error');
             }
@@ -19582,12 +14607,12 @@ document.addEventListener('click', function(event) {
         // Save ballcaps data to local storage (for Factory users)
         function saveBallCapsToLocalStorage() {
             try {
-                console.log('🔄 Starting ballcaps data save to local storage...');
+                console.log('🔍”„ Starting ballcaps data save to local storage...');
                 
                 // Check if ballcaps template is visible
                 const ballcapsBreakdown = document.getElementById('ballcapsBreakdown');
                 if (!ballcapsBreakdown || ballcapsBreakdown.style.display === 'none') {
-                    console.error('❌ Ballcaps template is not visible');
+                    console.error('âŒ Ballcaps template is not visible');
                     showNotification('Please select the Ballcaps template first.', 'error');
                     return;
                 }
@@ -19647,13 +14672,15 @@ document.addEventListener('click', function(event) {
                 databankData.push(databankRow);
                 localStorage.setItem('databankData', JSON.stringify(databankData));
                 
-                console.log('✅ Ballcaps data added to both factory data and databank table');
+                console.log('âœ… Ballcaps data added to both factory data and databank table');
                 
-                // Refresh databank table if it's visible
-                if (typeof refreshDatabankTable === 'function') {
+                // Refresh databank table if it's visible (only for Madison users)
+                if (typeof refreshDatabankTable === 'function' && window.authService && window.authService.canViewDatabank()) {
                     setTimeout(() => {
                         refreshDatabankTable();
                     }, 500);
+                } else {
+                    console.log('âœ… Skipping databank refresh for factory user');
                 }
                 
                 // Show success notification
@@ -19664,10 +14691,10 @@ document.addEventListener('click', function(event) {
                     updateFactoryDataTable();
                 }
                 
-                console.log('✅ Ballcaps data saved to local storage:', ballcapsData);
+                console.log('âœ… Ballcaps data saved to local storage:', ballcapsData);
                 
             } catch (error) {
-                console.error('❌ Error saving ballcaps data to local storage:', error);
+                console.error('âŒ Error saving ballcaps data to local storage:', error);
                 console.error('Error details:', error.message, error.stack);
                 showNotification(`Error saving data: ${error.message}`, 'error');
             }
@@ -19852,7 +14879,7 @@ document.addEventListener('click', function(event) {
                         // Hide loading notification and show update success
                         setTimeout(() => {
                             notificationManager.hide(loadingId);
-                            showSuccessNotification('🔄 Existing ballcaps data updated successfully! Duplicate prevented.', {
+                            showSuccessNotification('🔍”„ Existing ballcaps data updated successfully! Duplicate prevented.', {
                                 duration: 6000
                             });
                             
@@ -19866,7 +14893,7 @@ document.addEventListener('click', function(event) {
                         // Hide loading notification and show success
                         setTimeout(() => {
                             notificationManager.hide(loadingId);
-                            showSuccessNotification('✅ New ballcaps data saved successfully to database!', {
+                            showSuccessNotification('âœ… New ballcaps data saved successfully to database!', {
                                 duration: 5000
                             });
                             
@@ -20139,14 +15166,14 @@ document.addEventListener('click', function(event) {
 
         // Test function to test Excel reading
         function testExcelReading() {
-            console.log('🧪 TESTING EXCEL READING...');
+            console.log('🔍§ª TESTING EXCEL READING...');
             
             if (typeof XLSX === 'undefined') {
-                console.error('❌ XLSX library not loaded');
+                console.error('âŒ XLSX library not loaded');
                 return false;
             }
             
-            console.log('✅ XLSX library loaded');
+            console.log('âœ… XLSX library loaded');
             console.log('XLSX version:', XLSX.version);
             console.log('XLSX methods:', Object.keys(XLSX).slice(0, 10));
             
@@ -20155,7 +15182,7 @@ document.addEventListener('click', function(event) {
 
         // Test function to simulate ROSSIGNOL cap data
         function testRossignolCapData() {
-            console.log('🧪 TESTING ROSSIGNOL CAP DATA...');
+            console.log('🔍§ª TESTING ROSSIGNOL CAP DATA...');
             
             const testData = {
                 customer: "ROSSIGNOL",
@@ -20274,19 +15301,19 @@ document.addEventListener('click', function(event) {
                 totalFactoryCost: "60.88"
             };
             
-            console.log('✅ Test data created:', testData);
+            console.log('âœ… Test data created:', testData);
             
             // Test template detection
             const templateType = detectTemplateType([testData]);
-            console.log('✅ Template type detected:', templateType);
+            console.log('âœ… Template type detected:', templateType);
             
             // Test population
             if (templateType === 'ballcaps') {
-                console.log('🎯 Testing BallCaps template population...');
+                console.log('🔍Ž¯ Testing BallCaps template population...');
                 populateBallCapsTemplate(testData);
-                console.log('✅ BallCaps template populated successfully');
+                console.log('âœ… BallCaps template populated successfully');
             } else {
-                console.log('❌ Template type not detected as ballcaps');
+                console.log('âŒ Template type not detected as ballcaps');
             }
             
             return testData;
@@ -20294,11 +15321,11 @@ document.addEventListener('click', function(event) {
 
         // Test function to debug operations data
         window.testOperationsData = function() {
-            console.log('🧪 TESTING OPERATIONS DATA PARSING');
+            console.log('🔍§ª TESTING OPERATIONS DATA PARSING');
             console.log('==');
             
             if (!window.lastExcelData) {
-                console.log('❌ No Excel data available. Please upload an Excel file first.');
+                console.log('âŒ No Excel data available. Please upload an Excel file first.');
                 return;
             }
             
@@ -20308,7 +15335,7 @@ document.addEventListener('click', function(event) {
             if (window.ballcapsImporter) {
                 try {
                     const parsedData = window.ballcapsImporter.parseExcelData(window.lastExcelData.data || window.lastExcelData);
-                    console.log('✅ BallCaps parsing successful:');
+                    console.log('âœ… BallCaps parsing successful:');
                     console.log('Operations data:', parsedData.operations);
                     console.log('Operations count:', parsedData.operations.length);
                     
@@ -20321,26 +15348,26 @@ document.addEventListener('click', function(event) {
                         });
                     });
                 } catch (error) {
-                    console.error('❌ BallCaps parsing failed:', error);
+                    console.error('âŒ BallCaps parsing failed:', error);
                 }
             } else {
-                console.log('❌ BallCaps importer not available');
+                console.log('âŒ BallCaps importer not available');
             }
         };
 
         // Debug function to test beanie material cost parsing
         window.testBeanieMaterialCosts = function() {
-            console.log('🧪 TESTING BEANIE MATERIAL COSTS PARSING');
+            console.log('🔍§ª TESTING BEANIE MATERIAL COSTS PARSING');
             console.log('==');
             if (!window.lastExcelData) {
-                console.log('❌ No Excel data available. Please upload an Excel file first.');
+                console.log('âŒ No Excel data available. Please upload an Excel file first.');
                 return;
             }
             console.log('Raw Excel data:', window.lastExcelData);
             if (window.beanieImporter) {
                 try {
                     const parsedData = window.beanieImporter.parseExcelData(window.lastExcelData);
-                    console.log('✅ Beanie parsing successful:');
+                    console.log('âœ… Beanie parsing successful:');
                     console.log('YARN items:', parsedData.yarn);
                     console.log('FABRIC items:', parsedData.fabric);
                     console.log('TRIM items:', parsedData.trim);
@@ -20375,19 +15402,19 @@ document.addEventListener('click', function(event) {
                         });
                     });
                 } catch (error) {
-                    console.error('❌ Beanie parsing failed:', error);
+                    console.error('âŒ Beanie parsing failed:', error);
                 }
             } else {
-                console.log('❌ Beanie importer not available');
+                console.log('âŒ Beanie importer not available');
             }
         };
 
         // Debug function to specifically test YARN section detection
         window.debugYarnSection = function() {
-            console.log('🔍 DEBUGGING YARN SECTION DETECTION');
+            console.log('🔍” DEBUGGING YARN SECTION DETECTION');
             console.log('==');
             if (!window.lastExcelData) {
-                console.log('❌ No Excel data available. Please upload an Excel file first.');
+                console.log('âŒ No Excel data available. Please upload an Excel file first.');
                 return;
             }
             
@@ -20407,20 +15434,20 @@ document.addEventListener('click', function(event) {
                 if (firstCell === 'YARN' || firstCell === 'MATERIAL' || firstCell.includes('YARN')) {
                     currentSection = 'yarn';
                     foundYarnSection = true;
-                    console.log(`✅ Found YARN section at row ${i}:`, firstCell);
+                    console.log(`âœ… Found YARN section at row ${i}:`, firstCell);
                     console.log('  Row data:', row);
                 } else if (firstCell.includes('(Name/Code/Description)') && row[1] && row[1].includes('CONSUMPTION')) {
                     if (row[1].includes('G') && row[2] && row[2].includes('USD/KG')) {
                         currentSection = 'yarn';
                         foundYarnSection = true;
-                        console.log(`✅ Found YARN header row at row ${i}:`, firstCell);
+                        console.log(`âœ… Found YARN header row at row ${i}:`, firstCell);
                         console.log('  Row data:', row);
                     }
                 }
                 
                 // If we're in YARN section, show the next few rows
                 if (currentSection === 'yarn' && foundYarnSection) {
-                    console.log(`🔍 YARN section row ${i}:`, firstCell, '|', row[1], '|', row[2], '|', row[3]);
+                    console.log(`🔍” YARN section row ${i}:`, firstCell, '|', row[1], '|', row[2], '|', row[3]);
                     
                     // Show next 5 rows to see data
                     if (i < data.length - 1) {
@@ -20437,7 +15464,7 @@ document.addEventListener('click', function(event) {
             }
             
             if (!foundYarnSection) {
-                console.log('❌ No YARN section found in Excel data');
+                console.log('âŒ No YARN section found in Excel data');
                 console.log('Searching for any rows containing "yarn" or "material"...');
                 
                 for (let i = 0; i < Math.min(50, data.length); i++) {
@@ -20454,10 +15481,10 @@ document.addEventListener('click', function(event) {
 
         // Simple test function to force YARN parsing
         window.testYarnParsing = function() {
-            console.log('🧪 FORCING YARN PARSING TEST');
+            console.log('🔍§ª FORCING YARN PARSING TEST');
             console.log('==');
             if (!window.lastExcelData) {
-                console.log('❌ No Excel data available. Please upload an Excel file first.');
+                console.log('âŒ No Excel data available. Please upload an Excel file first.');
                 return;
             }
             
@@ -20498,7 +15525,7 @@ document.addEventListener('click', function(event) {
                         row: i
                     });
                     
-                    console.log(`✅ Found potential YARN item at row ${i}:`, {
+                    console.log(`âœ… Found potential YARN item at row ${i}:`, {
                         material: firstCell,
                         consumption: consumption,
                         price: price,
@@ -20646,405 +15673,5 @@ document.addEventListener('click', function(event) {
         window.collectManualData = collectManualData;
         window.mergeManualData = mergeManualData;
 
+// Debug functions
 
-    </script>
-
-    <!-- Floating Emergency Recovery Button -->
-    <div id="floatingEmergencyBtn" style="
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 1000;
-        background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-        color: white;
-        border: none;
-        border-radius: 50px;
-        padding: 15px 20px;
-        cursor: pointer;
-        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
-        font-size: 14px;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        transition: all 0.3s ease;
-        user-select: none;
-    " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onclick="toggleEmergencyPanel()">
-        <span style="margin-right: 8px; font-size: 16px;">🚨</span>
-        Emergency
-    </div>
-
-    <!-- Emergency Data Recovery Popup -->
-    <div id="emergencyRecoveryPopup" style="
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        z-index: 1001;
-        background: white;
-        border: 2px solid #ffc107;
-        border-radius: 12px;
-        padding: 25px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-        min-width: 400px;
-        max-width: 90vw;
-        display: none;
-    ">
-        <!-- Close button -->
-        <div style="position: absolute; top: 10px; right: 15px; cursor: pointer; font-size: 20px; color: #666;" onclick="toggleEmergencyPanel()">×</div>
-        
-        <h4 style="color: #856404; margin: 0 0 15px 0; display: flex; align-items: center; font-size: 18px;">
-            <span style="margin-right: 10px; font-size: 20px;">🚨</span>
-            Emergency Data Recovery
-        </h4>
-        <p style="color: #856404; margin: 0 0 20px 0; font-size: 14px; line-height: 1.5;">
-            If your data appears corrupted (showing column names instead of actual data), use these buttons to fix it:
-        </p>
-        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;">
-            <button onclick="runCheckCorruption()" id="checkCorruptionBtn" style="
-                background: #6f42c1; 
-                color: white; 
-                border: none; 
-                padding: 12px 20px; 
-                border-radius: 6px; 
-                cursor: pointer; 
-                display: flex; 
-                align-items: center; 
-                font-size: 14px;
-                font-weight: 500;
-                transition: all 0.2s ease;
-                flex: 1;
-                min-width: 150px;
-                justify-content: center;
-            " onmouseover="this.style.background='#5a32a3'" onmouseout="this.style.background='#6f42c1'">
-                <span style="margin-right: 8px;">🔍</span>
-                Check Data Corruption
-            </button>
-            <button onclick="runEmergencyRecovery()" id="emergencyRecoveryBtn" style="
-                background: #6f42c1; 
-                color: white; 
-                border: none; 
-                padding: 12px 20px; 
-                border-radius: 6px; 
-                cursor: pointer; 
-                display: flex; 
-                align-items: center; 
-                font-size: 14px;
-                font-weight: 500;
-                transition: all 0.2s ease;
-                flex: 1;
-                min-width: 150px;
-                justify-content: center;
-            " onmouseover="this.style.background='#5a32a3'" onmouseout="this.style.background='#6f42c1'">
-                <span style="margin-right: 8px;">🔧</span>
-                Emergency Recovery
-            </button>
-        </div>
-        <div id="recoveryStatus" style="
-            margin-top: 15px; 
-            font-size: 14px; 
-            color: #856404;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 6px;
-            border-left: 4px solid #ffc107;
-        "></div>
-    </div>
-
-    <!-- Backdrop overlay -->
-    <div id="emergencyBackdrop" style="
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 1000;
-        display: none;
-    " onclick="toggleEmergencyPanel()">    </div>
-
-    <!-- Season Filter Overlay and Popup -->
-    <div class="season-filter-overlay" id="season-filter-overlay" onclick="closeSeasonFilter()"></div>
-    <div class="season-filter-panel" id="season-filter-popup">
-        <div class="season-filter-header">Filter Season</div>
-        <div class="season-options-grid" id="season-options-popup">
-            <!-- Season options will be populated here -->
-        </div>
-        <div class="filter-panel-actions">
-            <button class="filter-clear-btn" onclick="clearSeasonFilterPopup()">Cancel</button>
-            <button class="filter-apply-btn" onclick="applySeasonFilterPopup()">OK</button>
-        </div>
-    </div>
-
-    <!-- Customer Filter Overlay and Popup -->
-    <div class="customer-filter-overlay" id="customer-filter-overlay" onclick="closeCustomerFilter()"></div>
-    <div class="customer-filter-panel" id="customer-filter-popup">
-        <div class="customer-filter-header">Filter Customer</div>
-        <div class="customer-options-grid" id="customer-options-popup">
-            <!-- Customer options will be populated here -->
-        </div>
-        <div class="filter-panel-actions">
-            <button class="filter-clear-btn" onclick="clearCustomerFilterPopup()">Cancel</button>
-            <button class="filter-apply-btn" onclick="applyCustomerFilterPopup()">OK</button>
-        </div>
-    </div>
-
-    <!-- Combined Help & Tutorial Button -->
-    <button class="help-tutorial-button" id="help-tutorial-button" onclick="toggleHelpTutorial()" title="Help & Quick Guide">
-        <span class="help-tutorial-icon">❓</span>
-        Help
-    </button>
-
-    <!-- Combined Help & Tutorial Panel -->
-    <div class="help-panel" id="help-panel">
-        <div class="help-panel-header">
-            <h2>Help & Quick Guide</h2>
-            <button class="help-close-btn" onclick="toggleHelpTutorial()">&times;</button>
-        </div>
-        <div class="help-panel-content">
-            <!-- Quick Guide Section -->
-            <div class="help-section quick-guide-section">
-                <h3>🚀 Quick Start Guide</h3>
-                <div class="quick-guide-grid">
-                    <div class="quick-guide-item">
-                        <h4>1. Choose Product Type</h4>
-                        <p>Select Beanie or BallCaps template</p>
-                    </div>
-                    <div class="quick-guide-item">
-                        <h4>2. Upload Excel Files</h4>
-                        <p>Use the templates to import data</p>
-                    </div>
-                    <div class="quick-guide-item">
-                        <h4>3. Search & Filter</h4>
-                        <p>Find specific records quickly</p>
-                    </div>
-                    <div class="quick-guide-item">
-                        <h4>4. Edit Data</h4>
-                        <p>Modify records directly in the table</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Detailed Help Sections -->
-            <div class="help-section">
-                <h3>📊 Data Management</h3>
-                <ul>
-                    <li><strong>Import Data:</strong> Use the product type buttons to upload Excel files with product data</li>
-                    <li><strong>View Data:</strong> All imported records are displayed in a comprehensive table format</li>
-                    <li><strong>Search & Filter:</strong> Use the search bar and filter buttons to find specific records</li>
-                </ul>
-            </div>
-            
-            <div class="help-section">
-                <h3>🔍 Search & Filter Features</h3>
-                <ul>
-                    <li><strong>Filter Type:</strong> Select Season, Customer, Style Number, or Style Name</li>
-                    <li><strong>Search Value:</strong> Enter your search term to find matching records</li>
-                    <li><strong>Clear Filters:</strong> Use the "Clear" button to reset all filters</li>
-                </ul>
-            </div>
-            
-            <div class="help-section">
-                <h3>✏️ Table Management</h3>
-                <ul>
-                    <li><strong>Edit Table:</strong> Click "Edit Table" to modify records directly</li>
-                    <li><strong>Add Records:</strong> Create new entries with real-time validation</li>
-                    <li><strong>Export Data:</strong> Download your data as Excel files</li>
-                </ul>
-            </div>
-            
-            <div class="help-section">
-                <h3>🎯 Tips & Tricks</h3>
-                <ul>
-                    <li>Use keyboard shortcuts: Escape to close panels</li>
-                    <li>Click on column headers to sort data</li>
-                    <li>All features have hover tooltips for guidance</li>
-                    <li>Check status indicators for real-time feedback</li>
-                </ul>
-            </div>
-            
-            <div class="help-section">
-                <h3>🆘 Troubleshooting</h3>
-                <ul>
-                    <li><strong>Import Issues:</strong> Ensure Excel files have proper headers and data format</li>
-                    <li><strong>Connection Problems:</strong> Check your internet connection and try refreshing</li>
-                    <li><strong>Data Not Loading:</strong> Use the refresh button or clear browser cache</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-
-    <!-- Help Panel Overlay -->
-    <div class="help-overlay" id="help-overlay" onclick="toggleHelpTutorial()"></div>
-
-    <script>
-        // Debug function for operations data
-        window.debugOperationsData = function() {
-            console.log('🔍 DEBUGGING OPERATIONS DATA');
-            console.log('==');
-            if (!window.lastExcelData) {
-                console.log('❌ No Excel data available. Please upload an Excel file first.');
-                return;
-            }
-            
-            const data = window.lastExcelData.data || window.lastExcelData;
-            console.log('Searching for OPERATIONS-related rows...');
-            
-            for (let i = 0; i < data.length; i++) {
-                const row = data[i];
-                if (!row || row.length === 0) continue;
-                
-                const firstCell = String(row[0] || '').trim();
-                
-                // Look for rows that might be operations data
-                if ((row[2] && !isNaN(parseFloat(row[2]))) || (row[3] && !isNaN(parseFloat(row[3])))) {
-                    console.log(`Row ${i}:`, {
-                        firstCell: firstCell,
-                        row: row,
-                        col2: row[2],
-                        col3: row[3],
-                        hasSMV: row[2] && !isNaN(parseFloat(row[2])),
-                        hasCost: row[3] && !isNaN(parseFloat(row[3]))
-                    });
-                }
-            }
-        };
-
-        // Debug function for table data and columns
-        window.debugTableData = function() {
-            console.log('🔍 DEBUGGING TABLE DATA');
-            console.log('==');
-            if (!window.currentTableData) {
-                console.log('❌ No currentTableData available');
-                return;
-            }
-            
-            console.log('Total records:', window.currentTableData.length);
-            console.log('First record:', window.currentTableData[0]);
-            console.log('Available columns:', Object.keys(window.currentTableData[0]));
-            
-            // Check each column for data
-            Object.keys(window.currentTableData[0]).forEach(column => {
-                const values = new Set();
-                window.currentTableData.slice(0, 10).forEach(row => {
-                    if (row[column] !== null && row[column] !== undefined) {
-                        values.add(String(row[column]).trim());
-                    }
-                });
-                console.log(`Column "${column}":`, Array.from(values).slice(0, 5));
-            });
-        };
-
-        // Test filter function
-        window.testFilter = function(columnName) {
-            console.log(`🧪 Testing filter for: ${columnName}`);
-            const actualName = getActualColumnName(columnName, 0);
-            console.log(`Actual column name: ${actualName}`);
-            const values = getUniqueColumnValues(actualName);
-            console.log(`Unique values:`, values);
-            return values;
-        };
-
-        // Filter search options in dropdown
-        function filterSearchOptions(columnIndex, searchTerm) {
-            const optionsContainer = document.getElementById(`filter-options-${columnIndex}`);
-            if (!optionsContainer) return;
-            
-            const options = optionsContainer.querySelectorAll('.filter-option');
-            const term = searchTerm.toLowerCase();
-            
-            options.forEach(option => {
-                const label = option.querySelector('label');
-                if (!label) return;
-                
-                const text = label.textContent.toLowerCase();
-                if (text.includes(term) || text === '(select all)') {
-                    option.style.display = 'flex';
-                } else {
-                    option.style.display = 'none';
-                }
-            });
-        }
-
-        // Toggle select all functionality
-        function toggleSelectAll(columnIndex, checked) {
-            const optionsContainer = document.getElementById(`filter-options-${columnIndex}`);
-            if (!optionsContainer) return;
-            
-            const checkboxes = optionsContainer.querySelectorAll('input[type="checkbox"]:not([id*="selectall"])');
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = checked;
-            });
-        }
-
-
-
-        // Debug function for notes data
-        window.debugNotesData = function() {
-            console.log('🔍 DEBUGGING NOTES DATA');
-            console.log('==');
-            if (!window.lastExcelData) {
-                console.log('❌ No Excel data available. Please upload an Excel file first.');
-                return;
-            }
-            
-            const data = window.lastExcelData.data || window.lastExcelData;
-            console.log('Searching for NOTES-related rows...');
-            
-            let notesFound = [];
-            let overallNotesFound = false;
-            
-            for (let i = 0; i < data.length; i++) {
-                const row = data[i];
-                if (!row || row.length === 0) continue;
-                
-                const firstCell = String(row[0] || '').trim();
-                const allRowContent = row.filter(cell => cell && String(cell).trim() !== '').join(' ');
-                
-                // Check specifically for OVERALL NOTES header
-                if (firstCell.toLowerCase() === 'overall notes' || 
-                    firstCell.toLowerCase() === 'overall notes:' ||
-                    allRowContent.toLowerCase() === 'overall notes' ||
-                    allRowContent.toLowerCase() === 'overall notes:') {
-                    overallNotesFound = true;
-                    console.log('✅ Found OVERALL NOTES header at row', i, ':', firstCell);
-                }
-                
-                // Look for rows that might be notes
-                if (firstCell.toLowerCase().includes('notes') || 
-                    allRowContent.toLowerCase().includes('notes') ||
-                    allRowContent.toLowerCase().includes('surcharge') ||
-                    allRowContent.toLowerCase().includes('suggest') ||
-                    allRowContent.toLowerCase().includes('moq') ||
-                    allRowContent.toLowerCase().includes('fabric') ||
-                    allRowContent.toLowerCase().includes('visor')) {
-                    
-                    notesFound.push({
-                        row: i,
-                        firstCell: firstCell,
-                        allContent: allRowContent,
-                        fullRow: row
-                    });
-                }
-            }
-            
-            console.log(`Found ${notesFound.length} potential notes rows:`);
-            notesFound.forEach(item => {
-                console.log(`Row ${item.row}:`, item);
-            });
-            
-            console.log('OVERALL NOTES header found:', overallNotesFound);
-            
-            // Check current parsed data
-            if (window.currentParsedData) {
-                console.log('Current parsed notes:', window.currentParsedData.notes);
-                if (window.currentParsedData.notes) {
-                    console.log('Notes content preview:', window.currentParsedData.notes.substring(0, 200) + '...');
-                }
-            } else {
-                console.log('No current parsed data available');
-            }
-        };
-    </script>
-
-</body>
-</html>
