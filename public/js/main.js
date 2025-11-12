@@ -14052,7 +14052,14 @@
             
             // Create new dropdown
             dropdown = createDatabankFilterDropdown(columnIndex, columnName);
+            
+            // Get the table container to append dropdown relative to it
+            const tableContainer = document.querySelector('.data-table-container') || document.querySelector('#tableData');
+            if (tableContainer) {
+            tableContainer.appendChild(dropdown);
+            } else {
             document.body.appendChild(dropdown);
+            }
             
             // Get positioning
             const table = document.querySelector('#tableData table');
@@ -14061,12 +14068,16 @@
             const filterButton = headerCell.querySelector('.filter-triangle');
             const rect = (filterButton || headerCell).getBoundingClientRect();
             
-            console.log('📏 Button position:', rect);
+            // Get table container position for relative positioning
+            const tableContainerRect = tableContainer ? tableContainer.getBoundingClientRect() : { top: 0, left: 0 };
             
-            // **SET POSITION USING STYLE.SETPROPERTY (HIGHER PRIORITY)**
-            dropdown.style.setProperty('position', 'fixed', 'important');
-            dropdown.style.setProperty('top', (rect.bottom + 5) + 'px', 'important');
-            dropdown.style.setProperty('left', rect.left + 'px', 'important');
+            console.log('📏 Button position:', rect);
+            console.log('📏 Table container position:', tableContainerRect);
+            
+            // **SET POSITION USING ABSOLUTE (STAYS WITH TABLE)**
+            dropdown.style.setProperty('position', 'absolute', 'important');
+            dropdown.style.setProperty('top', (rect.bottom - tableContainerRect.top + 5) + 'px', 'important');
+            dropdown.style.setProperty('left', (rect.left - tableContainerRect.left) + 'px', 'important');
             dropdown.style.setProperty('width', '250px', 'important');
             dropdown.style.setProperty('max-height', '400px', 'important');
             dropdown.style.setProperty('z-index', '999999', 'important');
@@ -14109,24 +14120,32 @@
             `;
             
             dropdown.innerHTML = `
-                <div style="margin-bottom: 10px;">
-                    <input type="text" id="databank-search-${columnIndex}" placeholder="Search ${columnName}..." 
-                           style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;"
-                           onkeyup="filterDatabankDropdownOptions(${columnIndex})">
-                </div>
-                <div id="databank-options-${columnIndex}" style="max-height: 200px; overflow-y: auto;">
-                    <!-- Options will be populated here -->
-                </div>
-                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; display: flex; gap: 5px;">
-                    <button onclick="applyDatabankColumnFilter(${columnIndex}, '${columnName}')" 
-                            style="background: #28a745; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; flex: 1;">
-                        Apply
-                    </button>
-                    <button onclick="clearDatabankColumnFilter(${columnIndex}, '${columnName}')" 
-                            style="background: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; flex: 1;">
-                        Clear
-                    </button>
-                </div>
+            <div style="margin-bottom: 10px;">
+            <input type="text" id="databank-search-${columnIndex}" placeholder="Search ${columnName}..."
+            style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;"
+            onkeyup="filterDatabankDropdownOptions(${columnIndex})">
+            </div>
+            <div style="margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #eee;">
+            <label style="display: flex; align-items: center; cursor: pointer; margin: 0; padding: 4px 8px; border-radius: 4px; transition: background-color 0.2s;">
+            <input type="checkbox" id="databank-select-all-${columnIndex}" 
+            style="margin-right: 6px; cursor: pointer;"
+            onchange="toggleDatabankSelectAll(${columnIndex}, '${columnName}')">
+            <span style="font-weight: 600; color: #333;">Select All</span>
+            </label>
+            </div>
+            <div id="databank-options-${columnIndex}" style="max-height: 250px; overflow-y: auto;">
+            <!-- Options will be populated here -->
+            </div>
+            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; display: flex; gap: 5px;">
+            <button onclick="applyDatabankColumnFilter(${columnIndex}, '${columnName}')"
+            style="background: #28a745; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; flex: 1;">
+            Apply
+            </button>
+            <button onclick="clearDatabankColumnFilter(${columnIndex}, '${columnName}')"
+            style="background: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; flex: 1;">
+            Clear
+            </button>
+            </div>
             `;
             
             return dropdown;
@@ -14172,6 +14191,25 @@
             });
             
             console.log(`âœ… Populated databank dropdown with ${uniqueValues.length} options`);
+        }
+
+        function toggleDatabankSelectAll(columnIndex, columnName) {
+            const selectAllCheckbox = document.getElementById(`databank-select-all-${columnIndex}`);
+            const optionsContainer = document.getElementById(`databank-options-${columnIndex}`);
+            
+            if (!selectAllCheckbox || !optionsContainer) return;
+
+            const allCheckboxes = optionsContainer.querySelectorAll('input[type="checkbox"]');
+            const isChecked = selectAllCheckbox.checked;
+
+            console.log(`🔍" Toggle Select All for column ${columnIndex}: ${isChecked ? 'checked' : 'unchecked'}`);
+
+            // Check or uncheck all checkboxes
+            allCheckboxes.forEach(checkbox => {
+                checkbox.checked = isChecked;
+            });
+
+            console.log(`âœ… ${isChecked ? 'Selected' : 'Deselected'} all ${allCheckboxes.length} items`);
         }
 
         function getDatabankUniqueValues(columnIndex) {
