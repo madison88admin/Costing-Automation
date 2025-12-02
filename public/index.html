@@ -5740,20 +5740,34 @@
             } else {
                 // Try Netlify function first for production
                 const netlifyUrl = `/.netlify/functions${netlifyEndpoint}`;
-                const localUrl = `/api${localEndpoint}`;
 
                 try {
                     console.log('🔄 Trying Netlify function:', netlifyUrl);
+                    console.log('📦 Request options:', JSON.stringify(options, null, 2));
+                    
                     const response = await fetch(netlifyUrl, options);
+                    
+                    console.log('📡 Response status:', response.status);
+                    console.log('📡 Response content-type:', response.headers.get('content-type'));
+
+                    // Check if response is JSON
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        const text = await response.text();
+                        console.error('❌ Non-JSON response received:', text.substring(0, 500));
+                        throw new Error(`Server returned non-JSON response (${response.status}). This usually means the Netlify function failed. Check Netlify function logs for details.`);
+                    }
 
                     if (!response.ok) {
-                        throw new Error(`Netlify function failed: ${response.status}`);
+                        const errorData = await response.json();
+                        console.error('❌ Netlify function error:', errorData);
+                        throw new Error(`Netlify function failed: ${errorData.error || response.status}`);
                     }
+                    
                     return response;
-                } catch (netlifyError) {
-                    console.log('⚠️ Netlify function failed, trying local API:', netlifyError.message);
-                    // Fallback to local API
-                    return await fetch(localUrl, options);
+                } catch (error) {
+                    console.error('⚠️ Netlify function failed:', error.message);
+                    throw error; // Re-throw the error instead of trying fallback that doesn't exist
                 }
             }
         }

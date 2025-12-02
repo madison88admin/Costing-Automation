@@ -1,11 +1,23 @@
 # Environment variables for Netlify deployment
-# Copy these to your Netlify dashboard under Site settings > Environment variables
+# ⚠️ REQUIRED: Copy these to your Netlify dashboard under Site settings > Environment variables
 
+# Node environment (already set in netlify.toml, but can be overridden here)
 NODE_ENV=production
-PORT=3000
 
-# Add your production environment variables here:
-# SUPABASE_URL=your_supabase_url_here
-# SUPABASE_ANON_KEY=your_supabase_anon_key_here
+# ⚠️ CRITICAL: Supabase Configuration (REQUIRED for database functions to work)
+# Get these from your Supabase dashboard: https://supabase.com/dashboard
+# Go to: Settings > API
+SUPABASE_URL=https://your-project-id.supabase.co
+SUPABASE_ANON_KEY=your-anon-key-here
+
+# Optional: Only needed if using custom database connection
 # DATABASE_URL=your_database_url_here
+
+# Optional: Only needed if implementing JWT authentication
 # JWT_SECRET=your_jwt_secret_here
+
+# Instructions:
+# 1. Go to Netlify dashboard > Your site > Site settings > Environment variables
+# 2. Add SUPABASE_URL with your Supabase project URL
+# 3. Add SUPABASE_ANON_KEY with your Supabase anon/public key
+# 4. Trigger a new deployment for changes to take effect
