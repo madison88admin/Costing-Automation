@@ -1,3 +1,6 @@
+# Netlify Functions - DO NOT redirect these
+/.netlify/*  /.netlify/:splat  200
+
 # SPA fallback - redirect all routes to index.html
 /*    /index.html   200
 
