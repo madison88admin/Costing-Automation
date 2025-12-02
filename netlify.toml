@@ -19,8 +19,18 @@
   SECRETS_SCAN_ENABLED = "false"
 
 # Redirect rules for SPA routing
+# Note: Netlify functions are automatically excluded from redirects
+# But we need to be explicit to avoid conflicts
+[[redirects]]
+  # Exclude Netlify functions from SPA redirect
+  from = "/.netlify/functions/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+  force = true
+
 [[redirects]]
   # Handle client-side routing for your SPA
+  # This should come AFTER the functions redirect
   from = "/*"
   to = "/index.html"
   status = 200
