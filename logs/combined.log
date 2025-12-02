@@ -4245,3 +4245,23 @@
 {"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-11-13T05:44:53.147Z"}
 {"level":"info","message":"Fetched batch: 819 records (total so far: 2819)","service":"costing-automation","timestamp":"2025-11-13T05:44:53.299Z"}
 {"level":"info","message":"Final result: 2819 records loaded, total count: 2819","service":"costing-automation","timestamp":"2025-11-13T05:44:53.299Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-12-01T02:09:25.341Z"}
+{"level":"info","message":"Total records in database: 2819","service":"costing-automation","timestamp":"2025-12-01T02:09:39.842Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-12-01T02:09:40.340Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-12-01T02:09:40.733Z"}
+{"level":"info","message":"Fetched batch: 819 records (total so far: 2819)","service":"costing-automation","timestamp":"2025-12-01T02:09:40.916Z"}
+{"level":"info","message":"Final result: 2819 records loaded, total count: 2819","service":"costing-automation","timestamp":"2025-12-01T02:09:40.917Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2025-12-02T07:31:52.608Z"}
+{"level":"info","message":"Total records in database: 2819","service":"costing-automation","timestamp":"2025-12-02T07:32:26.736Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-12-02T07:32:27.282Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-12-02T07:32:27.826Z"}
+{"level":"info","message":"Fetched batch: 819 records (total so far: 2819)","service":"costing-automation","timestamp":"2025-12-02T07:32:28.109Z"}
+{"level":"info","message":"Final result: 2819 records loaded, total count: 2819","service":"costing-automation","timestamp":"2025-12-02T07:32:28.109Z"}
+{"costedQuantity":"1212e1e1","customer":"123qweasd","fabric":[{"consumption":"123","cost":"$15129.00","material":"qwe","price":"123"}],"leadtime":"12e12e21e","level":"info","message":"Saving already parsed beanie cost data:","season":"12qwqe21","service":"costing-automation","styleName":"e21e21e1","styleNumber":"e121e121","timestamp":"2025-12-02T07:34:38.846Z","totalMaterialCost":"15144.13","trim":[],"yarn":[{"consumption":"123","cost":"$15.13","material":"qweqdw","price":"123"}]}
+{"customer":"123qweasd","knitting_cost":0,"level":"info","main_material":"qweqdw","material_consumption":"123","material_price":"123","message":"Saving beanie data to databank:","oh":0,"ops_cost":0,"packaging":0,"profit":0,"season":"12qwqe21","service":"costing-automation","style_name":"e21e21e1","style_number":"e121e121","timestamp":"2025-12-02T07:34:38.847Z","total_material_cost":15144.13,"trim_cost":0,"ttl_fty_cost":0}
+{"level":"info","message":"Beanie cost data saved successfully to databank table","service":"costing-automation","timestamp":"2025-12-02T07:34:39.375Z"}
+{"level":"info","message":"Total records in database: 2820","service":"costing-automation","timestamp":"2025-12-02T07:34:39.492Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2025-12-02T07:34:39.904Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2025-12-02T07:34:40.373Z"}
+{"level":"info","message":"Fetched batch: 820 records (total so far: 2820)","service":"costing-automation","timestamp":"2025-12-02T07:34:40.542Z"}
+{"level":"info","message":"Final result: 2820 records loaded, total count: 2820","service":"costing-automation","timestamp":"2025-12-02T07:34:40.542Z"}
