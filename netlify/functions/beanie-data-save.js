@@ -289,7 +289,7 @@ exports.handler = async (event, context) => {
     // First try exact match with cleaned data
     const { data: exactMatch, error: exactError } = await supabase
       .from(finalTableName)
-      .select('id, customer, season, style_number, style_name, created_at')
+      .select('id, customer, season, style_number, style_name')
       .eq('customer', cleanCustomer)
       .eq('season', cleanSeason)
       .eq('style_number', cleanStyleNumber);
@@ -299,7 +299,7 @@ exports.handler = async (event, context) => {
       // Try case-insensitive match
       const { data: caseInsensitive, error: caseError } = await supabase
         .from(finalTableName)
-        .select('id, customer, season, style_number, style_name, created_at')
+        .select('id, customer, season, style_number, style_name')
         .ilike('customer', cleanCustomer)
         .ilike('season', cleanSeason)
         .ilike('style_number', cleanStyleNumber);
@@ -309,7 +309,7 @@ exports.handler = async (event, context) => {
         // Try partial match
         const { data: partialMatch, error: partialError } = await supabase
           .from(finalTableName)
-          .select('id, customer, season, style_number, style_name, created_at')
+          .select('id, customer, season, style_number, style_name')
           .ilike('customer', `%${cleanCustomer}%`)
           .ilike('season', `%${cleanSeason}%`)
           .ilike('style_number', `%${cleanStyleNumber}%`);
@@ -353,7 +353,7 @@ exports.handler = async (event, context) => {
       // Try matching just customer and season (more lenient)
       const { data: lenientMatch, error: lenientError } = await supabase
         .from(finalTableName)
-        .select('id, customer, season, style_number, style_name, created_at')
+        .select('id, customer, season, style_number, style_name')
         .ilike('customer', `%${cleanCustomer}%`)
         .ilike('season', `%${cleanSeason}%`);
       
@@ -374,8 +374,7 @@ exports.handler = async (event, context) => {
         .update({
           ...insertData,
           id: existingRecord.id, // Keep the original ID
-          updated_at: new Date().toISOString(),
-          remarks: `Beanie data updated on ${new Date().toISOString()} (was: ${existingRecord.created_at})`
+          remarks: `Beanie data updated on ${new Date().toISOString()}`
         })
         .eq('id', existingRecord.id)
         .select();
