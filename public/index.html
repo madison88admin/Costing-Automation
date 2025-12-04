@@ -4190,9 +4190,6 @@
                     <button class="search-button" onclick="performSuperSearch()" id="searchButton">
                         Search
                     </button>
-                    <button class="clear-button" onclick="clearSuperSearch()" id="clearButton">
-                        Clear
-                    </button>
                     <button class="import-button" onclick="exportToExcel()" id="exportButton">
                         Export
                     </button>
@@ -5744,9 +5741,9 @@
                 try {
                     console.log('🔄 Trying Netlify function:', netlifyUrl);
                     console.log('📦 Request options:', JSON.stringify(options, null, 2));
-                    
+
                     const response = await fetch(netlifyUrl, options);
-                    
+
                     console.log('📡 Response status:', response.status);
                     console.log('📡 Response content-type:', response.headers.get('content-type'));
 
@@ -5763,7 +5760,7 @@
                         console.error('❌ Netlify function error:', errorData);
                         throw new Error(`Netlify function failed: ${errorData.error || response.status}`);
                     }
-                    
+
                     return response;
                 } catch (error) {
                     console.error('⚠️ Netlify function failed:', error.message);
@@ -7277,15 +7274,15 @@
                 const unfilterButton = document.createElement('div');
                 unfilterButton.style.cssText = 'padding: 10px; text-align: center; background: #f8f9fa; border-bottom: 1px solid #ddd;';
                 unfilterButton.innerHTML = `
-                <button onclick="unfilterAll()" style="
-                    background: #dc3545; 
-                    color: white; 
-                    border: none; 
-                    padding: 8px 16px; 
-                    border-radius: 4px; 
-                    cursor: pointer; 
-                    font-size: 12px;
-                    margin-right: 10px;
+                <button onclick="unfilterAll(); clearSuperSearch();" style="
+                background: #dc3545;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 12px;
+                margin-right: 10px;
                 ">🗑️ Clear All Filters</button>
                 <button onclick="refreshDatabankTable()" style="
                     background: #17a2b8; 
@@ -19416,8 +19413,11 @@
             // Apply filters
             applyDatabankFilters();
 
-            // Close dropdown
-            dropdown.classList.remove('show');
+            // Hide the dropdown filter
+            if (dropdown) {
+                dropdown.classList.remove('show');
+                dropdown.style.display = 'none';
+            }
         }
 
         function clearDatabankColumnFilter(columnIndex, columnName) {
