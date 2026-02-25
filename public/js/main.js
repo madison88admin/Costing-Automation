@@ -11232,9 +11232,16 @@
                 }
             });
             
+            const fabricSectionEl = findBallCapsSection('FABRIC/S');
+            const otherFabricSectionEl = findBallCapsSection('OTHER FABRIC/S - TRIM/S');
+            const trimSectionEl = findBallCapsSection('TRIM/S');
+            const operationsSectionEl = findBallCapsSection('OPERATIONS');
+            const packagingSectionEl = findBallCapsSection('PACKAGING');
+            const overheadSectionEl = findBallCapsSection('OVERHEAD/PROFIT');
+
             // Populate fabric/s section
             if (parsedData.fabric && parsedData.fabric.length > 0) {
-                const fabricRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(1) .cost-row:not(.header-row):not(.subtotal-row)');
+                const fabricRows = fabricSectionEl ? fabricSectionEl.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)') : [];
                 parsedData.fabric.forEach((item, index) => {
                     if (fabricRows[index]) {
                         const cells = fabricRows[index].querySelectorAll('.cost-cell');
@@ -11248,7 +11255,7 @@
             
             // Populate other fabric/s - trim/s section (formerly embroidery)
             if (parsedData.embroidery && parsedData.embroidery.length > 0) {
-                const otherFabricRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(2) .cost-row:not(.header-row):not(.subtotal-row)');
+                const otherFabricRows = otherFabricSectionEl ? otherFabricSectionEl.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)') : [];
                 parsedData.embroidery.forEach((item, index) => {
                     if (otherFabricRows[index]) {
                         const cells = otherFabricRows[index].querySelectorAll('.cost-cell');
@@ -11262,7 +11269,7 @@
             
             // Populate trim section
             if (parsedData.trim && parsedData.trim.length > 0) {
-                const trimRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(3) .cost-row:not(.header-row):not(.subtotal-row)');
+                const trimRows = trimSectionEl ? trimSectionEl.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)') : [];
                 let regularItemCount = 0;
                 let trimTotal = 0;
                 
@@ -11270,7 +11277,7 @@
                     // Check if this is a subtotal row
                     if (item.material && item.material.includes('TOTAL MATERIAL AND SUBMATERIALS COST')) {
                         // Update the subtotal row
-                        const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(3) .subtotal-row');
+                        const subtotalRow = trimSectionEl ? trimSectionEl.querySelector('.subtotal-row') : null;
                         if (subtotalRow) {
                             const cells = subtotalRow.querySelectorAll('.cost-cell');
                             if (cells[0]) cells[0].textContent = item.material;
@@ -11295,7 +11302,7 @@
                 });
                 
                 // If no subtotal row was found in data, calculate and display one
-                const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(3) .subtotal-row');
+                const subtotalRow = trimSectionEl ? trimSectionEl.querySelector('.subtotal-row') : null;
                 if (subtotalRow) {
                     const cells = subtotalRow.querySelectorAll('.cost-cell');
                     if (cells[0] && !cells[0].textContent.includes('TOTAL')) {
@@ -11314,7 +11321,16 @@
             
             
             if (parsedData.operations && parsedData.operations.length > 0) {
-                const operationsRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(5) .cost-row:not(.header-row):not(.subtotal-row)');
+                const operationsRows = operationsSectionEl
+                    ? Array.from(operationsSectionEl.querySelectorAll('.cost-row:not(.subtotal-row)')).filter(row => {
+                        if (row.classList.contains('header-row')) return false;
+                        const rowText = row.textContent.toUpperCase();
+                        return !rowText.includes('OPERATIONS') &&
+                            !rowText.includes('SMV') &&
+                            !rowText.includes('COST (USD/MIN)') &&
+                            !rowText.includes('OPERATION COST');
+                    })
+                    : [];
                 console.log('🔍” OPERATIONS DEBUG:');
                 console.log('- Found operations data:', parsedData.operations.length, 'items');
                 console.log('- Found DOM rows:', operationsRows.length);
@@ -11327,7 +11343,7 @@
                     // Check if this is a subtotal row
                     if (item.operation && (item.operation.includes('SUB TOTAL') || item.operation.includes('TOTAL'))) {
                         // Update the subtotal row
-                        const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(5) .subtotal-row');
+                        const subtotalRow = operationsSectionEl ? operationsSectionEl.querySelector('.subtotal-row') : null;
                         if (subtotalRow) {
                             const cells = subtotalRow.querySelectorAll('.cost-cell');
                             if (cells[2]) cells[2].textContent = item.operation; // SUB TOTAL in column 3
@@ -11378,7 +11394,7 @@
                 });
                 
                 // If no subtotal row was found in data, calculate and display one
-                const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(5) .subtotal-row');
+                const subtotalRow = operationsSectionEl ? operationsSectionEl.querySelector('.subtotal-row') : null;
                 if (subtotalRow) {
                     const cells = subtotalRow.querySelectorAll('.cost-cell');
                     if (cells[2] && !cells[2].textContent.includes('TOTAL')) {
@@ -11391,7 +11407,7 @@
             
             // Populate packaging section
             if (parsedData.packaging && parsedData.packaging.length > 0) {
-                const packagingRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(6) .cost-row:not(.header-row):not(.subtotal-row)');
+                const packagingRows = packagingSectionEl ? packagingSectionEl.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)') : [];
                 console.log('🔍” PACKAGING DEBUG:');
                 console.log('- Found packaging data:', parsedData.packaging.length, 'items');
                 console.log('- Found DOM rows:', packagingRows.length);
@@ -11403,7 +11419,7 @@
                     // Check if this is a subtotal row
                     if (item.type && (item.type.includes('SUB TOTAL') || item.type.includes('TOTAL'))) {
                         // Update the subtotal row
-                        const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(6) .subtotal-row');
+                        const subtotalRow = packagingSectionEl ? packagingSectionEl.querySelector('.subtotal-row') : null;
                         if (subtotalRow) {
                             const cells = subtotalRow.querySelectorAll('.cost-cell');
                             if (cells[0]) cells[0].textContent = item.type;
@@ -11427,7 +11443,7 @@
                 });
                 
                 // If no subtotal row was found in data, calculate and display one
-                const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(6) .subtotal-row');
+                const subtotalRow = packagingSectionEl ? packagingSectionEl.querySelector('.subtotal-row') : null;
                 if (subtotalRow) {
                     const cells = subtotalRow.querySelectorAll('.cost-cell');
                     if (cells[0] && !cells[0].textContent.includes('TOTAL')) {
@@ -11440,7 +11456,7 @@
             
             // Populate overhead section
             if (parsedData.overhead && parsedData.overhead.length > 0) {
-                const overheadRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(7) .cost-row:not(.header-row):not(.subtotal-row)');
+                const overheadRows = overheadSectionEl ? overheadSectionEl.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)') : [];
                 console.log('🔍” OVERHEAD DEBUG:');
                 console.log('- Found overhead data:', parsedData.overhead.length, 'items');
                 console.log('- Found DOM rows:', overheadRows.length);
@@ -11452,7 +11468,7 @@
                     // Check if this is a subtotal row
                     if (item.type && (item.type.includes('SUB TOTAL') || item.type.includes('TOTAL'))) {
                         // Update the subtotal row
-                        const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(7) .subtotal-row');
+                        const subtotalRow = overheadSectionEl ? overheadSectionEl.querySelector('.subtotal-row') : null;
                         if (subtotalRow) {
                             const cells = subtotalRow.querySelectorAll('.cost-cell');
                             if (cells[0]) cells[0].textContent = item.type;
@@ -11476,7 +11492,7 @@
                 });
                 
                 // If no subtotal row was found in data, calculate and display one
-                const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(7) .subtotal-row');
+                const subtotalRow = overheadSectionEl ? overheadSectionEl.querySelector('.subtotal-row') : null;
                 if (subtotalRow) {
                     const cells = subtotalRow.querySelectorAll('.cost-cell');
                     if (cells[0] && !cells[0].textContent.includes('TOTAL')) {
@@ -11542,13 +11558,19 @@
 
         function calculateBallCapsSubtotals(parsedData) {
             console.log('Calculating BallCaps subtotals...');
+            const fabricSectionEl = findBallCapsSection('FABRIC/S');
+            const otherFabricSectionEl = findBallCapsSection('OTHER FABRIC/S - TRIM/S');
+            const trimSectionEl = findBallCapsSection('TRIM/S');
+            const operationsSectionEl = findBallCapsSection('OPERATIONS');
+            const packagingSectionEl = findBallCapsSection('PACKAGING');
+            const overheadSectionEl = findBallCapsSection('OVERHEAD/PROFIT');
             
             // Calculate fabric/s subtotal
             if (parsedData.fabric && parsedData.fabric.length > 0) {
                 const fabricTotal = parsedData.fabric.reduce((sum, item) => {
                     return sum + (parseFloat(item.cost) || 0);
                 }, 0);
-                updateBallCapsSubtotal('#ballcapsBreakdown .cost-section:nth-child(1)', fabricTotal);
+                updateBallCapsSubtotal(fabricSectionEl, fabricTotal);
             }
             
             // Calculate other fabric/s - trim/s subtotal (formerly embroidery)
@@ -11556,7 +11578,7 @@
                 const otherFabricTotal = parsedData.embroidery.reduce((sum, item) => {
                     return sum + (parseFloat(item.cost) || 0);
                 }, 0);
-                updateBallCapsSubtotal('#ballcapsBreakdown .cost-section:nth-child(2)', otherFabricTotal);
+                updateBallCapsSubtotal(otherFabricSectionEl, otherFabricTotal);
             }
             
             // Calculate trim subtotal
@@ -11564,7 +11586,7 @@
                 const trimTotal = parsedData.trim.reduce((sum, item) => {
                     return sum + (parseFloat(item.cost) || 0);
                 }, 0);
-                updateBallCapsSubtotal('#ballcapsBreakdown .cost-section:nth-child(3)', trimTotal);
+                updateBallCapsSubtotal(trimSectionEl, trimTotal);
             }
             
             // Calculate operations subtotal
@@ -11572,7 +11594,7 @@
                 const operationsTotal = parsedData.operations.reduce((sum, item) => {
                     return sum + (parseFloat(item.total || item.cost) || 0);
                 }, 0);
-                updateBallCapsSubtotal('#ballcapsBreakdown .cost-section:nth-child(5)', operationsTotal);
+                updateBallCapsSubtotal(operationsSectionEl, operationsTotal);
             }
             
             // Calculate packaging subtotal
@@ -11580,7 +11602,7 @@
                 const packagingTotal = parsedData.packaging.reduce((sum, item) => {
                     return sum + (parseFloat(item.cost) || 0);
                 }, 0);
-                updateBallCapsSubtotal('#ballcapsBreakdown .cost-section:nth-child(6)', packagingTotal);
+                updateBallCapsSubtotal(packagingSectionEl, packagingTotal);
             }
             
             // Calculate overhead subtotal
@@ -11588,7 +11610,7 @@
                 const overheadTotal = parsedData.overhead.reduce((sum, item) => {
                     return sum + (parseFloat(item.cost) || 0);
                 }, 0);
-                updateBallCapsSubtotal('#ballcapsBreakdown .cost-section:nth-child(7)', overheadTotal);
+                updateBallCapsSubtotal(overheadSectionEl, overheadTotal);
             }
         }
 
