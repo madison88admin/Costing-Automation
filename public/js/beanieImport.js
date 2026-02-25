@@ -263,6 +263,7 @@ var TNFBeanieImporter = class TNFBeanieImporter {
                 if (!row || row.length === 0) continue;
                 
                 const firstCell = String(row[0] || '').trim();
+                const rowTextUpper = row.map(cell => String(cell || '').trim()).join(' | ').toUpperCase();
                 
                 // Detect sections with flexible matching (like ballcaps)
                 if (firstCell === 'YARN' || firstCell === 'MATERIAL' || firstCell.includes('YARN')) {
@@ -674,6 +675,18 @@ var TNFBeanieImporter = class TNFBeanieImporter {
                 if (firstCell.includes('TOTAL FACTORY') && row[3]) {
                     result.totalFactoryCost = parseFloat(row[3]).toFixed(2);
                     console.log('✅ Factory Total:', result.totalFactoryCost);
+                }
+
+                // Hard stop parsing sections after TOTAL FACTORY COST row to avoid reference tables below.
+                if (rowTextUpper.includes('TOTAL FACTORY COST')) {
+                    const numericCells = row
+                        .map(cell => this.parseNumeric(cell))
+                        .filter(val => val !== null);
+                    if (numericCells.length > 0) {
+                        result.totalFactoryCost = this.formatNumeric(numericCells[numericCells.length - 1]);
+                        console.log('✅ Factory Total (row scan):', result.totalFactoryCost);
+                    }
+                    break;
                 }
 
                 // Extract OVERHEAD SUB TOTAL from Excel file (read like other features)

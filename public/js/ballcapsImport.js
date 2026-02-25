@@ -385,10 +385,15 @@ class TNFBallCapsImporter {
                         parsedTime !== null &&
                         parsedTotal !== null &&
                         this.extractNumericValue(row[1]) === null;
+                    const isUnlabeledNumericRow =
+                        operationLabel === '' &&
+                        parsedTime !== null &&
+                        parsedCostPerMin !== null &&
+                        parsedTotal !== null;
 
                     // Keep only rows with real numeric operation data.
                     const hasOperationData = parsedTotal !== null || parsedCostPerMin !== null || parsedTime !== null;
-                    const canUseUnlabeledRow = looksLikeSingleSummaryRow;
+                    const canUseUnlabeledRow = looksLikeSingleSummaryRow || isUnlabeledNumericRow;
                     const hasValidLabel = operationLabel !== '' && !this.isExcelErrorValue(operationLabel);
                     if (!canUseUnlabeledRow && !hasValidLabel) continue;
                     if (hasOperationData) {
