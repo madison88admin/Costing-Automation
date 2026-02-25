@@ -106,6 +106,7 @@ class TNFBallCapsImporter {
      */
     parseExcelData(excelData) {
         this.sectionColumnMap = {};
+        this.pendingOperationTime = null;
         // Handle both old array format and new object format with images
         let data = excelData;
         let images = [];
@@ -208,6 +209,8 @@ class TNFBallCapsImporter {
                     console.log('🔍 Found TRIM section');
                 } else if (firstCellUpper === 'OPERATIONS') {
                     currentSection = 'operations';
+                    const possibleTime = this.extractNumericValue(row[leadIdx + 1]);
+                    this.pendingOperationTime = possibleTime !== null ? possibleTime : null;
                     console.log('🔍 Found OPERATIONS section - switching to operations parsing');
                 } else if (firstCellUpper === 'PACKAGING') {
                     currentSection = 'packaging';
@@ -356,17 +359,36 @@ class TNFBallCapsImporter {
                     const parsedCostPerMin = this.extractNumericValue(costPerMinRaw);
                     const parsedTotal = this.extractNumericValue(totalRaw);
 
+                    // Template pattern support:
+                    // Row A: "OPERATIONS | 52 | SMV | COST (USD/MIN)"
+                    // Row B: "" | "" | 0.02 | 1.04
+                    const looksLikeSingleSummaryRow =
+                        this.pendingOperationTime !== null &&
+                        operationLabel === '' &&
+                        parsedTime !== null &&
+                        parsedTotal !== null &&
+                        this.extractNumericValue(row[1]) === null;
+
                     // Keep only rows with operation numeric values or explicit time/cost data.
                     const hasOperationData = parsedTotal !== null || parsedCostPerMin !== null || parsedTime !== null || String(timeRaw || '').trim() !== '';
                     if (hasOperationData) {
+                        const resolvedTime = looksLikeSingleSummaryRow
+                            ? this.pendingOperationTime
+                            : parsedTime;
+                        const resolvedSmv = looksLikeSingleSummaryRow
+                            ? parsedTime
+                            : parsedTime;
+                        const resolvedCostPerMin = looksLikeSingleSummaryRow
+                            ? parsedTime
+                            : parsedCostPerMin;
                         const operationData = {
                             operation: operationLabel !== '' ? operationLabel : `Operation ${result.operations.length + 1}`,
-                            time: String(timeRaw || '').trim(),
-                            smv: parsedTime !== null ? this.normalizeNumericString(parsedTime, '0.00') : '',
-                            costPerMin: parsedCostPerMin !== null ? this.normalizeNumericString(parsedCostPerMin, '0.00') : '0.00',
+                            time: resolvedTime !== null ? this.normalizeNumericString(resolvedTime, '0.00') : String(timeRaw || '').trim(),
+                            smv: resolvedSmv !== null ? this.normalizeNumericString(resolvedSmv, '0.00') : '',
+                            costPerMin: resolvedCostPerMin !== null ? this.normalizeNumericString(resolvedCostPerMin, '0.00') : '0.00',
                             total: parsedTotal !== null
                                 ? this.normalizeNumericString(parsedTotal, '0.00')
-                                : ((parsedTime !== null && parsedCostPerMin !== null) ? this.formatCalculatedValue(parsedTime * parsedCostPerMin) : '')
+                                : ((resolvedTime !== null && resolvedCostPerMin !== null) ? this.formatCalculatedValue(resolvedTime * resolvedCostPerMin) : '')
                         };
 
                         // Avoid duplicate push when same row gets picked by fallback.
@@ -379,6 +401,9 @@ class TNFBallCapsImporter {
                         if (!duplicate) {
                             result.operations.push(operationData);
                             console.log('✅ OPERATION:', operationData);
+                            if (looksLikeSingleSummaryRow) {
+                                this.pendingOperationTime = null;
+                            }
                         }
                     }
                 }

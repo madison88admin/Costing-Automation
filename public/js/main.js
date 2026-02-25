@@ -11239,6 +11239,31 @@
             const packagingSectionEl = findBallCapsSection('PACKAGING');
             const overheadSectionEl = findBallCapsSection('OVERHEAD/PROFIT');
 
+            // Clear existing imported values so old rows do not persist between uploads.
+            function clearBallCapsSection(sectionEl) {
+                if (!sectionEl) return;
+                const rows = sectionEl.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                rows.forEach(row => {
+                    row.querySelectorAll('.cost-cell').forEach(cell => {
+                        cell.textContent = '';
+                    });
+                });
+                const subtotalRow = sectionEl.querySelector('.subtotal-row');
+                if (subtotalRow) {
+                    const subtotalCells = subtotalRow.querySelectorAll('.cost-cell');
+                    if (subtotalCells.length > 0) {
+                        subtotalCells[subtotalCells.length - 1].textContent = '$0.00';
+                    }
+                }
+            }
+
+            clearBallCapsSection(fabricSectionEl);
+            clearBallCapsSection(otherFabricSectionEl);
+            clearBallCapsSection(trimSectionEl);
+            clearBallCapsSection(operationsSectionEl);
+            clearBallCapsSection(packagingSectionEl);
+            clearBallCapsSection(overheadSectionEl);
+
             // Populate fabric/s section
             if (parsedData.fabric && parsedData.fabric.length > 0) {
                 const fabricRows = fabricSectionEl ? fabricSectionEl.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)') : [];
