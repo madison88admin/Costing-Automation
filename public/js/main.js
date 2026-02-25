@@ -7225,6 +7225,13 @@
                     if (operationSectionHeader) {
                         const targetSection = operationSectionHeader.closest('.cost-section');
                         const rows = targetSection ? targetSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)') : [];
+
+                        // Clear stale values from previous imports.
+                        rows.forEach(row => {
+                            row.querySelectorAll('.cost-cell').forEach(cell => {
+                                cell.textContent = '';
+                            });
+                        });
                         
                         data.operations.forEach((item, index) => {
                             if (rows[index]) {
@@ -7766,11 +7773,12 @@
                         const time = cells[1].textContent.trim();
                         const costPerMin = cells[2].textContent.trim();
                         const existingCost = cells[3].textContent.trim().replace('$', '');
+                        const existingCostValue = parseFloat(existingCost);
                         
                         console.log(`🔍” OPERATIONS Row ${index} - Time: ${time}, CostPerMin: ${costPerMin}, Existing Cost: ${existingCost}`);
                         
                         // Check if we have direct cost data (from Excel import), use that first
-                        if (existingCost !== '' && !isNaN(existingCostValue)) {
+                        if (existingCost !== '' && !isNaN(existingCostValue) && existingCostValue > 0) {
                             console.log(`âœ… OPERATIONS Row ${index} - Using existing cost: ${existingCost}`);
                             operationsTotal += existingCostValue;
                         }

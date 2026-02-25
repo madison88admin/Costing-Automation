@@ -35,6 +35,23 @@ class TNFBallCapsImporter {
         return normalized === '' ? '0.00' : normalized;
     }
 
+    isExcelErrorValue(value) {
+        if (value === null || value === undefined) return false;
+        const text = String(value).trim().toUpperCase();
+        if (!text.startsWith('#')) return false;
+        return (
+            text.includes('#NAME?') ||
+            text.includes('#VALUE!') ||
+            text.includes('#DIV/0!') ||
+            text.includes('#REF!') ||
+            text.includes('#N/A') ||
+            text.includes('#NULL!') ||
+            text.includes('#NUM!') ||
+            text.includes('#SPILL!') ||
+            text.includes('#CALC!')
+        );
+    }
+
     getHeaderText(value) {
         return String(value || '').toLowerCase().replace(/\s+/g, ' ').trim();
     }
@@ -355,9 +372,9 @@ class TNFBallCapsImporter {
                     const costPerMinRaw = isNumericTriple ? row[2] : (row[map.costPerMin] !== undefined ? row[map.costPerMin] : row[2]);
                     const totalRaw = isNumericTriple ? row[3] : (row[map.total] !== undefined ? row[map.total] : row[3]);
 
-                    const parsedTime = this.extractNumericValue(timeRaw);
-                    const parsedCostPerMin = this.extractNumericValue(costPerMinRaw);
-                    const parsedTotal = this.extractNumericValue(totalRaw);
+                    const parsedTime = this.isExcelErrorValue(timeRaw) ? null : this.extractNumericValue(timeRaw);
+                    const parsedCostPerMin = this.isExcelErrorValue(costPerMinRaw) ? null : this.extractNumericValue(costPerMinRaw);
+                    const parsedTotal = this.isExcelErrorValue(totalRaw) ? null : this.extractNumericValue(totalRaw);
 
                     // Template pattern support:
                     // Row A: "OPERATIONS | 52 | SMV | COST (USD/MIN)"
@@ -369,8 +386,11 @@ class TNFBallCapsImporter {
                         parsedTotal !== null &&
                         this.extractNumericValue(row[1]) === null;
 
-                    // Keep only rows with operation numeric values or explicit time/cost data.
-                    const hasOperationData = parsedTotal !== null || parsedCostPerMin !== null || parsedTime !== null || String(timeRaw || '').trim() !== '';
+                    // Keep only rows with real numeric operation data.
+                    const hasOperationData = parsedTotal !== null || parsedCostPerMin !== null || parsedTime !== null;
+                    const canUseUnlabeledRow = looksLikeSingleSummaryRow;
+                    const hasValidLabel = operationLabel !== '' && !this.isExcelErrorValue(operationLabel);
+                    if (!canUseUnlabeledRow && !hasValidLabel) continue;
                     if (hasOperationData) {
                         const resolvedTime = looksLikeSingleSummaryRow
                             ? this.pendingOperationTime
@@ -382,7 +402,7 @@ class TNFBallCapsImporter {
                             ? parsedTime
                             : parsedCostPerMin;
                         const operationData = {
-                            operation: operationLabel !== '' ? operationLabel : `Operation ${result.operations.length + 1}`,
+                            operation: hasValidLabel ? operationLabel : `Operation ${result.operations.length + 1}`,
                             time: resolvedTime !== null ? this.normalizeNumericString(resolvedTime, '0.00') : String(timeRaw || '').trim(),
                             smv: resolvedSmv !== null ? this.normalizeNumericString(resolvedSmv, '0.00') : '',
                             costPerMin: resolvedCostPerMin !== null ? this.normalizeNumericString(resolvedCostPerMin, '0.00') : '0.00',
@@ -424,9 +444,10 @@ class TNFBallCapsImporter {
                     const col1 = this.extractNumericValue(row[1]);
                     const col2 = this.extractNumericValue(row[2]);
                     const col3 = this.extractNumericValue(row[3]);
-                    const fallbackTimeOrSmv = (col1 !== null && col2 !== null && col3 !== null) ? col1 : this.extractNumericValue(row[map.time]);
-                    const fallbackCostPerMin = (col1 !== null && col2 !== null && col3 !== null) ? col2 : this.extractNumericValue(row[map.costPerMin]);
-                    const fallbackOperationCost = (col1 !== null && col2 !== null && col3 !== null) ? col3 : this.extractNumericValue(row[map.total]);
+                    if (!firstCell || this.isExcelErrorValue(firstCell)) continue;
+                    const fallbackTimeOrSmv = (col1 !== null && col2 !== null && col3 !== null) ? col1 : (this.isExcelErrorValue(row[map.time]) ? null : this.extractNumericValue(row[map.time]));
+                    const fallbackCostPerMin = (col1 !== null && col2 !== null && col3 !== null) ? col2 : (this.isExcelErrorValue(row[map.costPerMin]) ? null : this.extractNumericValue(row[map.costPerMin]));
+                    const fallbackOperationCost = (col1 !== null && col2 !== null && col3 !== null) ? col3 : (this.isExcelErrorValue(row[map.total]) ? null : this.extractNumericValue(row[map.total]));
                     if (fallbackOperationCost !== null || (fallbackTimeOrSmv !== null && fallbackCostPerMin !== null)) {
                         console.log(`🔍 Fallback operations detection - Row ${i}:`, firstCell, '|', row[1], '|', row[2], '|', row[3]);
                         

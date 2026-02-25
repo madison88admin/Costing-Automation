@@ -48,6 +48,23 @@ var TNFBeanieImporter = class TNFBeanieImporter {
         return Number.isFinite(value) ? value.toFixed(2) : '';
     }
 
+    isExcelErrorValue(value) {
+        if (value === null || value === undefined) return false;
+        const text = String(value).trim().toUpperCase();
+        if (!text.startsWith('#')) return false;
+        return (
+            text.includes('#NAME?') ||
+            text.includes('#VALUE!') ||
+            text.includes('#DIV/0!') ||
+            text.includes('#REF!') ||
+            text.includes('#N/A') ||
+            text.includes('#NULL!') ||
+            text.includes('#NUM!') ||
+            text.includes('#SPILL!') ||
+            text.includes('#CALC!')
+        );
+    }
+
     /**
      * Parse TNF Excel data into structured format for beanie
      * @param {Object|Array} excelData - Raw Excel data from XLSX library (can be array or object with data/images)
@@ -514,9 +531,9 @@ var TNFBeanieImporter = class TNFBeanieImporter {
                     // Excel format: OPERATION | OPERATION TIME (MINS) | OPERATION COST (USD/MIN) | OPERATION COST
                     const operationName = String(firstCell || '').trim();
                     const operationTime = String(row[1] || '').trim();
-                    const costPerMinValue = this.parseNumeric(row[2]);
-                    const operationCostValue = this.parseNumeric(row[3]);
-                    const timeNumeric = this.parseNumeric(row[1]);
+                    const costPerMinValue = this.isExcelErrorValue(row[2]) ? null : this.parseNumeric(row[2]);
+                    const operationCostValue = this.isExcelErrorValue(row[3]) ? null : this.parseNumeric(row[3]);
+                    const timeNumeric = this.isExcelErrorValue(row[1]) ? null : this.parseNumeric(row[1]);
 
                     const costPerMin = costPerMinValue !== null ? this.formatNumeric(costPerMinValue) : '0.00';
                     let total = '';
@@ -528,8 +545,10 @@ var TNFBeanieImporter = class TNFBeanieImporter {
                         total = this.formatNumeric(timeNumeric * costPerMinValue);
                     }
 
-                    // Keep rows that have an operation label and any value in time/cost/total.
-                    if (operationName && (operationTime || costPerMinValue !== null || total !== '')) {
+                    const hasValidLabel = operationName && !this.isExcelErrorValue(operationName);
+                    const hasOperationData = timeNumeric !== null || costPerMinValue !== null || operationCostValue !== null || total !== '';
+                    // Keep only rows with real label + real numeric operation data.
+                    if (hasValidLabel && hasOperationData) {
                         result.operations.push({
                             operation: operationName,
                             time: operationTime,
