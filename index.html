@@ -1033,7 +1033,7 @@
                             <span class="format-badge">XLSX</span>
                         </div>
                     </div>
-                    <input type="file" id="fileInput" accept=".csv,.xlsx" style="display: none;" onchange="handleFileSelect(event)">
+                    <input type="file" id="fileInput" accept=".csv,.xlsx,.xls,.xlsm" style="display: none;" onchange="handleFileSelect(event)">
                 </div>
                 
                 <!-- Data Review Panel -->
@@ -2346,7 +2346,15 @@
             formData.append('config', JSON.stringify(config));
 
             try {
-                const response = await fetch(`/api/import/csv/${connectionId}`, {
+                // Detect file type and call appropriate endpoint
+                const fileExtension = currentFile.name.split('.').pop().toLowerCase();
+                let endpoint = '/api/import/csv';
+                
+                if (['xlsx', 'xls', 'xlsm'].includes(fileExtension)) {
+                    endpoint = '/api/import/excel';
+                }
+                
+                const response = await fetch(`${endpoint}/${connectionId}`, {
                     method: 'POST',
                     body: formData
                 });

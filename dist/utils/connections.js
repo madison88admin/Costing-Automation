@@ -5,7 +5,6 @@ exports.addConnection = addConnection;
 exports.getConnection = getConnection;
 exports.removeConnection = removeConnection;
 exports.getAllConnections = getAllConnections;
-// Shared connections store for all routes
 exports.connections = new Map();
 function addConnection(connectionId, connection) {
     exports.connections.set(connectionId, connection);
@@ -19,3 +18,4 @@ function removeConnection(connectionId) {
 function getAllConnections() {
     return exports.connections;
 }
+//# sourceMappingURL=connections.js.map

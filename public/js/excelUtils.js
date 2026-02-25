@@ -165,7 +165,11 @@ class ExcelUtils {
                         for (let i = 0; i < workbook.SheetNames.length; i++) {
                             const sheetName = workbook.SheetNames[i];
                             const worksheet = workbook.Sheets[sheetName];
-                            const sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: true });
+                            let sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: true });
+                            // Normalize all empty cells to 0
+                            sheetData = sheetData.map(row => Array.isArray(row)
+                                ? row.map(cell => (cell === null || cell === undefined || cell === '' || cell === ' ' || cell === false) ? 0 : cell)
+                                : row);
                             
                             // Check if this sheet contains Fuzzy Wool Blend data
                             const sheetString = JSON.stringify(sheetData).toLowerCase();

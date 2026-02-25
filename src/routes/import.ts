@@ -16,14 +16,21 @@ const upload = multer({
   },
   fileFilter: (req, file, cb) => {
     const allowedTypes = [
-      'text/csv'
+      'text/csv',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel.sheet.macroEnabled.12'
     ];
     
+    const allowedExtensions = ['.csv', '.xlsx', '.xls', '.xlsm'];
+    const extension = file.originalname.split('.').pop();
+    const fileExtension = extension ? '.' + extension.toLowerCase() : '';
+    
     if (allowedTypes.includes(file.mimetype) || 
-        file.originalname.endsWith('.csv')) {
+        allowedExtensions.includes(fileExtension)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only CSV files are allowed.'));
+      cb(new Error('Invalid file type. Only CSV and Excel files (.csv, .xlsx, .xls, .xlsm) are allowed.'));
     }
   }
 });
@@ -79,6 +86,33 @@ router.post('/csv/:connectionId', upload.single('file'), async (req: Request, re
     logger.error('Error importing CSV:', error);
     return res.status(500).json({ 
       error: 'Failed to import CSV',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+router.post('/excel/:connectionId', upload.single('file'), async (req: Request, res: Response) => {
+  try {
+    const { connectionId } = req.params;
+    const config: ImportConfig = JSON.parse(req.body.config);
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const connection = getConnection(connectionId);
+    if (!connection) {
+      return res.status(404).json({ error: 'Connection not found' });
+    }
+
+    const importService = new ImportService(connection);
+    const result = await importService.importExcel(req.file, config);
+
+    return res.json(result);
+  } catch (error) {
+    logger.error('Error importing Excel:', error);
+    return res.status(500).json({ 
+      error: 'Failed to import Excel',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }

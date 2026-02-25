@@ -2047,45 +2047,91 @@
             `;
             
             // Add column headers with display names and triangle filter buttons (all columns are filterable)
-            columnHeaders.forEach((header, index) => {
-                const isMissing = mappedColumns[index] === null;
-                const headerStyle = isMissing ? 
-                    'padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; background: #ffebee; color: #c62828; font-style: italic; font-weight: 600; position: relative;' :
-                    'padding: 12px 8px; border: 1px solid #ddd; text-align: left; min-width: 150px; white-space: nowrap; font-weight: 600; position: relative;';
-                
-                // All columns get filter buttons
+            content.forEach((sheet, index) => {
                 html += `
-                    <th style="${headerStyle}">
-                        <div class="header-with-filter">
-                            <span>${header}${isMissing ? ' (Missing)' : ''}</span>
-                            <button class="filter-triangle" onclick="toggleDatabankColumnFilter(${index}, '${header}')" title="Filter ${header}">
-                                â–¼
-                            </button>
-                        </div>
-                    </th>
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="color: #4CAF50; margin-bottom: 10px;">âš¡ ${sheet.sheetName}</h4>
                 `;
+
+                let operationCosts = [];
+                let operationTableFound = false;
+
+                // Detect operation table by sheet name or header
+                if (sheet.sheetName && sheet.sheetName.toLowerCase().includes('operation')) {
+                    operationTableFound = true;
+                } else if (sheet.data && sheet.data[0]) {
+                    const headerRow = sheet.data[0];
+                    if (Array.isArray(headerRow)) {
+                        for (let i = 0; i < headerRow.length; i++) {
+                            if (headerRow[i] && headerRow[i].toString().toLowerCase().includes('operation cost')) {
+                                operationTableFound = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (sheet.isImage) {
+                    html += `
+                        <div style="text-align: center; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 8px;">
+                            <img src="${sheet.imageUrl}" style="max-width: 100%; max-height: 400px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);" alt="Image preview">
+                        </div>
+                    `;
+                } else if (sheet.isPDF) {
+                    html += `
+                        <div style="text-align: center; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 8px;">
+                            <div style="font-size: 48px; color: #ff6b6b; margin-bottom: 10px;">🔍“„</div>
+                            <p style="color: rgba(255, 255, 255, 0.8);">PDF files cannot be directly parsed in the browser.</p>
+                            <p style="color: rgba(255, 255, 255, 0.6); font-size: 14px;">File: ${sheet.fileName} (${(sheet.fileSize / 1024).toFixed(2)} KB)</p>
+                        </div>
+                    `;
+                } else if (sheet.data && sheet.data.length > 0) {
+                    html += `
+                        <div class="table-container" style="max-height: 500px; height: 500px; overflow-y: auto; overflow-x: auto; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; background: rgba(255, 255, 255, 0.05);">
+                            <table style="width: 100%; border-collapse: collapse; font-family: monospace; font-size: 12px;">
+                    `;
+
+                    // ...existing code...
+
+                    // Extract OPERATION COST column if this is the OPERATIONS table
+                    if (operationTableFound) {
+                        // Find the column index for OPERATION COST
+                        const headerRow = sheet.data[0];
+                        let opCostColIdx = -1;
+                        if (headerRow && Array.isArray(headerRow)) {
+                            for (let i = 0; i < headerRow.length; i++) {
+                                if (headerRow[i] && headerRow[i].toString().toLowerCase().includes('operation cost')) {
+                                    opCostColIdx = i;
+                                    break;
+                                }
+                            }
+                        }
+                        // Extract values from OPERATION COST column
+                        if (opCostColIdx !== -1) {
+                            for (let rowIdx = 1; rowIdx < sheet.data.length; rowIdx++) {
+                                const row = sheet.data[rowIdx];
+                                if (Array.isArray(row) && row[opCostColIdx] !== undefined && row[opCostColIdx] !== null && row[opCostColIdx] !== '') {
+                                    operationCosts.push(row[opCostColIdx]);
+                                }
+                            }
+                        }
+                    }
+
+                    html += '</table></div>';
+
+                    if (sheet.data.length > 100) {
+                        html += `<p style="color: rgba(255, 255, 255, 0.7); font-size: 12px; margin-top: 10px; text-align: center;">Showing first 100 rows of ${sheet.data.length} total rows</p>`;
+                    }
+                    // Show OPERATION COST summary if found
+                    if (operationTableFound && operationCosts.length > 0) {
+                        html += `<div style="margin-top: 16px; background: #e8f5e9; border-radius: 8px; padding: 12px; color: #388e3c; font-weight: bold;">Operation Costs: ${operationCosts.map(v => v === 0 ? '$0.00' : v).join(', ')}</div>`;
+                    }
+                } else {
+                    html += '<p style="color: #ff6b6b; padding: 20px; text-align: center;">No data found in this sheet</p>';
+                }
+
+                html += '</div>';
             });
-            
-            html += `
-                                </tr>
-                            </thead>
-                            <tbody>
-            `;
-            
-            // Add data rows (show all rows with mapped columns)
-            console.log('First row data:', data[0]);
-            console.log('Mapped columns for data:', mappedColumns);
-            
-            // Check if first row contains column names instead of data
-            const firstRowKeys = Object.keys(data[0]);
-            const firstRowValues = Object.values(data[0]);
-            console.log('First row keys:', firstRowKeys);
-            console.log('First row values:', firstRowValues);
-            
-            // More robust check for header row
-            
-            // Function to check if a row contains header-like data
-            function isHeaderRow(row) {
                 if (!row || typeof row !== 'object') return false;
                 
                 const values = Object.values(row);
@@ -2154,22 +2200,28 @@
                         if (rowIndex < 3) {
                             console.log(`Row ${rowIndex}, Column ${col}: value =`, value, 'type =', typeof value);
                         }
-                        
                         // Handle different value types
                         let displayValue = '';
-                        if (value === null || value === undefined) {
-                            displayValue = '';
+                        if (value === null || value === undefined || value === '') {
+                            // Show $0.00 for cost columns
+                            if (col && (col.toLowerCase().includes('cost') || col.toLowerCase().includes('price') || col.toLowerCase().includes('total')) ) {
+                                displayValue = '$0.00';
+                            } else {
+                                displayValue = '';
+                            }
                         } else if (typeof value === 'object') {
                             displayValue = JSON.stringify(value);
                         } else {
                             displayValue = String(value);
+                            // Show $0.00 for empty or zero cost values
+                            if ((col && (col.toLowerCase().includes('cost') || col.toLowerCase().includes('price') || col.toLowerCase().includes('total'))) && (displayValue === '' || displayValue === '0' || displayValue === '0.00')) {
+                                displayValue = '$0.00';
+                            }
                         }
-                        
                         // Truncate if too long
                         if (displayValue.length > 50) {
                             displayValue = displayValue.substring(0, 50) + '...';
                         }
-                        
                         html += `<td style="padding: 10px 8px; border: 1px solid #ddd; font-size: 13px; vertical-align: middle;">${displayValue}</td>`;
                     }
                 });
@@ -2263,7 +2315,6 @@
                     </div>
                 `;
             }
-        }
 
         // Filter functionality
         let currentFilters = {};
@@ -3620,7 +3671,20 @@
             
             const files = event.dataTransfer.files;
             if (files.length > 0) {
-                handleImageFile(files[0], productType);
+                const file = files[0];
+                try {
+                    const ft = typeof getFileType === 'function' ? getFileType(file) : null;
+                    if (ft === 'excel' || ft === 'csv' || ft === 'text') {
+                        // Route spreadsheet/text files to the main import flow
+                        readAndDisplayFile(file);
+                        return;
+                    }
+                } catch (e) {
+                    // if detection fails, fall back to image handling
+                    console.warn('file type detection failed on drop:', e);
+                }
+
+                handleImageFile(file, productType);
             }
         }
 
@@ -6840,6 +6904,23 @@
                     } else {
                         fillTemplateWithData(parsedData);
                     }
+
+                    // Force auto-compute after import population.
+                    const runAutoCompute = () => {
+                        try {
+                            if (templateType === 'ballcaps') {
+                                if (typeof calculateBallCapsTemplate === 'function') calculateBallCapsTemplate();
+                            } else {
+                                if (typeof calculateBeanieTemplate === 'function') calculateBeanieTemplate();
+                                if (typeof updateSubtotals === 'function') updateSubtotals();
+                            }
+                        } catch (computeError) {
+                            console.error('âŒ Auto-compute error after import:', computeError);
+                        }
+                    };
+                    runAutoCompute();
+                    setTimeout(runAutoCompute, 180);
+                    setTimeout(runAutoCompute, 420);
                     
                     // Display product images if available
                     displayProductImages(parsedData.images);
@@ -7137,21 +7218,22 @@
             
             
             if (data.operations && data.operations.length > 0) {
-                const visibleTemplate = document.querySelector('.cost-breakdown-container:not([style*="display: none"])');
-                if (visibleTemplate) {
-                    const operationsSection = visibleTemplate.querySelector('.cost-section .section-header');
-                    if (operationsSection && operationsSection.textContent.trim() === 'OPERATIONS') {
-                        const targetSection = operationsSection.parentElement;
-                        const rows = targetSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                const beanieContainer = document.querySelector('#costBreakdown:not([style*="display: none"])');
+                if (beanieContainer) {
+                    const operationSectionHeader = Array.from(beanieContainer.querySelectorAll('.section-header'))
+                        .find(header => header.textContent.trim().toUpperCase().includes('OPERATIONS'));
+                    if (operationSectionHeader) {
+                        const targetSection = operationSectionHeader.closest('.cost-section');
+                        const rows = targetSection ? targetSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)') : [];
                         
                         data.operations.forEach((item, index) => {
                             if (rows[index]) {
                                 const cells = rows[index].querySelectorAll('.cost-cell');
                                 if (cells[0]) cells[0].textContent = item.operation || '';
-                                if (cells[1]) cells[1].textContent = item.smv || ''; // BLANK column shows SMV values
-                                if (cells[2]) cells[2].textContent = item.costPerMin || ''; // SMV column shows cost per minute
-                                if (cells[3]) cells[3].textContent = item.total || ''; // COST (USD/MIN) column shows total
-                                console.log(`âœ… OPERATIONS item ${index}:`, item.operation, item.smv, item.costPerMin, item.total);
+                                if (cells[1]) cells[1].textContent = item.time || item.smv || '';
+                                if (cells[2]) cells[2].textContent = item.costPerMin || '';
+                                if (cells[3]) cells[3].textContent = item.total || item.cost || '';
+                                console.log(`âœ… OPERATIONS item ${index}:`, item.operation, item.time || item.smv, item.costPerMin, item.total || item.cost);
                             }
                         });
                     }
@@ -7165,10 +7247,16 @@
             console.log('🔍” OVERHEAD DATA FROM EXCEL:', data.overhead);
             fillCostSection('OVERHEAD/PROFIT', data.overhead, ['type', 'notes', 'cost']);
             
-            // Let the calculation system handle totals instead of importing from Excel
+            // Force totals/subtotals recalculation after DOM is fully populated.
+            // Run twice to catch any delayed paint/content updates from section fills.
             setTimeout(() => {
                 calculateBeanieTemplate();
-            }, 100);
+                if (typeof updateSubtotals === 'function') updateSubtotals();
+            }, 120);
+            setTimeout(() => {
+                calculateBeanieTemplate();
+                if (typeof updateSubtotals === 'function') updateSubtotals();
+            }, 420);
             
         }
         
@@ -7544,7 +7632,8 @@
                     if (cells.length >= 4) {
                         const consumption = cells[1].textContent.trim();
                         const price = cells[2].textContent.trim();
-                        const existingCost = cells[3].textContent.trim().replace('$', '');
+                        const existingCost = cells[3].textContent.trim().replace('$', '').replace(/,/g, '');
+                        const existingCostValue = parseFloat(existingCost);
                         
                         // Check if we have consumption and price data for calculation
                         if (consumption && price && !isNaN(parseFloat(consumption)) && !isNaN(parseFloat(price))) {
@@ -7681,9 +7770,9 @@
                         console.log(`🔍” OPERATIONS Row ${index} - Time: ${time}, CostPerMin: ${costPerMin}, Existing Cost: ${existingCost}`);
                         
                         // Check if we have direct cost data (from Excel import), use that first
-                        if (existingCost && !isNaN(parseFloat(existingCost)) && parseFloat(existingCost) > 0) {
+                        if (existingCost !== '' && !isNaN(existingCostValue)) {
                             console.log(`âœ… OPERATIONS Row ${index} - Using existing cost: ${existingCost}`);
-                            operationsTotal += parseFloat(existingCost);
+                            operationsTotal += existingCostValue;
                         }
                         // Otherwise, calculate from time and rate
                         else if (time && costPerMin && !isNaN(parseFloat(time)) && !isNaN(parseFloat(costPerMin))) {
@@ -7697,6 +7786,10 @@
                 
                 // Update OPERATIONS subtotal
                 updateSectionSubtotal('#costBreakdown .cost-section:nth-child(6)', operationsTotal.toFixed(2));
+                const opSubtotalCell = operationsSection.querySelector('.subtotal-row .cost-cell:last-child');
+                if (opSubtotalCell) {
+                    opSubtotalCell.textContent = `$${operationsTotal.toFixed(2)}`;
+                }
                 console.log('🔍§® OPERATIONS Total:', operationsTotal.toFixed(2));
             }
 
@@ -8025,10 +8118,10 @@
                 // Update the cost cell
                 if (cells[3]) cells[3].textContent = cost.toFixed(2);
             } else if (sectionType === 'operations') {
-                // OPERATIONS: Blank column Ã— SMV column (4-column format)
-                const blankValue = parseFloat(cells[1].textContent.trim()) || 0;
-                const smv = parseFloat(cells[2].textContent.trim()) || 0;
-                cost = blankValue * smv;
+                // OPERATIONS: TIME/SMV × COST (USD/MIN)
+                const timeOrSmv = parseFloat(cells[1].textContent.trim().replace(/[$,]/g, '')) || 0;
+                const costPerMin = parseFloat(cells[2].textContent.trim().replace(/[$,]/g, '')) || 0;
+                cost = timeOrSmv * costPerMin;
 
                 // Display the calculated cost in the COST (USD/MIN) column
                 if (cells[3]) {
@@ -8487,6 +8580,74 @@
             } catch (error) {
                 console.error('Error exporting to CSV:', error);
                 showStatus('tableData', `âŒ Error exporting to CSV: ${error.message}`, 'error');
+            }
+        }
+
+        // Export visible table/container to PNG
+        function exportToPNG() {
+            try {
+                const el = document.getElementById('tableData');
+                if (!el) {
+                    alert('No table available to export.');
+                    return;
+                }
+
+                const width = el.scrollWidth;
+                const height = el.scrollHeight;
+
+                // Clone element to avoid modifying the live DOM
+                const clone = el.cloneNode(true);
+
+                const svg = `<?xml version="1.0" encoding="utf-8"?>\n` +
+                    `<svg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}'>` +
+                    `<foreignObject width='100%' height='100%'>` +
+                    `<div xmlns='http://www.w3.org/1999/xhtml' style='font-family: Arial, Helvetica, sans-serif;'>${clone.outerHTML}</div>` +
+                    `</foreignObject></svg>`;
+
+                const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+                const url = URL.createObjectURL(svgBlob);
+                const img = new Image();
+
+                img.onload = function () {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
+                    canvas.toBlob(function (blob) {
+                        if (!blob) {
+                            alert('Failed to generate PNG.');
+                            URL.revokeObjectURL(url);
+                            return;
+                        }
+                        const link = document.createElement('a');
+                        const now = new Date();
+                        const timestamp = now.toISOString().slice(0,19).replace(/:/g,'-');
+                        const filename = `Databank_Data_${timestamp}.png`;
+                        const blobUrl = URL.createObjectURL(blob);
+                        link.href = blobUrl;
+                        link.download = filename;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(blobUrl);
+                        URL.revokeObjectURL(url);
+                    }, 'image/png');
+                };
+
+                img.onerror = function (e) {
+                    console.error('Image load error for SVG->PNG conversion', e);
+                    alert('Failed to convert content to PNG.');
+                    URL.revokeObjectURL(url);
+                };
+
+                img.src = url;
+
+            } catch (error) {
+                console.error('Error exporting to PNG:', error);
+                alert('Error exporting to PNG: ' + (error && error.message ? error.message : error));
             }
         }
 
@@ -9313,11 +9474,17 @@
 
                         if (Array.isArray(row)) {
                             row.forEach((cell, cellIndex) => {
-                                const cellValue = cell !== null && cell !== undefined ? String(cell) : '';
+                                let cellValue = cell;
+                                // Force all empty/null/undefined/blank cells to $0.00
+                                if (cell === null || cell === undefined || cell === '' || cell === ' ' || cell === false) {
+                                    cellValue = '$0.00';
+                                } else if (!isNaN(cellValue) && cellValue !== '' && Number(cellValue) === 0) {
+                                    cellValue = '$0.00';
+                                }
                                 html += `<td style="padding: 6px; border: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.9); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${cellValue}">${cellValue}</td>`;
                             });
                         } else {
-                            html += `<td style="padding: 6px; border: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.9);" colspan="10">${row}</td>`;
+                            html += `<td style="padding: 6px; border: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.9);" colspan="10">${row === null || row === undefined || row === '' || row === ' ' || row === false ? '$0.00' : row}</td>`;
                         }
                         html += '</tr>';
                     }
@@ -9653,14 +9820,53 @@
 
                         if (Array.isArray(row)) {
                             row.forEach((cell, cellIndex) => {
-                                const cellValue = cell !== null && cell !== undefined ? String(cell) : '';
-                                html += `<td style="padding: 6px; border: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.9); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${cellValue}">${cellValue}</td>`;
+                                let cellValue = cell;
+                                // Force all empty/null/undefined/blank cells to 0
+                                if (cell === null || cell === undefined || cell === '' || cell === ' ' || cell === false) {
+                                    cellValue = 0;
+                                }
+                                // If cell is numeric and 0, show $0.00
+                                let displayValue = cellValue;
+                                if (!isNaN(cellValue) && cellValue !== '' && Number(cellValue) === 0) {
+                                    displayValue = '$0.00';
+                                }
+                                html += `<td style="padding: 6px; border: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.9); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${displayValue}">${displayValue}</td>`;
                             });
                         } else {
-                            html += `<td style="padding: 6px; border: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.9);" colspan="10">${row}</td>`;
+                            let cellValue = row;
+                            if (cellValue === null || cellValue === undefined || cellValue === '' || cellValue === ' ' || cellValue === false) {
+                                cellValue = 0;
+                            }
+                            let displayValue = cellValue;
+                            if (!isNaN(cellValue) && cellValue !== '' && Number(cellValue) === 0) {
+                                displayValue = '$0.00';
+                            }
+                            html += `<td style="padding: 6px; border: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.9);" colspan="10">${displayValue}</td>`;
                         }
                         html += '</tr>';
                     }
+
+                    // Always show subtotal row for numeric columns (except header row)
+                    const subtotalRow = [];
+                    for (let col = 0; col < sheet.data[0].length; col++) {
+                        let subtotal = 0;
+                        for (let rowIdx = 1; rowIdx < maxRows; rowIdx++) {
+                            let val = sheet.data[rowIdx][col];
+                            if (val === null || val === undefined || val === '') val = 0;
+                            if (!isNaN(val)) subtotal += Number(val);
+                        }
+                        // Show $0.00 for 0 subtotal, else formatted
+                        if (subtotal === 0) {
+                            subtotalRow.push('$0.00');
+                        } else {
+                            subtotalRow.push(subtotal.toFixed(2));
+                        }
+                    }
+                    html += '<tr style="background: #e8f5e9; font-weight: bold;">';
+                    subtotalRow.forEach((val, idx) => {
+                        html += `<td style="padding: 6px; border: 1px solid #c8e6c9; color: #388e3c;">${val}</td>`;
+                    });
+                    html += '</tr>';
 
                     html += '</table></div>';
 
@@ -10321,36 +10527,67 @@
             
             const dataString = JSON.stringify(data).toLowerCase();
             console.log('Analyzing data for template detection...');
-            
-            // Check for Beanie template indicators
-            if (dataString.includes('yarn') || dataString.includes('knitting') || (dataString.includes('fabric') && dataString.includes('trim') && !dataString.includes('fabric/s'))) {
-                console.log('Beanie template detected based on YARN/KNITTING/FABRIC/TRIM sections');
-                return 'beanie';
+
+            const includesAny = (tokens) => tokens.some(token => dataString.includes(token));
+
+            const beanieIndicators = [
+                'yarn',
+                'knitting',
+                'costed quantity',
+                'pull on',
+                'beanie'
+            ];
+
+            const ballcapsIndicators = [
+                'fabric/s',
+                'other fabric/s - trim/s',
+                'trim/s',
+                'corporate cap',
+                'flat brim',
+                'ballcap',
+                'baseball cap',
+                'moq',
+                'visor',
+                'sweatband'
+            ];
+
+            let beanieScore = 0;
+            let ballcapsScore = 0;
+
+            beanieIndicators.forEach(token => {
+                if (dataString.includes(token)) beanieScore += 2;
+            });
+
+            ballcapsIndicators.forEach(token => {
+                if (dataString.includes(token)) ballcapsScore += 2;
+            });
+
+            if (dataString.includes('fabric') && dataString.includes('trim') && !dataString.includes('fabric/s') && !dataString.includes('trim/s')) {
+                beanieScore += 1;
             }
-            
-            // Check for BallCaps template indicators
-            if (dataString.includes('fabric/s') || dataString.includes('other fabric/s') || dataString.includes('trim/s') || 
-                dataString.includes('embroidery') || dataString.includes('corporate cap') || dataString.includes('flat brim') ||
-                dataString.includes('rossignol') || dataString.includes('moq') || dataString.includes('visor') ||
-                dataString.includes('sweatband') || dataString.includes('cotton twill')) {
-                console.log('BallCaps template detected based on FABRIC/S/EMBROIDERY/CAP sections');
+
+            if (includesAny(['cap', 'caps'])) {
+                ballcapsScore += 1;
+            }
+
+            if (includesAny(['hat']) && !includesAny(['cap', 'caps'])) {
+                beanieScore += 1;
+            }
+
+            console.log('Template detection score:', { beanieScore, ballcapsScore });
+
+            if (ballcapsScore > beanieScore) {
+                console.log('BallCaps template detected from weighted indicators');
                 return 'ballcaps';
             }
-            
-            // Check for style name patterns
-            if (dataString.includes('beanie') || dataString.includes('hat')) {
-                console.log('Beanie template detected based on style name');
+
+            if (beanieScore > ballcapsScore) {
+                console.log('Beanie template detected from weighted indicators');
                 return 'beanie';
             }
-            
-            if (dataString.includes('cap') || dataString.includes('baseball') || dataString.includes('ballcap') ||
-                dataString.includes('corporate') || dataString.includes('flat brim') || dataString.includes('visor')) {
-                console.log('BallCaps template detected based on style name');
-                return 'ballcaps';
-            }
-            
-            console.log('No specific template indicators found, defaulting to beanie');
-            return 'beanie'; // Default
+
+            console.log('Template score tie, defaulting to beanie');
+            return 'beanie';
         }
 
         // Data Extraction
@@ -11019,7 +11256,7 @@
                 
                 // If no subtotal row was found in data, calculate and display one
                 const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(3) .subtotal-row');
-                if (subtotalRow && trimTotal > 0) {
+                if (subtotalRow) {
                     const cells = subtotalRow.querySelectorAll('.cost-cell');
                     if (cells[0] && !cells[0].textContent.includes('TOTAL')) {
                         cells[0].textContent = 'SUB TOTAL';
@@ -11063,15 +11300,15 @@
                             const cells = operationsRows[regularItemCount].querySelectorAll('.cost-cell');
                             console.log(`🔍” Populating operation ${regularItemCount + 1}:`, {
                                 operation: item.operation,
-                                smv: item.smv,
+                                smv: item.time || item.smv,
                                 costPerMin: item.costPerMin,
-                                total: item.total
+                                total: item.total || item.cost
                             });
                             
                             console.log(`🔍” Setting cells for operation ${regularItemCount + 1}:`, {
                                 operation: item.operation,
-                                smv: item.smv,
-                                total: item.total,
+                                smv: item.time || item.smv,
+                                total: item.total || item.cost,
                                 cellsLength: cells.length
                             });
                             
@@ -11080,20 +11317,20 @@
                                 console.log(`âœ… Set cell 0 (OPERATION): "${item.operation}"`);
                             }
                             if (cells[1]) {
-                                cells[1].textContent = item.smv || ''; // BLANK column shows SMV values
-                                console.log(`âœ… Set cell 1 (BLANK): "${item.smv}"`);
+                                cells[1].textContent = item.time || item.smv || ''; // TIME/SMV
+                                console.log(`âœ… Set cell 1 (TIME/SMV): "${item.time || item.smv}"`);
                             }
                             if (cells[2]) {
-                                cells[2].textContent = item.costPerMin || ''; // SMV column shows cost per minute
-                                console.log(`âœ… Set cell 2 (SMV): "${item.costPerMin}"`);
+                                cells[2].textContent = item.costPerMin || ''; // COST (USD/MIN)
+                                console.log(`âœ… Set cell 2 (COST USD/MIN): "${item.costPerMin}"`);
                             }
                             if (cells[3]) {
-                                cells[3].textContent = item.total || ''; // COST (USD/MIN) column shows total
-                                console.log(`âœ… Set cell 3 (COST USD/MIN): "${item.total}"`);
+                                cells[3].textContent = item.total || item.cost || ''; // OPERATION COST
+                                console.log(`âœ… Set cell 3 (OPERATION COST): "${item.total || item.cost}"`);
                             }
                             
                             // Add to total for calculation - use total from calculated value
-                            const cost = parseFloat(item.total) || 0;
+                            const cost = parseFloat(item.total || item.cost) || 0;
                             operationsTotal += cost;
                             regularItemCount++;
                         }
@@ -11102,7 +11339,7 @@
                 
                 // If no subtotal row was found in data, calculate and display one
                 const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(5) .subtotal-row');
-                if (subtotalRow && operationsTotal > 0) {
+                if (subtotalRow) {
                     const cells = subtotalRow.querySelectorAll('.cost-cell');
                     if (cells[2] && !cells[2].textContent.includes('TOTAL')) {
                         cells[2].textContent = 'SUB TOTAL';
@@ -11151,7 +11388,7 @@
                 
                 // If no subtotal row was found in data, calculate and display one
                 const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(6) .subtotal-row');
-                if (subtotalRow && packagingTotal > 0) {
+                if (subtotalRow) {
                     const cells = subtotalRow.querySelectorAll('.cost-cell');
                     if (cells[0] && !cells[0].textContent.includes('TOTAL')) {
                         cells[0].textContent = 'SUB TOTAL';
@@ -11200,7 +11437,7 @@
                 
                 // If no subtotal row was found in data, calculate and display one
                 const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(7) .subtotal-row');
-                if (subtotalRow && overheadTotal > 0) {
+                if (subtotalRow) {
                     const cells = subtotalRow.querySelectorAll('.cost-cell');
                     if (cells[0] && !cells[0].textContent.includes('TOTAL')) {
                         cells[0].textContent = 'SUB TOTAL';
@@ -11293,7 +11530,7 @@
             // Calculate operations subtotal
             if (parsedData.operations && parsedData.operations.length > 0) {
                 const operationsTotal = parsedData.operations.reduce((sum, item) => {
-                    return sum + (parseFloat(item.total) || 0);
+                    return sum + (parseFloat(item.total || item.cost) || 0);
                 }, 0);
                 updateBallCapsSubtotal('#ballcapsBreakdown .cost-section:nth-child(5)', operationsTotal);
             }
@@ -11369,10 +11606,21 @@
 
         function calculateFactoryTotal(parsedData) {
             let total = 0;
-            
+
+            // Add material costs (overall total basis)
+            if (parsedData.fabric && parsedData.fabric.length > 0) {
+                total += parsedData.fabric.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
+            }
+            if (parsedData.embroidery && parsedData.embroidery.length > 0) {
+                total += parsedData.embroidery.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
+            }
+            if (parsedData.trim && parsedData.trim.length > 0) {
+                total += parsedData.trim.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
+            }
+
             // Add operations costs
             if (parsedData.operations && parsedData.operations.length > 0) {
-                total += parsedData.operations.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
+                total += parsedData.operations.reduce((sum, item) => sum + (parseFloat(item.total || item.cost) || 0), 0);
             }
             
             // Add packaging costs
@@ -11444,8 +11692,8 @@
                 totalMaterialCost += trimTotal;
             }
             
-            // Calculate factory costs
-            let totalFactoryCost = 0;
+            // Calculate factory costs (overall total = material + operations + packaging + overhead)
+            let totalFactoryCost = totalMaterialCost;
             
             if (operationsSection) {
                 const operationsTotal = calculateBallCapsSectionTotal(operationsSection);
@@ -12314,6 +12562,18 @@
 
         // Update subtotals for all sections
         function updateSubtotals() {
+                // Auto-fill empty operation cells with 0
+                const operationsSection = document.querySelector('#costBreakdown .cost-section[data-section="OPERATIONS"]');
+                if (operationsSection) {
+                    const rows = operationsSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                    rows.forEach(row => {
+                        const cells = row.querySelectorAll('.cost-cell');
+                        // For operation cost (cell[3]), if empty, set to $0.00
+                        if (cells[3] && (!cells[3].textContent.trim() || isNaN(parseFloat(cells[3].textContent.replace('$',''))))) {
+                            cells[3].textContent = '$0.00';
+                        }
+                    });
+                }
             // Update YARN subtotal
             updateBeanieSectionSubtotal('YARN');
             // Update FABRIC subtotal
@@ -12392,7 +12652,7 @@
         }
 
         // Update subtotal for a specific section (legacy function)
-        function updateSectionSubtotal(sectionName) {
+        function updateSectionSubtotalLegacy(sectionName) {
             const section = document.querySelector(`#costBreakdown .cost-section[data-section="${sectionName}"]`);
             if (!section) return;
 
@@ -14773,7 +15033,75 @@
             });
             
             return data;
+            }
+
+    // Subtotal calculation for cost breakdown sections
+    function updateSubtotals() {
+        // Helper to parse float safely
+        function parseFloatSafe(val) {
+            if (!val || isNaN(val)) return 0;
+            return parseFloat(val);
         }
+
+        // Calculate subtotal for a section
+        function calcSectionSubtotal(sectionName) {
+            const section = document.querySelector(`#costBreakdown .cost-section[data-section="${sectionName}"]`);
+            if (!section) return 0;
+            let subtotal = 0;
+            const rows = section.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('.cost-cell');
+                // For YARN, FABRIC, TRIM: cost is in cell[3]
+                let cost = cells[3] ? parseFloatSafe(cells[3].textContent.replace('$','')) : 0;
+                subtotal += cost;
+            });
+            // Update subtotal cell
+            const subtotalCell = section.querySelector('.cost-row.subtotal-row .cost-cell:last-child');
+            if (subtotalCell) subtotalCell.textContent = `$${subtotal.toFixed(2)}`;
+            return subtotal;
+        }
+
+        // YARN, FABRIC, TRIM
+        const yarnSubtotal = calcSectionSubtotal('YARN');
+        const fabricSubtotal = calcSectionSubtotal('FABRIC');
+        const trimSubtotal = calcSectionSubtotal('TRIM');
+
+        // OPERATIONS
+        let operationsSubtotal = 0;
+        if (operationsSection) {
+            const rows = operationsSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('.cost-cell');
+                let cost = cells[3] ? parseFloatSafe(cells[3].textContent.replace('$','')) : 0;
+                operationsSubtotal += cost;
+            });
+            const subtotalCell = operationsSection.querySelector('.cost-row.subtotal-row .cost-cell:last-child');
+            if (subtotalCell) subtotalCell.textContent = `$${operationsSubtotal.toFixed(2)}`;
+        }
+// Trigger updateSubtotals when operation table values change
+document.addEventListener('input', function(e) {
+    const operationsSection = document.querySelector('#costBreakdown .cost-section[data-section="OPERATIONS"]');
+    if (operationsSection && operationsSection.contains(e.target)) {
+        updateSubtotals();
+    }
+});
+
+        // Update TOTAL MATERIAL COST
+        const totalMaterial = yarnSubtotal + fabricSubtotal + trimSubtotal;
+        const totalMaterialElem = document.querySelector('#costBreakdown .total-material-cost .total-value');
+        if (totalMaterialElem) totalMaterialElem.textContent = `$${totalMaterial.toFixed(2)}`;
+
+        // You can add similar logic for KNITTING, PACKAGING, OVERHEAD, etc.
+        // Example for KNITTING:
+        const knittingSubtotal = calcSectionSubtotal('KNITTING');
+        // Example for PACKAGING:
+        // const packagingSubtotal = calcSectionSubtotal('PACKAGING');
+        // Example for OVERHEAD/PROFIT:
+        // const overheadSubtotal = calcSectionSubtotal('OVERHEAD/PROFIT');
+        // Example for total factory cost:
+        // const totalFactoryElem = document.querySelector('#costBreakdown .total-factory-cost .total-value');
+        // if (totalFactoryElem) totalFactoryElem.textContent = `$${(totalMaterial + knittingSubtotal + operationsSubtotal).toFixed(2)}`;
+    }
 
         // Helper function to extract section data for ballcaps template
         function extractBallCapsSectionData(sectionName) {
@@ -15710,6 +16038,55 @@
         window.updateProductData = updateProductData;
         window.collectManualData = collectManualData;
         window.mergeManualData = mergeManualData;
+
+// Robust OPERATIONS extraction and rendering
+function parseAndRenderOperations(sheetData) {
+    // Find header row for OPERATIONS
+    let headerRowIdx = sheetData.findIndex(row =>
+        row.includes('OPERATION') && row.includes('SMV') && row.some(cell => cell && cell.toString().toUpperCase().includes('COST'))
+    );
+    if (headerRowIdx === -1) return;
+
+    const headerRow = sheetData[headerRowIdx];
+    const opIdx = headerRow.indexOf('OPERATION');
+    const smvIdx = headerRow.indexOf('SMV');
+    const costIdx = headerRow.findIndex(cell => cell && cell.toString().toUpperCase().includes('COST'));
+
+    // Extract operation rows
+    const operations = [];
+    for (let i = headerRowIdx + 1; i < sheetData.length; i++) {
+        const row = sheetData[i];
+        // Stop if row is empty or section ends
+        if (!row || row.length < 3 || !row[opIdx]) break;
+        operations.push({
+            operation: row[opIdx] || '',
+            smv: row[smvIdx] || '',
+            cost: row[costIdx] ? parseFloat(row[costIdx].toString().replace(/[^0-9.]/g, '')) : 0
+        });
+    }
+
+    // Render OPERATIONS table
+    const table = document.getElementById('operationsTable');
+    if (!table) return;
+    // Clear existing rows except header
+    while (table.rows.length > 1) table.deleteRow(1);
+    operations.forEach(op => {
+        const tr = table.insertRow();
+        tr.insertCell().textContent = op.operation;
+        tr.insertCell().textContent = op.smv;
+        tr.insertCell().textContent = op.cost ? `$${op.cost.toFixed(2)}` : '$0.00';
+    });
+    // If no operations, add empty rows
+    if (operations.length === 0) {
+        for (let i = 0; i < 6; i++) {
+            const tr = table.insertRow();
+            tr.insertCell().textContent = '';
+            tr.insertCell().textContent = '';
+            tr.insertCell().textContent = '$0.00';
+        }
+    }
+}
+// ...existing code...
 
 // Debug functions
 

@@ -11969,6 +11969,23 @@
                         fillTemplateWithData(parsedData);
                     }
 
+                    // Force auto-compute after import population.
+                    const runAutoCompute = () => {
+                        try {
+                            if (templateType === 'ballcaps') {
+                                if (typeof calculateBallCapsTemplate === 'function') calculateBallCapsTemplate();
+                            } else {
+                                if (typeof calculateBeanieTemplate === 'function') calculateBeanieTemplate();
+                                if (typeof updateSubtotals === 'function') updateSubtotals();
+                            }
+                        } catch (computeError) {
+                            console.error('❌ Auto-compute error after import:', computeError);
+                        }
+                    };
+                    runAutoCompute();
+                    setTimeout(runAutoCompute, 180);
+                    setTimeout(runAutoCompute, 420);
+
                     // Display product images if available
                     displayProductImages(parsedData.images);
 
@@ -12267,19 +12284,20 @@
             if (data.operations && data.operations.length > 0) {
                 const visibleTemplate = document.querySelector('.cost-breakdown-container:not([style*="display: none"])');
                 if (visibleTemplate) {
-                    const operationsSection = visibleTemplate.querySelector('.cost-section .section-header');
-                    if (operationsSection && operationsSection.textContent.trim() === 'OPERATIONS') {
-                        const targetSection = operationsSection.parentElement;
+                    const operationsHeader = Array.from(visibleTemplate.querySelectorAll('.section-header'))
+                        .find(header => header.textContent.trim().toUpperCase() === 'OPERATIONS');
+                    if (operationsHeader) {
+                        const targetSection = operationsHeader.closest('.cost-section');
                         const rows = targetSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
 
                         data.operations.forEach((item, index) => {
                             if (rows[index]) {
                                 const cells = rows[index].querySelectorAll('.cost-cell');
                                 if (cells[0]) cells[0].textContent = item.operation || '';
-                                if (cells[1]) cells[1].textContent = item.smv || ''; // BLANK column shows SMV values
-                                if (cells[2]) cells[2].textContent = item.costPerMin || ''; // SMV column shows cost per minute
-                                if (cells[3]) cells[3].textContent = item.total || ''; // COST (USD/MIN) column shows total
-                                console.log(`✅ OPERATIONS item ${index}:`, item.operation, item.smv, item.costPerMin, item.total);
+                                if (cells[1]) cells[1].textContent = item.time || item.smv || '';
+                                if (cells[2]) cells[2].textContent = item.costPerMin || '';
+                                if (cells[3]) cells[3].textContent = item.total || item.cost || '';
+                                console.log(`✅ OPERATIONS item ${index}:`, item.operation, item.time || item.smv, item.costPerMin, item.total || item.cost);
                             }
                         });
                     }
@@ -16191,15 +16209,15 @@
                             const cells = operationsRows[regularItemCount].querySelectorAll('.cost-cell');
                             console.log(`🔍 Populating operation ${regularItemCount + 1}:`, {
                                 operation: item.operation,
-                                smv: item.smv,
+                                smv: item.time || item.smv,
                                 costPerMin: item.costPerMin,
-                                total: item.total
+                                total: item.total || item.cost
                             });
 
                             console.log(`🔍 Setting cells for operation ${regularItemCount + 1}:`, {
                                 operation: item.operation,
-                                smv: item.smv,
-                                total: item.total,
+                                smv: item.time || item.smv,
+                                total: item.total || item.cost,
                                 cellsLength: cells.length
                             });
 
@@ -16208,20 +16226,20 @@
                                 console.log(`✅ Set cell 0 (OPERATION): "${item.operation}"`);
                             }
                             if (cells[1]) {
-                                cells[1].textContent = item.smv || ''; // BLANK column shows SMV values
-                                console.log(`✅ Set cell 1 (BLANK): "${item.smv}"`);
+                                cells[1].textContent = item.time || item.smv || '';
+                                console.log(`✅ Set cell 1 (BLANK): "${item.time || item.smv}"`);
                             }
                             if (cells[2]) {
                                 cells[2].textContent = item.costPerMin || ''; // SMV column shows cost per minute
                                 console.log(`✅ Set cell 2 (SMV): "${item.costPerMin}"`);
                             }
                             if (cells[3]) {
-                                cells[3].textContent = item.total || ''; // COST (USD/MIN) column shows total
-                                console.log(`✅ Set cell 3 (COST USD/MIN): "${item.total}"`);
+                                cells[3].textContent = item.total || item.cost || '';
+                                console.log(`✅ Set cell 3 (COST USD/MIN): "${item.total || item.cost}"`);
                             }
 
                             // Add to total for calculation - use total from calculated value
-                            const cost = parseFloat(item.total) || 0;
+                            const cost = parseFloat(item.total || item.cost) || 0;
                             operationsTotal += cost;
                             regularItemCount++;
                         }
@@ -16421,7 +16439,7 @@
             // Calculate operations subtotal
             if (parsedData.operations && parsedData.operations.length > 0) {
                 const operationsTotal = parsedData.operations.reduce((sum, item) => {
-                    return sum + (parseFloat(item.total) || 0);
+                    return sum + (parseFloat(item.total || item.cost) || 0);
                 }, 0);
                 updateBallCapsSubtotal('#ballcapsBreakdown .cost-section:nth-child(5)', operationsTotal);
             }
@@ -16498,9 +16516,20 @@
         function calculateFactoryTotal(parsedData) {
             let total = 0;
 
+            // Add material costs (overall total basis)
+            if (parsedData.fabric && parsedData.fabric.length > 0) {
+                total += parsedData.fabric.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
+            }
+            if (parsedData.embroidery && parsedData.embroidery.length > 0) {
+                total += parsedData.embroidery.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
+            }
+            if (parsedData.trim && parsedData.trim.length > 0) {
+                total += parsedData.trim.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
+            }
+
             // Add operations costs
             if (parsedData.operations && parsedData.operations.length > 0) {
-                total += parsedData.operations.reduce((sum, item) => sum + (parseFloat(item.total) || 0), 0);
+                total += parsedData.operations.reduce((sum, item) => sum + (parseFloat(item.total || item.cost) || 0), 0);
             }
 
             // Add packaging costs
@@ -16572,8 +16601,8 @@
                 totalMaterialCost += trimTotal;
             }
 
-            // Calculate factory costs
-            let totalFactoryCost = 0;
+            // Calculate factory costs (overall total = material + operations + packaging + overhead)
+            let totalFactoryCost = totalMaterialCost;
 
             if (operationsSection) {
                 const operationsTotal = calculateBallCapsSectionTotal(operationsSection);

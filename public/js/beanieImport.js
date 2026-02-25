@@ -35,6 +35,19 @@ var TNFBeanieImporter = class TNFBeanieImporter {
         };
     }
 
+    parseNumeric(value) {
+        if (value === null || value === undefined || value === '') return null;
+        if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+        const cleaned = String(value).replace(/[$,\s]/g, '').trim();
+        if (!cleaned || cleaned === '-' || cleaned === '--') return null;
+        const parsed = Number(cleaned);
+        return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    formatNumeric(value) {
+        return Number.isFinite(value) ? value.toFixed(2) : '';
+    }
+
     /**
      * Parse TNF Excel data into structured format for beanie
      * @param {Object|Array} excelData - Raw Excel data from XLSX library (can be array or object with data/images)
@@ -498,37 +511,33 @@ var TNFBeanieImporter = class TNFBeanieImporter {
                     firstCell.trim() !== '') {
                     console.log(`🔍 Checking OPERATIONS: "${firstCell}" - Row:`, row);
                     
-                    // Updated operations parsing to match new header structure:
-                    // OPERATION | BLANK | SMV | COST (USD/MIN)
-                    let smv = '';
-                    let costPerMin = '';
+                    // Excel format: OPERATION | OPERATION TIME (MINS) | OPERATION COST (USD/MIN) | OPERATION COST
+                    const operationName = String(firstCell || '').trim();
+                    const operationTime = String(row[1] || '').trim();
+                    const costPerMinValue = this.parseNumeric(row[2]);
+                    const operationCostValue = this.parseNumeric(row[3]);
+                    const timeNumeric = this.parseNumeric(row[1]);
+
+                    const costPerMin = costPerMinValue !== null ? this.formatNumeric(costPerMinValue) : '0.00';
                     let total = '';
-                    
-                    // SMV is in col 2 (index 2)
-                    if (row[2] && !isNaN(parseFloat(row[2]))) {
-                        smv = parseFloat(row[2]).toFixed(2);
+
+                    // Prefer explicit OPERATION COST column; otherwise compute when both numeric.
+                    if (operationCostValue !== null) {
+                        total = this.formatNumeric(operationCostValue);
+                    } else if (timeNumeric !== null && costPerMinValue !== null) {
+                        total = this.formatNumeric(timeNumeric * costPerMinValue);
                     }
-                    
-                    // COST (USD/MIN) is in col 3 (index 3)
-                    if (row[3] && !isNaN(parseFloat(row[3]))) {
-                        costPerMin = parseFloat(row[3]).toFixed(2);
-                    }
-                    
-                    // Calculate total: SMV * COST (USD/MIN)
-                    if (smv && costPerMin) {
-                        total = (parseFloat(smv) * parseFloat(costPerMin)).toFixed(2);
-                    }
-                    
-                    // If we have any meaningful data, add the operation
-                    if (smv || costPerMin || total) {
-                        let operationName = `Operation ${result.operations.length + 1}`;
+
+                    // Keep rows that have an operation label and any value in time/cost/total.
+                    if (operationName && (operationTime || costPerMinValue !== null || total !== '')) {
                         result.operations.push({
-                            operation: String(operationName),
-                            smv: smv,
+                            operation: operationName,
+                            time: operationTime,
+                            smv: timeNumeric !== null ? this.formatNumeric(timeNumeric) : '',
                             costPerMin: costPerMin,
                             total: total
                         });
-                        console.log('✅ OPERATION:', operationName, 'SMV:', smv, 'Cost/Min:', costPerMin, 'Total:', total);
+                        console.log('✅ OPERATION:', operationName, 'Time:', operationTime, 'Cost/Min:', costPerMin, 'Total:', total);
                     }
                 }
                 

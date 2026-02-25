@@ -1,5 +1,6 @@
 import csv from 'csv-parser';
 import { Readable } from 'stream';
+import * as XLSX from 'xlsx';
 import { DatabaseConnection } from '../config/database';
 import { ImportResult, FileUpload, ImportConfig, ColumnMapping } from '../types';
 import logger from '../utils/logger';
@@ -27,6 +28,22 @@ export class ImportService {
     }
   }
 
+  async importExcel(file: FileUpload, config: ImportConfig): Promise<ImportResult> {
+    try {
+      const data = await this.parseExcel(file.buffer);
+      return await this.processData(data, config);
+    } catch (error) {
+      logger.error('Excel import error:', error);
+      return {
+        success: false,
+        message: `Excel import failed: ${error}`,
+        rowsProcessed: 0,
+        rowsInserted: 0,
+        errors: [error instanceof Error ? error.message : String(error)]
+      };
+    }
+  }
+
 
   private async parseCSV(buffer: Buffer): Promise<any[]> {
     return new Promise((resolve, reject) => {
@@ -39,6 +56,17 @@ export class ImportService {
         .on('end', () => resolve(results))
         .on('error', reject);
     });
+  }
+
+  private async parseExcel(buffer: Buffer): Promise<any[]> {
+    try {
+      const workbook = XLSX.read(buffer, { type: 'buffer' });
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(worksheet);
+      return data;
+    } catch (error) {
+      throw new Error(`Failed to parse Excel file: ${error}`);
+    }
   }
 
 
@@ -128,13 +156,19 @@ export class ImportService {
     const mappedData: Record<string, any> = {};
 
     for (const mapping of mappings) {
-      const value = row[mapping.fileColumn];
-      
+      let value = row[mapping.fileColumn];
       if (value !== undefined && value !== null && value !== '') {
         // Apply data type conversion if specified
         mappedData[mapping.databaseColumn] = this.convertDataType(value, mapping.dataType);
       } else if (mapping.required) {
         throw new Error(`Required field "${mapping.fileColumn}" is empty`);
+      } else {
+        // Default empty values to 0 for numeric types, or '' for text
+        if (mapping.dataType && ['integer', 'int', 'float', 'decimal'].includes(mapping.dataType.toLowerCase())) {
+          mappedData[mapping.databaseColumn] = 0;
+        } else {
+          mappedData[mapping.databaseColumn] = '';
+        }
       }
     }
 
@@ -211,6 +245,15 @@ export class ImportService {
       
       if (file.mimetype === 'text/csv' || file.originalname.endsWith('.csv')) {
         data = await this.parseCSV(file.buffer);
+      } else if (
+        file.mimetype === 'application/vnd.ms-excel' ||
+        file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+        file.mimetype === 'application/vnd.ms-excel.sheet.macroEnabled.12' ||
+        file.originalname.endsWith('.xlsx') ||
+        file.originalname.endsWith('.xls') ||
+        file.originalname.endsWith('.xlsm')
+      ) {
+        data = await this.parseExcel(file.buffer);
       } else {
         throw new Error('Unsupported file type');
       }
