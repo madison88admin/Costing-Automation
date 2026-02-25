@@ -149,7 +149,7 @@ class ExcelUtils {
                         
                         console.log('Available sheets:', workbook.SheetNames);
                         
-                        // Look for the correct sheet with Fuzzy Wool Blend data
+                        // Pick the most relevant sheet for import parsing
                         let targetSheet = null;
                         let targetSheetName = null;
                         let allImages = [];
@@ -161,34 +161,46 @@ class ExcelUtils {
                             allImages = allImages.concat(this.extractImagesFromWorkbook(workbook));
                         }
                         
-                        // Look for sheet with Fuzzy Wool Blend data
+                        const beanieTokens = ['yarn', 'knitting', 'costed quantity', 'beanie'];
+                        const ballcapsTokens = ['fabric/s', 'other fabric/s - trim/s', 'trim/s', 'ballcap', 'baseball cap', 'visor', 'sweatband', 'moq'];
+                        const sharedTokens = ['customer', 'season', 'style#', 'style name', 'operations', 'packaging', 'overhead', 'total factory cost'];
+                        let bestScore = -1;
+
                         for (let i = 0; i < workbook.SheetNames.length; i++) {
                             const sheetName = workbook.SheetNames[i];
                             const worksheet = workbook.Sheets[sheetName];
+                            if (!worksheet || worksheet['!hidden']) continue;
                             let sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: true });
                             // Normalize all empty cells to 0
                             sheetData = sheetData.map(row => Array.isArray(row)
                                 ? row.map(cell => (cell === null || cell === undefined || cell === '' || cell === ' ' || cell === false) ? 0 : cell)
                                 : row);
-                            
-                            // Check if this sheet contains Fuzzy Wool Blend data
-                            const sheetString = JSON.stringify(sheetData).toLowerCase();
-                            if (sheetString.includes('fuzzy wool blend') || sheetString.includes('tnff27-014') || sheetString.includes('f27')) {
-                                console.log('🔍 Found Fuzzy Wool Blend data in sheet:', sheetName);
+
+                            const sampleRows = sheetData.slice(0, 220);
+                            const sheetString = JSON.stringify(sampleRows).toLowerCase();
+                            let score = 0;
+                            beanieTokens.forEach(token => { if (sheetString.includes(token)) score += 3; });
+                            ballcapsTokens.forEach(token => { if (sheetString.includes(token)) score += 3; });
+                            sharedTokens.forEach(token => { if (sheetString.includes(token)) score += 1; });
+                            if (sheetData.length > 20) score += 1;
+
+                            if (score > bestScore) {
+                                bestScore = score;
                                 targetSheet = sheetData;
                                 targetSheetName = sheetName;
-                                break;
                             }
                         }
                         
-                        // If no Fuzzy Wool Blend sheet found, use the first sheet as fallback
+                        // If no relevant visible sheet is found, use the first sheet.
                         if (!targetSheet) {
-                            console.log('🔍 No Fuzzy Wool Blend sheet found, using first sheet as fallback');
+                            console.log('No relevant visible sheet found, using first sheet as fallback');
                             const firstSheetName = workbook.SheetNames[0];
                             const firstWorksheet = workbook.Sheets[firstSheetName];
                             targetSheet = XLSX.utils.sheet_to_json(firstWorksheet, { header: 1, raw: true });
                             targetSheetName = firstSheetName;
                             console.log('Using first sheet as fallback:', firstSheetName);
+                        } else {
+                            console.log(`Selected worksheet "${targetSheetName}" with relevance score ${bestScore}`);
                         }
                         
                         // targetSheet is already converted to JSON data

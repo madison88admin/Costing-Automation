@@ -10333,23 +10333,63 @@
                         
                         console.log('🔍“‹ Workbook sheets found:', workbook.SheetNames);
                         
-                        // Get the first sheet data
-                        const firstSheetName = workbook.SheetNames[0];
-                        const worksheet = workbook.Sheets[firstSheetName];
-                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
-                            header: 1, 
-                            defval: '',
-                            raw: true
-                        });
-                        
-                        console.log('🔍“Š Excel data rows:', jsonData.length);
-                        console.log('🔍“Š First 5 rows:', jsonData.slice(0, 5));
-                        
+                        // Select the most relevant visible worksheet for Beanie/Ballcaps imports.
+                        const beanieTokens = ['yarn', 'knitting', 'costed quantity', 'beanie'];
+                        const ballcapsTokens = ['fabric/s', 'other fabric/s - trim/s', 'trim/s', 'ballcap', 'baseball cap', 'visor', 'sweatband', 'moq'];
+                        const sharedTokens = ['customer', 'season', 'style#', 'style name', 'operations', 'packaging', 'overhead', 'total factory cost'];
+
+                        let selectedSheetName = null;
+                        let selectedSheetData = null;
+                        let bestScore = -1;
+
+                        for (let i = 0; i < workbook.SheetNames.length; i++) {
+                            const sheetName = workbook.SheetNames[i];
+                            const worksheet = workbook.Sheets[sheetName];
+                            if (!worksheet || worksheet['!hidden']) continue;
+
+                            const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+                                header: 1,
+                                defval: '',
+                                raw: true
+                            });
+
+                            const sampleRows = jsonData.slice(0, 220);
+                            const sheetString = JSON.stringify(sampleRows).toLowerCase();
+                            let score = 0;
+                            beanieTokens.forEach(token => { if (sheetString.includes(token)) score += 3; });
+                            ballcapsTokens.forEach(token => { if (sheetString.includes(token)) score += 3; });
+                            sharedTokens.forEach(token => { if (sheetString.includes(token)) score += 1; });
+                            if (jsonData.length > 20) score += 1;
+
+                            if (score > bestScore) {
+                                bestScore = score;
+                                selectedSheetName = sheetName;
+                                selectedSheetData = jsonData;
+                            }
+                        }
+
+                        if (!selectedSheetData) {
+                            const firstSheetName = workbook.SheetNames[0];
+                            const firstWorksheet = workbook.Sheets[firstSheetName];
+                            selectedSheetData = XLSX.utils.sheet_to_json(firstWorksheet, {
+                                header: 1,
+                                defval: '',
+                                raw: true
+                            });
+                            selectedSheetName = firstSheetName;
+                            console.log('No relevant visible sheet found, using first sheet:', firstSheetName);
+                        } else {
+                            console.log(`✅ Selected worksheet "${selectedSheetName}" with relevance score ${bestScore}`);
+                        }
+
+                        console.log('🔍“Š Excel data rows:', selectedSheetData.length);
+                        console.log('🔍“Š First 5 rows:', selectedSheetData.slice(0, 5));
+
                         // Return data in expected format
                         resolve({
-                            data: jsonData,
+                            data: selectedSheetData,
                             images: [],
-                            sheetName: firstSheetName
+                            sheetName: selectedSheetName
                         });
                         
                     } catch (error) {
