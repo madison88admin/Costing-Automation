@@ -4165,6 +4165,20 @@
             
             // Hide product selection first
             productSelection.style.display = 'none';
+
+            // Reset uploader state when switching templates so stale file names don't carry over.
+            uploadedFile = null;
+            const hiddenInput = document.getElementById('hiddenFileInput');
+            if (hiddenInput) hiddenInput.value = '';
+            const dragDropTexts = document.querySelectorAll('.drag-drop-text');
+            const dragDropIcons = document.querySelectorAll('.drag-drop-icon');
+            dragDropTexts.forEach(el => {
+                el.innerHTML = 'drag & drop<br>or click to select';
+            });
+            dragDropIcons.forEach(el => {
+                el.textContent = '🔍“';
+            });
+            hideDragDropOptions();
             
             if (productType === 'beanie') {
                 // Hide ballcaps if showing
@@ -6542,12 +6556,19 @@
                     console.log('Drag drop area clicked:', index);
                     e.preventDefault();
                     e.stopPropagation();
+
+                    // Do not open picker when clicking action buttons inside options.
+                    if (e.target.closest('.drag-drop-options') || e.target.closest('.option-button')) {
+                        return;
+                    }
                     
                     // Test if click is working
                     console.log('Drag & drop area clicked! This means the click handler is working.');
                     
                     const fileInput = document.getElementById('hiddenFileInput');
                     if (fileInput) {
+                        // Ensure selecting the same file again still triggers change.
+                        fileInput.value = '';
                         fileInput.click();
                     } else {
                         console.error('File input not found');
@@ -6790,6 +6811,7 @@
                 }
             }
 
+            let importSucceeded = false;
             try {
                 // Show loading state
                 const importButton = document.querySelector('.import-template-button');
@@ -6826,7 +6848,18 @@
                 
                 // Determine which importer to use based on file content
                 let parsedData = null;
-                const templateType = detectTemplateType(dataToProcess);
+                let templateType = detectTemplateType(dataToProcess);
+                const dataString = JSON.stringify(dataToProcess || []).toLowerCase();
+                const strongBallcapsHint =
+                    dataString.includes('fabric/s') ||
+                    dataString.includes('other fabric/s - trim/s') ||
+                    dataString.includes('trim/s') ||
+                    dataString.includes('sweatband') ||
+                    dataString.includes('visor') ||
+                    dataString.includes('moq');
+                if (strongBallcapsHint) {
+                    templateType = 'ballcaps';
+                }
                 console.log('Detected template type:', templateType);
                 
                 if (templateType === 'ballcaps') {
@@ -6853,6 +6886,37 @@
                         console.error('âŒ PARSER ERROR:', parserError);
                         alert('âŒ Parser error: ' + parserError.message);
                         return;
+                    }
+                }
+
+                // Fallback: if beanie parse is effectively empty, retry as ballcaps.
+                const hasCoreData = parsedData && (
+                    !!parsedData.customer ||
+                    !!parsedData.season ||
+                    !!parsedData.styleNumber ||
+                    !!parsedData.styleName ||
+                    (parsedData.fabric && parsedData.fabric.length > 0) ||
+                    (parsedData.embroidery && parsedData.embroidery.length > 0) ||
+                    (parsedData.trim && parsedData.trim.length > 0) ||
+                    (parsedData.operations && parsedData.operations.length > 0)
+                );
+                if (!hasCoreData && templateType !== 'ballcaps') {
+                    console.warn('Beanie parse returned empty data; retrying with BallCaps importer...');
+                    const retryBallcaps = ballcapsImporter.parseExcelData(rawData);
+                    const retryHasData = retryBallcaps && (
+                        !!retryBallcaps.customer ||
+                        !!retryBallcaps.season ||
+                        !!retryBallcaps.styleNumber ||
+                        !!retryBallcaps.styleName ||
+                        (retryBallcaps.fabric && retryBallcaps.fabric.length > 0) ||
+                        (retryBallcaps.embroidery && retryBallcaps.embroidery.length > 0) ||
+                        (retryBallcaps.trim && retryBallcaps.trim.length > 0) ||
+                        (retryBallcaps.operations && retryBallcaps.operations.length > 0)
+                    );
+                    if (retryHasData) {
+                        parsedData = retryBallcaps;
+                        templateType = 'ballcaps';
+                        console.log('✅ BallCaps fallback parser succeeded');
                     }
                 }
                     
@@ -6897,6 +6961,9 @@
                         leadtime: parsedData.leadtime,
                         notes: parsedData.notes ? parsedData.notes.substring(0, 50) + '...' : 'None'
                     });
+
+                    // Ensure the matching template is visible before population.
+                    showTemplate(templateType);
                     
                     // Populate the appropriate template based on detected type
                     if (templateType === 'ballcaps') {
@@ -6940,6 +7007,7 @@
                     
                     // Reset Excel processing flag
                     window.isProcessingExcel = false;
+                    importSucceeded = true;
                 } else {
                     console.error('âŒ NO PARSED DATA! Excel file parsing failed.');
                     alert('âŒ Excel file parsing failed. Please check the file format and try again.');
@@ -6949,48 +7017,30 @@
                     console.error('Error processing file:', error);
                 alert(`Error processing file: ${error.message}`);
                 
-                // Clear uploaded file state and reinitialize drag & drop even after error
+                // Clear uploaded file state even after error
                 uploadedFile = null;
                 console.log('🔍”„ Cleared uploaded file state after error');
-                
-                setTimeout(() => {
-                    console.log('🔍”„ Reinitializing drag & drop after error...');
-                    try {
-                        initializeDragDrop();
-                        console.log('âœ… Drag & drop reinitialized after error');
-                    } catch (reinitError) {
-                        console.error('âŒ Error reinitializing drag & drop after error:', reinitError);
-                    }
-                }, 500);
             } finally {
-                // Reset button and show success
+                // Reset button and uploader state for next import.
                 setTimeout(() => {
                     const importButton = document.querySelector('.import-template-button');
-                    const dragDropText = document.querySelector('.drag-drop-text');
+                    const dragDropTexts = document.querySelectorAll('.drag-drop-text');
                     
                     if (importButton) {
                         importButton.textContent = 'Import';
                         importButton.disabled = false;
                     }
                     
-                    if (dragDropText) {
-                        dragDropText.innerHTML = 'Import successful!<br><small>Click to import another</small>';
-                    }
+                    dragDropTexts.forEach(el => {
+                        el.innerHTML = importSucceeded
+                            ? 'Import successful!<br><small>Click to import another</small>'
+                            : 'drag & drop<br><small>or click to select</small>';
+                    });
                     
-                    // Clear uploaded file state and reinitialize drag & drop for next file upload
+                    // Clear uploaded file state for next file upload.
                     uploadedFile = null;
                     console.log('🔍”„ Cleared uploaded file state for next upload');
-                    
-                    setTimeout(() => {
-                        console.log('🔍”„ Reinitializing drag & drop after successful import...');
-                        try {
-                            initializeDragDrop();
-                            console.log('âœ… Drag & drop reinitialized after import');
-                        } catch (error) {
-                            console.error('âŒ Error reinitializing drag & drop after import:', error);
-                        }
-                    }, 500);
-                }, 1000);
+                }, 50);
             }
         }
 
@@ -7081,16 +7131,26 @@
             });
         }
 
-        function uploadAnotherFile() {
+        function uploadAnotherFile(event) {
             console.log('🔍“ Upload another file clicked...');
-            const fileInput = document.getElementById('fileInput');
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const fileInput = document.getElementById('hiddenFileInput');
             if (fileInput) {
+                // Ensure same file can be selected again.
+                fileInput.value = '';
                 fileInput.click();
             }
         }
 
-        function clearForm() {
+        function clearForm(event) {
             console.log('🔍—‘ï¸ Clear form clicked...');
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
             
             // Clear all extracted data
             clearDatabaseData();
@@ -7099,19 +7159,31 @@
             hideDragDropOptions();
             
             // Reset file input
-            const fileInput = document.getElementById('fileInput');
+            const fileInput = document.getElementById('hiddenFileInput');
             if (fileInput) {
                 fileInput.value = '';
             }
+
+            // Reset file/import runtime state.
+            uploadedFile = null;
+            window.currentFile = null;
+            window.fileContent = null;
+            window.currentFileType = null;
+            window.isProcessingExcel = false;
+            window.isProcessing = false;
+
+            // Reset drag-drop visual state.
+            const dragDropTexts = document.querySelectorAll('.drag-drop-text');
+            const dragDropIcons = document.querySelectorAll('.drag-drop-icon');
+            dragDropTexts.forEach(el => {
+                el.innerHTML = 'drag & drop<br>or click to select';
+            });
+            dragDropIcons.forEach(el => {
+                el.textContent = '🔍“';
+            });
             
-            // Keep templates visible but reset to initial state
-            // Show the beanie template by default (initial state)
-            const beanieTemplate = document.getElementById('costBreakdown');
-            const ballcapsTemplate = document.getElementById('ballcapsBreakdown');
-            if (beanieTemplate) beanieTemplate.style.display = 'block';
-            if (ballcapsTemplate) ballcapsTemplate.style.display = 'none';
-            
-            console.log('âœ… Form cleared successfully - templates remain visible');
+            // Keep currently selected template visible.
+            console.log('âœ… Form cleared successfully');
         }
 
         function fillTemplateWithData(data) {
@@ -9108,29 +9180,31 @@
         function handleFileSelect(event) {
             const file = event.target.files[0];
             if (!file) return;
-
-            // Reset previous state
-            resetImportState();
             
             try {
-                currentFile = file;
-                
-                console.log('File selected:', {
+                console.log('File selected for template import:', {
                     name: file.name,
                     type: file.type,
                     size: file.size
                 });
-                
-                // Show file info
-                showFileInfo(file, getFileType(file));
-                
-                // Read and display file contents
-                readAndDisplayFile(file);
-                
+
+                uploadedFile = file;
+                clearPreviousData();
+
+                const dragDropTexts = document.querySelectorAll('.drag-drop-text');
+                const dragDropIcons = document.querySelectorAll('.drag-drop-icon');
+                dragDropTexts.forEach(el => {
+                    el.innerHTML = `File: ${file.name}<br><small>Click to change</small>`;
+                });
+                dragDropIcons.forEach(el => {
+                    el.textContent = 'âœ…';
+                });
+
+                processImportedFile();
             } catch (error) {
                 console.error('File processing failed:', error);
                 showStatus('importStatus', 'âŒ ' + error.message, 'error');
-                resetImportState();
+                uploadedFile = null;
             }
         }
 
@@ -11418,7 +11492,7 @@
                                 console.log(`âœ… Set cell 3 (OPERATION COST): "${item.total || item.cost}"`);
                             }
                             
-                            // Add to total for calculation - use total from calculated value
+                            // Add to total for calculation - use cost column value from Excel/import.
                             const cost = parseFloat(item.total || item.cost) || 0;
                             operationsTotal += cost;
                             regularItemCount++;
@@ -11426,14 +11500,15 @@
                     }
                 });
                 
-                // If no subtotal row was found in data, calculate and display one
+                // Prefer explicit SUB TOTAL from Excel when available.
                 const subtotalRow = operationsSectionEl ? operationsSectionEl.querySelector('.subtotal-row') : null;
                 if (subtotalRow) {
                     const cells = subtotalRow.querySelectorAll('.cost-cell');
-                    if (cells[2] && !cells[2].textContent.includes('TOTAL')) {
-                        cells[2].textContent = 'SUB TOTAL';
-                        cells[3].textContent = `$${operationsTotal.toFixed(2)}`;
-                        console.log('âœ… Calculated OPERATIONS subtotal:', operationsTotal.toFixed(2));
+                    const excelSubtotal = parseFloat(String(parsedData.operationsSubtotal || '').replace(/[$,]/g, ''));
+                    const subtotalToShow = Number.isFinite(excelSubtotal) ? excelSubtotal : operationsTotal;
+                    if (cells[2]) cells[2].textContent = 'SUB TOTAL';
+                    if (cells[3]) cells[3].textContent = `$${subtotalToShow.toFixed(2)}`;
+                    console.log('âœ… OPERATIONS subtotal shown:', subtotalToShow.toFixed(2), Number.isFinite(excelSubtotal) ? '(from Excel)' : '(calculated)');
                     }
                 }
             }
@@ -11624,9 +11699,12 @@
             
             // Calculate operations subtotal
             if (parsedData.operations && parsedData.operations.length > 0) {
-                const operationsTotal = parsedData.operations.reduce((sum, item) => {
-                    return sum + (parseFloat(item.total || item.cost) || 0);
-                }, 0);
+                const excelSubtotal = parseFloat(String(parsedData.operationsSubtotal || '').replace(/[$,]/g, ''));
+                const operationsTotal = Number.isFinite(excelSubtotal)
+                    ? excelSubtotal
+                    : parsedData.operations.reduce((sum, item) => {
+                        return sum + (parseFloat(item.total || item.cost) || 0);
+                    }, 0);
                 updateBallCapsSubtotal(operationsSectionEl, operationsTotal);
             }
             

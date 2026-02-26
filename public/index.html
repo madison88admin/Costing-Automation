@@ -11606,11 +11606,17 @@
                     e.preventDefault();
                     e.stopPropagation();
 
+                    // Do not open picker when clicking action buttons inside options.
+                    if (e.target.closest('.drag-drop-options') || e.target.closest('.option-button')) {
+                        return;
+                    }
+
                     // Test if click is working
                     console.log('Drag & drop area clicked! This means the click handler is working.');
 
                     const fileInput = document.getElementById('hiddenFileInput');
                     if (fileInput) {
+                        fileInput.value = '';
                         fileInput.click();
                     } else {
                         console.error('File input not found');
@@ -12144,16 +12150,25 @@
             });
         }
 
-        function uploadAnotherFile() {
+        function uploadAnotherFile(event) {
             console.log('📁 Upload another file clicked...');
-            const fileInput = document.getElementById('fileInput');
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const fileInput = document.getElementById('hiddenFileInput');
             if (fileInput) {
+                fileInput.value = '';
                 fileInput.click();
             }
         }
 
-        function clearForm() {
+        function clearForm(event) {
             console.log('🗑️ Clear form clicked...');
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
 
             // Clear all extracted data
             clearDatabaseData();
@@ -12162,19 +12177,20 @@
             hideDragDropOptions();
 
             // Reset file input
-            const fileInput = document.getElementById('fileInput');
+            const fileInput = document.getElementById('hiddenFileInput');
             if (fileInput) {
                 fileInput.value = '';
             }
 
-            // Keep templates visible but reset to initial state
-            // Show the beanie template by default (initial state)
-            const beanieTemplate = document.getElementById('costBreakdown');
-            const ballcapsTemplate = document.getElementById('ballcapsBreakdown');
-            if (beanieTemplate) beanieTemplate.style.display = 'block';
-            if (ballcapsTemplate) ballcapsTemplate.style.display = 'none';
+            // Reset runtime import state.
+            uploadedFile = null;
+            window.currentFile = null;
+            window.fileContent = null;
+            window.currentFileType = null;
+            window.isProcessingExcel = false;
+            window.isProcessing = false;
 
-            console.log('✅ Form cleared successfully - templates remain visible');
+            console.log('✅ Form cleared successfully');
         }
 
         function fillTemplateWithData(data) {
@@ -14080,33 +14096,26 @@
             document.getElementById('importStatus').innerHTML = fileInfo;
         }
 
-        // Handle file selection
+        // Handle file selection for template import
         function handleFileSelect(event) {
             const file = event.target.files[0];
             if (!file) return;
 
-            // Reset previous state
-            resetImportState();
-
             try {
-                currentFile = file;
-
-                console.log('File selected:', {
+                console.log('File selected for template import:', {
                     name: file.name,
                     type: file.type,
                     size: file.size
                 });
 
-                // Show file info
-                showFileInfo(file, getFileType(file));
-
-                // Read and display file contents
-                readAndDisplayFile(file);
+                uploadedFile = file;
+                clearPreviousData();
+                processImportedFile();
 
             } catch (error) {
                 console.error('File processing failed:', error);
                 showStatus('importStatus', '❌ ' + error.message, 'error');
-                resetImportState();
+                uploadedFile = null;
             }
         }
 

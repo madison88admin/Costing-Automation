@@ -155,6 +155,7 @@ class TNFBallCapsImporter {
             operations: [],
             packaging: [],
             overhead: [],
+            operationsSubtotal: '',
             
             totalMaterialCost: "0.00",
             totalFactoryCost: "0.00",
@@ -352,6 +353,16 @@ class TNFBallCapsImporter {
                         cost: costRaw
                     });
                     console.log('✅ TRIM:', firstCell, 'Cost:', costRaw);
+                }
+
+                if (currentSection === 'operations' &&
+                    (firstCellUpper.includes('SUB TOTAL') || firstCellUpper === 'TOTAL')) {
+                    const subtotalRaw = row[3] !== undefined ? row[3] : this.getLastNumericValue(row);
+                    const subtotalNumeric = this.extractNumericValue(subtotalRaw);
+                    if (subtotalNumeric !== null) {
+                        result.operationsSubtotal = this.normalizeNumericString(subtotalNumeric, '0.00');
+                        console.log('✅ OPERATIONS SUBTOTAL (Excel):', result.operationsSubtotal);
+                    }
                 }
 
                 if (currentSection === 'operations' &&
