@@ -16246,7 +16246,7 @@
                                 console.log(`✅ Set cell 3 (COST USD/MIN): "${item.total || item.cost}"`);
                             }
 
-                            // Add to total for calculation - use total from calculated value
+                            // Add to total for calculation - use cost column value from Excel/import.
                             const cost = parseFloat(item.total || item.cost) || 0;
                             operationsTotal += cost;
                             regularItemCount++;
@@ -16254,15 +16254,15 @@
                     }
                 });
 
-                // If no subtotal row was found in data, calculate and display one
+                // Prefer explicit SUB TOTAL from Excel when available.
                 const subtotalRow = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(5) .subtotal-row');
-                if (subtotalRow && operationsTotal > 0) {
+                if (subtotalRow) {
                     const cells = subtotalRow.querySelectorAll('.cost-cell');
-                    if (cells[2] && !cells[2].textContent.includes('TOTAL')) {
-                        cells[2].textContent = 'SUB TOTAL';
-                        cells[3].textContent = `$${operationsTotal.toFixed(2)}`;
-                        console.log('✅ Calculated OPERATIONS subtotal:', operationsTotal.toFixed(2));
-                    }
+                    const excelSubtotal = parseFloat(String(parsedData.operationsSubtotal || '').replace(/[$,]/g, ''));
+                    const subtotalToShow = Number.isFinite(excelSubtotal) ? excelSubtotal : operationsTotal;
+                    if (cells[2]) cells[2].textContent = 'SUB TOTAL';
+                    if (cells[3]) cells[3].textContent = `$${subtotalToShow.toFixed(2)}`;
+                    console.log('✅ OPERATIONS subtotal shown:', subtotalToShow.toFixed(2), Number.isFinite(excelSubtotal) ? '(from Excel)' : '(calculated)');
                 }
             }
 
@@ -16446,9 +16446,12 @@
 
             // Calculate operations subtotal
             if (parsedData.operations && parsedData.operations.length > 0) {
-                const operationsTotal = parsedData.operations.reduce((sum, item) => {
-                    return sum + (parseFloat(item.total || item.cost) || 0);
-                }, 0);
+                const excelSubtotal = parseFloat(String(parsedData.operationsSubtotal || '').replace(/[$,]/g, ''));
+                const operationsTotal = Number.isFinite(excelSubtotal)
+                    ? excelSubtotal
+                    : parsedData.operations.reduce((sum, item) => {
+                        return sum + (parseFloat(item.total || item.cost) || 0);
+                    }, 0);
                 updateBallCapsSubtotal('#ballcapsBreakdown .cost-section:nth-child(5)', operationsTotal);
             }
 
