@@ -536,7 +536,7 @@ var TNFBeanieImporter = class TNFBeanieImporter {
                     const operationCostValue = this.isExcelErrorValue(row[3]) ? null : this.parseNumeric(row[3]);
                     const timeNumeric = this.isExcelErrorValue(row[1]) ? null : this.parseNumeric(row[1]);
 
-                    const costPerMin = costPerMinValue !== null ? this.formatNumeric(costPerMinValue) : '0.00';
+                    const costPerMin = costPerMinValue !== null ? this.formatNumeric(costPerMinValue) : '';
                     let total = '';
 
                     // Prefer explicit OPERATION COST column; otherwise compute when both numeric.

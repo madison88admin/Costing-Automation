@@ -7213,8 +7213,8 @@
             console.log('🔍” KNITTING DATA FROM EXCEL:', data.knitting);
             fillCostSection('KNITTING', data.knitting, ['machine', 'time', 'sah', 'cost']);
             
-            // Fill OPERATIONS section - Updated to match new header structure
-            // Map: operation, blank, smv, total
+            // Fill OPERATIONS section
+            // Map: operation, operation time, operation cost (usd/min), operation cost
             
             
             if (data.operations && data.operations.length > 0) {
@@ -12638,11 +12638,11 @@
                 // Update the cost cell
                 if (cells[3]) cells[3].textContent = cost.toFixed(2);
             } else if (sectionType === 'operations') {
-                // OPERATIONS: SMV Ã— Cost per Minute
-                const smv = parseFloat(cells[2].textContent.trim()) || 0;
-                const costPerMinute = parseFloat(cells[3].textContent.trim()) || 0;
-                cost = smv * costPerMinute;
-                // Update the cost cell (4th column in 4-column format)
+                // OPERATIONS: Time/SMV × Cost per Minute
+                const smvOrTime = parseFloat(cells[1].textContent.trim().replace(/[$,]/g, '')) || 0;
+                const costPerMinute = parseFloat(cells[2].textContent.trim().replace(/[$,]/g, '')) || 0;
+                cost = smvOrTime * costPerMinute;
+                // Update OPERATION COST column
                 if (cells[3]) cells[3].textContent = cost.toFixed(2);
             } else if (sectionType === 'packaging' || sectionType === 'overhead') {
                 // PACKAGING/OVERHEAD: Direct cost entry (3-column structure)

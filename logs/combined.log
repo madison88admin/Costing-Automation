@@ -4336,3 +4336,10 @@
 {"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2026-02-25T03:34:11.389Z"}
 {"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2026-02-25T05:29:36.241Z"}
 {"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2026-02-25T06:05:09.161Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2026-02-25T23:55:15.360Z"}
+{"level":"info","message":"Server running on port 3000","service":"costing-automation","timestamp":"2026-02-26T01:48:33.110Z"}
+{"level":"info","message":"Total records in database: 2826","service":"costing-automation","timestamp":"2026-02-26T01:48:54.048Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 1000)","service":"costing-automation","timestamp":"2026-02-26T01:48:54.663Z"}
+{"level":"info","message":"Fetched batch: 1000 records (total so far: 2000)","service":"costing-automation","timestamp":"2026-02-26T01:48:55.011Z"}
+{"level":"info","message":"Fetched batch: 826 records (total so far: 2826)","service":"costing-automation","timestamp":"2026-02-26T01:48:55.193Z"}
+{"level":"info","message":"Final result: 2826 records loaded, total count: 2826","service":"costing-automation","timestamp":"2026-02-26T01:48:55.194Z"}

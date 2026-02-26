@@ -404,13 +404,13 @@ class TNFBallCapsImporter {
                             ? parsedTime
                             : parsedTime;
                         const resolvedCostPerMin = looksLikeSingleSummaryRow
-                            ? parsedTime
+                            ? parsedCostPerMin
                             : parsedCostPerMin;
                         const operationData = {
-                            operation: hasValidLabel ? operationLabel : `Operation ${result.operations.length + 1}`,
+                            operation: hasValidLabel ? operationLabel : '',
                             time: resolvedTime !== null ? this.normalizeNumericString(resolvedTime, '0.00') : String(timeRaw || '').trim(),
                             smv: resolvedSmv !== null ? this.normalizeNumericString(resolvedSmv, '0.00') : '',
-                            costPerMin: resolvedCostPerMin !== null ? this.normalizeNumericString(resolvedCostPerMin, '0.00') : '0.00',
+                            costPerMin: resolvedCostPerMin !== null ? this.normalizeNumericString(resolvedCostPerMin, '0.00') : '',
                             total: parsedTotal !== null
                                 ? this.normalizeNumericString(parsedTotal, '0.00')
                                 : ((resolvedTime !== null && resolvedCostPerMin !== null) ? this.formatCalculatedValue(resolvedTime * resolvedCostPerMin) : '')
