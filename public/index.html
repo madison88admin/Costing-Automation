@@ -12524,12 +12524,12 @@
             }
 
             if (targetSection) {
-                const rows = targetSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                const rows = ensureOperationRowCapacity(targetSection, MAX_OPERATION_ROWS);
                 console.log(`🔍 Found ${rows.length} data rows for ${sectionName}`);
 
                 if (data && Array.isArray(data)) {
                     console.log(`🔍 Processing ${data.length} data items for ${sectionName}:`, data);
-                    data.forEach((item, index) => {
+                    data.slice(0, MAX_OPERATION_ROWS).forEach((item, index) => {
                         // Skip SUB TOTAL items - they will be handled separately
                         if (item.isSubtotal) {
                             console.log('⏭️ Skipping subtotal item:', item);
@@ -16235,8 +16235,9 @@
 
             // Populate fabric/s section
             if (parsedData.fabric && parsedData.fabric.length > 0) {
-                const fabricRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(1) .cost-row:not(.header-row):not(.subtotal-row)');
-                parsedData.fabric.forEach((item, index) => {
+                const fabricSection = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(1)');
+                const fabricRows = fabricSection ? ensureOperationRowCapacity(fabricSection, MAX_OPERATION_ROWS) : [];
+                parsedData.fabric.slice(0, MAX_OPERATION_ROWS).forEach((item, index) => {
                     if (fabricRows[index]) {
                         const cells = fabricRows[index].querySelectorAll('.cost-cell');
                         if (cells[0]) cells[0].textContent = item.material || '';
@@ -16249,8 +16250,9 @@
 
             // Populate other fabric/s - trim/s section (formerly embroidery)
             if (parsedData.embroidery && parsedData.embroidery.length > 0) {
-                const otherFabricRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(2) .cost-row:not(.header-row):not(.subtotal-row)');
-                parsedData.embroidery.forEach((item, index) => {
+                const otherFabricSection = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(2)');
+                const otherFabricRows = otherFabricSection ? ensureOperationRowCapacity(otherFabricSection, MAX_OPERATION_ROWS) : [];
+                parsedData.embroidery.slice(0, MAX_OPERATION_ROWS).forEach((item, index) => {
                     if (otherFabricRows[index]) {
                         const cells = otherFabricRows[index].querySelectorAll('.cost-cell');
                         if (cells[0]) cells[0].textContent = item.material || item.design || '';
@@ -16263,11 +16265,12 @@
 
             // Populate trim section
             if (parsedData.trim && parsedData.trim.length > 0) {
-                const trimRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(3) .cost-row:not(.header-row):not(.subtotal-row)');
+                const trimSection = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(3)');
+                const trimRows = trimSection ? ensureOperationRowCapacity(trimSection, MAX_OPERATION_ROWS) : [];
                 let regularItemCount = 0;
                 let trimTotal = 0;
 
-                parsedData.trim.forEach((item, index) => {
+                parsedData.trim.slice(0, MAX_OPERATION_ROWS).forEach((item, index) => {
                     // Check if this is a subtotal row
                     if (item.material && item.material.includes('TOTAL MATERIAL AND SUBMATERIALS COST')) {
                         // Update the subtotal row
@@ -16395,7 +16398,8 @@
 
             // Populate packaging section
             if (parsedData.packaging && parsedData.packaging.length > 0) {
-                const packagingRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(6) .cost-row:not(.header-row):not(.subtotal-row)');
+                const packagingSection = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(6)');
+                const packagingRows = packagingSection ? ensureOperationRowCapacity(packagingSection, MAX_OPERATION_ROWS) : [];
                 console.log('🔍 PACKAGING DEBUG:');
                 console.log('- Found packaging data:', parsedData.packaging.length, 'items');
                 console.log('- Found DOM rows:', packagingRows.length);
@@ -16403,7 +16407,7 @@
                 let regularItemCount = 0;
                 let packagingTotal = 0;
 
-                parsedData.packaging.forEach((item, index) => {
+                parsedData.packaging.slice(0, MAX_OPERATION_ROWS).forEach((item, index) => {
                     // Check if this is a subtotal row
                     if (item.type && (item.type.includes('SUB TOTAL') || item.type.includes('TOTAL'))) {
                         // Update the subtotal row
@@ -16444,7 +16448,8 @@
 
             // Populate overhead section
             if (parsedData.overhead && parsedData.overhead.length > 0) {
-                const overheadRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(7) .cost-row:not(.header-row):not(.subtotal-row)');
+                const overheadSection = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(7)');
+                const overheadRows = overheadSection ? ensureOperationRowCapacity(overheadSection, MAX_OPERATION_ROWS) : [];
                 console.log('🔍 OVERHEAD DEBUG:');
                 console.log('- Found overhead data:', parsedData.overhead.length, 'items');
                 console.log('- Found DOM rows:', overheadRows.length);
@@ -16452,7 +16457,7 @@
                 let regularItemCount = 0;
                 let overheadTotal = 0;
 
-                parsedData.overhead.forEach((item, index) => {
+                parsedData.overhead.slice(0, MAX_OPERATION_ROWS).forEach((item, index) => {
                     // Check if this is a subtotal row
                     if (item.type && (item.type.includes('SUB TOTAL') || item.type.includes('TOTAL'))) {
                         // Update the subtotal row
