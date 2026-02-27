@@ -65,6 +65,85 @@ var TNFBeanieImporter = class TNFBeanieImporter {
         );
     }
 
+    extractBeanieOperationsTable(data) {
+        let headerRowIndex = -1;
+        let operationCol = -1;
+
+        for (let i = 0; i < data.length; i++) {
+            const row = data[i] || [];
+            const normalized = row.map(cell => String(cell || '').trim().toUpperCase());
+            const hasOperations = normalized.some(cell => cell === 'OPERATIONS' || cell === 'OPERATION');
+            const hasOperationTime = normalized.some(cell => cell.includes('OPERATION TIME'));
+            const hasOperationCost = normalized.some(cell => cell.includes('OPERATION COST'));
+
+            if (hasOperations && hasOperationTime && hasOperationCost) {
+                headerRowIndex = i;
+                operationCol = normalized.findIndex(cell => cell === 'OPERATIONS' || cell === 'OPERATION');
+                break;
+            }
+        }
+
+        if (headerRowIndex === -1 || operationCol === -1) {
+            return { operations: [], subtotal: null };
+        }
+
+        const extracted = [];
+        let subtotal = null;
+
+        for (let i = headerRowIndex + 1; i < data.length; i++) {
+            const row = data[i] || [];
+            const label = String(row[operationCol] || '').trim();
+            const leadIdx = row.findIndex(cell => String(cell || '').trim() !== '');
+            const leadValue = leadIdx >= 0 ? String(row[leadIdx] || '').trim().toUpperCase() : '';
+
+            if (leadValue.includes('PACKAGING') || leadValue.includes('OVERHEAD') || leadValue.includes('TOTAL FACTORY COST')) {
+                break;
+            }
+
+            if (!label) continue;
+
+            if (label.toUpperCase().includes('SUB TOTAL') || label.toUpperCase() === 'TOTAL') {
+                const directSubtotal = this.parseNumeric(row[operationCol + 3]);
+                if (directSubtotal !== null) {
+                    subtotal = this.formatNumeric(directSubtotal);
+                } else {
+                    const numericCells = row.map(cell => this.parseNumeric(cell)).filter(val => val !== null);
+                    if (numericCells.length > 0) subtotal = this.formatNumeric(numericCells[numericCells.length - 1]);
+                }
+                continue;
+            }
+
+            if (label.toUpperCase().includes('OPERATION')) continue;
+
+            const timeCell = row[operationCol + 1];
+            const costPerMinCell = row[operationCol + 2];
+            const totalCell = row[operationCol + 3];
+            const timeNumeric = this.isExcelErrorValue(timeCell) ? null : this.parseNumeric(timeCell);
+            const costPerMinNumeric = this.isExcelErrorValue(costPerMinCell) ? null : this.parseNumeric(costPerMinCell);
+            const totalNumeric = this.isExcelErrorValue(totalCell) ? null : this.parseNumeric(totalCell);
+
+            let resolvedTotal = '';
+            if (totalNumeric !== null) {
+                resolvedTotal = this.formatNumeric(totalNumeric);
+            } else if (timeNumeric !== null && costPerMinNumeric !== null) {
+                resolvedTotal = this.formatNumeric(timeNumeric * costPerMinNumeric);
+            }
+
+            const hasData = timeNumeric !== null || costPerMinNumeric !== null || totalNumeric !== null || resolvedTotal !== '';
+            if (!hasData) continue;
+
+            extracted.push({
+                operation: label,
+                time: String(timeCell || '').trim(),
+                smv: timeNumeric !== null ? this.formatNumeric(timeNumeric) : '',
+                costPerMin: costPerMinNumeric !== null ? this.formatNumeric(costPerMinNumeric) : '',
+                total: resolvedTotal
+            });
+        }
+
+        return { operations: extracted, subtotal };
+    }
+
     /**
      * Parse TNF Excel data into structured format for beanie
      * @param {Object|Array} excelData - Raw Excel data from XLSX library (can be array or object with data/images)
@@ -518,23 +597,30 @@ var TNFBeanieImporter = class TNFBeanieImporter {
                     }
                 }
                 
-                if (currentSection === 'operations' && firstCell && 
-                    !firstCell.includes('OPERATION') && 
-                    !firstCell.includes('OPERATIONS') && 
-                    !firstCell.includes('SMV') && 
-                    !firstCell.includes('COST') && 
-                    !firstCell.includes('USD/MIN') &&
-                    !firstCell.includes('SUB TOTAL') && 
-                    !firstCell.includes('TOTAL') &&
-                    firstCell.trim() !== '') {
-                    console.log(`🔍 Checking OPERATIONS: "${firstCell}" - Row:`, row);
+                const opLeadIdx = row.findIndex(cell => String(cell || '').trim() !== '');
+                const opFirstCell = opLeadIdx >= 0 ? String(row[opLeadIdx] || '').trim() : '';
+
+                if (currentSection === 'operations' && opFirstCell &&
+                    !opFirstCell.includes('OPERATION') &&
+                    !opFirstCell.includes('OPERATIONS') &&
+                    !opFirstCell.includes('SMV') &&
+                    !opFirstCell.includes('COST') &&
+                    !opFirstCell.includes('USD/MIN') &&
+                    !opFirstCell.includes('SUB TOTAL') &&
+                    !opFirstCell.includes('TOTAL') &&
+                    opFirstCell.trim() !== '') {
+                    console.log(`🔍 Checking OPERATIONS: "${opFirstCell}" - Row:`, row);
                     
                     // Excel format: OPERATION | OPERATION TIME (MINS) | OPERATION COST (USD/MIN) | OPERATION COST
-                    const operationName = String(firstCell || '').trim();
-                    const operationTime = String(row[1] || '').trim();
-                    const costPerMinValue = this.isExcelErrorValue(row[2]) ? null : this.parseNumeric(row[2]);
-                    const operationCostValue = this.isExcelErrorValue(row[3]) ? null : this.parseNumeric(row[3]);
-                    const timeNumeric = this.isExcelErrorValue(row[1]) ? null : this.parseNumeric(row[1]);
+                    const operationName = String(opFirstCell || '').trim();
+                    const timeCell = opLeadIdx >= 0 ? row[opLeadIdx + 1] : row[1];
+                    const costPerMinCell = opLeadIdx >= 0 ? row[opLeadIdx + 2] : row[2];
+                    const operationCostCell = opLeadIdx >= 0 ? row[opLeadIdx + 3] : row[3];
+
+                    const operationTime = String(timeCell || '').trim();
+                    const costPerMinValue = this.isExcelErrorValue(costPerMinCell) ? null : this.parseNumeric(costPerMinCell);
+                    const operationCostValue = this.isExcelErrorValue(operationCostCell) ? null : this.parseNumeric(operationCostCell);
+                    const timeNumeric = this.isExcelErrorValue(timeCell) ? null : this.parseNumeric(timeCell);
 
                     const costPerMin = costPerMinValue !== null ? this.formatNumeric(costPerMinValue) : '';
                     let total = '';
@@ -716,6 +802,25 @@ var TNFBeanieImporter = class TNFBeanieImporter {
                         console.log('❌ SUB TOTAL row found but no valid cost value');
                     }
                 }
+            }
+
+            // Second pass for OPERATIONS table to recover shifted/irregular rows.
+            const scannedOps = this.extractBeanieOperationsTable(data);
+            if (scannedOps.operations.length > 0) {
+                const existingKeys = new Set(
+                    result.operations.map(item => `${String(item.operation || '').trim().toUpperCase()}|${String(item.total || '').trim()}|${String(item.costPerMin || '').trim()}`)
+                );
+                scannedOps.operations.forEach(item => {
+                    const key = `${String(item.operation || '').trim().toUpperCase()}|${String(item.total || '').trim()}|${String(item.costPerMin || '').trim()}`;
+                    if (!existingKeys.has(key)) {
+                        result.operations.push(item);
+                        existingKeys.add(key);
+                    }
+                });
+                console.log('Merged OPERATIONS rows from second pass:', scannedOps.operations.length, 'Total operations:', result.operations.length);
+            }
+            if (scannedOps.subtotal !== null) {
+                result.operationsSubtotal = scannedOps.subtotal;
             }
 
             // Extract Notes section - look for rows that contain notes information

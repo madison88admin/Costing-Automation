@@ -11925,6 +11925,13 @@
                     }
                 }
 
+                const rawOps = extractOperationsFromRawRows(dataToProcess);
+                if (parsedData && rawOps.operations.length > (parsedData.operations ? parsedData.operations.length : 0)) {
+                    console.log(`🔧 Raw OPERATIONS fallback applied: ${rawOps.operations.length} rows (was ${parsedData.operations ? parsedData.operations.length : 0})`);
+                    parsedData.operations = rawOps.operations;
+                    if (rawOps.subtotal !== null) parsedData.operationsSubtotal = rawOps.subtotal;
+                }
+
                 if (parsedData) {
                     console.log('🔍 DEBUGGING PARSED DATA:');
                     console.log('Parsed data:', parsedData);
@@ -12163,6 +12170,123 @@
             }
         }
 
+        const MAX_OPERATION_ROWS = 10;
+
+        function parseExcelNumeric(value) {
+            if (value === null || value === undefined || value === '') return null;
+            if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+            const cleaned = String(value).replace(/[$,\s]/g, '').trim();
+            if (!cleaned || cleaned === '-' || cleaned === '--') return null;
+            const parsed = Number(cleaned);
+            return Number.isFinite(parsed) ? parsed : null;
+        }
+
+        function extractOperationsFromRawRows(rows) {
+            if (!Array.isArray(rows) || rows.length === 0) return { operations: [], subtotal: null };
+
+            let headerRowIndex = -1;
+            let opCol = -1;
+            for (let i = 0; i < rows.length; i++) {
+                const row = Array.isArray(rows[i]) ? rows[i] : [];
+                const normalized = row.map(cell => String(cell || '').trim().toUpperCase());
+                const hasOperations = normalized.some(cell => cell === 'OPERATIONS' || cell === 'OPERATION');
+                const hasTime = normalized.some(cell => cell.includes('OPERATION TIME'));
+                const hasCost = normalized.some(cell => cell.includes('OPERATION COST'));
+                if (hasOperations && hasTime && hasCost) {
+                    headerRowIndex = i;
+                    opCol = normalized.findIndex(cell => cell === 'OPERATIONS' || cell === 'OPERATION');
+                    break;
+                }
+            }
+
+            if (headerRowIndex === -1 || opCol === -1) return { operations: [], subtotal: null };
+
+            const operations = [];
+            let subtotal = null;
+            for (let i = headerRowIndex + 1; i < rows.length; i++) {
+                const row = Array.isArray(rows[i]) ? rows[i] : [];
+                const rowUpper = row.map(cell => String(cell || '').trim().toUpperCase()).join(' | ');
+                if (rowUpper.includes('PACKAGING') || rowUpper.includes('OVERHEAD') || rowUpper.includes('TOTAL FACTORY COST')) break;
+
+                if (rowUpper.includes('SUB TOTAL')) {
+                    const directSubtotal = parseExcelNumeric(row[opCol + 3]);
+                    if (directSubtotal !== null) subtotal = directSubtotal.toFixed(2);
+                    else {
+                        const numericCells = row.map(cell => parseExcelNumeric(cell)).filter(v => v !== null);
+                        if (numericCells.length > 0) subtotal = numericCells[numericCells.length - 1].toFixed(2);
+                    }
+                    continue;
+                }
+                if (rowUpper.includes('SMV') && rowUpper.includes('COST')) continue;
+
+                const labelCell = row.find(cell => {
+                    const text = String(cell || '').trim();
+                    if (!text) return false;
+                    const upper = text.toUpperCase();
+                    if (upper.includes('SUB TOTAL') || upper.includes('OPERATIONS') || upper.includes('OPERATION TIME') || upper.includes('OPERATION COST')) return false;
+                    return parseExcelNumeric(text) === null;
+                });
+                const label = String(labelCell || '').trim();
+                if (!label) continue;
+
+                const timeRaw = row[opCol + 1] !== undefined ? row[opCol + 1] : row[1];
+                const costPerMinRaw = row[opCol + 2] !== undefined ? row[opCol + 2] : row[2];
+                const totalRaw = row[opCol + 3] !== undefined ? row[opCol + 3] : row[3];
+                const timeNumeric = parseExcelNumeric(timeRaw);
+                const costPerMinNumeric = parseExcelNumeric(costPerMinRaw);
+                const totalNumeric = parseExcelNumeric(totalRaw);
+                const numericCells = row.map(cell => parseExcelNumeric(cell)).filter(v => v !== null);
+
+                let total = '';
+                if (totalNumeric !== null) total = totalNumeric.toFixed(2);
+                else if (timeNumeric !== null && costPerMinNumeric !== null) total = (timeNumeric * costPerMinNumeric).toFixed(2);
+                else if (numericCells.length > 0) total = numericCells[numericCells.length - 1].toFixed(2);
+
+                if (!(timeNumeric !== null || costPerMinNumeric !== null || totalNumeric !== null || total !== '')) continue;
+
+                operations.push({
+                    operation: label,
+                    time: String(timeRaw || '').trim(),
+                    smv: timeNumeric !== null ? timeNumeric.toFixed(2) : '',
+                    costPerMin: costPerMinNumeric !== null ? costPerMinNumeric.toFixed(2) : '',
+                    total: total
+                });
+            }
+
+            const unique = [];
+            const seen = new Set();
+            operations.forEach(item => {
+                const key = `${String(item.operation || '').trim().toUpperCase()}|${String(item.total || '').trim()}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    unique.push(item);
+                }
+            });
+            return { operations: unique, subtotal };
+        }
+
+        function ensureOperationRowCapacity(sectionEl, requiredCount = MAX_OPERATION_ROWS) {
+            if (!sectionEl) return [];
+            sectionEl.querySelectorAll('.cost-row[data-import-generated="true"]').forEach(row => row.remove());
+
+            const rows = Array.from(sectionEl.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)'));
+            if (rows.length >= requiredCount) return rows;
+
+            const templateRow = rows[rows.length - 1];
+            const subtotalRow = sectionEl.querySelector('.subtotal-row');
+            const insertParent = subtotalRow ? subtotalRow.parentNode : null;
+            if (!templateRow || !subtotalRow || !insertParent) return rows;
+
+            while (rows.length < requiredCount) {
+                const newRow = templateRow.cloneNode(true);
+                newRow.setAttribute('data-import-generated', 'true');
+                newRow.querySelectorAll('.cost-cell').forEach(cell => cell.textContent = '');
+                insertParent.insertBefore(newRow, subtotalRow);
+                rows.push(newRow);
+            }
+            return rows;
+        }
+
         function clearForm(event) {
             console.log('🗑️ Clear form clicked...');
             if (event) {
@@ -12303,9 +12427,9 @@
                         .find(header => header.textContent.trim().toUpperCase() === 'OPERATIONS');
                     if (operationsHeader) {
                         const targetSection = operationsHeader.closest('.cost-section');
-                        const rows = targetSection.querySelectorAll('.cost-row:not(.header-row):not(.subtotal-row)');
+                        const rows = ensureOperationRowCapacity(targetSection, MAX_OPERATION_ROWS);
 
-                        data.operations.forEach((item, index) => {
+                        data.operations.slice(0, MAX_OPERATION_ROWS).forEach((item, index) => {
                             if (rows[index]) {
                                 const cells = rows[index].querySelectorAll('.cost-cell');
                                 if (cells[0]) cells[0].textContent = item.operation || '';
@@ -16191,7 +16315,10 @@
 
 
             if (parsedData.operations && parsedData.operations.length > 0) {
-                const operationsRows = document.querySelectorAll('#ballcapsBreakdown .cost-section:nth-child(5) .cost-row:not(.header-row):not(.subtotal-row)');
+                const operationsSection = document.querySelector('#ballcapsBreakdown .cost-section:nth-child(5)');
+                const operationsRows = operationsSection
+                    ? ensureOperationRowCapacity(operationsSection, MAX_OPERATION_ROWS)
+                    : [];
                 console.log('🔍 OPERATIONS DEBUG:');
                 console.log('- Found operations data:', parsedData.operations.length, 'items');
                 console.log('- Found DOM rows:', operationsRows.length);
@@ -16200,7 +16327,7 @@
                 let regularItemCount = 0;
                 let operationsTotal = 0;
 
-                parsedData.operations.forEach((item, index) => {
+                parsedData.operations.slice(0, MAX_OPERATION_ROWS).forEach((item, index) => {
                     // Check if this is a subtotal row
                     if (item.operation && (item.operation.includes('SUB TOTAL') || item.operation.includes('TOTAL'))) {
                         // Update the subtotal row

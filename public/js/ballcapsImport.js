@@ -378,10 +378,16 @@ class TNFBallCapsImporter {
                     const col3 = this.extractNumericValue(row[3]);
                     const isNumericTriple = col1 !== null && col2 !== null && col3 !== null;
 
-                    const operationLabel = String(row[map.name] || row[0] || '').trim();
-                    const timeRaw = isNumericTriple ? row[1] : (row[map.time] !== undefined ? row[map.time] : row[1]);
-                    const costPerMinRaw = isNumericTriple ? row[2] : (row[map.costPerMin] !== undefined ? row[map.costPerMin] : row[2]);
-                    const totalRaw = isNumericTriple ? row[3] : (row[map.total] !== undefined ? row[map.total] : row[3]);
+                    const operationLabel = String(row[map.name] || firstCell || row[0] || '').trim();
+                    const timeRaw = isNumericTriple
+                        ? row[1]
+                        : (row[map.time] !== undefined ? row[map.time] : row[leadIdx + 1]);
+                    const costPerMinRaw = isNumericTriple
+                        ? row[2]
+                        : (row[map.costPerMin] !== undefined ? row[map.costPerMin] : row[leadIdx + 2]);
+                    const totalRaw = isNumericTriple
+                        ? row[3]
+                        : (row[map.total] !== undefined ? row[map.total] : row[leadIdx + 3]);
 
                     const parsedTime = this.isExcelErrorValue(timeRaw) ? null : this.extractNumericValue(timeRaw);
                     const parsedCostPerMin = this.isExcelErrorValue(costPerMinRaw) ? null : this.extractNumericValue(costPerMinRaw);
